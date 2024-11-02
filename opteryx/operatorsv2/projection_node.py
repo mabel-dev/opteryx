@@ -68,5 +68,4 @@ class ProjectionNode(BasePlanNode):
 
         # If any of the columns need evaluating, we need to do that here
         morsel = evaluate_and_append(self.evaluations, morsel)
-        morsel = morsel.select(self.projection)
-        return morsel
+        return morsel.select(self.projection)

@@ -51,7 +51,7 @@ class SortNode(BasePlanNode):
         return "Sort"
 
     def execute(self, morsel: Table) -> Table:
-        if morsel != EOS and morsel.num_rows > 0:
+        if morsel != EOS:
             self.morsels.append(morsel)
             return None
 

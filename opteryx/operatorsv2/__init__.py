@@ -14,7 +14,7 @@
 
 
 from .base_plan_node import BasePlanDataObject  # isort: skip
-from .base_plan_node import BasePlanNode  # isort: skip
+from .base_plan_node import BasePlanNode, JoinNode  # isort: skip
 
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS
@@ -33,7 +33,6 @@ from .heap_sort_node import HeapSortNode  # Heap
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
-from .join_node import JoinNode
 from .limit_node import LimitNode  # select the first N records
 
 # from .metadata_writer_node import MetadataWriterNode

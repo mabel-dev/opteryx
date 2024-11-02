@@ -16,18 +16,14 @@ Set Variables Node
 This is a SQL Query Execution Plan Node.
 """
 
-from typing import Generator
-
 from opteryx.constants import QueryStatus
 from opteryx.models import NonTabularResult
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class SetVariableNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -48,6 +44,6 @@ class SetVariableNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return f"{self.variable} TO {self.value}"
 
-    def execute(self) -> Generator:
+    def execute(self, morsel) -> NonTabularResult:
         self.variables[self.variable] = self.value
         return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)  # type: ignore

@@ -15,6 +15,7 @@ from orso.schema import OrsoTypes
 
 from opteryx import operatorsv2 as operators
 from opteryx.exceptions import UnsupportedSyntaxError
+from opteryx.models import LogicalColumn
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
@@ -43,7 +44,10 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
         elif node_type == LogicalPlanStepType.Filter:
             node = operators.FilterNode(query_properties, filter=node_config["condition"])
         elif node_type == LogicalPlanStepType.FunctionDataset:
-            node = operators.FunctionDatasetNode(query_properties, **node_config)
+            if node_config.get("function") != "UNNEST" or (len(node_config.get("args", [])) > 0 and not isinstance(node_config["args"][0], LogicalColumn)):
+                node = operators.FunctionDatasetNode(query_properties, **node_config)
+            else:
+                node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.HeapSort:
             node = operators.HeapSortNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:

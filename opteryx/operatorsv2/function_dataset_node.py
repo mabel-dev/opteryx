@@ -23,13 +23,13 @@ from typing import Generator
 
 import pyarrow
 
+from opteryx import EOS
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
 from opteryx.utils import series
 
 from .read_node import ReaderNode
-from opteryx import EOS
 
 
 def _generate_series(**kwargs):
@@ -147,4 +147,5 @@ class FunctionDatasetNode(ReaderNode):
         self.bytes_out += table.nbytes
         self.statistics.columns_read += len(table.column_names)
 
-        return [table, EOS]
+        yield table
+        yield EOS

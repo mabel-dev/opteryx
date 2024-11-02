@@ -39,7 +39,7 @@ from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
-from . import BasePlanNode
+from . import JoinNode
 
 
 def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_columns, hash_table):
@@ -72,7 +72,7 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     return align_tables(right_relation, left_relation, right_indexes, left_indexes)
 
 
-class InnerJoinNode(BasePlanNode):
+class InnerJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self._join_type = config["type"]

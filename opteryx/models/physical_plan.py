@@ -149,7 +149,7 @@ class PhysicalPlan(Graph):
         else:
             yield results, ResultType.TABULAR
 
-    def explain(self):
+    def explain(self) -> Generator[pyarrow.Table, None, None]:
         from opteryx import operators
 
         def _inner_explain(node, depth):
@@ -178,12 +178,106 @@ class PhysicalPlan(Graph):
 
         yield table
 
-    def push_executor(self):
-        pump_nodes = self.get_entry_points()
-        for pump_node in pump_nodes:
-            pump_instance = self[pump_node]
-            for morsel in pump_instance(None):
-                yield from self.process_node(pump_node, morsel)
+    def explainv2(self, analyze: bool) -> Generator[pyarrow.Table, None, None]:
+        from opteryx import operatorsv2
+
+        def _inner_explain(node, depth):
+            incoming_operators = self.ingoing_edges(node)
+            for operator_name in incoming_operators:
+                operator = self[operator_name[0]]
+                if isinstance(
+                    operator, (operatorsv2.ExitNode, operatorsv2.ExplainNode)
+                ):  # Skip ExitNode
+                    yield from _inner_explain(operator_name[0], depth)
+                    continue
+                elif isinstance(operator, operatorsv2.BasePlanNode):
+                    record = {
+                        "tree": depth,
+                        "operator": operator.name,
+                        "config": operator.config,
+                    }
+                    if analyze:
+                        record["time_ms"] = operator.execution_time / 1e6
+                        record["records_in"] = operator.records_in
+                        record["records_out"] = operator.records_out
+                    yield record
+                    yield from _inner_explain(operator_name[0], depth + 1)
+
+        head = list(dict.fromkeys(self.get_exit_points()))
+        if len(head) != 1:  # pragma: no cover
+            raise InvalidInternalStateError(f"Problem with the plan - it has {len(head)} heads.")
+
+        # for EXPLAIN ANALYZE, we execute the query and report statistics
+        if analyze:
+            # we don't want the results, just the details from the plan
+            temp = None
+            for temp in self.push_executor():
+                pass
+            del temp
+
+        plan = list(_inner_explain(head[0], 1))
+
+        table = pyarrow.Table.from_pylist(plan)
+
+        yield table
+
+    def push_executor(self) -> Tuple[Generator[pyarrow.Table, None, None], ResultType]:
+        from opteryx.operatorsv2 import ExplainNode
+        from opteryx.operatorsv2 import JoinNode
+        from opteryx.operatorsv2 import SetVariableNode
+
+        return_type = ResultType.TABULAR
+
+        # Validate query plan to ensure it's acyclic
+        if not self.is_acyclic():
+            raise InvalidInternalStateError("Query plan is cyclic, cannot execute.")
+
+        # Retrieve the tail of the query plan, which should ideally be a single head node
+        head_nodes = list(set(self.get_exit_points()))
+
+        if len(head_nodes) != 1:
+            raise InvalidInternalStateError(
+                f"Query plan has {len(head_nodes)} heads, expected exactly 1."
+            )
+
+        head_node = self[head_nodes[0]]
+
+        joins = [(nid, node) for nid, node in self.nodes(True) if isinstance(node, JoinNode)]
+        for nid, join in joins:
+            print(join, self.ingoing_edges(nid))
+            for s, t, r in self.breadth_first_search(nid, reverse=True):
+                if set(join._left_relation).intersection(
+                    {
+                        self[s].parameters.get("alias"),
+                        self[s].parameters.get("relation"),
+                    }
+                ):
+                    self.remove_edge(s, t, r)
+                    self.add_edge(s, t, "left")
+                elif set(join._right_relation).intersection(
+                    {
+                        self[s].parameters.get("alias"),
+                        self[s].parameters.get("relation"),
+                    }
+                ):
+                    self.remove_edge(s, t, r)
+                    self.add_edge(s, t, "right")
+
+        # Special case handling for 'Explain' queries
+        if isinstance(head_node, ExplainNode):
+            yield self.explainv2(head_node.analyze), ResultType.TABULAR
+
+        if isinstance(head_node, SetVariableNode):
+            yield head_node(None), ResultType.NON_TABULAR
+
+        def inner_execute(plan):
+            pump_nodes = plan.get_entry_points()
+            for pump_node in pump_nodes:
+                pump_instance = plan[pump_node]
+                for morsel in pump_instance(None):
+                    yield from plan.process_node(pump_node, morsel)
+
+        yield inner_execute(self), ResultType.TABULAR
 
     def process_node(self, nid, morsel):
         from opteryx.operatorsv2 import ReaderNode
@@ -191,9 +285,10 @@ class PhysicalPlan(Graph):
         node = self[nid]
 
         if isinstance(node, ReaderNode):
-            children = [t for s, t, r in self.outgoing_edges(nid)]
+            children = (t for s, t, r in self.outgoing_edges(nid))
             for child in children:
                 results = self.process_node(child, morsel)
+                results = list(results)
                 yield from results
         else:
             results = node(morsel)
@@ -208,8 +303,8 @@ class PhysicalPlan(Graph):
                     children = [t for s, t, r in self.outgoing_edges(nid)]
                     for child in children:
                         yield from self.process_node(child, result)
-                    if len(children) == 0:
-                        yield result, ResultType.TABULAR
+                    if len(children) == 0 and result != EOS:
+                        yield result
 
     def sensors(self):
         readings = {}
@@ -220,4 +315,6 @@ class PhysicalPlan(Graph):
 
     def __del__(self):
         pass
+
+
 #        print(self.sensors())

@@ -113,3 +113,7 @@ class BasePlanNode:
             "bytes_in": self.bytes_in,
             "bytes_out": self.bytes_out,
         }
+
+
+class JoinNode(BasePlanNode):
+    pass
