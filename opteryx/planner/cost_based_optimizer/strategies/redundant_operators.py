@@ -58,6 +58,11 @@ class RedundantOperationsStrategy(OptimizationStrategy):
 
         # Subqueries are useful for planning but not needed for execution
         if node.node_type == LogicalPlanStepType.Subquery:
+            alias = node.alias
+            for nid, _, _ in context.optimized_plan.ingoing_edges(context.node_id):
+                updated_node = context.optimized_plan[nid]
+                updated_node.alias = alias
+                context.optimized_plan.add_node(nid, updated_node)
             context.optimized_plan.remove_node(context.node_id, heal=True)
             self.statistics.optimization_remove_redundant_operators_subquery += 1
 

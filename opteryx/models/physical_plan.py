@@ -24,6 +24,7 @@ The execution tree contains functionality to:
 import gc
 from typing import Any
 from typing import Generator
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -221,12 +222,49 @@ class PhysicalPlan(Graph):
 
         yield table
 
-    def push_executor(self) -> Tuple[Generator[pyarrow.Table, None, None], ResultType]:
+    def depth_first_search_flat(
+        self, node: Optional[str] = None, visited: Optional[set] = None
+    ) -> list:
+        """
+        Returns a flat list representing the depth-first traversal of the graph with left/right ordering.
+
+        We do this so we always evaluate the left side of a join before the right side. It technically
+        doesn't need the entire plan flattened DFS-wise, but this is what we are doing here to achieve
+        the outcome we're after.
+        """
+        if node is None:
+            node = self.get_exit_points()[0]
+
+        if visited is None:
+            visited = set()
+
+        visited.add(node)
+
+        # Collect this node's information in a flat list format
+        traversal_list = [
+            (
+                node,
+                self[node],
+            )
+        ]
+
+        # Sort neighbors based on relationship to ensure left, right, then unlabelled order
+        neighbors = sorted(self.ingoing_edges(node), key=lambda x: (x[2] == "right", x[2] == ""))
+
+        # Traverse each child, prioritizing left, then right, then unlabelled
+        for neighbor, _, _ in neighbors:
+            if neighbor not in visited:
+                child_list = self.depth_first_search_flat(neighbor, visited)
+                traversal_list.extend(child_list)
+
+        return traversal_list
+
+    def push_executor(self) -> Tuple[Generator[pyarrow.Table, Any, Any], ResultType]:
         from opteryx.operatorsv2 import ExplainNode
         from opteryx.operatorsv2 import JoinNode
+        from opteryx.operatorsv2 import ReaderNode
         from opteryx.operatorsv2 import SetVariableNode
-
-        return_type = ResultType.TABULAR
+        from opteryx.operatorsv2 import ShowValueNode
 
         # Validate query plan to ensure it's acyclic
         if not self.is_acyclic():
@@ -242,22 +280,23 @@ class PhysicalPlan(Graph):
 
         head_node = self[head_nodes[0]]
 
+        # add the left/right labels to the edges coming into the joins
         joins = [(nid, node) for nid, node in self.nodes(True) if isinstance(node, JoinNode)]
         for nid, join in joins:
-            print(join, self.ingoing_edges(nid))
             for s, t, r in self.breadth_first_search(nid, reverse=True):
+                source_parameters = self[s].parameters
                 if set(join._left_relation).intersection(
                     {
-                        self[s].parameters.get("alias"),
-                        self[s].parameters.get("relation"),
+                        source_parameters.get("alias"),
+                        source_parameters.get("relation"),
                     }
                 ):
                     self.remove_edge(s, t, r)
                     self.add_edge(s, t, "left")
                 elif set(join._right_relation).intersection(
                     {
-                        self[s].parameters.get("alias"),
-                        self[s].parameters.get("relation"),
+                        source_parameters.get("alias"),
+                        source_parameters.get("relation"),
                     }
                 ):
                     self.remove_edge(s, t, r)
@@ -267,15 +306,23 @@ class PhysicalPlan(Graph):
         if isinstance(head_node, ExplainNode):
             yield self.explainv2(head_node.analyze), ResultType.TABULAR
 
-        if isinstance(head_node, SetVariableNode):
+        # Special case handling for 'Set' queries
+        elif isinstance(head_node, SetVariableNode):
             yield head_node(None), ResultType.NON_TABULAR
 
+        elif isinstance(head_node, ShowValueNode):
+            yield head_node(None), ResultType.TABULAR
+
         def inner_execute(plan):
-            pump_nodes = plan.get_entry_points()
-            for pump_node in pump_nodes:
-                pump_instance = plan[pump_node]
+            # Get the pump nodes from the plan and execute them in order
+            pump_nodes = [
+                (nid, node)
+                for nid, node in self.depth_first_search_flat()
+                if isinstance(node, ReaderNode)
+            ]
+            for pump_nid, pump_instance in pump_nodes:
                 for morsel in pump_instance(None):
-                    yield from plan.process_node(pump_node, morsel)
+                    yield from plan.process_node(pump_nid, morsel)
 
         yield inner_execute(self), ResultType.TABULAR
 

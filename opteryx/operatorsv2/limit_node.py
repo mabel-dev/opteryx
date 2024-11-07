@@ -29,12 +29,11 @@ from . import BasePlanNode
 class LimitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.limit = config.get("limit")
+        self.limit = config.get("limit", float("inf"))
         self.offset = config.get("offset", 0)
 
         self.remaining_rows = self.limit if self.limit is not None else float("inf")
         self.rows_left_to_skip = max(0, self.offset)
-        self.at_least_one = False
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -62,16 +61,13 @@ class LimitNode(BasePlanNode):
                 )
                 self.rows_left_to_skip = 0
 
-        if self.remaining_rows <= 0:
-            self.at_least_one = True
+        if self.remaining_rows <= 0 or morsel.num_rows == 0:
             return morsel.slice(offset=0, length=0)
 
-        if morsel.num_rows > 0:
-            if morsel.num_rows < self.remaining_rows:
-                self.remaining_rows -= morsel.num_rows
-                self.at_least_one = True
-                return morsel
-
-            else:
-                self.at_least_one = True
-                return morsel.slice(offset=0, length=self.remaining_rows)
+        if morsel.num_rows < self.remaining_rows:
+            self.remaining_rows -= morsel.num_rows
+            return morsel
+        else:
+            rows_to_slice = self.remaining_rows
+            self.remaining_rows = 0
+            return morsel.slice(offset=0, length=rows_to_slice)

@@ -34,6 +34,7 @@ from .heap_sort_node import HeapSortNode  # Heap
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
 from .limit_node import LimitNode  # select the first N records
+from .pyarrow_join_node import PyArrowJoinNode
 
 # from .metadata_writer_node import MetadataWriterNode
 # from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels

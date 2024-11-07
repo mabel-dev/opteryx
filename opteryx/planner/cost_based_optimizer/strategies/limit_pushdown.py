@@ -46,12 +46,13 @@ class LimitPushdownStrategy(OptimizationStrategy):
                     node.limit = limit_node.limit
                     context.optimized_plan[context.node_id] = node
         elif node.node_type in (
-            LogicalPlanStepType.Join,
-            LogicalPlanStepType.Scan,
-            LogicalPlanStepType.AggregateAndGroup,
             LogicalPlanStepType.Aggregate,
-            LogicalPlanStepType.Union,
+            LogicalPlanStepType.AggregateAndGroup,
+            LogicalPlanStepType.Distinct,
             LogicalPlanStepType.Filter,
+            LogicalPlanStepType.Join,
+            LogicalPlanStepType.Union,
+            LogicalPlanStepType.Scan,
         ):
             # we don't push past here
             for limit_node in context.collected_limits:

@@ -35,7 +35,7 @@ from . import BasePlanNode
 class SortNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.order_by = config.get("order", [])
+        self.order_by = config.get("order_by", [])
         self.morsels = []
 
     @classmethod

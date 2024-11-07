@@ -30,9 +30,9 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
 
         # fmt: off
         if node_type == LogicalPlanStepType.Aggregate:
-            node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
+            node = operators.AggregateNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "all_relations")})
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
+            node = operators.AggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
         #        elif node_type == LogicalPlanStepType.Defragment:
         #            node = operators.MorselDefragmentNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
@@ -42,7 +42,7 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
-            node = operators.FilterNode(query_properties, filter=node_config["condition"])
+            node = operators.FilterNode(query_properties, filter=node_config["condition"], **{k:v for k,v in node_config.items() if k in ("all_relations",)})
         elif node_type == LogicalPlanStepType.FunctionDataset:
             if node_config.get("function") != "UNNEST" or (len(node_config.get("args", [])) > 0 and not isinstance(node_config["args"][0], LogicalColumn)):
                 node = operators.FunctionDatasetNode(query_properties, **node_config)
@@ -65,14 +65,14 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
                 # Pyarrow doesn't have a CROSS JOIN
                 node = operators.CrossJoinNode(query_properties, **node_config)
             else:
-                # Use Pyarrow for all other joins
-                node = operators.JoinNode(query_properties, **node_config)
+                # Use Pyarrow for all other joins (right semi, right anti)
+                node = operators.PyArrowJoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
-            node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
+            node = operators.LimitNode(query_properties, **{k:v for k,v in node_config.items() if k in ("limit", "offset", "all_relations")})
         elif node_type == LogicalPlanStepType.Order:
-            node = operators.SortNode(query_properties, order=node_config["order_by"])
+            node = operators.SortNode(query_properties, **{k:v for k,v in node_config.items() if k in ("order_by", "all_relations")})
         elif node_type == LogicalPlanStepType.Project:
-            node = operators.ProjectionNode(query_properties, projection=logical_node.columns)
+            node = operators.ProjectionNode(query_properties, projection=logical_node.columns, **{k:v for k,v in node_config.items() if k in ("projection", "all_relations")})
         elif node_type == LogicalPlanStepType.Scan:
             connector = node_config.get("connector")
             if connector and hasattr(connector, "async_read_blob"):
@@ -83,7 +83,7 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
             if node_config["object_type"] == "VARIABLE":
-                node = operators.ShowValueNode(query_properties, kind=node_config["items"][1], value=node_config["items"][1])
+                node = operators.ShowValueNode(query_properties, kind=node_config["items"][1], value=node_config["items"][1], **node_config)
             elif node_config["object_type"] == "VIEW":
                 node = operators.ShowCreateNode(query_properties, **node_config)
             else:

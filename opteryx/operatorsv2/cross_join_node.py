@@ -225,7 +225,7 @@ def _cross_join(left_morsel, right):
     from opteryx.utils.arrow import align_tables
 
     at_least_once = False
-    left_schema = None
+    left_schema = left_morsel.schema
     right_schema = right.schema
 
     # Iterate through left table in chunks of size INTERNAL_BATCH_SIZE
