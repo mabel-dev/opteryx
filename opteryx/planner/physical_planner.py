@@ -10,23 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This is a temporary step, which takes logical plans from the V2 planner
-and converts them to modified-V1 physical plans.
-
-This should look different when the operators are rewritten for the
-Gen 2 execution engine (a later piece of work)
-"""
 
 from orso.schema import OrsoTypes
 
-from opteryx import operators
+from opteryx import operatorsv2 as operators
 from opteryx.exceptions import UnsupportedSyntaxError
+from opteryx.models import LogicalColumn
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
 
-def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
+def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
     plan = PhysicalPlan()
 
     for nid, logical_node in logical_plan.nodes(data=True):
@@ -36,9 +30,9 @@ def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
 
         # fmt: off
         if node_type == LogicalPlanStepType.Aggregate:
-            node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
+            node = operators.AggregateNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "all_relations")})
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
+            node = operators.AggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
         #        elif node_type == LogicalPlanStepType.Defragment:
         #            node = operators.MorselDefragmentNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
@@ -48,9 +42,12 @@ def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
-            node = operators.FilterNode(query_properties, filter=node_config["condition"])
+            node = operators.FilterNode(query_properties, filter=node_config["condition"], **{k:v for k,v in node_config.items() if k in ("all_relations",)})
         elif node_type == LogicalPlanStepType.FunctionDataset:
-            node = operators.FunctionDatasetNode(query_properties, **node_config)
+            if node_config.get("function") != "UNNEST" or (len(node_config.get("args", [])) > 0 and not isinstance(node_config["args"][0], LogicalColumn)):
+                node = operators.FunctionDatasetNode(query_properties, **node_config)
+            else:
+                node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.HeapSort:
             node = operators.HeapSortNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
@@ -68,25 +65,25 @@ def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
                 # Pyarrow doesn't have a CROSS JOIN
                 node = operators.CrossJoinNode(query_properties, **node_config)
             else:
-                # Use Pyarrow for all other joins
-                node = operators.JoinNode(query_properties, **node_config)
+                # Use Pyarrow for all other joins (right semi, right anti)
+                node = operators.PyArrowJoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
-            node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
+            node = operators.LimitNode(query_properties, **{k:v for k,v in node_config.items() if k in ("limit", "offset", "all_relations")})
         elif node_type == LogicalPlanStepType.Order:
-            node = operators.SortNode(query_properties, order=node_config["order_by"])
+            node = operators.SortNode(query_properties, **{k:v for k,v in node_config.items() if k in ("order_by", "all_relations")})
         elif node_type == LogicalPlanStepType.Project:
-            node = operators.ProjectionNode(query_properties, projection=logical_node.columns)
+            node = operators.ProjectionNode(query_properties, projection=logical_node.columns, **{k:v for k,v in node_config.items() if k in ("projection", "all_relations")})
         elif node_type == LogicalPlanStepType.Scan:
             connector = node_config.get("connector")
             if connector and hasattr(connector, "async_read_blob"):
                 node = operators.AsyncReaderNode(query_properties, **node_config)
             else:
-                node = operators.ReaderNode(query_properties, **node_config)
+                node = operators.ReaderNode(properties=query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
             if node_config["object_type"] == "VARIABLE":
-                node = operators.ShowValueNode(query_properties, kind=node_config["items"][1], value=node_config["items"][1])
+                node = operators.ShowValueNode(query_properties, kind=node_config["items"][1], value=node_config["items"][1], **node_config)
             elif node_config["object_type"] == "VIEW":
                 node = operators.ShowCreateNode(query_properties, **node_config)
             else:

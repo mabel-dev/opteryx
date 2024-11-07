@@ -240,7 +240,7 @@ class Graph(object):
 
         return tree
 
-    def outgoing_edges(self, source) -> List[Tuple]:
+    def outgoing_edges(self, source: str) -> List[Tuple]:
         """
         Get the list of edges traversable from a given node.
 

@@ -286,14 +286,14 @@ def _temporal_extration_state_machine(
                 open_count += 1
             if comparable_part == ")":
                 open_count -= 1
+                if in_special_function and open_count == special_function_brackets:
+                    in_special_function = False
             if relation == "":
                 state = WAITING
             else:
                 # function relations, like FAKE(234,234) need the items between the
                 # brackets be be consumed
                 state = FUNCTION_RELATION
-        elif in_special_function and open_count == special_function_brackets:
-            in_special_function = False
 
         if not in_special_function:
             if comparable_part in STOP_COLLECTING:
@@ -310,7 +310,9 @@ def _temporal_extration_state_machine(
         transition.append(state)
 
         # based on what the state was and what it is now, do something
-        if transition == [TEMPORAL, TEMPORAL]:
+        if in_special_function:
+            pass
+        elif transition == [TEMPORAL, TEMPORAL]:
             temporal = (temporal + " " + part).strip()
         elif (
             transition

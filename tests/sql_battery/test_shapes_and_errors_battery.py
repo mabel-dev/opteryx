@@ -1499,7 +1499,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN (SELECT id FROM $satellites WHERE name != 'Moon') AS S ON S.id = P.id;", 8, 20, None),
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON S.id = P.id WHERE P.name != 'Earth';", 8, 20, None),
         ("SELECT * FROM GENERATE_SERIES(1, 10) AS G LEFT SEMI JOIN $satellites AS S ON S.id = G;", 10, 1, None),
-        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 3, None),
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 6, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
 
@@ -1757,6 +1757,12 @@ STATEMENTS = [
         ("SELECT jsonb_object_keys(birth_place) FROM testdata.astronauts", 357, 1, None),
         ("SELECT jsonb_object_keys(VARCHAR(birth_place)) FROM testdata.astronauts", 357, 1, None),
         ("SELECT jsonb_object_keys(BLOB(birth_place)) FROM testdata.astronauts", 357, 1, None),
+
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM -4)) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(BLOB(birth_date) FROM -4) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM 4) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM -1 FOR 1) FROM $astronauts", 357, 1, None),
 
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),

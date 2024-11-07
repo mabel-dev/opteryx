@@ -55,8 +55,8 @@ from orso.types import OrsoTypes
 
 from opteryx import config
 from opteryx.managers.expression import NodeType
-from opteryx.models import ExecutionTree
 from opteryx.models import Node
+from opteryx.models import PhysicalPlan
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
@@ -125,7 +125,7 @@ def query_planner(
     connection,
     qid: str,
     statistics,
-) -> Generator[ExecutionTree, Any, Any]:
+) -> Generator[PhysicalPlan, Any, Any]:
     from opteryx.exceptions import SqlError
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter
@@ -134,8 +134,9 @@ def query_planner(
     from opteryx.planner.logical_planner import LogicalPlan
     from opteryx.planner.logical_planner import apply_visibility_filters
     from opteryx.planner.logical_planner import do_logical_planning_phase
+    from opteryx.planner.physical_planner import create_physical_plan
     from opteryx.planner.sql_rewriter import do_sql_rewrite
-    from opteryx.planner.temporary_physical_planner import create_physical_plan
+    from opteryx.planner.temporary_physical_planner import create_legacy_physical_plan
     from opteryx.third_party import sqloxide
 
     # SQL Rewriter extracts temporal filters
@@ -200,6 +201,9 @@ def query_planner(
         # before we write the new optimizer and execution engine, convert to a V1 plan
         start = time.monotonic_ns()
         query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
-        physical_plan = create_physical_plan(optimized_plan, query_properties)
+        if config.EXPERIMENTAL_EXECUTION_ENGINE:
+            physical_plan = create_physical_plan(optimized_plan, query_properties)
+        else:
+            physical_plan = create_legacy_physical_plan(optimized_plan, query_properties)
         statistics.time_planning_physical_planner += time.monotonic_ns() - start
         yield physical_plan

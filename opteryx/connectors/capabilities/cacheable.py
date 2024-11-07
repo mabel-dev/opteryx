@@ -124,21 +124,25 @@ def async_read_thru_cache(func):
                 raise  # Optionally re-raise the error after logging it
 
         finally:
-            # If we found the file, see if we need to write it to the caches
-            if source != SOURCE_NOT_FOUND and evictions_remaining > 0:
+            if payload is None and read_buffer_ref is not None:
                 # we set a per-query eviction limit
                 payload = await pool.read(read_buffer_ref)  # type: ignore
 
-                if source != SOURCE_BUFFER_POOL and len(payload) < buffer_pool.size // 10:
-                    # if we didn't get it from the buffer pool (origin or remote cache) we add it
-                    evicted = buffer_pool.set(key, payload)
-                    if evicted:
-                        # if we're evicting items we just put in the cache, stop
-                        if evicted in my_keys:
-                            evictions_remaining = 0
-                        else:
-                            evictions_remaining -= 1
-                        statistics.cache_evictions += 1
+            # If we found the file, see if we need to write it to the caches
+            if (
+                not source in (SOURCE_NOT_FOUND, SOURCE_BUFFER_POOL)
+                and evictions_remaining > 0
+                and len(payload) < buffer_pool.size // 10
+            ):
+                # if we didn't get it from the buffer pool (origin or remote cache) we add it
+                evicted = buffer_pool.set(key, payload)
+                if evicted:
+                    # if we're evicting items we just put in the cache, stop
+                    if evicted in my_keys:
+                        evictions_remaining = 0
+                    else:
+                        evictions_remaining -= 1
+                    statistics.cache_evictions += 1
 
             if source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
                 # If we read from the source, it's not in the remote cache

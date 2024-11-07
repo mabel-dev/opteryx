@@ -19,6 +19,7 @@ import time
 from typing import Any
 from typing import Dict
 from typing import Generator
+from typing import Optional
 from typing import Tuple
 
 import pyarrow
@@ -34,6 +35,7 @@ from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -55,7 +57,7 @@ def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
     return f":{name}", parameters
 
 
-class SqlConnector(BaseConnector, PredicatePushable):
+class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
     __mode__ = "Sql"
     __type__ = "SQL"
 
@@ -95,6 +97,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
         BaseConnector.__init__(self, **kwargs)
+        LimitPushable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
         try:
@@ -129,6 +132,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
         columns: list = None,
         predicates: list = None,
         chunk_size: int = INITIAL_CHUNK_SIZE,  # type:ignore
+        limit: Optional[int] = None,
     ) -> Generator[pyarrow.Table, None, None]:  # type:ignore
         from sqlalchemy.sql import text
 
@@ -167,6 +171,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 right_value, parameters = _handle_operand(right_operand, parameters)
 
                 query_builder.WHERE(f"{left_value} {operator} {right_value}")
+
+        if limit is not None:
+            query_builder.LIMIT(str(limit))
 
         at_least_once = False
 

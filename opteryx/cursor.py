@@ -349,6 +349,8 @@ class Cursor(DataFrame):
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
+        if isinstance(result_data, pyarrow.Table):
+            return result_data
         try:
             return pyarrow.concat_tables(result_data, promote_options="permissive")
         except (

@@ -95,7 +95,7 @@ class LogicalPlanNode(Node):
                 if self.function == "GENERATE_SERIES":
                     return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
                 if self.function == "VALUES":
-                    return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+                    return f"VALUES (({', '.join(c.value for c in self.columns)}) x {len(self.values)} AS {self.alias})"
                 if self.function == "UNNEST":
                     return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.unnest_target if self.unnest_target else ''})"
                 if self.function == "HTTP":
@@ -119,9 +119,10 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
-                order_by_indicator = " +" if self.order_by_columns else ""
+                order_by_indicator = f" + ({', '.join(format_expression(col) for col in self.order_by_columns)})" if self.order_by_columns else ""
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)}){order_by_indicator}"
             if node_type == LogicalPlanStepType.Scan:
+                io_async = "ASYNC " if hasattr(self.connector, "async_read_blob") else ""
                 date_range = ""
                 if self.start_date == self.end_date and self.start_date is not None:
                     date_range = f" FOR '{self.start_date}'"
@@ -136,7 +137,10 @@ class LogicalPlanNode(Node):
                 predicates = ""
                 if self.predicates:
                     predicates = " (" + " AND ".join(map(format_expression, self.predicates)) + ")"
-                return f"READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}"
+                limit = ""
+                if self.limit:
+                    limit = f" LIMIT {self.limit}"
+                return f"{io_async}READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}{limit}"
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:
@@ -151,7 +155,7 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Union:
                 columns = ""
                 if self.columns:
-                    columns = " [" + ", ".join(c.qualified_name for c in self.columns) + "]"
+                    columns = " [" + ", ".join(c.current_name for c in self.columns) + "]"
                 return f"UNION {'' if self.modifier is None else self.modifier.upper()}{columns}"
 
             # fmt:on

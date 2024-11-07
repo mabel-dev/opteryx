@@ -32,6 +32,7 @@ from opteryx.planner.binder.binder import locate_identifier_in_loaded_schemas
 from opteryx.planner.binder.binder import merge_schemas
 from opteryx.planner.binder.binding_context import BindingContext
 from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanStepType
 from opteryx.virtual_datasets import derived
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -1084,20 +1085,17 @@ class BinderVisitor:
         # Visit node and return updated context
         return_node, context = self.visit_node(graph[node], context=context)
 
+        # We keep track of the relations which are 'visible' along each branch
         return_node.all_relations = {
             value for value in [return_node.relation, return_node.alias] if value is not None
         }
-        sub_plan = {
-            x for (s, t, r) in graph.breadth_first_search(node, reverse=True) for x in (s, t)
-        }
-        for plan_node_id in sub_plan:
-            plan_node = graph[plan_node_id]
-            if plan_node.alias:
-                return_node.all_relations.add(plan_node.alias)
-            if plan_node.relation:
-                return_node.all_relations.add(plan_node.relation)
-            if plan_node.all_relations:
-                return_node.all_relations.update(plan_node.all_relations)
+        # subqueries change the context of the query
+        if return_node.node_type not in (LogicalPlanStepType.Subquery, LogicalPlanStepType.Union):
+            children = graph.ingoing_edges(node)
+            for plan_node_id, _, _ in children:
+                plan_node = graph[plan_node_id]
+                if plan_node.all_relations:
+                    return_node.all_relations.update(plan_node.all_relations)
 
         return_node = self.post_bind(return_node)
         graph[node] = return_node
