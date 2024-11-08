@@ -264,7 +264,8 @@ class PhysicalPlan(Graph):
         from opteryx.operatorsv2 import JoinNode
         from opteryx.operatorsv2 import ReaderNode
         from opteryx.operatorsv2 import SetVariableNode
-        from opteryx.operatorsv2 import ShowValueNode, ShowCreateNode
+        from opteryx.operatorsv2 import ShowCreateNode
+        from opteryx.operatorsv2 import ShowValueNode
 
         # Validate query plan to ensure it's acyclic
         if not self.is_acyclic():
