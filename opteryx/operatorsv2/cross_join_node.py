@@ -306,6 +306,8 @@ class CrossJoinNode(JoinNode):
         self.right_relation = None
         self.hash_set = HashSet()
 
+        self.continue_executing = True
+
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
@@ -322,8 +324,12 @@ class CrossJoinNode(JoinNode):
         return f"CROSS JOIN {filters}"
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+        if not self.continue_executing:
+            return None
+
         if self._unnest_column is not None:
             if morsel == EOS:
+                self.continue_executing = False
                 return EOS
             if isinstance(self._unnest_column.value, tuple):
                 return list(

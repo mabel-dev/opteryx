@@ -16,13 +16,12 @@ Show Create Node
 This is a SQL Query Execution Plan Node.
 """
 
-from typing import Generator
-
 import pyarrow
 
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import QueryProperties
+
 from . import BasePlanNode
 
 
