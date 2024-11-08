@@ -44,12 +44,14 @@ def _simple_collector(schema):
 
 
 class ShowColumnsNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._full = config.get("full")
-        self._extended = config.get("extended")
-        self._schema = config.get("schema")
-        self._column_map = {c.schema_column.identity: c.source_column for c in config["columns"]}
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self._full = parameters.get("full")
+        self._extended = parameters.get("extended")
+        self._schema = parameters.get("schema")
+        self._column_map = {
+            c.schema_column.identity: c.source_column for c in parameters["columns"]
+        }
         self.collector = None
         self.seen = False
 

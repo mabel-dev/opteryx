@@ -187,10 +187,10 @@ class AggregateDataObject(BasePlanDataObject):
 
 
 class AggregateNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
-        self.aggregates = config.get("aggregates", [])
+        self.aggregates = parameters.get("aggregates", [])
 
         # get all the columns anywhere in the aggregates
         all_identifiers = [

@@ -28,12 +28,12 @@ from . import ReaderNode
 
 
 class ShowValueNode(ReaderNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
+    def __init__(self, properties: QueryProperties, **parameters):
+        ReaderNode.__init__(self, properties=properties, **parameters)
 
-        self.key = config.get("key")
-        self.kind = config.get("kind")
-        self.value = config.get("value")
+        self.key = parameters.get("key")
+        self.kind = parameters.get("kind")
+        self.value = parameters.get("value")
 
         if self.kind == "PARAMETER":
             if self.value[0] == "@":

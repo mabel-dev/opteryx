@@ -170,29 +170,27 @@ def _cross_join_unnest_column(
 
 
 def _cross_join_unnest_literal(
-    morsels: pyarrow.Table, source: Tuple, target_column: FlatColumn
+    morsel: pyarrow.Table, source: Tuple, target_column: FlatColumn
 ) -> Generator[pyarrow.Table, None, None]:
     joined_list_size = len(source)
 
-    # Loop through each morsel from the morsels execution
-    for left_morsel in morsels.execute():
-        # Break the morsel into batches to avoid memory issues
-        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
-            left_block = pyarrow.Table.from_batches([left_block], schema=left_morsel.schema)
-            block_size = left_block.num_rows
+    # Break the morsel into batches to avoid memory issues
+    for left_block in morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+        left_block = pyarrow.Table.from_batches([left_block], schema=morsel.schema)
+        block_size = left_block.num_rows
 
-            # Repeat each row in the table n times
-            repeated_indices = numpy.repeat(numpy.arange(block_size), joined_list_size)
-            appended_table = left_block.take(repeated_indices)
+        # Repeat each row in the table n times
+        repeated_indices = numpy.repeat(numpy.arange(block_size), joined_list_size)
+        appended_table = left_block.take(repeated_indices)
 
-            # Tile the array to match the new number of rows
-            tiled_array = numpy.tile(source, block_size)
+        # Tile the array to match the new number of rows
+        tiled_array = numpy.tile(source, block_size)
 
-            # Convert tiled_array to PyArrow array and append it to the table
-            array_column = pyarrow.array(tiled_array)
-            appended_table = appended_table.append_column(target_column.identity, array_column)
+        # Convert tiled_array to PyArrow array and append it to the table
+        array_column = pyarrow.array(tiled_array)
+        appended_table = appended_table.append_column(target_column.identity, array_column)
 
-            yield appended_table
+        yield appended_table
 
 
 def _cartesian_product(*arrays):
@@ -273,19 +271,19 @@ class CrossJoinNode(JoinNode):
     Implements a SQL CROSS JOIN
     """
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
+    def __init__(self, properties: QueryProperties, **parameters):
+        JoinNode.__init__(self, properties=properties, **parameters)
 
-        self.source = config.get("column")
+        self.source = parameters.get("column")
 
-        self._left_relation = config.get("left_relation_names")
-        self._right_relation = config.get("right_relation_names")
+        self._left_relation = parameters.get("left_relation_names")
+        self._right_relation = parameters.get("right_relation_names")
 
         # do we have unnest details?
-        self._unnest_column = config.get("unnest_column")
-        self._unnest_target = config.get("unnest_target")
-        self._filters = config.get("filters")
-        self._distinct = config.get("distinct", False)
+        self._unnest_column = parameters.get("unnest_column")
+        self._unnest_target = parameters.get("unnest_target")
+        self._filters = parameters.get("filters")
+        self._distinct = parameters.get("distinct", False)
 
         # handle variation in how the unnested column is represented
         if self._unnest_column:
@@ -297,7 +295,7 @@ class CrossJoinNode(JoinNode):
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
 
-            self._single_column = config.get("pre_update_columns", set()) == {
+            self._single_column = parameters.get("pre_update_columns", set()) == {
                 self._unnest_target.identity,
             }
 
@@ -330,7 +328,7 @@ class CrossJoinNode(JoinNode):
             if isinstance(self._unnest_column.value, tuple):
                 return list(
                     _cross_join_unnest_literal(
-                        morsels=morsel,
+                        morsel=morsel,
                         source=self._unnest_column.value,
                         target_column=self._unnest_target,
                     )

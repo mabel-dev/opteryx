@@ -34,9 +34,9 @@ from . import BasePlanNode
 
 
 class FilterNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.filter = config.get("filter")
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.filter = parameters.get("filter")
 
         self.function_evaluations = get_all_nodes_of_type(
             self.filter,

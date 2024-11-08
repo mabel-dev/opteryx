@@ -30,13 +30,13 @@ from . import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
+    def __init__(self, properties: QueryProperties, **parameters):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        super().__init__(properties=properties)
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
-        projection = config["projection"] + config.get("order_by_columns", [])
+        projection = parameters["projection"] + parameters.get("order_by_columns", [])
 
         self.projection = []
         for column in projection:
@@ -46,7 +46,7 @@ class ProjectionNode(BasePlanNode):
             column for column in projection if column.node_type != NodeType.IDENTIFIER
         ]
 
-        self.columns = config["projection"]
+        self.columns = parameters["projection"]
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

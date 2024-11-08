@@ -27,11 +27,11 @@ from . import BasePlanNode
 
 
 class DistinctNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
+    def __init__(self, properties: QueryProperties, **parameters):
         from opteryx.compiled.structures import HashSet
 
-        super().__init__(properties=properties)
-        self._distinct_on = config.get("on")
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self._distinct_on = parameters.get("on")
         if self._distinct_on:
             self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
         self.hash_set = HashSet()

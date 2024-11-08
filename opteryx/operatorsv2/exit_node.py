@@ -46,9 +46,9 @@ class ExitDataObject(BasePlanDataObject):
 
 
 class ExitNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.columns = config.get("columns", [])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.columns = parameters.get("columns", [])
 
         self.do = ExitDataObject(columns=self.columns)
 

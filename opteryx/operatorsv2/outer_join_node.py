@@ -249,17 +249,17 @@ def left_semi_join(
 
 
 class OuterJoinNode(JoinNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._join_type = config["type"]
-        self._on = config.get("on")
-        self._using = config.get("using")
+    def __init__(self, properties: QueryProperties, **parameters):
+        JoinNode.__init__(self, properties=properties, **parameters)
+        self._join_type = parameters["type"]
+        self._on = parameters.get("on")
+        self._using = parameters.get("using")
 
-        self._left_columns = config.get("left_columns")
-        self._left_relation = config.get("left_relation_names")
+        self._left_columns = parameters.get("left_columns")
+        self._left_relation = parameters.get("left_relation_names")
 
-        self._right_columns = config.get("right_columns")
-        self._right_relation = config.get("right_relation_names")
+        self._right_columns = parameters.get("right_columns")
+        self._right_relation = parameters.get("right_relation_names")
 
         self.stream = "left"
         self.left_buffer = []

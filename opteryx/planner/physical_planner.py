@@ -44,7 +44,9 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
         elif node_type == LogicalPlanStepType.Filter:
             node = operators.FilterNode(query_properties, filter=node_config["condition"], **{k:v for k,v in node_config.items() if k in ("all_relations",)})
         elif node_type == LogicalPlanStepType.FunctionDataset:
-            if node_config.get("function") != "UNNEST" or (len(node_config.get("args", [])) > 0 and not isinstance(node_config["args"][0], LogicalColumn)):
+            if False and node_config.get("function") == "UNNEST":
+                node = operators.NoOpNode(query_properties, **node_config)
+            elif node_config.get("function") != "UNNEST" or len(node_config.get("args", [])) > 0 and not isinstance(node_config["args"][0], LogicalColumn):
                 node = operators.FunctionDatasetNode(query_properties, **node_config)
             else:
                 node = operators.NoOpNode(query_properties, **node_config)
