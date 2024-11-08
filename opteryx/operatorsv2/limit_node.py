@@ -27,10 +27,10 @@ from . import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.limit = config.get("limit", float("inf"))
-        self.offset = config.get("offset", 0)
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.limit = parameters.get("limit", float("inf"))
+        self.offset = parameters.get("offset", 0)
 
         self.remaining_rows = self.limit if self.limit is not None else float("inf")
         self.rows_left_to_skip = max(0, self.offset)

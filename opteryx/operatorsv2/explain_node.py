@@ -27,7 +27,7 @@ from . import BasePlanNode
 
 class ExplainNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
-        super().__init__(properties=properties)
+        BasePlanNode.__init__(self, properties=properties, **parameters)
         self._query_plan = parameters.get("query_plan")
         self.analyze = parameters.get("analyze", False)
 

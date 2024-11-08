@@ -48,21 +48,41 @@ class RedundantOperationsStrategy(OptimizationStrategy):
         if node.node_type == LogicalPlanStepType.Project:
             providers = context.pre_optimized_tree.ingoing_edges(context.node_id)
             if len(providers) == 1:
-                provider_node = context.pre_optimized_tree[providers[0][0]]
+                provider_nid = providers[0][0]
+                provider_node = context.pre_optimized_tree[provider_nid]
                 if provider_node.node_type != LogicalPlanStepType.Subquery:
                     provider_columns = {c.schema_column.identity for c in provider_node.columns}
+                    # if the columns in the project are the same as the operator before it
+                    # we don't need to project
                     my_columns = {c.schema_column.identity for c in node.columns}
                     if provider_columns == my_columns:
+                        # we need to ensure we keep some of the context if not the step
+                        source_node_alias = context.optimized_plan[context.node_id].alias
+                        if provider_node.all_relations:
+                            provider_node.all_relations.add(source_node_alias)
+                        else:
+                            provider_node.all_relations = {source_node_alias}
+                        context.optimized_plan.add_node(provider_nid, provider_node)
+                        # remove the node
                         context.optimized_plan.remove_node(context.node_id, heal=True)
                         self.statistics.optimization_remove_redundant_operators_project += 1
 
         # Subqueries are useful for planning but not needed for execution
+        # We need to ensure the alias of the subquery is pushed
         if node.node_type == LogicalPlanStepType.Subquery:
             alias = node.alias
-            for nid, _, _ in context.optimized_plan.ingoing_edges(context.node_id):
+            nid = context.optimized_plan.ingoing_edges(context.node_id)[0][0]
+            updated_node = context.optimized_plan[nid]
+            # if we have multiple layers of subqueries, ignore everything other than the outermost
+            while updated_node.node_type == LogicalPlanStepType.Subquery:
+                nid = context.optimized_plan.ingoing_edges(nid)[0][0]
                 updated_node = context.optimized_plan[nid]
-                updated_node.alias = alias
-                context.optimized_plan.add_node(nid, updated_node)
+            updated_node.alias = alias
+            if updated_node.all_relations:
+                updated_node.all_relations.add(alias)
+            else:
+                updated_node.all_relations = {alias}
+            context.optimized_plan.add_node(nid, updated_node)
             context.optimized_plan.remove_node(context.node_id, heal=True)
             self.statistics.optimization_remove_redundant_operators_subquery += 1
 

@@ -264,7 +264,7 @@ class PhysicalPlan(Graph):
         from opteryx.operatorsv2 import JoinNode
         from opteryx.operatorsv2 import ReaderNode
         from opteryx.operatorsv2 import SetVariableNode
-        from opteryx.operatorsv2 import ShowValueNode
+        from opteryx.operatorsv2 import ShowValueNode, ShowCreateNode
 
         # Validate query plan to ensure it's acyclic
         if not self.is_acyclic():
@@ -284,21 +284,11 @@ class PhysicalPlan(Graph):
         joins = [(nid, node) for nid, node in self.nodes(True) if isinstance(node, JoinNode)]
         for nid, join in joins:
             for s, t, r in self.breadth_first_search(nid, reverse=True):
-                source_parameters = self[s].parameters
-                if set(join._left_relation).intersection(
-                    {
-                        source_parameters.get("alias"),
-                        source_parameters.get("relation"),
-                    }
-                ):
+                source_relations = self[s].parameters.get("all_relations", set())
+                if set(join._left_relation).intersection(source_relations):
                     self.remove_edge(s, t, r)
                     self.add_edge(s, t, "left")
-                elif set(join._right_relation).intersection(
-                    {
-                        source_parameters.get("alias"),
-                        source_parameters.get("relation"),
-                    }
-                ):
+                elif set(join._right_relation).intersection(source_relations):
                     self.remove_edge(s, t, r)
                     self.add_edge(s, t, "right")
 
@@ -310,7 +300,7 @@ class PhysicalPlan(Graph):
         elif isinstance(head_node, SetVariableNode):
             yield head_node(None), ResultType.NON_TABULAR
 
-        elif isinstance(head_node, ShowValueNode):
+        elif isinstance(head_node, (ShowValueNode, ShowCreateNode)):
             yield head_node(None), ResultType.TABULAR
 
         def inner_execute(plan):

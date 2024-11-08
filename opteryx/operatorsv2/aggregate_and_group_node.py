@@ -52,11 +52,11 @@ class AggregateAndGroupDataObject(BasePlanDataObject):
 
 
 class AggregateAndGroupNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.groups = list(config["groups"])
-        self.aggregates = list(config["aggregates"])
-        projection = list(config["projection"])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.groups = list(parameters["groups"])
+        self.aggregates = list(parameters["aggregates"])
+        projection = list(parameters["projection"])
 
         # we're going to preload some of the evaluation
 

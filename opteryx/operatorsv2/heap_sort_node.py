@@ -46,10 +46,10 @@ class HeapSortDataObject(BasePlanDataObject):
 
 
 class HeapSortNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.order_by = config.get("order_by", [])
-        self.limit: int = config.get("limit", -1)
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.order_by = parameters.get("order_by", [])
+        self.limit: int = parameters.get("limit", -1)
 
         self.do = HeapSortDataObject(order_by=self.order_by, limit=self.limit)
         self.mapped_order = []

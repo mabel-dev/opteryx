@@ -25,9 +25,9 @@ from . import BasePlanNode
 
 
 class UnionNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.columns = config.get("columns", [])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.columns = parameters.get("columns", [])
         self.column_ids = [c.schema_column.identity for c in self.columns]
         self.seen_first_eos = False
         self.schema = None

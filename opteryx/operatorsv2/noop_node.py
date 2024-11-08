@@ -24,8 +24,8 @@ from . import BasePlanNode
 
 
 class NoOpNode(BasePlanNode):
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
