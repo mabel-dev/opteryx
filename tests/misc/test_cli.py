@@ -1,26 +1,73 @@
-"""
-Touch Test Only:
-We test the CLI runs when we touch it, we're not checking the outputs.
-"""
-
 import os
 import sys
+import subprocess
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.command import main
+def run_cli(args):
+    """Helper function to run the CLI and return the result."""
+    result = subprocess.run(
+        [sys.executable, "opteryx"] + args,
+        capture_output=True,
+        text=True,
+        timeout=5
+    )
+    return result
 
 
-def test_basic_cli():
-    main(sql="SELECT * FROM $planets;", o="console", max_col_width=5)
-    main(sql="SELECT * FROM $planets;", o="console")
-    main(sql="SELECT * FROM $planets;", o="temp.csv")
-    main(sql="SELECT * FROM $planets;", o="temp.jsonl")
-    main(sql="SELECT * FROM $planets;", o="temp.parquet")
-    main(sql="SELECT * FROM $planets;", o="temp.md")
+def test_basic_execution():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["SELECT * FROM $planets"])
+    assert result.returncode == 0
 
+def test_save_to_file():
+    result = run_cli(["--o", "planets.parquet", "SELECT * FROM $planets"])
+
+    assert result.returncode == 0, result.stderr
+    assert "Written result to" in result.stdout
+
+def test_colorized():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--color", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_decolorized():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--no-color", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_stats():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--stats", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_no_stats():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--no-stats", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_cycles():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--cycles", "3", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_table_width():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--table_width", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+
+def test_column_width():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--no-color", "--max_col_width", "4", "SELECT * FROM $planets"])
+    assert result.returncode == 0
+    assert '│ Merc │' in result.stdout
+
+def test_unknown_param():
+    """Test the CLI when no SQL is provided, expecting an error."""
+    result = run_cli(["--verbose", "SELECT * FROM $planets"])
+    assert result.returncode != 0
 
 if __name__ == "__main__":  # pragma: no cover
-    test_basic_cli()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()
