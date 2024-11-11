@@ -113,6 +113,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
         columns: list = None,
         predicates: list = None,
         chunk_size: int = INITIAL_CHUNK_SIZE,  # type:ignore
+        limit: int = None,
     ) -> Generator[pyarrow.Table, None, None]:  # type:ignore
         self.chunk_size = chunk_size
 

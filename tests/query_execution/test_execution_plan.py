@@ -8,14 +8,14 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.models import ExecutionTree
+from opteryx.models import PhysicalPlan
 
 
 def test_linear_execution_tree():
     """
     Test an execution tree where each item has no more than one incoming edge
     """
-    tree = ExecutionTree()
+    tree = PhysicalPlan()
     tree.add_node("p", print)
     tree.add_node("m", max)
     tree.add_edge("p", "m")

@@ -1764,6 +1764,10 @@ STATEMENTS = [
         ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", 357, 1, None),
         ("SELECT SUBSTRING(name FROM -1 FOR 1) FROM $astronauts", 357, 1, None),
 
+        ("SELECT * FROM $planets LEFT JOIN $satellites USING(id) WHERE False", 0, 27, None),
+        ("SELECT * FROM (SELECT * FROM $planets WHERE False) AS S LEFT JOIN $satellites USING(id)", 0, 27, None),
+        ("SELECT * FROM $planets LEFT JOIN (SELECT * FROM $satellites WHERE False) AS S USING(id)", 9, 27, None),
+
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),
         # Handling NULL Comparisons in WHERE Clause

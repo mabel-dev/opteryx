@@ -85,11 +85,11 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
             left_indexes.clear()
             right_indexes.clear()
 
-    if len(left_indexes) > 0:
-        table = align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
-        yield table
-        left_indexes.clear()
-        right_indexes.clear()
+    # this may return an empty table each time - fix later
+    table = align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
+    yield table
+    left_indexes.clear()
+    right_indexes.clear()
 
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):

@@ -149,6 +149,9 @@ class ReaderNode(BasePlanNode):
         if len(self.hints) != 0:
             self.statistics.add_message("All HINTS are currently ignored")
 
+        self.statistics.rows_read += 0
+        self.statistics.columns_read += 0
+
     def to_dict(self) -> dict:
         return {
             "identity": f"read-{self.identity}",
@@ -213,6 +216,7 @@ class ReaderNode(BasePlanNode):
             self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             self.statistics.blobs_read += 1
             self.records_out += morsel.num_rows
+            self.statistics.rows_read += morsel.num_rows
             self.bytes_out += morsel.nbytes
             yield morsel
             start_clock = time.monotonic_ns()
