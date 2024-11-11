@@ -212,8 +212,13 @@ class PhysicalPlan(Graph):
         if analyze:
             # we don't want the results, just the details from the plan
             temp = None
-            for temp in self.push_executor():
-                pass
+            head_node = self.get_exit_points()[0]
+            query_head, _, _ = self.ingoing_edges(head_node)[0]
+            results = self.push_executor(query_head)
+            if results is not None:
+                results_generator, _ = next(results, ([], None))
+                for temp in results_generator:
+                    pass
             del temp
 
         plan = list(_inner_explain(head[0], 1))
@@ -259,7 +264,9 @@ class PhysicalPlan(Graph):
 
         return traversal_list
 
-    def push_executor(self) -> Tuple[Generator[pyarrow.Table, Any, Any], ResultType]:
+    def push_executor(
+        self, head_node=None
+    ) -> Tuple[Generator[pyarrow.Table, Any, Any], ResultType]:
         from opteryx.operatorsv2 import ExplainNode
         from opteryx.operatorsv2 import JoinNode
         from opteryx.operatorsv2 import ReaderNode
@@ -279,7 +286,8 @@ class PhysicalPlan(Graph):
                 f"Query plan has {len(head_nodes)} heads, expected exactly 1."
             )
 
-        head_node = self[head_nodes[0]]
+        if head_node is None:
+            head_node = self[head_nodes[0]]
 
         # add the left/right labels to the edges coming into the joins
         joins = [(nid, node) for nid, node in self.nodes(True) if isinstance(node, JoinNode)]
@@ -304,18 +312,20 @@ class PhysicalPlan(Graph):
         elif isinstance(head_node, (ShowValueNode, ShowCreateNode)):
             yield head_node(None), ResultType.TABULAR
 
-        def inner_execute(plan):
-            # Get the pump nodes from the plan and execute them in order
-            pump_nodes = [
-                (nid, node)
-                for nid, node in self.depth_first_search_flat()
-                if isinstance(node, ReaderNode)
-            ]
-            for pump_nid, pump_instance in pump_nodes:
-                for morsel in pump_instance(None):
-                    yield from plan.process_node(pump_nid, morsel)
+        else:
 
-        yield inner_execute(self), ResultType.TABULAR
+            def inner_execute(plan):
+                # Get the pump nodes from the plan and execute them in order
+                pump_nodes = [
+                    (nid, node)
+                    for nid, node in self.depth_first_search_flat()
+                    if isinstance(node, ReaderNode)
+                ]
+                for pump_nid, pump_instance in pump_nodes:
+                    for morsel in pump_instance(None):
+                        yield from plan.process_node(pump_nid, morsel)
+
+            yield inner_execute(self), ResultType.TABULAR
 
     def process_node(self, nid, morsel):
         from opteryx.operatorsv2 import ReaderNode

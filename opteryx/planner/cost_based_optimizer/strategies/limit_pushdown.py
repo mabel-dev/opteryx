@@ -51,6 +51,7 @@ class LimitPushdownStrategy(OptimizationStrategy):
             LogicalPlanStepType.Distinct,
             LogicalPlanStepType.Filter,
             LogicalPlanStepType.Join,
+            LogicalPlanStepType.Order,
             LogicalPlanStepType.Union,
             LogicalPlanStepType.Scan,
         ):

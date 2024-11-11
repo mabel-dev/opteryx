@@ -32,7 +32,7 @@ STATEMENTS = [
     ("SELECT name FROM (SELECT * FROM sqlite.planets) AS S LIMIT 3", 3),
 ]
 
-@pytest.mark.parametrize("query, expected_columns", STATEMENTS)
+@pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_sqlite_limit_pushdown(query, expected_rows):
     cur = opteryx.query(query)
     cur.materialize()

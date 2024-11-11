@@ -96,7 +96,7 @@ ORSO_TO_NUMPY_MAP = {
     OrsoTypes.STRUCT: numpy.dtype("O"),
     OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
     OrsoTypes.TIME: numpy.dtype("O"),
-    OrsoTypes.VARCHAR: numpy.unicode_(),
+    OrsoTypes.VARCHAR: numpy.dtype("U"),
     OrsoTypes.NULL: numpy.dtype("O"),
 }
 

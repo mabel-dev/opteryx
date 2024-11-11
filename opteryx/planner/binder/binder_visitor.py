@@ -1086,16 +1086,18 @@ class BinderVisitor:
         return_node, context = self.visit_node(graph[node], context=context)
 
         # We keep track of the relations which are 'visible' along each branch
-        return_node.all_relations = {
-            value for value in [return_node.relation, return_node.alias] if value is not None
-        }
-        # subqueries change the context of the query
-        if return_node.node_type not in (LogicalPlanStepType.Subquery, LogicalPlanStepType.Union):
-            children = graph.ingoing_edges(node)
-            for plan_node_id, _, _ in children:
-                plan_node = graph[plan_node_id]
-                if plan_node.all_relations:
-                    return_node.all_relations.update(plan_node.all_relations)
+        if return_node.all_relations is None:
+            return_node.all_relations = set()  # Initialize as an empty set if None
+
+        return_node.all_relations.update(
+            {value for value in [return_node.relation, return_node.alias] if value is not None}
+        )
+
+        children = graph.ingoing_edges(node)
+        for plan_node_id, _, _ in children:
+            plan_node = graph[plan_node_id]
+            if plan_node.all_relations:
+                return_node.all_relations.update(plan_node.all_relations)
 
         return_node = self.post_bind(return_node)
         graph[node] = return_node

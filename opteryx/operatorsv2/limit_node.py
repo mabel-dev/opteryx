@@ -54,7 +54,7 @@ class LimitNode(BasePlanNode):
         if self.rows_left_to_skip > 0:
             if self.rows_left_to_skip >= morsel.num_rows:
                 self.rows_left_to_skip -= morsel.num_rows
-                return None
+                return morsel.slice(offset=0, length=0)
             else:
                 morsel = morsel.slice(
                     offset=self.rows_left_to_skip, length=morsel.num_rows - self.rows_left_to_skip

@@ -56,7 +56,7 @@ test_cases = [
         query=f"SELECT name, kepler_name FROM {BUCKET_NAME}.exoplanets AS exoplanets INNER JOIN $planets AS planets ON rowid = id LIMIT 5",
         expected_rowcount=5,
         expected_columncount=2,
-        stats={"columns_read": 2},
+        stats={"columns_read": 4},
     ),
 ]
 

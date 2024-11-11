@@ -1146,6 +1146,7 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
                 filter_node = LogicalPlanNode(
                     node_type=LogicalPlanStepType.Filter,
                     condition=expression_tree,  # Use the built expression tree
+                    all_relations={node.relation, node.alias},
                 )
 
                 logical_plan.insert_node_after(random_string(), filter_node, nid)

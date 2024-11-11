@@ -7,11 +7,11 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.models.physical_plan import ExecutionTree
+from opteryx.models.physical_plan import PhysicalPlan
 
 
 def test_execution_tree():
-    et = ExecutionTree()
+    et = PhysicalPlan()
     et.add_node("a", None)
     et.add_node("b", None)
     et.add_edge("a", "b", "forwards")
