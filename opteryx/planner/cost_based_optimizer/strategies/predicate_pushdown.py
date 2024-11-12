@@ -11,7 +11,10 @@
 # limitations under the License.
 
 """
-PUSH DOWN
+Optimization Rule - Predicate Pushdown
+
+Type: Heuristic
+Goal: Filter rows as early as possible
 
 One main heuristic strategy is it eliminate rows to be processed as early
 as possible, to do that we try to push filter conditions to as close to the
@@ -51,6 +54,32 @@ def _add_condition(existing_condition, new_condition):
     return _and
 
 
+def _is_pushable_predicate(predicate) -> bool:
+    """
+    There's a few restrictions on what predicates can be pushed, most of the complex ones are
+    pushing filters into joins
+    """
+    if len(get_all_nodes_of_type(predicate, (NodeType.AGGREGATOR,))) > 0:
+        return False
+
+    identifiers = get_all_nodes_of_type(predicate, (NodeType.IDENTIFIER,))
+    if len(identifiers) < 2:
+        return True
+    if len(identifiers) > 2:
+        return False
+    if len(identifiers) == 2 and (identifiers[0].source == identifiers[1].source):
+        return False
+    if len(identifiers) == 2 and predicate.value != "Eq":
+        return False
+    if predicate.left.node_type not in (NodeType.LITERAL, NodeType.IDENTIFIER):
+        return False
+    if predicate.right.node_type not in (NodeType.LITERAL, NodeType.IDENTIFIER):
+        return False
+    if predicate.right.node_type == predicate.left.node_type:
+        return False
+    return True
+
+
 class PredicatePushdownStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
@@ -62,7 +91,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         ):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
-            self.statistics.optimization_predicate_pushdown += 1
             context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
             if context.last_nid:
                 context.optimized_plan.add_edge(context.node_id, context.last_nid)
@@ -79,11 +107,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
-            if (
-                len(node.relations) > 0
-                and not get_all_nodes_of_type(node.condition, (NodeType.AGGREGATOR,))
-                and len(get_all_nodes_of_type(node.condition, (NodeType.IDENTIFIER,))) == 1
-            ):
+            if _is_pushable_predicate(node.condition):
                 # record where the node was, so we can put it back
                 node.nid = context.node_id
                 node.plan_path = context.optimized_plan.trace_to_root(context.node_id)

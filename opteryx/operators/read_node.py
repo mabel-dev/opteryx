@@ -144,6 +144,7 @@ class ReaderNode(BasePlanNode):
 
         self.connector = parameters.get("connector")
         self.schema = parameters.get("schema")
+        self.limit = parameters.get("limit")
 
         if len(self.hints) != 0:
             self.statistics.add_message("All HINTS are currently ignored")
@@ -201,7 +202,9 @@ class ReaderNode(BasePlanNode):
         orso_schema.columns = orso_schema_cols
         arrow_schema = None
         start_clock = time.monotonic_ns()
-        reader = self.connector.read_dataset(columns=self.columns, predicates=self.predicates)
+        reader = self.connector.read_dataset(
+            columns=self.columns, predicates=self.predicates, limit=self.limit
+        )
         for morsel in reader:
             # try to make each morsel have the same schema
             morsel = struct_to_jsonb(morsel)

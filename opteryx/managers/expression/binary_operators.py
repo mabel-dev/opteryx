@@ -18,33 +18,41 @@ from typing import Union
 
 import numpy
 import pyarrow
+import simdjson
 from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
+
+# Initialize simdjson parser once
+parser = simdjson.Parser()
 
 
 def ArrowOp(documents, elements) -> pyarrow.Array:
     """JSON Selector"""
     element = elements[0]
 
-    # if it's dicts, extract the value from the dict
+    # Fast path: if the documents are dicts, delegate to the cython optimized op
     if len(documents) > 0 and isinstance(documents[0], dict):
         return list_ops.cython_arrow_op(documents, element)
 
-    # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
-    # so we can use a library which allows us to access the values directly
-    import simdjson
+    if hasattr(documents, "to_numpy"):
+        documents = documents.to_numpy(zero_copy_only=False)
 
+    # Function to extract value from a document
     def extract(doc: bytes, elem: Union[bytes, str]) -> Any:
-        value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+        value = parser.parse(doc).get(elem)  # type:ignore
         if hasattr(value, "as_list"):
             return value.as_list()
         if hasattr(value, "as_dict"):
-            return value.as_dict()
+            return value.mini
         return value
 
-    return pyarrow.array([None if d is None else extract(d, element) for d in documents])
+    # Use a generator expression to lazily evaluate the extraction
+    extracted_values = (None if d is None else extract(d, element) for d in documents)
+
+    # Return the result as a PyArrow array
+    return pyarrow.array(extracted_values)
 
 
 def LongArrowOp(documents, elements) -> pyarrow.Array:
@@ -53,6 +61,9 @@ def LongArrowOp(documents, elements) -> pyarrow.Array:
 
     if len(documents) > 0 and isinstance(documents[0], dict):
         return list_ops.cython_long_arrow_op(documents, element)
+
+    if hasattr(documents, "to_numpy"):
+        documents = documents.to_numpy(zero_copy_only=False)
 
     import simdjson
 

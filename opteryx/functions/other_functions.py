@@ -15,6 +15,7 @@ from typing import Optional
 
 import numpy
 import pyarrow
+import simdjson
 from pyarrow import compute
 
 from opteryx.exceptions import SqlError
@@ -196,17 +197,46 @@ def cosine_similarity(arr, val):
     return similarities
 
 
-def jsonb_object_keys(arr):
+def jsonb_object_keys(arr: numpy.ndarray):
+    """
+    Extract the keys from a NumPy array of JSON objects or JSON strings/bytes.
+
+    Parameters:
+        arr: numpy.ndarray
+            A NumPy array of dictionaries or JSON-encoded strings/bytes.
+
+    Returns:
+        pyarrow.Array
+            A PyArrow Array containing lists of keys for each input element.
+    """
+    # Early exit for empty input
     if len(arr) == 0:
-        return []
-    result = []
+        return numpy.array([])
+
+    # we may get pyarrow arrays here - usually not though
+    if isinstance(arr, pyarrow.Array):
+        arr = arr.to_numpy(zero_copy_only=False)
+
+    # Determine type based on dtype of the array
+    if not numpy.issubdtype(arr.dtype, numpy.object_):
+        raise ValueError(
+            "Unsupported array dtype. Expected object dtype for dicts or strings/bytes."
+        )
+
+        # Pre-create the result array as a NumPy boolean array set to False
+    result = numpy.empty(arr.shape, dtype=list)
+
     if isinstance(arr[0], dict):
-        result = [[str(key) for key in row] for row in arr]
-    if isinstance(arr[0], (str, bytes)):
-        import simdjson
+        # Process dictionaries
+        for i, row in enumerate(arr):
+            result[i] = [str(key) for key in row.keys()]
+    elif isinstance(arr[0], (str, bytes)):
+        # SIMD-JSON parser instance for JSON string/bytes
+        parser = simdjson.Parser()
+        for i, row in enumerate(arr):
+            result[i] = [str(key) for key in parser.parse(row).keys()]
+    else:
+        raise ValueError("Unsupported dtype for array elements. Expected dict, str, or bytes.")
 
-        def keys(doc):
-            return simdjson.Parser().parse(doc).keys()  # type:ignore
-
-        result = [[str(key) for key in keys(row)] for row in arr]
-    return pyarrow.array(result)
+    # Return the result as a PyArrow array
+    return result

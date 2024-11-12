@@ -68,11 +68,13 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             return context
 
         if node.node_type in (
-            LogicalPlanStepType.Join,
-            LogicalPlanStepType.Scan,
-            LogicalPlanStepType.AggregateAndGroup,
             LogicalPlanStepType.Aggregate,
+            LogicalPlanStepType.AggregateAndGroup,
+            LogicalPlanStepType.Join,
+            LogicalPlanStepType.Limit,
+            LogicalPlanStepType.Scan,
             LogicalPlanStepType.Subquery,
+            LogicalPlanStepType.Union,
         ):
             # we don't push past here
             context.collected_distincts.clear()

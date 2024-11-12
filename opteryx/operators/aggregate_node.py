@@ -21,6 +21,7 @@ This node performs aggregates without performing groupings.
 import time
 from dataclasses import dataclass
 from typing import Generator
+from typing import List
 
 import numpy
 import pyarrow
@@ -80,14 +81,13 @@ def _count_star(morsel_promise, column_name):
     yield table
 
 
-def project(tables, column_names):
-    for table in tables:
-        row_count = table.num_rows
-        if len(column_names) > 0:
-            yield table.select(dict.fromkeys(column_names))
-        else:
-            # if we can't find the column, add a placeholder column
-            yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
+def project(table: pyarrow.Table, column_names: List) -> pyarrow.Table:
+    row_count = table.num_rows
+    if len(column_names) > 0:
+        return table.select(dict.fromkeys(column_names))
+    else:
+        # if we can't find the column, add a placeholder column
+        return pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
 def build_aggregations(aggregators):

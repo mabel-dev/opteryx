@@ -53,7 +53,7 @@ STATEMENTS = [
 ]
 
 @pytest.mark.parametrize("query, expected_columns", STATEMENTS)
-def test_parquet_projection_pushdown(query, expected_columns):
+def test_sqlite_projection_pushdown(query, expected_columns):
     cur = opteryx.query(query)
     cur.materialize()
     assert cur.stats["columns_read"] == expected_columns, cur.stats
@@ -83,7 +83,7 @@ if __name__ == "__main__":  # pragma: no cover
         )
         try:
             start = time.monotonic_ns()
-            test_parquet_projection_pushdown(statement, read_columns)
+            test_sqlite_projection_pushdown(statement, read_columns)
             print(
                 f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",
                 end="",

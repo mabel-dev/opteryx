@@ -12,7 +12,8 @@
 
 from opteryx.connectors.capabilities.asynchronous import Asynchronous
 from opteryx.connectors.capabilities.cacheable import Cacheable
+from opteryx.connectors.capabilities.limit_pushable import LimitPushable
 from opteryx.connectors.capabilities.partitionable import Partitionable
 from opteryx.connectors.capabilities.predicate_pushable import PredicatePushable
 
-__all__ = ("Asynchronous", "Cacheable", "Partitionable", "PredicatePushable")
+__all__ = ("Asynchronous", "Cacheable", "LimitPushable", "Partitionable", "PredicatePushable")

@@ -22,12 +22,12 @@ from orso.schema import OrsoTypes
 
 from opteryx import operators
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.models import ExecutionTree
+from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
 
-def create_physical_plan(logical_plan, query_properties) -> ExecutionTree:
-    plan = ExecutionTree()
+def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
+    plan = PhysicalPlan()
 
     for nid, logical_node in logical_plan.nodes(data=True):
         node_type = logical_node.node_type
