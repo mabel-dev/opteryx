@@ -25,6 +25,8 @@ class VersionStatus(Enum):
     BETA = "beta"
     RELEASE = "release"
 
+
+_major = 0
 _minor = 19
 _revision = 0
 _status = VersionStatus.ALPHA
