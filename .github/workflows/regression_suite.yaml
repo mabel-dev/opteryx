@@ -74,6 +74,7 @@ jobs:
           DATA_CATALOG_PROVIDER: 'TARCHIA'
           DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
           TARCHIA_KEY: '${{ secrets.TARCHIA_KEY }}'
+          EXPERIMENTAL_EXECUTION_ENGINE: 'true'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=90 -m
