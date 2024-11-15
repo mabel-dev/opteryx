@@ -47,6 +47,7 @@ Example:
 
 import platform
 from functools import wraps
+from typing import Optional
 
 
 def is_arm():  # pragma: no cover
@@ -177,6 +178,13 @@ def skip_if(is_true: bool = True):  # pragma: no cover
         return wrapper
 
     return decorate
+
+
+def find_file(path: str) -> Optional[str]:
+    import glob
+
+    matches = glob.iglob(path)
+    return next(matches, None)
 
 
 def download_file(url: str, path: str):  # pragma: no cover
