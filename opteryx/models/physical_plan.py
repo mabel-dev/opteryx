@@ -21,12 +21,10 @@ The execution tree contains functionality to:
 
 """
 
-import gc
 from typing import Any
 from typing import Generator
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 import pyarrow
 
@@ -43,114 +41,7 @@ class PhysicalPlan(Graph):
     complex code which is the planner from the tree that describes the plan.
     """
 
-    def execute(self) -> Generator[Tuple[Union[pyarrow.Table, Any], ResultType], None, None]:
-        if config.EXPERIMENTAL_EXECUTION_ENGINE:
-            return self.push_executor()
-        return self.legacy_executor()
-
-    def legacy_executor(
-        self,
-    ) -> Generator[Tuple[Union[pyarrow.Table, Any], ResultType], None, None]:
-        """
-        Implements a 'pull' model execution engine, pulling records starting from
-        the last stage (head) of the query plan, and working backwards towards the first stage.
-
-        Yields:
-            tuple: The first element is the result (either tabular data or a
-                NonTabularResult object). The second element is a ResultType enum,
-                indicating the type of the result.
-        """
-        from opteryx.models import NonTabularResult
-        from opteryx.operators import ExplainNode
-
-        def map_operators_to_producers(nodes: list) -> None:
-            """
-            Walks through the query plan, linking each operator node with its data producers.
-
-            Parameters:
-                nodes: list
-                    List of operator nodes in the query plan.
-            """
-
-            for node in nodes:
-                producers = self.ingoing_edges(node)
-                operator = self[node]
-
-                if len(producers) == 1:
-                    # If there is only one producer, set it directly
-                    operator.set_producers([self[producers[0][0]]])
-                elif len(producers) == 2 and hasattr(operator, "_left_relation"):
-                    left_producer = None
-                    right_producer = None
-
-                    left_relation = operator._left_relation
-                    right_relation = operator._right_relation
-                    for source, target, relation in producers:
-                        for s, t, r in self.breadth_first_search(source, reverse=True) + [
-                            (source, target, relation)
-                        ]:
-                            if set(left_relation).intersection(
-                                {
-                                    self[s].parameters.get("alias"),
-                                    self[s].parameters.get("relation"),
-                                }
-                            ):
-                                left_producer = self[source]
-                            elif set(right_relation).intersection(
-                                {
-                                    self[s].parameters.get("alias"),
-                                    self[s].parameters.get("relation"),
-                                }
-                            ):
-                                right_producer = self[source]
-
-                    if left_producer and right_producer:
-                        operator.set_producers([left_producer, right_producer])
-                    else:
-                        # Default to setting producers as in the current method if left and right cannot be determined
-                        operator.set_producers([self[src_node[0]] for src_node in producers])
-                else:
-                    # Handle cases with more than two producers if applicable
-                    operator.set_producers([self[src_node[0]] for src_node in producers])
-
-                # Recursively process the producers
-                map_operators_to_producers([src_node[0] for src_node in producers])
-
-        # Validate query plan to ensure it's acyclic
-        if not self.is_acyclic():
-            raise InvalidInternalStateError("Query plan is cyclic, cannot execute.")
-
-        # Retrieve the tail of the query plan, which should ideally be a single head node
-        head_nodes = list(set(self.get_exit_points()))
-
-        if len(head_nodes) != 1:
-            raise InvalidInternalStateError(
-                f"Query plan has {len(head_nodes)} heads, expected exactly 1."
-            )
-
-        head_node = head_nodes[0]
-
-        # Special case handling for 'Explain' queries
-        if isinstance(self[head_node], ExplainNode):
-            yield self.explain(), ResultType.TABULAR
-            return
-
-        # Link operators with their producers
-        map_operators_to_producers([head_node])
-
-        # Execute the head node's operation
-        operator = self[head_node]
-        gc.disable()
-        results = operator.execute()
-        gc.enable()
-
-        # If the results are non-tabular, handle them accordingly
-        if isinstance(results, NonTabularResult):
-            yield results, ResultType.NON_TABULAR
-        else:
-            yield results, ResultType.TABULAR
-
-    def explain(self) -> Generator[pyarrow.Table, None, None]:
+    def explainv2(self, analyze: bool) -> Generator[pyarrow.Table, None, None]:
         from opteryx import operators
 
         def _inner_explain(node, depth):
@@ -163,35 +54,6 @@ class PhysicalPlan(Graph):
                     yield from _inner_explain(operator_name[0], depth)
                     continue
                 elif isinstance(operator, operators.BasePlanNode):
-                    yield {
-                        "operator": operator.name,
-                        "config": operator.config,
-                        "depth": depth,
-                    }
-                    yield from _inner_explain(operator_name[0], depth + 1)
-
-        head = list(dict.fromkeys(self.get_exit_points()))
-        if len(head) != 1:  # pragma: no cover
-            raise InvalidInternalStateError(f"Problem with the plan - it has {len(head)} heads.")
-        plan = list(_inner_explain(head[0], 1))
-
-        table = pyarrow.Table.from_pylist(plan)
-
-        yield table
-
-    def explainv2(self, analyze: bool) -> Generator[pyarrow.Table, None, None]:
-        from opteryx import operatorsv2
-
-        def _inner_explain(node, depth):
-            incoming_operators = self.ingoing_edges(node)
-            for operator_name in incoming_operators:
-                operator = self[operator_name[0]]
-                if isinstance(
-                    operator, (operatorsv2.ExitNode, operatorsv2.ExplainNode)
-                ):  # Skip ExitNode
-                    yield from _inner_explain(operator_name[0], depth)
-                    continue
-                elif isinstance(operator, operatorsv2.BasePlanNode):
                     record = {
                         "tree": depth,
                         "operator": operator.name,
@@ -214,7 +76,7 @@ class PhysicalPlan(Graph):
             temp = None
             head_node = self.get_exit_points()[0]
             query_head, _, _ = self.ingoing_edges(head_node)[0]
-            results = self.push_executor(query_head)
+            results = self.execute(query_head)
             if results is not None:
                 results_generator, _ = next(results, ([], None))
                 for temp in results_generator:
@@ -264,15 +126,13 @@ class PhysicalPlan(Graph):
 
         return traversal_list
 
-    def push_executor(
-        self, head_node=None
-    ) -> Tuple[Generator[pyarrow.Table, Any, Any], ResultType]:
-        from opteryx.operatorsv2 import ExplainNode
-        from opteryx.operatorsv2 import JoinNode
-        from opteryx.operatorsv2 import ReaderNode
-        from opteryx.operatorsv2 import SetVariableNode
-        from opteryx.operatorsv2 import ShowCreateNode
-        from opteryx.operatorsv2 import ShowValueNode
+    def execute(self, head_node=None) -> Tuple[Generator[pyarrow.Table, Any, Any], ResultType]:
+        from opteryx.operators import ExplainNode
+        from opteryx.operators import JoinNode
+        from opteryx.operators import ReaderNode
+        from opteryx.operators import SetVariableNode
+        from opteryx.operators import ShowCreateNode
+        from opteryx.operators import ShowValueNode
 
         # Validate query plan to ensure it's acyclic
         if not self.is_acyclic():
@@ -328,7 +188,7 @@ class PhysicalPlan(Graph):
             yield inner_execute(self), ResultType.TABULAR
 
     def process_node(self, nid, morsel):
-        from opteryx.operatorsv2 import ReaderNode
+        from opteryx.operators import ReaderNode
 
         node = self[nid]
 
@@ -363,6 +223,3 @@ class PhysicalPlan(Graph):
 
     def __del__(self):
         pass
-
-
-#        print(self.sensors())

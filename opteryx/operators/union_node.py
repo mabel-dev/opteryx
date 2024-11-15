@@ -16,20 +16,21 @@ Union Node
 This is a SQL Query Execution Plan Node.
 """
 
-from typing import Generator
+from pyarrow import Table
 
+from opteryx import EOS
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class UnionNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.columns = config.get("columns", [])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.columns = parameters.get("columns", [])
         self.column_ids = [c.schema_column.identity for c in self.columns]
+        self.seen_first_eos = False
+        self.schema = None
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -43,18 +44,21 @@ class UnionNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Generator:
+    def execute(self, morsel: Table) -> Table:
         """
         Union needs to ensure the column names are the same and that
         coercible types are coerced.
         """
-        schema = None
-        if self._producers:
-            for morsels in self._producers:
-                for morsel in morsels.execute():
-                    if schema is None:
-                        schema = morsel.schema
-                    else:
-                        morsel = morsel.rename_columns(schema.names)
-                        morsel = morsel.cast(schema)
-                    yield morsel.select(self.column_ids)
+        if morsel == EOS and self.seen_first_eos:
+            return [EOS]
+        if morsel == EOS:
+            self.seen_first_eos = True
+            return None
+
+        if self.schema is None:
+            self.schema = morsel.schema
+        else:
+            morsel = morsel.rename_columns(self.schema.names)
+            morsel = morsel.cast(self.schema)
+
+        return morsel.select(self.column_ids)

@@ -13,7 +13,7 @@
 
 from orso.schema import OrsoTypes
 
-from opteryx import operatorsv2 as operators
+from opteryx import operators as operators
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import LogicalColumn
 from opteryx.models import PhysicalPlan

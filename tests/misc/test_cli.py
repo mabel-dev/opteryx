@@ -7,11 +7,12 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 def run_cli(args):
     """Helper function to run the CLI and return the result."""
     result = subprocess.run(
-        [sys.executable, "opteryx"] + args,
+        [sys.executable, "opteryx/__main__.py"] + args,
         capture_output=True,
         text=True,
         timeout=5
     )
+
     return result
 
 
@@ -59,8 +60,9 @@ def test_table_width():
 def test_column_width():
     """Test the CLI when no SQL is provided, expecting an error."""
     result = run_cli(["--no-color", "--max_col_width", "4", "SELECT * FROM $planets"])
+    output = result.stdout
     assert result.returncode == 0
-    assert '│ Merc │' in result.stdout
+    assert '│ Merc │' in output, output
 
 def test_unknown_param():
     """Test the CLI when no SQL is provided, expecting an error."""

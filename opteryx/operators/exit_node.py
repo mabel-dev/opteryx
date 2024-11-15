@@ -24,19 +24,20 @@ This does two things that the projection node doesn't do:
 This node doesn't do any calculations, it is a pure Projection.
 """
 
-import time
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Generator
 from typing import List
 
+from pyarrow import Table
+
+from opteryx import EOS
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.models import LogicalColumn
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
 from opteryx.operators.base_plan_node import BasePlanDataObject
+
+from . import BasePlanNode
 
 
 @dataclass
@@ -45,11 +46,9 @@ class ExitDataObject(BasePlanDataObject):
 
 
 class ExitNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.columns = config.get("columns", [])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.columns = parameters.get("columns", [])
 
         self.do = ExitDataObject(columns=self.columns)
 
@@ -65,10 +64,10 @@ class ExitNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Exit"
 
-    def execute(self) -> Generator:
-        start = time.monotonic_ns()
-        morsels = self._producers[0]  # type:ignore
-        at_least_one = False
+    def execute(self, morsel: Table) -> Table:
+        # Exit doesn't return EOS
+        if morsel == EOS:
+            return None
 
         final_columns = []
         final_names = []
@@ -93,28 +92,17 @@ class ExitNode(BasePlanNode):
                 # else:
                 final_names.append(column.qualified_name)
 
-        self.statistics.time_exiting += time.monotonic_ns() - start
-        for morsel in morsels.execute():
-            start = time.monotonic_ns()
-            if not set(final_columns).issubset(morsel.column_names):  # pragma: no cover
-                mapping = {name: int_name for name, int_name in zip(final_columns, final_names)}
-                missing_references = {
-                    mapping.get(ref): ref for ref in final_columns if ref not in morsel.column_names
-                }
+        if not set(final_columns).issubset(morsel.column_names):  # pragma: no cover
+            mapping = {name: int_name for name, int_name in zip(final_columns, final_names)}
+            missing_references = {
+                mapping.get(ref): ref for ref in final_columns if ref not in morsel.column_names
+            }
 
-                raise InvalidInternalStateError(
-                    f"The following fields were not in the resultset - {', '.join(missing_references.keys())}"
-                )
+            raise InvalidInternalStateError(
+                f"The following fields were not in the resultset - {', '.join(missing_references.keys())}"
+            )
 
-            morsel = morsel.select(final_columns)
-            morsel = morsel.rename_columns(final_names)
+        morsel = morsel.select(final_columns)
+        morsel = morsel.rename_columns(final_names)
 
-            self.statistics.time_exiting += time.monotonic_ns() - start
-            yield morsel
-            at_least_one = True
-            start = time.monotonic_ns()
-
-        if not at_least_one:
-            from orso import DataFrame
-
-            yield DataFrame(schema=final_names).arrow()
+        return morsel
