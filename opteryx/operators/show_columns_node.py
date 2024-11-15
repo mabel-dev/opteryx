@@ -18,13 +18,12 @@ This is a SQL Query Execution Plan Node.
 Gives information about a dataset's columns
 """
 
-from typing import Generator
-
 import pyarrow
 
+from opteryx import EOS
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 def _simple_collector(schema):
@@ -41,39 +40,20 @@ def _simple_collector(schema):
         }
         buffer.append(new_row)
 
-    table = pyarrow.Table.from_pylist(buffer)
-    return table
-
-
-def _extended_collector(morsels):
-    """
-    Collect summary statistics about each column
-
-    We use orso, which means converting to an orso DataFrame and then converting back
-    to a PyArrow table.
-    """
-    import orso
-
-    profile = None
-    for morsel in morsels:
-        df = orso.DataFrame.from_arrow(morsel)
-        if profile is None:
-            profile = df.profile
-        else:
-            profile += df.profile
-
-    return profile.to_dicts()
+    return pyarrow.Table.from_pylist(buffer)
 
 
 class ShowColumnsNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._full = config.get("full")
-        self._extended = config.get("extended")
-        self._schema = config.get("schema")
-        self._column_map = {c.schema_column.identity: c.source_column for c in config["columns"]}
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self._full = parameters.get("full")
+        self._extended = parameters.get("extended")
+        self._schema = parameters.get("schema")
+        self._column_map = {
+            c.schema_column.identity: c.source_column for c in parameters["columns"]
+        }
+        self.collector = None
+        self.seen = False
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -91,28 +71,32 @@ class ShowColumnsNode(BasePlanNode):
         dic["name"] = renames[dic["name"]]
         return dic
 
-    def execute(self) -> Generator:
-        morsels = self._producers[0]  # type:ignore
+    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+        from orso import DataFrame
 
-        if morsels is None:
+        if self.seen:
             return None
 
         if not (self._full or self._extended):
             # if it's not full or extended, do just get the list of columns and their
             # types
-            yield _simple_collector(self._schema)
-            return
+            self.seen = True
+            return _simple_collector(self._schema)
 
-        if self._full and not self._extended:
+        if self._full or self._extended:
             # we're going to read the full table, so we can count stuff
-            dicts = _extended_collector(morsels.execute())
-            dicts = [self.rename_column(d, self._column_map) for d in dicts]
-            yield pyarrow.Table.from_pylist(dicts)
-            return
 
-        if self._extended:
-            # get everything we can reasonable get
-            dicts = _extended_collector(morsels.execute())
-            dicts = [self.rename_column(d, self._column_map) for d in dicts]
-            yield pyarrow.Table.from_pylist(dicts)
-            return
+            if morsel == EOS:
+                dicts = self.collector.to_dicts()
+                dicts = [self.rename_column(d, self._column_map) for d in dicts]
+                self.seen = True
+                return pyarrow.Table.from_pylist(dicts)
+
+            df = DataFrame.from_arrow(morsel)
+
+            if self.collector is None:
+                self.collector = df.profile
+            else:
+                self.collector += df.profile
+
+            return None

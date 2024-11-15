@@ -1,3 +1,5 @@
+# isort: skip
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from .base_plan_node import BasePlanDataObject  # isort: skip
-from .base_plan_node import BasePlanNode  # isort: skip
-from .base_plan_node import OperatorType  # isort: skip
+from .base_plan_node import BasePlanNode, JoinNode  # isort: skip
 
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS
@@ -31,8 +33,8 @@ from .heap_sort_node import HeapSortNode  # Heap
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
-from .join_node import JoinNode
 from .limit_node import LimitNode  # select the first N records
+from .pyarrow_join_node import PyArrowJoinNode
 
 # from .metadata_writer_node import MetadataWriterNode
 # from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels

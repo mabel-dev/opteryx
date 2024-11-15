@@ -18,25 +18,20 @@ This is a SQL Query Execution Plan Node.
 This Node eliminates duplicate records.
 """
 
-import time
-from typing import Generator
+from pyarrow import Table
 
-import pyarrow
-import pyarrow.compute
-
+from opteryx import EOS
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class DistinctNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
+    def __init__(self, properties: QueryProperties, **parameters):
         from opteryx.compiled.structures import HashSet
 
-        super().__init__(properties=properties)
-        self._distinct_on = config.get("on")
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self._distinct_on = parameters.get("on")
         if self._distinct_on:
             self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
         self.hash_set = HashSet()
@@ -53,7 +48,7 @@ class DistinctNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Distinction"
 
-    def execute(self) -> Generator[pyarrow.Table, None, None]:
+    def execute(self, morsel: Table) -> Table:
         from opteryx.compiled.structures import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
@@ -63,22 +58,16 @@ class DistinctNode(BasePlanNode):
         # Being able to run morsel-by-morsel means if we have a LIMIT clause, we can
         # limit processing
 
-        morsels = self._producers[0]  # type:ignore
-        at_least_one = False
+        if morsel == EOS:
+            return EOS
 
-        for morsel in morsels.execute():
-            start = time.monotonic_ns()
-            unique_indexes, self.hash_set = distinct(
-                morsel, columns=self._distinct_on, seen_hashes=self.hash_set
-            )
+        unique_indexes, self.hash_set = distinct(
+            morsel, columns=self._distinct_on, seen_hashes=self.hash_set
+        )
 
-            if len(unique_indexes) > 0:
-                distinct_table = morsel.take(unique_indexes)
-                self.statistics.time_distincting += time.monotonic_ns() - start
-                yield distinct_table
-                at_least_one = True
-            elif not at_least_one:
-                distinct_table = morsel.slice(0, 0)
-                self.statistics.time_distincting += time.monotonic_ns() - start
-                yield distinct_table
-                at_least_one = True
+        if len(unique_indexes) > 0:
+            distinct_table = morsel.take(unique_indexes)
+            return distinct_table
+        else:
+            distinct_table = morsel.slice(0, 0)
+            return distinct_table

@@ -172,9 +172,6 @@ DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
 DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG_CONFIGURATION")
 """Data Catalog configuration, different catalogs have different config formats."""
 
-EXPERIMENTAL_EXECUTION_ENGINE: bool = bool(get("EXPERIMENTAL_EXECUTION_ENGINE", False))
-"""Use the experimental/incomplete generation 2 execution engine."""
-
 # GCP project ID - for Google Cloud Data
 GCP_PROJECT_ID: str = get("GCP_PROJECT_ID") 
 # don't try to raise the priority of the server process

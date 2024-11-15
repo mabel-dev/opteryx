@@ -18,19 +18,18 @@ This is a SQL Query Execution Plan Node.
 This writes out a query plan
 """
 
-from typing import Generator
+from pyarrow import Table
 
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class ExplainNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._query_plan = config.get("query_plan")
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self._query_plan = parameters.get("query_plan")
+        self.analyze = parameters.get("analyze", False)
 
     @property
     def name(self):  # pragma: no cover
@@ -44,6 +43,6 @@ class ExplainNode(BasePlanNode):
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
-    def execute(self) -> Generator:
+    def execute(self, morsel: Table) -> Table:
         if self._query_plan:
-            yield from self._query_plan.explain()
+            return self._query_plan.explain(self.analyze)

@@ -16,18 +16,16 @@ No Operation
 This is a SQL Query Execution Plan Node.
 """
 
-from typing import Generator
+from pyarrow import Table
 
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class NoOpNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -41,8 +39,6 @@ class NoOpNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Generator:
-        # nodes generally have 0 (scan), 1 (most) or 2 (join, union) producers
-        if self._producers:
-            for morsels in self._producers:
-                yield from morsels.execute()
+    def execute(self, morsel: Table) -> Table:
+        print("NOOP was called")
+        return [morsel]

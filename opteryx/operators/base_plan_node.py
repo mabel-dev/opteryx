@@ -11,30 +11,19 @@
 # limitations under the License.
 
 
+import time
 from dataclasses import dataclass
-from enum import Enum
-from enum import auto
-from typing import Generator
 from typing import Optional
 
 import pyarrow
 from orso.tools import random_string
 
-from opteryx.models import QueryProperties
-from opteryx.models import QueryStatistics
-
-
-class OperatorType(int, Enum):
-    PRODUCER = auto()
-    PASSTHRU = auto()
-    BLOCKING = auto()
-    _UNKNOWN = auto()
+from opteryx import EOS
 
 
 @dataclass
 class BasePlanDataObject:
     operation: Optional[str] = None
-    operator_type: OperatorType = OperatorType._UNKNOWN
     query_id: str = None
     identity: str = None
 
@@ -47,22 +36,27 @@ class BasePlanDataObject:
 
 
 class BasePlanNode:
-    _producers = None
-    operator_type = OperatorType._UNKNOWN
-
-    def __init__(self, properties: QueryProperties, **parameters):
+    def __init__(self, *, properties, **parameters):
         """
         This is the base class for nodes in the execution plan.
 
         The initializer accepts a QueryStatistics node which is populated by different nodes
         differently to record what happened during the query execution.
         """
-        self.properties = properties
+        from opteryx.models import QueryProperties
+        from opteryx.models import QueryStatistics
+
+        self.properties: QueryProperties = properties
+        self.statistics: QueryStatistics = QueryStatistics(properties.qid)
         self.parameters = parameters
-        self.statistics = QueryStatistics(properties.qid)
         self.execution_time = 0
         self.identity = random_string()
         self.do: Optional[BasePlanDataObject] = None
+        self.calls = 0
+        self.records_in = 0
+        self.bytes_in = 0
+        self.records_out = 0
+        self.bytes_out = 0
 
     def to_json(self) -> bytes:  # pragma: no cover
         import orjson
@@ -75,9 +69,6 @@ class BasePlanNode:
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
-    def set_producers(self, producers):
-        self._producers = producers
-
     def config(self) -> str:
         return ""
 
@@ -88,5 +79,41 @@ class BasePlanNode:
         """
         return "no name"
 
-    def execute(self) -> Generator[pyarrow.Table, None, None]:  # pragma: no cover
+    @property
+    def node_type(self) -> str:
+        return self.name
+
+    def __str__(self) -> str:
+        return f"{self.name} {self.sensors()}"
+
+    def execute(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:  # pragma: no cover
         pass
+
+    def __call__(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:
+        if morsel is not None and morsel != EOS:
+            self.records_in += morsel.num_rows
+            self.bytes_in += morsel.nbytes
+            self.calls += 1
+
+        start_time = time.monotonic_ns()
+        result = self.execute(morsel)
+
+        self.execution_time += time.monotonic_ns() - start_time
+        if result is not None and result != EOS and hasattr(result, "num_rows"):
+            self.records_out += result.num_rows
+            self.bytes_out += result.nbytes
+        return result
+
+    def sensors(self):
+        return {
+            "calls": self.calls,
+            "execution_time": self.execution_time,
+            "records_in": self.records_in,
+            "records_out": self.records_out,
+            "bytes_in": self.bytes_in,
+            "bytes_out": self.bytes_out,
+        }
+
+
+class JoinNode(BasePlanNode):
+    pass
