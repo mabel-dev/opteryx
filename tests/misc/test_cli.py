@@ -6,8 +6,11 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 def run_cli(args):
     """Helper function to run the CLI and return the result."""
+    from tests.tools import find_file
+
+    path = find_file("**/__main__.py")
     result = subprocess.run(
-        [sys.executable, "opteryx/__main__.py"] + args,
+        [sys.executable, path] + args,
         capture_output=True,
         text=True,
         timeout=5
