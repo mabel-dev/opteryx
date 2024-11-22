@@ -79,13 +79,13 @@ class LogicalPlanNode(Node):
             # fmt:off
             node_type = self.node_type
             if node_type == LogicalPlanStepType.AggregateAndGroup:
-                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
+                return f"AGGREGATE [{', '.join(format_expression(col) for col in self.aggregates)}] GROUP BY [{', '.join(format_expression(col) for col in self.groups)}]"
             if node_type == LogicalPlanStepType.Aggregate:
-                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)})"
+                return f"AGGREGATE [{', '.join(format_expression(col) for col in self.aggregates)}]"
             if node_type == LogicalPlanStepType.Distinct:
                 distinct_on = ""
                 if self.on is not None:
-                    distinct_on = f" ON ({','.join(format_expression(col) for col in self.on)})"
+                    distinct_on = f" ON [{','.join(format_expression(col) for col in self.on)}]"
                 return f"DISTINCT{distinct_on}"
             if node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
@@ -111,16 +111,16 @@ class LogicalPlanNode(Node):
                     return f"{self.type.upper()} JOIN{distinct} (USING {','.join(map(format_expression, self.using))}){filters}"
                 return f"{self.type.upper()}{distinct} {filters}"
             if node_type == LogicalPlanStepType.HeapSort:
-                return f"HEAP SORT (LIMIT {self.limit}, ORDER BY {', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
+                return f"HEAP SORT (LIMIT {self.limit}, ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}])"
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
                 offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
                 return (limit_str + offset_str).strip()
             if node_type == LogicalPlanStepType.Order:
-                return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
+                return f"ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}]"
             if node_type == LogicalPlanStepType.Project:
                 order_by_indicator = f" + ({', '.join(format_expression(col) for col in self.order_by_columns)})" if self.order_by_columns else ""
-                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)}){order_by_indicator}"
+                return f"PROJECT [{', '.join(format_expression(col) for col in self.columns)}]{order_by_indicator}"
             if node_type == LogicalPlanStepType.Scan:
                 io_async = "ASYNC " if hasattr(self.connector, "async_read_blob") else ""
                 date_range = ""

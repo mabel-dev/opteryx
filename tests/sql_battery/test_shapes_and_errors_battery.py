@@ -1805,6 +1805,22 @@ STATEMENTS = [
         # Aggregate Functions with HAVING Clause
         ("SELECT name, COUNT(*) AS count FROM $satellites GROUP BY name HAVING count > 1", 0, 2, None),
 
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY '%apoll%'", 0, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY '%apoll%'", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%apoll%')", 0, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%Apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 'mission')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%Apoll%', 'mission')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY '%apoll%'", 0, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY '%apoll%'", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%apoll%')", 0, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY ('%apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY ('%Apoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%', 'mission')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY ('%Apoll%', 'mission')", 34, 2, None),
 
         # ****************************************************************************************
 

@@ -8,7 +8,6 @@ This module is not from sqloxide, it is written for Opteryx.
 """
 
 from opteryx.compute import parse_sql
-from opteryx.compute import restore_ast
 
 # Explicitly define the API of this module for external consumers
-__all__ = ["parse_sql", "restore_ast"]
+__all__ = ["parse_sql"]
