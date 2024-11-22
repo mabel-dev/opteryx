@@ -32,6 +32,12 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "AnyOpGtEq",
         "AnyOpLt",
         "AnyOpLtEq",
+        "AnyOpLike",
+        "AnyOpNotLike",
+        "AnyOpILike",
+        "AnyOpNotILike",
+        "AnyOpRLike",
+        "AnyOpNotRLike",
         "AllOpEq",
         "AllOpNotEq",
         "AtArrow",
@@ -169,6 +175,59 @@ def _inner_filter_operations(arr, operator, value):
         return list_ops.cython_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
+
+    if operator == "AnyOpLike":
+        patterns = value[0]
+        return numpy.array(
+            [
+                None
+                if row is None
+                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
+                for row in arr
+            ],
+            dtype=bool,
+        )
+    if operator == "AnyOpNotLike":
+        patterns = value[0]
+        matches = numpy.array(
+            [
+                None
+                if row is None
+                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
+                for row in arr
+            ],
+            dtype=bool,
+        )
+        return numpy.invert(matches)
+    if operator == "AnyOpILike":
+        patterns = value[0]
+        return numpy.array(
+            [
+                None
+                if row is None
+                else any(
+                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
+                    for pattern in patterns
+                )
+                for row in arr
+            ],
+            dtype=bool,
+        )
+    if operator == "AnyOpNotILike":
+        patterns = value[0]
+        matches = numpy.array(
+            [
+                None
+                if row is None
+                else any(
+                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
+                    for pattern in patterns
+                )
+                for row in arr
+            ],
+            dtype=bool,
+        )
+        return numpy.invert(matches)
 
     if operator == "AtQuestion":
         element = value[0]
