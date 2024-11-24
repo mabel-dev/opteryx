@@ -330,26 +330,25 @@ class CrossJoinNode(JoinNode):
         if self._unnest_column is not None:
             if morsel == EOS:
                 self.continue_executing = False
-                return EOS
+                return
             if isinstance(self._unnest_column.value, tuple):
-                return list(
-                    _cross_join_unnest_literal(
-                        morsel=morsel,
-                        source=self._unnest_column.value,
-                        target_column=self._unnest_target,
-                    )
-                )
-            return list(
-                _cross_join_unnest_column(
+                yield from _cross_join_unnest_literal(
                     morsel=morsel,
-                    source=self._unnest_column,
+                    source=self._unnest_column.value,
                     target_column=self._unnest_target,
-                    conditions=self._filters,
-                    hash_set=self.hash_set,
-                    distinct=self._distinct,
-                    single_column=self._single_column,
                 )
+                return
+
+            yield from _cross_join_unnest_column(
+                morsel=morsel,
+                source=self._unnest_column,
+                target_column=self._unnest_target,
+                conditions=self._filters,
+                hash_set=self.hash_set,
+                distinct=self._distinct,
+                single_column=self._single_column,
             )
+            return
 
         if self.stream == "left":
             if morsel == EOS:
@@ -358,13 +357,13 @@ class CrossJoinNode(JoinNode):
                 self.left_buffer.clear()
             else:
                 self.left_buffer.append(morsel)
-            return None
+            yield None
 
         if self.stream == "right":
             if morsel == EOS:
                 right_table = pyarrow.concat_tables(self.right_buffer, promote_options="none")  # type:ignore
                 self.right_buffer = None
-                return list(_cross_join(self.left_relation, right_table))
+                yield from _cross_join(self.left_relation, right_table)
             else:
                 self.right_buffer.append(morsel)
-            return None
+            yield None

@@ -50,15 +50,15 @@ class UnionNode(BasePlanNode):
         coercible types are coerced.
         """
         if morsel == EOS and self.seen_first_eos:
-            return [EOS]
-        if morsel == EOS:
+            return
+        elif morsel == EOS:
             self.seen_first_eos = True
-            return None
+            yield None
 
-        if self.schema is None:
+        elif self.schema is None:
             self.schema = morsel.schema
         else:
             morsel = morsel.rename_columns(self.schema.names)
             morsel = morsel.cast(self.schema)
 
-        return morsel.select(self.column_ids)
+        yield morsel.select(self.column_ids)

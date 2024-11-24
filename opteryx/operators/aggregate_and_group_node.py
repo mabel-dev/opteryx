@@ -104,7 +104,7 @@ class AggregateAndGroupNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Group"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table):
         if morsel == EOS:
             # merge all the morsels together into one table, selecting only the columns
             # we're pretty sure we're going to use - this will fail for datasets
@@ -138,7 +138,8 @@ class AggregateAndGroupNode(BasePlanNode):
             groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
             groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
 
-            return [groups, EOS]
+            yield groups
+            return
 
         morsel = project(morsel, self.all_identifiers)
         # Add a "*" column, this is an int because when a bool it miscounts

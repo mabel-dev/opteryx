@@ -95,14 +95,29 @@ class BasePlanNode:
             self.bytes_in += morsel.nbytes
             self.calls += 1
 
-        start_time = time.monotonic_ns()
-        result = self.execute(morsel)
+        generator = self.execute(morsel)  # Initialize the generator
 
-        self.execution_time += time.monotonic_ns() - start_time
-        if result is not None and result != EOS and hasattr(result, "num_rows"):
-            self.records_out += result.num_rows
-            self.bytes_out += result.nbytes
-        return result
+        while True:
+            try:
+                # Time the production of the next result
+                start_time = time.monotonic_ns()
+                result = next(generator)  # Retrieve the next item from the generator
+                self.execution_time += time.monotonic_ns() - start_time
+                self.statistics.increase(
+                    "time_" + self.name.lower(), time.monotonic_ns() - start_time
+                )
+
+                # Update metrics for valid results
+                if result is not None and result != EOS and hasattr(result, "num_rows"):
+                    self.records_out += result.num_rows
+                    self.bytes_out += result.nbytes
+
+                # Yield the result to the consumer
+                yield result
+
+            except StopIteration:
+                # Break the loop when the generator is exhausted
+                break
 
     def sensors(self):
         return {

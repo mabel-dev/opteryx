@@ -224,5 +224,3 @@ class ReaderNode(BasePlanNode):
             self.statistics.columns_read += morsel.num_columns
         else:
             self.statistics.columns_read += len(orso_schema.columns)
-
-        yield EOS

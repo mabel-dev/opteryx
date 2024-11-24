@@ -45,4 +45,4 @@ class ExplainNode(BasePlanNode):
 
     def execute(self, morsel: Table) -> Table:
         if self._query_plan:
-            return self._query_plan.explain(self.analyze)
+            yield self._query_plan.explain(self.analyze)

@@ -84,7 +84,8 @@ class HeapSortNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if morsel == EOS:
-            return [self.table, EOS]
+            yield self.table
+            return
 
         if self.table:
             # Concatenate the accumulated table with the new morsel

@@ -57,10 +57,12 @@ class FilterNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if morsel == EOS:
-            return EOS
+            yield EOS
+            return
 
         if morsel.num_rows == 0:
-            return morsel
+            yield morsel
+            return
 
         if self.function_evaluations:
             morsel = evaluate_and_append(self.function_evaluations, morsel)
@@ -77,5 +79,6 @@ class FilterNode(BasePlanNode):
 
         # if there's no matching rows, just drop the morsel
         if mask.size > 0 and not numpy.all(mask is None):
-            return morsel.take(pyarrow.array(mask))
-        return morsel.slice(0, 0)
+            yield morsel.take(pyarrow.array(mask))
+        else:
+            yield morsel.slice(0, 0)

@@ -221,10 +221,11 @@ class AggregateNode(BasePlanNode):
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if morsel == EOS:
             if _is_count_star(self.aggregates):
-                return _count_star(
+                yield _count_star(
                     morsel_promise=self.buffer,
                     column_name=self.aggregates[0].schema_column.identity,
                 )
+                return
 
             # merge all the morsels together into one table, selecting only the columns
             # we're pretty sure we're going to use - this will fail for datasets
@@ -248,6 +249,9 @@ class AggregateNode(BasePlanNode):
             # name the aggregate fields and add them to the Columns data
             aggregates = aggregates.select(list(self.column_map.keys()))
 
-            return [aggregates, EOS]
+            yield aggregates
+
+            return
 
         self.buffer.append(project(morsel, self.all_identifiers))
+        yield None

@@ -148,4 +148,3 @@ class FunctionDatasetNode(ReaderNode):
         self.statistics.columns_read += len(table.column_names)
 
         yield table
-        yield EOS
