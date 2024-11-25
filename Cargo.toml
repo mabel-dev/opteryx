@@ -13,7 +13,7 @@ pythonize = "0.22"
 serde = "1.0.171"
 
 [dependencies.pyo3]
-version = "0.22"
+version = "0.23"
 features = ["extension-module"]
 
 [dependencies.sqlparser]
