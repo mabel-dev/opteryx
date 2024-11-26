@@ -9,7 +9,7 @@ name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pythonize = "0.22"
+pythonize = "0.23"
 serde = "1.0.171"
 
 [dependencies.pyo3]
