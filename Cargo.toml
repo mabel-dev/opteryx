@@ -9,11 +9,11 @@ name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pythonize = "0.22"
+pythonize = "0.23"
 serde = "1.0.171"
 
 [dependencies.pyo3]
-version = "0.22"
+version = "0.23"
 features = ["extension-module"]
 
 [dependencies.sqlparser]

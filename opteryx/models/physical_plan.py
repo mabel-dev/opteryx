@@ -24,8 +24,16 @@ from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
 
+import pyarrow
+
 morsel_lock = Lock()
+active_task_lock = Lock()
 active_tasks: int = 0
+
+def active_tasks_increment(value: int):
+    global active_tasks
+    with active_task_lock:
+        active_tasks += value
 
 
 class PhysicalPlan(Graph):
@@ -59,6 +67,55 @@ class PhysicalPlan(Graph):
 
         return traversal_list
 
+    def explain(self, analyze: bool) -> Generator[pyarrow.Table, None, None]:
+        from opteryx import operators
+
+        def _inner_explain(node, depth):
+            incoming_operators = self.ingoing_edges(node)
+            for operator_name in incoming_operators:
+                operator = self[operator_name[0]]
+                if isinstance(
+                    operator, (operators.ExitNode, operators.ExplainNode)
+                ):  # Skip ExitNode
+                    yield from _inner_explain(operator_name[0], depth)
+                    continue
+                elif isinstance(operator, operators.BasePlanNode):
+                    record = {
+                        "tree": depth,
+                        "operator": operator.name,
+                        "config": operator.config,
+                    }
+                    if analyze:
+                        record["time_ms"] = operator.execution_time / 1e6
+                        record["records_in"] = operator.records_in
+                        record["records_out"] = operator.records_out
+                    yield record
+                    yield from _inner_explain(operator_name[0], depth + 1)
+
+        head = list(dict.fromkeys(self.get_exit_points()))
+        if len(head) != 1:  # pragma: no cover
+            raise InvalidInternalStateError(f"Problem with the plan - it has {len(head)} heads.")
+
+        # for EXPLAIN ANALYZE, we execute the query and report statistics
+        if analyze:
+            # we don't want the results, just the details from the plan
+            temp = None
+            head_node = self.get_exit_points()[0]
+            query_head, _, _ = self.ingoing_edges(head_node)[0]
+            results = self.execute(query_head)
+            if results is not None:
+                results_generator, _ = next(results, ([], None))
+                for temp in results_generator:
+                    pass
+            del temp
+
+        plan = list(_inner_explain(head[0], 1))
+
+        table = pyarrow.Table.from_pylist(plan)
+        print(table)
+        return table
+
+
     def execute(self, head_node=None) -> Generator[Tuple[Any, ResultType], Any, Any]:
         from opteryx.operators import ExplainNode
         from opteryx.operators import JoinNode
@@ -77,9 +134,8 @@ class PhysicalPlan(Graph):
             if node_exhaustion[node_id]:
                 return  # Node is already marked as exhausted
 
-            global active_tasks
             node_exhaustion[node_id] = True
-            # print("+", node_id)
+            print("+", node_id, self[node_id].name)
 
             # Notify downstream nodes
             for _, downstream_node, _ in self.outgoing_edges(node_id):
@@ -87,8 +143,8 @@ class PhysicalPlan(Graph):
                 if all(
                     node_exhaustion[parent] for parent, _, _ in self.ingoing_edges(downstream_node)
                 ):
-                    work_queue.put((downstream_node, EOS))  # None signals exhaustion
-                    active_tasks += 1
+                    work_queue.put((downstream_node, EOS))  # EOS signals exhaustion
+                    active_tasks_increment(+1)
                     morsel_accounting[node_id] += 1
 
         def update_morsel_accounting(node_id, morsel_count_change: int):
@@ -139,7 +195,7 @@ class PhysicalPlan(Graph):
             work_queue = Queue()
             # Response queue for results sent back to the engine
             response_queue = Queue()
-            num_workers = 2
+            num_workers = 1
             workers = []
 
             def worker_process():
@@ -191,7 +247,7 @@ class PhysicalPlan(Graph):
                         for downstream_node in next_nodes:
                             # Queue tasks for downstream operators
                             work_queue.put((downstream_node, morsel))
-                            active_tasks += 1
+                            active_tasks_increment(+1)
                             update_morsel_accounting(downstream_node, +1)
 
                     # Pump is exhausted after emitting all morsels
@@ -202,7 +258,7 @@ class PhysicalPlan(Graph):
                     all_nodes_exhausted = all(node_exhaustion.values())
                     queues_empty = work_queue.empty() and response_queue.empty()
                     all_nodes_inactive = active_tasks <= 0
-                    # print(node_exhaustion.values(), all(node_exhaustion.values()), work_queue.empty(), response_queue.empty(), active_tasks)
+                    print(node_exhaustion.values(), all(node_exhaustion.values()), work_queue.empty(), response_queue.empty(), active_tasks)
                     return all_nodes_exhausted and queues_empty and all_nodes_inactive
 
                 while not should_stop():
@@ -213,8 +269,8 @@ class PhysicalPlan(Graph):
                         continue
 
                     # Handle EOS
-                    if result is None:
-                        active_tasks -= 1
+                    if result is None or result == EOS:
+                        active_tasks_increment(-1)
                         continue
 
                     # Determine downstream operators
@@ -225,12 +281,12 @@ class PhysicalPlan(Graph):
                     else:
                         for downstream_node in downstream_nodes:
                             # Queue tasks for downstream operators
-                            active_tasks += 1
+                            active_tasks_increment(+1)
                             work_queue.put((downstream_node, result))
                             update_morsel_accounting(downstream_node, +1)
 
                     # decrement _after_ we've done the work relation to handling the task
-                    active_tasks -= 1
+                    active_tasks_increment(-1)
 
                 # print("DONE!", node_exhaustion, work_queue.empty(), response_queue.empty())
 

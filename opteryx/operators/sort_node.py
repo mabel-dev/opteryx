@@ -69,6 +69,7 @@ class SortNode(BasePlanNode):
                     new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
                     table = table.take(new_order)
                     yield table
+                    yield EOS
                     return
 
                 raise UnsupportedSyntaxError(
