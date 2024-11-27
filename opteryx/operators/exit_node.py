@@ -67,7 +67,8 @@ class ExitNode(BasePlanNode):
     def execute(self, morsel: Table) -> Table:
         # Exit doesn't return EOS
         if morsel == EOS:
-            return None
+            yield None
+            return
 
         final_columns = []
         final_names = []
@@ -105,4 +106,4 @@ class ExitNode(BasePlanNode):
         morsel = morsel.select(final_columns)
         morsel = morsel.rename_columns(final_names)
 
-        return morsel
+        yield morsel

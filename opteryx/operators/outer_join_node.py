@@ -292,7 +292,8 @@ class OuterJoinNode(JoinNode):
                 self.left_buffer.clear()
             else:
                 self.left_buffer.append(morsel)
-            return None
+            yield None
+            return
 
         if self.stream == "right":
             if morsel == EOS:
@@ -301,18 +302,16 @@ class OuterJoinNode(JoinNode):
 
                 join_provider = providers.get(self._join_type)
 
-                return list(
-                    join_provider(
-                        left_relation=self.left_relation,
-                        right_relation=right_relation,
-                        left_columns=self._left_columns,
-                        right_columns=self._right_columns,
-                    )
-                ) + [EOS]
+                yield from join_provider(
+                    left_relation=self.left_relation,
+                    right_relation=right_relation,
+                    left_columns=self._left_columns,
+                    right_columns=self._right_columns,
+                )
 
             else:
                 self.right_buffer.append(morsel)
-            return None
+                yield None
 
 
 providers = {

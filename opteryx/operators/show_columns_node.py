@@ -75,13 +75,15 @@ class ShowColumnsNode(BasePlanNode):
         from orso import DataFrame
 
         if self.seen:
-            return None
+            yield None
+            return
 
         if not (self._full or self._extended):
             # if it's not full or extended, do just get the list of columns and their
             # types
             self.seen = True
-            return _simple_collector(self._schema)
+            yield _simple_collector(self._schema)
+            return
 
         if self._full or self._extended:
             # we're going to read the full table, so we can count stuff
@@ -90,7 +92,8 @@ class ShowColumnsNode(BasePlanNode):
                 dicts = self.collector.to_dicts()
                 dicts = [self.rename_column(d, self._column_map) for d in dicts]
                 self.seen = True
-                return pyarrow.Table.from_pylist(dicts)
+                yield pyarrow.Table.from_pylist(dicts)
+                return
 
             df = DataFrame.from_arrow(morsel)
 
@@ -99,4 +102,4 @@ class ShowColumnsNode(BasePlanNode):
             else:
                 self.collector += df.profile
 
-            return None
+            yield None

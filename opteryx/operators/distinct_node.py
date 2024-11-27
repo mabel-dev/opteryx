@@ -59,7 +59,8 @@ class DistinctNode(BasePlanNode):
         # limit processing
 
         if morsel == EOS:
-            return EOS
+            yield EOS
+            return
 
         unique_indexes, self.hash_set = distinct(
             morsel, columns=self._distinct_on, seen_hashes=self.hash_set
@@ -67,7 +68,7 @@ class DistinctNode(BasePlanNode):
 
         if len(unique_indexes) > 0:
             distinct_table = morsel.take(unique_indexes)
-            return distinct_table
+            yield distinct_table
         else:
             distinct_table = morsel.slice(0, 0)
-            return distinct_table
+            yield distinct_table

@@ -209,5 +209,3 @@ class AsyncReaderNode(ReaderNode):
             yield pyarrow.Table.from_arrays(
                 [pyarrow.array([]) for _ in arrow_schema], schema=arrow_schema
             )
-
-        yield EOS

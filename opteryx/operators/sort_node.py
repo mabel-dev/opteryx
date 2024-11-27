@@ -53,7 +53,8 @@ class SortNode(BasePlanNode):
     def execute(self, morsel: Table) -> Table:
         if morsel != EOS:
             self.morsels.append(morsel)
-            return None
+            yield None
+            return
 
         table = concat_tables(self.morsels, promote_options="permissive")
 
@@ -67,7 +68,9 @@ class SortNode(BasePlanNode):
                 if column.value in ("RANDOM", "RAND"):
                     new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
                     table = table.take(new_order)
-                    return table
+                    yield table
+                    yield EOS
+                    return
 
                 raise UnsupportedSyntaxError(
                     "`ORDER BY` only supports `RAND()` as a functional sort order."
@@ -97,4 +100,5 @@ class SortNode(BasePlanNode):
                         f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                     )
 
-        return [table.sort_by(mapped_order), EOS]
+        yield table.sort_by(mapped_order)
+        yield EOS

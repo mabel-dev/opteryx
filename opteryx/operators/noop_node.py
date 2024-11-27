@@ -41,4 +41,4 @@ class NoOpNode(BasePlanNode):
 
     def execute(self, morsel: Table) -> Table:
         print("NOOP was called")
-        return [morsel]
+        yield morsel

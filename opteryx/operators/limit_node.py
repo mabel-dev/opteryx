@@ -49,12 +49,13 @@ class LimitNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if morsel == EOS:
-            return EOS
+            return
 
         if self.rows_left_to_skip > 0:
             if self.rows_left_to_skip >= morsel.num_rows:
                 self.rows_left_to_skip -= morsel.num_rows
-                return morsel.slice(offset=0, length=0)
+                yield morsel.slice(offset=0, length=0)
+                return
             else:
                 morsel = morsel.slice(
                     offset=self.rows_left_to_skip, length=morsel.num_rows - self.rows_left_to_skip
@@ -62,12 +63,13 @@ class LimitNode(BasePlanNode):
                 self.rows_left_to_skip = 0
 
         if self.remaining_rows <= 0 or morsel.num_rows == 0:
-            return morsel.slice(offset=0, length=0)
+            yield morsel.slice(offset=0, length=0)
+            yield
 
         if morsel.num_rows < self.remaining_rows:
             self.remaining_rows -= morsel.num_rows
-            return morsel
+            yield morsel
         else:
             rows_to_slice = self.remaining_rows
             self.remaining_rows = 0
-            return morsel.slice(offset=0, length=rows_to_slice)
+            yield morsel.slice(offset=0, length=rows_to_slice)

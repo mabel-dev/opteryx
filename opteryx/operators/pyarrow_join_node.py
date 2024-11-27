@@ -78,7 +78,8 @@ class PyArrowJoinNode(JoinNode):
 
             else:
                 self.left_buffer.append(morsel)
-            return None
+            yield None
+            return
 
         if morsel == EOS:
             right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
@@ -111,8 +112,8 @@ class PyArrowJoinNode(JoinNode):
                     "Unable to ANTI/SEMI JOIN with unsupported column types in table."
                 ) from err
 
-            return [new_morsel, EOS]
+            yield new_morsel
 
         else:
             self.right_buffer.append(morsel)
-            return None
+            yield None

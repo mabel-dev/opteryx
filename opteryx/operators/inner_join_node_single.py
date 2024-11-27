@@ -204,10 +204,11 @@ class InnerJoinSingleNode(JoinNode):
                 self.left_hash = preprocess_left(self.left_relation, self._left_columns)
             else:
                 self.left_buffer.append(morsel)
-            return None
+            yield None
+            return
 
         if morsel == EOS:
-            return EOS
+            return
 
         # do the join
         new_morsel = inner_join_with_preprocessed_left_side(
@@ -217,4 +218,4 @@ class InnerJoinSingleNode(JoinNode):
             hash_table=self.left_hash,
         )
 
-        return new_morsel
+        yield new_morsel
