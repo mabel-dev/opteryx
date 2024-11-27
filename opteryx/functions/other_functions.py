@@ -130,17 +130,39 @@ def if_null(values, replacement):
     if isinstance(values, list):
         values = numpy.array(values)
 
-    response = values.copy()  # Create a copy of the array to avoid modifying the original
+    # Create a mask for null values
     is_null_array = _is_null(values)
-    for index, is_null in enumerate(is_null_array):
-        if is_null:
-            response[index] = replacement[index]
 
-    return response
+    # Use NumPy's where function to vectorize the operation
+    return numpy.where(is_null_array, replacement, values)
 
 
 def null_if(col1, col2):
-    return [None if a == b else a for a, b in zip(col1, col2)]
+    """    
+    Parameters:
+        col1: Union[numpy.ndarray, list]
+            The first input array.
+        col2: Union[numpy.ndarray, list]
+            The second input array.
+
+    Returns:
+        numpy.ndarray
+            An array where elements from col1 are replaced with None if they match the corresponding elements in col2.
+    """
+    if isinstance(col1, pyarrow.Array):
+        values = values.to_numpy(False)
+    if isinstance(col1, list):
+        values = numpy.array(values)
+    if isinstance(col2, pyarrow.Array):
+        values = values.to_numpy(False)
+    if isinstance(col2, list):
+        values = numpy.array(values)
+
+    # Create a mask where elements in col1 are equal to col2
+    mask = col1 == col2
+
+    # Return None where the mask is True, else col1
+    return numpy.where(mask, None, col1)
 
 
 def cosine_similarity(arr, val):
