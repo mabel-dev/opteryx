@@ -208,6 +208,7 @@ class InnerJoinSingleNode(JoinNode):
             return
 
         if morsel == EOS:
+            yield None
             return
 
         # do the join

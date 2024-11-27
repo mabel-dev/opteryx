@@ -138,7 +138,7 @@ def if_null(values, replacement):
 
 
 def null_if(col1, col2):
-    """    
+    """
     Parameters:
         col1: Union[numpy.ndarray, list]
             The first input array.

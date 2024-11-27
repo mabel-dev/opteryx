@@ -138,3 +138,5 @@ class HeapSortNode(BasePlanNode):
             )
             # Slice the sorted table
             self.table = self.table.take(sort_indices[: self.limit])
+
+        yield None

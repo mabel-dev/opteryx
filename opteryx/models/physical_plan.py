@@ -19,16 +19,17 @@ from typing import Generator
 from typing import Optional
 from typing import Tuple
 
+import pyarrow
+
 from opteryx import EOS
 from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
 
-import pyarrow
-
 morsel_lock = Lock()
 active_task_lock = Lock()
 active_tasks: int = 0
+
 
 def active_tasks_increment(value: int):
     global active_tasks
@@ -115,7 +116,6 @@ class PhysicalPlan(Graph):
         print(table)
         return table
 
-
     def execute(self, head_node=None) -> Generator[Tuple[Any, ResultType], Any, Any]:
         from opteryx.operators import ExplainNode
         from opteryx.operators import JoinNode
@@ -135,7 +135,7 @@ class PhysicalPlan(Graph):
                 return  # Node is already marked as exhausted
 
             node_exhaustion[node_id] = True
-            print("+", node_id, self[node_id].name)
+#            print("+", node_id, self[node_id].name)
 
             # Notify downstream nodes
             for _, downstream_node, _ in self.outgoing_edges(node_id):
@@ -258,7 +258,13 @@ class PhysicalPlan(Graph):
                     all_nodes_exhausted = all(node_exhaustion.values())
                     queues_empty = work_queue.empty() and response_queue.empty()
                     all_nodes_inactive = active_tasks <= 0
-                    print(node_exhaustion.values(), all(node_exhaustion.values()), work_queue.empty(), response_queue.empty(), active_tasks)
+#                    print(
+#                        node_exhaustion.values(),
+#                        all(node_exhaustion.values()),
+#                        work_queue.empty(),
+#                        response_queue.empty(),
+#                        active_tasks,
+#                    )
                     return all_nodes_exhausted and queues_empty and all_nodes_inactive
 
                 while not should_stop():
