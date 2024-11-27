@@ -139,7 +139,6 @@ class AggregateAndGroupNode(BasePlanNode):
             groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
 
             yield groups
-            yield EOS
             return
 
         morsel = project(morsel, self.all_identifiers)
@@ -153,3 +152,4 @@ class AggregateAndGroupNode(BasePlanNode):
         morsel = evaluate_and_append(self.groups, morsel)
 
         self.buffer.append(morsel)
+        yield None

@@ -154,7 +154,6 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 statistics.optimization_constant_fold_reduce += 1
                 return node
 
-
     if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         # try to fold each side of logical operators
         root.left = fold_constants(root.left, statistics)

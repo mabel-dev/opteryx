@@ -64,7 +64,7 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if morsel == EOS:
-            yield EOS
+            yield None
             return
 
         # If any of the columns need evaluating, we need to do that here

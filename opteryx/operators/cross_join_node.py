@@ -325,11 +325,13 @@ class CrossJoinNode(JoinNode):
 
     def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
         if not self.continue_executing:
-            return None
+            yield None
+            return
 
         if self._unnest_column is not None:
             if morsel == EOS:
                 self.continue_executing = False
+                yield None
                 return
             if isinstance(self._unnest_column.value, tuple):
                 yield from _cross_join_unnest_literal(
@@ -366,4 +368,4 @@ class CrossJoinNode(JoinNode):
                 yield from _cross_join(self.left_relation, right_table)
             else:
                 self.right_buffer.append(morsel)
-            yield None
+                yield None
