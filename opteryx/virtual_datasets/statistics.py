@@ -30,9 +30,6 @@ def read(end_date=None, variables={}):
     from opteryx.shared.buffer_pool import BufferPool
 
     bufferpool = BufferPool()
-
-    lru_hits, lru_misses, lru_evictions, lru_inserts = bufferpool.stats
-
     pool = bufferpool._memory_pool
 
     # fmt:off
@@ -47,16 +44,13 @@ def read(end_date=None, variables={}):
         {"key": "bufferpool_capacity", "value": str(pool.size)},
         {"key": "bufferpool_free", "value": str(pool.available_space())},
         {"key": "bufferpool_items", "value": str(len(pool.used_segments))},
-        {"key": "lru_hits", "value": str(lru_hits)},
-        {"key": "lru_misses", "value": str(lru_misses)},
-        {"key": "lru_evictions", "value": str(lru_evictions)},
-        {"key": "lru_inserts", "value": str(lru_inserts)},
         {"key": "queries_executed", "value": str(system_statistics.queries_executed)},
         {"key": "uptime_seconds","value": str((time.time_ns() - system_statistics.start_time) / 1e9)},
         {"key": "io_wait_seconds", "value": str(system_statistics.io_wait_seconds)},
         {"key": "cpu_wait_seconds", "value": str(system_statistics.cpu_wait_seconds)},
         {"key": "origin_reads", "value": str(system_statistics.origin_reads)},
         {"key": "remote_cache_reads", "value": str(system_statistics.remote_cache_reads)},
+        {"key": "remote_cache_commits", "value": str(system_statistics.remote_cache_commits)},
     ]
     # fmt:on
 

@@ -52,10 +52,12 @@ class SortNode(BasePlanNode):
 
     def execute(self, morsel: Table) -> Table:
         if morsel != EOS:
+            print("APPENDED")
             self.morsels.append(morsel)
             yield None
             return
 
+        print("JOIN", len(self.morsels))
         table = concat_tables(self.morsels, promote_options="permissive")
 
         mapped_order = []

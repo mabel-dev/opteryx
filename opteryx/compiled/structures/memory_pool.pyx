@@ -158,8 +158,7 @@ cdef class MemoryPool:
                     self._level2_compaction()
                     segment_index = self._find_free_segment(len_data)
                     if segment_index == -1:
-                        self.failed_commits += 1
-                        return None  # No space available
+                        raise MemoryError("Unable to create segment in bufferpool")
 
             segment = self.free_segments[segment_index]
             self.free_segments.erase(self.free_segments.begin() + segment_index)

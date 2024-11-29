@@ -23,7 +23,6 @@ from typing import Generator
 
 import pyarrow
 
-from opteryx import EOS
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties

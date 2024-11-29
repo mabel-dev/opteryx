@@ -90,25 +90,25 @@ class BasePlanNode:
         pass
 
     def __call__(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:
-        if morsel is not None and morsel != EOS:
+        if hasattr(morsel, "num_rows"):
             self.records_in += morsel.num_rows
             self.bytes_in += morsel.nbytes
             self.calls += 1
 
-        generator = self.execute(morsel)  # Initialize the generator
+        # set up the execution of the operator
+        generator = self.execute(morsel)
 
         while True:
             try:
                 # Time the production of the next result
                 start_time = time.monotonic_ns()
                 result = next(generator)  # Retrieve the next item from the generator
-                self.execution_time += time.monotonic_ns() - start_time
-                self.statistics.increase(
-                    "time_" + self.name.lower(), time.monotonic_ns() - start_time
-                )
+                execution_time = time.monotonic_ns() - start_time
+                self.execution_time += execution_time
+                self.statistics.increase("time_" + self.name.lower(), execution_time)
 
                 # Update metrics for valid results
-                if result is not None and result != EOS and hasattr(result, "num_rows"):
+                if hasattr(result, "num_rows"):
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
 
@@ -118,6 +118,8 @@ class BasePlanNode:
             except StopIteration:
                 # Break the loop when the generator is exhausted
                 break
+            except Exception as err:
+                yield err
 
     def sensors(self):
         return {
