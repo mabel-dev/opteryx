@@ -8,7 +8,8 @@
 		"ghcr.io/devcontainers/features/sshd:1": {},
 		"ghcr.io/va-h/devcontainers-features/uv:1": {},
 		"ghcr.io/devcontainers-extra/features/ruff:1": {},
-		"ghcr.io/devcontainers/features/rust": {}
+		"ghcr.io/devcontainers/features/rust": {},
+		"ghcr.io/devcontainers-extra/features/pre-commit": {}
 	},
 	"runArgs": [
 		// other args
@@ -27,7 +28,10 @@
 				"charliermarsh.ruff",
 				"donjayamanne.python-extension-pack",
 				"njpwerner.autodocstring",
-				"KevinRose.vsc-python-indent"
+				"KevinRose.vsc-python-indent",
+				"tamasfe.even-better-toml",
+				"usernamehw.errorlens",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	}
