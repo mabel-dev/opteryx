@@ -1,3 +1,65 @@
+[project]
+name = "opteryx"
+version = "0.19.0"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp>=3.11.8",
+    "cython>=3.0.11",
+    "numpy==1.*",
+    "orjson>=3.10.12",
+    "orso>=0.0.176",
+    "psutil>=6.1.0",
+    "pyarrow>=12.0.1",
+    "pysimdjson>=6.0.2",
+    "requests>=2.32.3",
+]
+
+[build-system]
+requires = ["setuptools_rust", "setuptools>=42", "wheel", "Cython", "numpy"]
+build-backend = "setuptools.build_meta"
+
+
+[dependency-groups]
+dev = ["setuptools-rust>=1.10.2"]
+dev-tests = [
+    "black>=24.10.0",
+    "coverage>=7.6.8",
+    "duckdb>=1.1.3",
+    "duckdb-engine>=0.13.6",
+    "fastavro>=1.9.7",
+    "firestore>=0.0.8",
+    "google-cloud-bigquery-storage>=2.27.0",
+    "google-cloud-storage>=2.18.2",
+    "hypothesis>=6.122.0",
+    "isort>=5.13.2",
+    "minio>=7.2.12",
+    "mypy>=1.13.0",
+    "pandas>=2.2.3",
+    "polars>=1.16.0",
+    "psycopg2-binary>=2.9.10",
+    "pycln>=2.4.0",
+    "pymemcache>=4.0.0",
+    "pymongo>=4.10.1",
+    "pymysql>=1.1.1",
+    "pytest>=8.3.3",
+    "redis>=5.2.0",
+    "requests>=2.32.3",
+    "rich>=13.9.4",
+    "sqlalchemy-cockroachdb>=2.0.2",
+    "sqlalchemy>=2.0.0",
+    "types-orjson>=3.6.2",
+    "types-pyyaml>=6.0.12.20240917",
+    "types-requests>=2.32.0.20241016",
+    "zstandard>=0.23.0",
+    "sqlalchemy-bigquery>=1.12.0",
+    "pyodbc>=5.2.0",
+    "cassandra-driver>=3.29.2",
+    "setuptools-rust>=1.10.2",
+    "aiohttp>=3.11.8",
+    "psutil>=6.1.0",
+]
+
 [tool.black]
 line-length = 100
 target-version = ['py310']
@@ -5,7 +67,12 @@ fast = true
 
 [tool.isort]
 profile = "black"
-extend_skip_glob = ["tests/**", "*.pyx", "testdata/**", "**/operators/__init__.py"]
+extend_skip_glob = [
+    "tests/**",
+    "*.pyx",
+    "testdata/**",
+    "**/operators/__init__.py",
+]
 skip_gitignore = true
 line_length = 100
 multi_line_output = 9
@@ -18,18 +85,21 @@ disable = "C0103,C0415"
 
 [tool.mypy]
 exclude = ["bench", "#"]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+show_error_codes = true
+no_implicit_optional = true
 
 [tool.bandit]
-exclude_dirs = ["**/test_*.py",]
+exclude_dirs = ["**/test_*.py"]
 skips = ["B101", "B105", "B324", "B608"]
 # B101 - Use of ASSERT
 # B105 - Hardcoded passwords
 # B324 - Use of weak crypto
 # B608 - Hardcoded SQL
 
-[build-system]
-requires = ["setuptools>=42", "wheel", "Cython", "numpy"]
-build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 100
@@ -41,7 +111,7 @@ docstring-code-format = true
 docstring-code-line-length = 100
 
 [tool.ruff.lint]
-select = ["SIM"]
+select = ["F", "E", "W", "I", "D", "SIM"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
