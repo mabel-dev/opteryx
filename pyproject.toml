@@ -92,14 +92,6 @@ disallow_untyped_defs = true
 show_error_codes = true
 no_implicit_optional = true
 
-[tool.bandit]
-exclude_dirs = ["**/test_*.py"]
-skips = ["B101", "B105", "B324", "B608"]
-# B101 - Use of ASSERT
-# B105 - Hardcoded passwords
-# B324 - Use of weak crypto
-# B608 - Hardcoded SQL
-
 
 [tool.ruff]
 line-length = 100
@@ -111,9 +103,11 @@ docstring-code-format = true
 docstring-code-line-length = 100
 
 [tool.ruff.lint]
-select = ["F", "E", "W", "I", "D", "SIM"]
+select = ["F", "E", "W", "I", "D", "SIM", "S", "N", "C", "E", "W"]
 ignore = []
+
 
 [tool.ruff.lint.per-file-ignores]
 "**/cost_based_optimizer/**" = ["SIM102"]
 "opteryx/managers/expression/ops.py" = ["SIM118"]
+"**/test_*.py" = ["S101", "S105", "S324", "S608"]
