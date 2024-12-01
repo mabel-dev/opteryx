@@ -251,12 +251,12 @@ def jsonb_object_keys(arr: numpy.ndarray):
     if isinstance(arr[0], dict):
         # Process dictionaries
         for i, row in enumerate(arr):
-            result[i] = [str(key) for key in row.keys()]
+            result[i] = [str(key) for key in row.keys()]  # noqa: SIM118 - row is not a dict; .keys() is required
     elif isinstance(arr[0], (str, bytes)):
         # SIMD-JSON parser instance for JSON string/bytes
         parser = simdjson.Parser()
         for i, row in enumerate(arr):
-            result[i] = [str(key) for key in parser.parse(row).keys()]
+            result[i] = [str(key) for key in parser.parse(row).keys()]  # noqa: SIM118 - row is not a dict; .keys() is required
     else:
         raise ValueError("Unsupported dtype for array elements. Expected dict, str, or bytes.")
 

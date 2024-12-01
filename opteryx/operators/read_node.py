@@ -27,7 +27,6 @@ import pyarrow
 from orso.schema import RelationSchema
 from orso.schema import convert_orso_schema_to_arrow_schema
 
-from opteryx import EOS
 from opteryx.models import QueryProperties
 
 from . import BasePlanNode
