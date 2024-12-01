@@ -136,7 +136,7 @@ class PhysicalPlan(Graph):
                 return  # Node is already marked as exhausted
 
             node_exhaustion[node_id] = True
-            print("+", node_id, self[node_id].name)
+            print("EXHAUST", node_id, self[node_id].name)
 
             # Notify downstream nodes
             for _, downstream_node, _ in self.outgoing_edges(node_id):
@@ -162,7 +162,7 @@ class PhysicalPlan(Graph):
             with morsel_lock:
                 morsel_accounting[node_id] += morsel_count_change
                 print(
-                    ">",
+                    "ACCOUNT",
                     node_id,
                     morsel_accounting[node_id],
                     morsel_count_change,
@@ -177,10 +177,6 @@ class PhysicalPlan(Graph):
                     # Ensure all parent nodes are exhausted
                     all_parents_exhausted = all(
                         node_exhaustion[parent] for parent, _, _ in self.ingoing_edges(node_id)
-                    )
-                    print(
-                        self.ingoing_edges(node_id)[0][0],
-                        node_exhaustion[self.ingoing_edges(node_id)[0][0]],
                     )
                     if all_parents_exhausted:
                         mark_node_exhausted(node_id)
@@ -244,6 +240,8 @@ class PhysicalPlan(Graph):
                 # Identify pump nodes
                 global active_tasks
 
+                # Get all the nodes which push data into the plan We use DFS to order the
+                # nodes to ensure left branch is always before the right branch
                 pump_nodes = [
                     (nid, node)
                     for nid, node in self.depth_first_search_flat()
@@ -253,10 +251,13 @@ class PhysicalPlan(Graph):
                 # Main engine loop processes pump nodes and coordinates work
                 for pump_nid, pump_instance in pump_nodes:
                     for morsel in pump_instance(None):
-                        # Initial morsels pushed to the work queue
-                        # Determine downstream operators
+                        print("MORSEL")
+                        # Initial morsels pushed to the work queue determine downstream operators
                         next_nodes = [target for _, target, _ in self.outgoing_edges(pump_nid)]
                         for downstream_node in next_nodes:
+                            print(
+                                f"following {self[pump_nid].name} triggering {self[downstream_node].name}"
+                            )
                             # Queue tasks for downstream operators
                             work_queue.put((downstream_node, morsel))
                             active_tasks_increment(+1)
