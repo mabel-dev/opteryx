@@ -288,12 +288,9 @@ def _temporal_extration_state_machine(
                 open_count -= 1
                 if in_special_function and open_count == special_function_brackets:
                     in_special_function = False
-            if relation == "":
-                state = WAITING
-            else:
-                # function relations, like FAKE(234,234) need the items between the
-                # brackets be be consumed
-                state = FUNCTION_RELATION
+            # function relations, like FAKE(234,234) need the items between the
+            # brackets be be consumed
+            state = WAITING if relation == "" else FUNCTION_RELATION
 
         if not in_special_function:
             if comparable_part in STOP_COLLECTING:

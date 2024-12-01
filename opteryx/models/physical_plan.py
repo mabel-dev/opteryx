@@ -114,7 +114,6 @@ class PhysicalPlan(Graph):
         plan = list(_inner_explain(head[0], 1))
 
         table = pyarrow.Table.from_pylist(plan)
-        print(table)
         return table
 
     def execute(self, head_node=None) -> Generator[Tuple[Any, ResultType], Any, Any]:
@@ -136,10 +135,16 @@ class PhysicalPlan(Graph):
                 return  # Node is already marked as exhausted
 
             node_exhaustion[node_id] = True
-            print("EXHAUST", node_id, self[node_id].name)
+
+            if isinstance(self[node_id], ReaderNode):
+                return
 
             # Notify downstream nodes
-            for _, downstream_node, _ in self.outgoing_edges(node_id):
+            downstream_nodes = self.outgoing_edges(node_id)
+            if len(downstream_nodes) > 1:
+                raise InvalidInternalStateError("Cannot FORK execution")
+            elif len(downstream_nodes) == 1:
+                _, downstream_node, _ = downstream_nodes[0]
                 # Check if all parents of downstream_node are exhausted
                 if all(
                     node_exhaustion[parent] for parent, _, _ in self.ingoing_edges(downstream_node)
@@ -161,13 +166,13 @@ class PhysicalPlan(Graph):
             """
             with morsel_lock:
                 morsel_accounting[node_id] += morsel_count_change
-                print(
-                    "ACCOUNT",
-                    node_id,
-                    morsel_accounting[node_id],
-                    morsel_count_change,
-                    self[node_id].name,
-                )
+                #                print(
+                #                    "ACCOUNT",
+                #                    node_id,
+                #                    morsel_accounting[node_id],
+                #                    morsel_count_change,
+                #                    self[node_id].name,
+                #                )
 
                 if morsel_accounting[node_id] < 0:
                     raise InvalidInternalStateError("Node input and output count in invalid state.")
@@ -251,13 +256,10 @@ class PhysicalPlan(Graph):
                 # Main engine loop processes pump nodes and coordinates work
                 for pump_nid, pump_instance in pump_nodes:
                     for morsel in pump_instance(None):
-                        print("MORSEL")
                         # Initial morsels pushed to the work queue determine downstream operators
                         next_nodes = [target for _, target, _ in self.outgoing_edges(pump_nid)]
                         for downstream_node in next_nodes:
-                            print(
-                                f"following {self[pump_nid].name} triggering {self[downstream_node].name}"
-                            )
+                            # DEBUG: log (f"following initial {self[pump_nid].name} triggering {self[downstream_node].name}")
                             # Queue tasks for downstream operators
                             work_queue.put((downstream_node, morsel))
                             active_tasks_increment(+1)
@@ -271,13 +273,6 @@ class PhysicalPlan(Graph):
                     all_nodes_exhausted = all(node_exhaustion.values())
                     queues_empty = work_queue.empty() and response_queue.empty()
                     all_nodes_inactive = active_tasks <= 0
-                    print(
-                        list(node_exhaustion.values()),
-                        all(node_exhaustion.values()),
-                        work_queue.empty(),
-                        response_queue.empty(),
-                        active_tasks,
-                    )
                     return all_nodes_exhausted and queues_empty and all_nodes_inactive
 
                 while not should_stop():
@@ -290,7 +285,7 @@ class PhysicalPlan(Graph):
                     # if a thread threw a error, we get them in the main
                     # thread here, we just reraise the error here
                     if isinstance(result, Exception):
-                        raise Exception(f"{node_id} - {self[node_id]}") from result
+                        raise result
 
                     # Handle Empty responses
                     if result is None:
@@ -308,13 +303,12 @@ class PhysicalPlan(Graph):
                     for downstream_node in downstream_nodes:
                         # Queue tasks for downstream operators
                         active_tasks_increment(+1)
+                        # DEBUG: log (f"following {self[node_id].name} triggering {self[downstream_node].name}")
                         work_queue.put((downstream_node, result))
                         update_morsel_accounting(downstream_node, +1)
 
                     # decrement _after_ we've done the work relation to handling the task
                     active_tasks_increment(-1)
-
-                print("DONE!", node_exhaustion, work_queue.empty(), response_queue.empty())
 
                 for worker in workers:
                     work_queue.put(None)
