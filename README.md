@@ -287,18 +287,18 @@ You can also try Opteryx right now using our [interactive labs](https://github.c
 ## Community
 
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
-[![X Follow](https://img.shields.io/badge/follow%20on-X-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
 [![Medium](https://img.shields.io/badge/Read%20on-Medium-5865F2.svg?logo=medium)](https://medium.com/opteryx)
 
 
 **Get Involved**
 
-* :star: Star this repo
-* [Contribute](https://opteryx.dev/latest/contributing/contributing/) — join us in building Opteryx, through writing code, or inspiring others to use it.
-* Let us know [your ideas](https://github.com/mabel-dev/opteryx/discussions), how you are using Opteryx, or report a [bug or feature request]((https://github.com/mabel-dev/opteryx/issues/new/choose)).
-* See the [contributor documentation](https://opteryx.dev/latest/contributing/contributing/) for Opteryx. It's easy to get started, and we're really friendly if you need any help!
-* If you're interested in contributing to the code now, check out [GitHub issues](https://github.com/mabel-dev/opteryx/issues). Feel free to ask questions or open a draft PR.
+🌟 **Star this repo** to show your support and help others discover Opteryx.  
+💬 [Join the discussion](https://github.com/mabel-dev/opteryx/discussions) — share your ideas, tell us how you’re using Opteryx, or suggest [features](https://github.com/mabel-dev/opteryx/issues/new/choose).  
+🛠️ [Contribute to the code](https://opteryx.dev/latest/contributing/contributing/) — join us in building Opteryx! It’s easy to get started, and we’re happy to guide you.  
+📚 Check out the [contributor documentation](https://opteryx.dev/latest/contributing/contributing/). No matter your skill level, there are ways to contribute.  
+❤️ We welcome [sponsorships](https://github.com/sponsors/mabel-dev) of any size. Every contribution helps us make Opteryx even better! 
 
+We’re excited to have you join our journey. Let us know how we can help!
 ## Security
 
 [![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
@@ -331,3 +331,15 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
 - **[tarchia](https://github.com/mabel-dev/mabel)** Data Catalog  
+
+## Thank You
+
+A huge thank you to our amazing sponsor:
+
+**[Konstantin Vinogradov](https://github.com/vinogradovkonst)**  
+❤️ Your support helps us continue building and improving Opteryx for everyone.
+
+---
+
+Want to see your name here?  
+[Become a sponsor](https://github.com/sponsors/mabel-dev) to support Opteryx and join our journey!

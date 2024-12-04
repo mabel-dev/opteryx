@@ -31,7 +31,6 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import convert_orso_schema_to_arrow_schema
 
-from opteryx import EOS
 from opteryx import config
 from opteryx.exceptions import DataError
 from opteryx.models import QueryProperties

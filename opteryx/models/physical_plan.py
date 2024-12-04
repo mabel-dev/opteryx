@@ -22,6 +22,7 @@ from typing import Tuple
 import pyarrow
 
 from opteryx import EOS
+from opteryx.config import CONCURRENT_WORKERS
 from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
@@ -113,7 +114,6 @@ class PhysicalPlan(Graph):
         plan = list(_inner_explain(head[0], 1))
 
         table = pyarrow.Table.from_pylist(plan)
-        print(table)
         return table
 
     def execute(self, head_node=None) -> Generator[Tuple[Any, ResultType], Any, Any]:
@@ -135,15 +135,21 @@ class PhysicalPlan(Graph):
                 return  # Node is already marked as exhausted
 
             node_exhaustion[node_id] = True
-#            print("+", node_id, self[node_id].name)
+
+            if isinstance(self[node_id], ReaderNode):
+                return
 
             # Notify downstream nodes
-            for _, downstream_node, _ in self.outgoing_edges(node_id):
+            downstream_nodes = self.outgoing_edges(node_id)
+            if len(downstream_nodes) > 1:
+                raise InvalidInternalStateError("Cannot FORK execution")
+            elif len(downstream_nodes) == 1:
+                _, downstream_node, _ = downstream_nodes[0]
                 # Check if all parents of downstream_node are exhausted
                 if all(
                     node_exhaustion[parent] for parent, _, _ in self.ingoing_edges(downstream_node)
                 ):
-                    work_queue.put((downstream_node, EOS))  # EOS signals exhaustion
+                    work_queue.put((node_id, EOS))  # EOS signals exhaustion
                     active_tasks_increment(+1)
                     morsel_accounting[node_id] += 1
 
@@ -160,10 +166,19 @@ class PhysicalPlan(Graph):
             """
             with morsel_lock:
                 morsel_accounting[node_id] += morsel_count_change
-                # print(">", node_id, morsel_accounting[node_id], morsel_count_change, self[node_id].name)
+                #                print(
+                #                    "ACCOUNT",
+                #                    node_id,
+                #                    morsel_accounting[node_id],
+                #                    morsel_count_change,
+                #                    self[node_id].name,
+                #                )
+
+                if morsel_accounting[node_id] < 0:
+                    raise InvalidInternalStateError("Node input and output count in invalid state.")
 
                 # Check if the node is exhausted
-                if morsel_accounting[node_id] <= 0:  # No more pending morsels for this node
+                if morsel_accounting[node_id] == 0:  # No more pending morsels for this node
                     # Ensure all parent nodes are exhausted
                     all_parents_exhausted = all(
                         node_exhaustion[parent] for parent, _, _ in self.ingoing_edges(node_id)
@@ -195,7 +210,7 @@ class PhysicalPlan(Graph):
             work_queue = Queue()
             # Response queue for results sent back to the engine
             response_queue = Queue()
-            num_workers = 1
+            num_workers = CONCURRENT_WORKERS
             workers = []
 
             def worker_process():
@@ -208,8 +223,6 @@ class PhysicalPlan(Graph):
                         break
 
                     node_id, morsel = task
-                    if morsel_accounting[node_id] is False:
-                        print("RUNNING AN EXHAUSTED NODE")
                     operator = self[node_id]
                     results = operator(morsel)
 
@@ -232,6 +245,8 @@ class PhysicalPlan(Graph):
                 # Identify pump nodes
                 global active_tasks
 
+                # Get all the nodes which push data into the plan We use DFS to order the
+                # nodes to ensure left branch is always before the right branch
                 pump_nodes = [
                     (nid, node)
                     for nid, node in self.depth_first_search_flat()
@@ -241,10 +256,10 @@ class PhysicalPlan(Graph):
                 # Main engine loop processes pump nodes and coordinates work
                 for pump_nid, pump_instance in pump_nodes:
                     for morsel in pump_instance(None):
-                        # Initial morsels pushed to the work queue
-                        # Determine downstream operators
+                        # Initial morsels pushed to the work queue determine downstream operators
                         next_nodes = [target for _, target, _ in self.outgoing_edges(pump_nid)]
                         for downstream_node in next_nodes:
+                            # DEBUG: log (f"following initial {self[pump_nid].name} triggering {self[downstream_node].name}")
                             # Queue tasks for downstream operators
                             work_queue.put((downstream_node, morsel))
                             active_tasks_increment(+1)
@@ -258,13 +273,6 @@ class PhysicalPlan(Graph):
                     all_nodes_exhausted = all(node_exhaustion.values())
                     queues_empty = work_queue.empty() and response_queue.empty()
                     all_nodes_inactive = active_tasks <= 0
-#                    print(
-#                        node_exhaustion.values(),
-#                        all(node_exhaustion.values()),
-#                        work_queue.empty(),
-#                        response_queue.empty(),
-#                        active_tasks,
-#                    )
                     return all_nodes_exhausted and queues_empty and all_nodes_inactive
 
                 while not should_stop():
@@ -274,27 +282,33 @@ class PhysicalPlan(Graph):
                     except Empty:
                         continue
 
-                    # Handle EOS
-                    if result is None or result == EOS:
+                    # if a thread threw a error, we get them in the main
+                    # thread here, we just reraise the error here
+                    if isinstance(result, Exception):
+                        raise result
+
+                    # Handle Empty responses
+                    if result is None:
                         active_tasks_increment(-1)
                         continue
 
                     # Determine downstream operators
                     downstream_nodes = [target for _, target, _ in self.outgoing_edges(node_id)]
-                    if len(downstream_nodes) == 0:
-                        # print("YIELD")
-                        yield result
-                    else:
-                        for downstream_node in downstream_nodes:
-                            # Queue tasks for downstream operators
-                            active_tasks_increment(+1)
-                            work_queue.put((downstream_node, result))
-                            update_morsel_accounting(downstream_node, +1)
+                    if len(downstream_nodes) == 0:  # Exit node
+                        if result is not None:
+                            yield result  # Emit the morsel immediately
+                        active_tasks_increment(-1)  # Mark the task as completed
+                        continue
+
+                    for downstream_node in downstream_nodes:
+                        # Queue tasks for downstream operators
+                        active_tasks_increment(+1)
+                        # DEBUG: log (f"following {self[node_id].name} triggering {self[downstream_node].name}")
+                        work_queue.put((downstream_node, result))
+                        update_morsel_accounting(downstream_node, +1)
 
                     # decrement _after_ we've done the work relation to handling the task
                     active_tasks_increment(-1)
-
-                # print("DONE!", node_exhaustion, work_queue.empty(), response_queue.empty())
 
                 for worker in workers:
                     work_queue.put(None)

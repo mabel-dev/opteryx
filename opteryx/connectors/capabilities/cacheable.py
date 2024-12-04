@@ -147,6 +147,7 @@ def async_read_thru_cache(func):
             if source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
                 # If we read from the source, it's not in the remote cache
                 remote_cache.set(key, payload)
+                system_statistics.remote_cache_commits += 1
             else:
                 statistics.cache_oversize += 1
 
