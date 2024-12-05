@@ -62,7 +62,7 @@ class PyArrowJoinNode(JoinNode):
             return f"{self._join_type.upper()} JOIN (USING {','.join(map(format_expression, self._using))})"
         return f"{self._join_type.upper()}"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
         if self.stream == "left":
             if morsel == EOS:
                 self.stream = "right"

@@ -64,7 +64,7 @@ class ExitNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Exit"
 
-    def execute(self, morsel: Table) -> Table:
+    def execute(self, morsel: Table, **kwargs) -> Table:
         # Exit doesn't return EOS
         if morsel == EOS:
             yield None

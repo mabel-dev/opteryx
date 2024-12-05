@@ -21,9 +21,7 @@ Download      | https://pypi.org/project/opteryx/
 
 ## What is Opteryx?
 
-Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources, including database systems like Postgres and datalake file formats like Parquet. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization.
-
-Opteryx is a Python library that combines elements of in-process database engines like SQLite and DuckDB with federative features found in systems like Presto and Trino. The result is a versatile tool for querying data across multiple data sources in a seamless fashion.
+Opteryx is a Python library enabling SQL queries across diverse data sources like Postgres, Parquet, and MongoDB. Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization. Opteryx combines the simplicity of SQLite and DuckDB with federated query capabilities found in Presto and Trino.
 
 Opteryx offers the following features:
 
@@ -289,7 +287,6 @@ You can also try Opteryx right now using our [interactive labs](https://github.c
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
 [![Medium](https://img.shields.io/badge/Read%20on-Medium-5865F2.svg?logo=medium)](https://medium.com/opteryx)
 
-
 **Get Involved**
 
 🌟 **Star this repo** to show your support and help others discover Opteryx.  
@@ -299,13 +296,14 @@ You can also try Opteryx right now using our [interactive labs](https://github.c
 ❤️ We welcome [sponsorships](https://github.com/sponsors/mabel-dev) of any size. Every contribution helps us make Opteryx even better! 
 
 We’re excited to have you join our journey. Let us know how we can help!
+
 ## Security
+
+We take security seriously. If you find any weaknesses please review our [Security Policy](https://github.com/mabel-dev/opteryx/blob/main/SECURITY.md) let us know through our [reporting process](https://github.com/mabel-dev/opteryx/security/advisories/new).
 
 [![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
-
-See the project [Security Policy](SECURITY.md) for information about reporting vulnerabilities.
 
 ## License
 
@@ -325,6 +323,8 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 - Performance tuning is incomplete
 - Changes are focused on feature completion, bugs, performance, reducing debt, and security
 - Code structure and APIs are not stable and may change
+
+We’re actively adding features and improving performance.
 
 ## Related Projects
 

@@ -104,7 +104,7 @@ class AggregateAndGroupNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Group"
 
-    def execute(self, morsel: pyarrow.Table):
+    def execute(self, morsel: pyarrow.Table, **kwargs):
         if morsel == EOS:
             # merge all the morsels together into one table, selecting only the columns
             # we're pretty sure we're going to use - this will fail for datasets

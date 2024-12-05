@@ -85,9 +85,10 @@ class InnerJoinNode(JoinNode):
         self._right_columns = parameters.get("right_columns")
         self._right_relation = parameters.get("right_relation_names")
 
-        self.stream = "left"
         self.left_buffer = []
+        self.right_buffer = []
         self.left_hash = None
+        self.left_complete = False
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -101,10 +102,12 @@ class InnerJoinNode(JoinNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel: Table) -> Table:
-        if self.stream == "left":
+    def execute(self, morsel: Table, join_leg: str) -> Table:
+        print(join_leg, type(morsel))
+
+        if join_leg == "left":
             if morsel == EOS:
-                self.stream = "right"
+                self.left_complete = True
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
 
@@ -116,21 +119,36 @@ class InnerJoinNode(JoinNode):
                     )
 
                 self.left_hash = hash_join_map(self.left_relation, self._left_columns)
+
+                for right_morsel in self.right_buffer:
+                    yield inner_join_with_preprocessed_left_side(
+                        left_relation=self.left_relation,
+                        right_relation=right_morsel,
+                        join_columns=self._right_columns,
+                        hash_table=self.left_hash,
+                    )
+                self.right_buffer.clear()
+                return
             else:
                 self.left_buffer.append(morsel)
             yield None
             return
 
-        if morsel == EOS:
-            yield None
-            return
+        if join_leg == "right":
+            if morsel == EOS:
+                yield None
+                return
+            if not self.left_complete:
+                self.right_buffer.append(morsel)
+                yield None
+                return
 
-        # do the join
-        new_morsel = inner_join_with_preprocessed_left_side(
-            left_relation=self.left_relation,
-            right_relation=morsel,
-            join_columns=self._right_columns,
-            hash_table=self.left_hash,
-        )
+            # do the join
+            new_morsel = inner_join_with_preprocessed_left_side(
+                left_relation=self.left_relation,
+                right_relation=morsel,
+                join_columns=self._right_columns,
+                hash_table=self.left_hash,
+            )
 
-        yield new_morsel
+            yield new_morsel

@@ -218,7 +218,7 @@ class AggregateNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Aggregation"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
             if _is_count_star(self.aggregates):
                 yield _count_star(

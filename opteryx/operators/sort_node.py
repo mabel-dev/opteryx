@@ -50,7 +50,7 @@ class SortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sort"
 
-    def execute(self, morsel: Table) -> Table:
+    def execute(self, morsel: Table, **kwargs) -> Table:
         if morsel != EOS:
             self.morsels.append(morsel)
             yield None

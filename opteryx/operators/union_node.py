@@ -44,7 +44,7 @@ class UnionNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel: Table) -> Table:
+    def execute(self, morsel: Table, **kwargs) -> Table:
         """
         Union needs to ensure the column names are the same and that
         coercible types are coerced.

@@ -39,6 +39,6 @@ class NoOpNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel: Table) -> Table:
+    def execute(self, morsel: Table, **kwargs) -> Table:
         print("NOOP was called")
         yield morsel

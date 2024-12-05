@@ -89,14 +89,14 @@ class BasePlanNode:
     def execute(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:  # pragma: no cover
         pass
 
-    def __call__(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:
+    def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
         if hasattr(morsel, "num_rows"):
             self.records_in += morsel.num_rows
             self.bytes_in += morsel.nbytes
             self.calls += 1
 
         # set up the execution of the operator
-        generator = self.execute(morsel)
+        generator = self.execute(morsel, join_leg=join_leg)
 
         while True:
             try:

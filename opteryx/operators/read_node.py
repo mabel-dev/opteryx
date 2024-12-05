@@ -188,7 +188,7 @@ class ReaderNode(BasePlanNode):
             f"{' WITH(' + ','.join(self.parameters.get('hints')) + ')' if self.parameters.get('hints') else ''})"
         )
 
-    def execute(self, morsel) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         """Perform this step, time how long is spent doing work"""
 
         morsel = None

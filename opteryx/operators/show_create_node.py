@@ -44,7 +44,7 @@ class ShowCreateNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if self.object_type == "VIEW":
             from opteryx.planner.views import is_view
             from opteryx.planner.views import view_as_sql

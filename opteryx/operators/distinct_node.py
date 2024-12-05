@@ -48,7 +48,7 @@ class DistinctNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Distinction"
 
-    def execute(self, morsel: Table) -> Table:
+    def execute(self, morsel: Table, **kwargs) -> Table:
         from opteryx.compiled.structures import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
