@@ -82,7 +82,7 @@ class HeapSortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Heap Sort"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
             yield self.table
             return

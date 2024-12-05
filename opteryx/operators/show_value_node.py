@@ -53,7 +53,7 @@ class ShowValueNode(ReaderNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         buffer = [{"name": self.key, "value": str(self.value)}]
         table = pyarrow.Table.from_pylist(buffer)
         yield table

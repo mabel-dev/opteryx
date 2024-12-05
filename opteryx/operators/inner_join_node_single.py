@@ -187,7 +187,7 @@ class InnerJoinSingleNode(JoinNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
         if self.stream == "left":
             if morsel == EOS:
                 self.stream = "right"

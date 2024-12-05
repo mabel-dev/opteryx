@@ -93,7 +93,7 @@ STATEMENTS = [
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
 
-        # Randomly generated but consistently tested queries
+        # Randomly generated but consistently tested queries (note we have a fuzzer in the full suite)
         ("SELECT * FROM $planets WHERE `name` = 'Earth'", 1, 20, None),
         ("SELECT * FROM $planets WHERE name = 'Mars'", 1, 20, None),
         ("SELECT * FROM $planets WHERE name <> 'Venus'", 8, 20, None),

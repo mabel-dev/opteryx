@@ -47,7 +47,7 @@ class LimitNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self.limit) + " OFFSET " + str(self.offset)
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
             yield None
             return

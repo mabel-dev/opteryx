@@ -123,7 +123,7 @@ class FunctionDatasetNode(ReaderNode):
     def can_push_selection(self):
         return False
 
-    def execute(self, morsel) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         try:
             start_time = time.time_ns()
             data = DATASET_FUNCTIONS[self.function](**self.parameters)  # type:ignore

@@ -84,7 +84,7 @@ class AsyncReaderNode(ReaderNode):
     def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover
         raise NotImplementedError()
 
-    def execute(self, morsel) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         from opteryx import system_statistics
 
         """Perform this step, time how long is spent doing work"""

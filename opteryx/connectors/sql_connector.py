@@ -198,8 +198,6 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 b = time.monotonic_ns()
                 morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
                 convert_time += time.monotonic_ns() - b
-                yield morsel
-                at_least_once = True
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
                 # 500 records to get an idea of the row size, assuming these 500 are
@@ -212,6 +210,9 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     self.chunk_size = min(self.chunk_size, 1000000)  # cap at 1 million
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
+
+                yield morsel
+                at_least_once = True
 
         if not at_least_once:
             yield DataFrame(schema=result_schema).arrow()
@@ -236,9 +237,16 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                         name=column.name,
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
                         precision=(
-                            column.type.precision if column.type.precision is not None else 38
+                            column.type.precision
+                            if hasattr(column.type, "precision")
+                            and column.type.precision is not None
+                            else 38
                         ),
-                        scale=(column.type.scale if column.type.scale is not None else 14),
+                        scale=(
+                            column.type.scale
+                            if hasattr(column.type, "scale") and column.type.scale is not None
+                            else 14
+                        ),
                         nullable=column.nullable,
                     )
                     for column in table.columns

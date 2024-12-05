@@ -323,7 +323,7 @@ class CrossJoinNode(JoinNode):
             filters = f"({self._unnest_target.name} IN ({', '.join(self._filters)}))"
         return f"CROSS JOIN {filters}"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
         if not self.continue_executing:
             yield None
             return

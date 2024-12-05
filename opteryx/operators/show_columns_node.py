@@ -71,7 +71,7 @@ class ShowColumnsNode(BasePlanNode):
         dic["name"] = renames[dic["name"]]
         return dic
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         from orso import DataFrame
 
         if self.seen:

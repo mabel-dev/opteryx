@@ -62,7 +62,7 @@ class ProjectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Projection"
 
-    def execute(self, morsel: pyarrow.Table) -> pyarrow.Table:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
             yield None
             return
