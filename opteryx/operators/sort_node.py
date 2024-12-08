@@ -18,27 +18,25 @@ This is a SQL Query Execution Plan Node.
 This node orders a dataset
 """
 
-import time
-from typing import Generator
-
 import numpy
 from orso.types import OrsoTypes
+from pyarrow import Table
 from pyarrow import concat_tables
 
+from opteryx import EOS
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class SortNode(BasePlanNode):
-    operator_type = OperatorType.BLOCKING
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.order_by = config.get("order", [])
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.order_by = parameters.get("order_by", [])
+        self.morsels = []
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -52,15 +50,15 @@ class SortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sort"
 
-    def execute(self) -> Generator:
-        morsels = self._producers[0]  # type:ignore
-        morsels = morsels.execute()
-        morsels = tuple(morsels)
+    def execute(self, morsel: Table, **kwargs) -> Table:
+        if morsel != EOS:
+            self.morsels.append(morsel)
+            yield None
+            return
+
+        table = concat_tables(self.morsels, promote_options="permissive")
+
         mapped_order = []
-
-        table = concat_tables(morsels, promote_options="permissive")
-
-        start_time = time.time_ns()
 
         for column, direction in self.order_by:
             if column.node_type == NodeType.FUNCTION:
@@ -70,8 +68,6 @@ class SortNode(BasePlanNode):
                 if column.value in ("RANDOM", "RAND"):
                     new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
                     table = table.take(new_order)
-                    self.statistics.time_ordering = time.time_ns() - start_time
-
                     yield table
                     return
 
@@ -103,7 +99,4 @@ class SortNode(BasePlanNode):
                         f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                     )
 
-        table = table.sort_by(mapped_order)
-        self.statistics.time_ordering = time.time_ns() - start_time
-
-        yield table
+        yield table.sort_by(mapped_order)

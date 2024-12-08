@@ -46,6 +46,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets\nFOR TODAY;", [('$planets', THIS_MORNING, TONIGHT)]),
         ("SELECT * FROM $planets\tFOR TODAY;", [('$planets', THIS_MORNING, TONIGHT)]),
         ("SELECT * FROM $planets -- FOR YESTERDAY\nFOR TODAY;", [('$planets', THIS_MORNING, TONIGHT)]),
+        ("SELECT * FROM $planets /* FOR YESTERDAY */ FOR TODAY;", [('$planets', THIS_MORNING, TONIGHT)]),
         ("SELECT * FROM $planets FOR TODAY WHERE name = ?", [('$planets', THIS_MORNING, TONIGHT)]),
         ("SELECT * FROM $planets FOR TODAY GROUP BY name", [('$planets', THIS_MORNING, TONIGHT)]),
         ("SELECT * FROM $planets FOR TODAY ORDER BY name", [('$planets', THIS_MORNING, TONIGHT)]),
@@ -101,6 +102,23 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR YESTERDAY WHERE id IN (SELECT * FROM $planets);", [('$planets', YESTERDAY, YESTERDAY.replace(hour=23, minute=59)), ('$planets', None, None)]),
         ("SELECT * FROM $planets WHERE id IN (SELECT * FROM $planets FOR YESTERDAY);", [('$planets', None, None), ('$planets', YESTERDAY, YESTERDAY.replace(hour=23, minute=59))]),
         ("SELECT * FROM $planets WHERE id IN (SELECT * FROM $planets);", [('$planets', None, None), ('$planets', None, None)]),
+        
+        # FROM in functions
+        ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT EXTRACT(YEAR FROM CURRENT_TIME)", []),
+        ("SELECT SUBSTRING('name' FROM 1 FOR 1)", []),
+        ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+        ("SELECT TRIM ( 'foo' FROM 'foo' )", []),
+        ("SELECT TRIM ( 'MVEJSONP' FROM name ) FROM $planets", [("$planets", None, None)]),
+        ("SELECT TRIM ( 'MVEJSONP' FROM name ) FROM $planets FOR TODAY", [("$planets", THIS_MORNING, TONIGHT)]),
+        
+        # function in a 'special' function
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM -4)) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM -4)) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
     ]
 # fmt:on
 

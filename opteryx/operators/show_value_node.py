@@ -20,21 +20,20 @@ from typing import Generator
 
 import pyarrow
 
+from opteryx import EOS
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import ReaderNode
 
 
-class ShowValueNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
+class ShowValueNode(ReaderNode):
+    def __init__(self, properties: QueryProperties, **parameters):
+        ReaderNode.__init__(self, properties=properties, **parameters)
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-
-        self.key = config.get("key")
-        self.kind = config.get("kind")
-        self.value = config.get("value")
+        self.key = parameters.get("key")
+        self.kind = parameters.get("kind")
+        self.value = parameters.get("value")
 
         if self.kind == "PARAMETER":
             if self.value[0] == "@":
@@ -54,7 +53,7 @@ class ShowValueNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         buffer = [{"name": self.key, "value": str(self.value)}]
         table = pyarrow.Table.from_pylist(buffer)
         yield table

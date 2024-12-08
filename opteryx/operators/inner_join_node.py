@@ -31,16 +31,15 @@ This is a hash join, this is completely rewritten from the earlier
 pyarrow_ops implementation which was a variation of a sort-merge join.
 """
 
-import time
-from typing import Generator
-
 import pyarrow
+from pyarrow import Table
 
+from opteryx import EOS
 from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
 from opteryx.utils.arrow import align_tables
+
+from . import JoinNode
 
 
 def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_columns, hash_table):
@@ -73,20 +72,23 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     return align_tables(right_relation, left_relation, right_indexes, left_indexes)
 
 
-class InnerJoinNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
+class InnerJoinNode(JoinNode):
+    def __init__(self, properties: QueryProperties, **parameters):
+        JoinNode.__init__(self, properties=properties, **parameters)
+        self._join_type = parameters["type"]
+        self._on = parameters.get("on")
+        self._using = parameters.get("using")
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._join_type = config["type"]
-        self._on = config.get("on")
-        self._using = config.get("using")
+        self._left_columns = parameters.get("left_columns")
+        self._left_relation = parameters.get("left_relation_names")
 
-        self._left_columns = config.get("left_columns")
-        self._left_relation = config.get("left_relation_names")
+        self._right_columns = parameters.get("right_columns")
+        self._right_relation = parameters.get("right_relation_names")
 
-        self._right_columns = config.get("right_columns")
-        self._right_relation = config.get("right_relation_names")
+        self.left_buffer = []
+        self.right_buffer = []
+        self.left_hash = None
+        self.left_complete = False
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -100,30 +102,53 @@ class InnerJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Generator:
-        left_node = self._producers[0]  # type:ignore
-        right_node = self._producers[1]  # type:ignore
+    def execute(self, morsel: Table, join_leg: str) -> Table:
+        print(join_leg, type(morsel))
 
-        left_relation = pyarrow.concat_tables(left_node.execute(), promote_options="none")
-        # in place until #1295 resolved
-        if self._left_columns[0] not in left_relation.column_names:
-            self._right_columns, self._left_columns = (
-                self._left_columns,
-                self._right_columns,
-            )
+        if join_leg == "left":
+            if morsel == EOS:
+                self.left_complete = True
+                self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
+                self.left_buffer.clear()
 
-        start = time.monotonic_ns()
-        left_hash = hash_join_map(left_relation, self._left_columns)
+                # in place until #1295 resolved
+                if self._left_columns[0] not in self.left_relation.column_names:
+                    self._right_columns, self._left_columns = (
+                        self._left_columns,
+                        self._right_columns,
+                    )
 
-        self.statistics.time_inner_join += time.monotonic_ns() - start
-        for morsel in right_node.execute():
-            start = time.monotonic_ns()
+                self.left_hash = hash_join_map(self.left_relation, self._left_columns)
+
+                for right_morsel in self.right_buffer:
+                    yield inner_join_with_preprocessed_left_side(
+                        left_relation=self.left_relation,
+                        right_relation=right_morsel,
+                        join_columns=self._right_columns,
+                        hash_table=self.left_hash,
+                    )
+                self.right_buffer.clear()
+                return
+            else:
+                self.left_buffer.append(morsel)
+            yield None
+            return
+
+        if join_leg == "right":
+            if morsel == EOS:
+                yield None
+                return
+            if not self.left_complete:
+                self.right_buffer.append(morsel)
+                yield None
+                return
+
             # do the join
             new_morsel = inner_join_with_preprocessed_left_side(
-                left_relation=left_relation,
+                left_relation=self.left_relation,
                 right_relation=morsel,
                 join_columns=self._right_columns,
-                hash_table=left_hash,
+                hash_table=self.left_hash,
             )
-            self.statistics.time_inner_join += time.monotonic_ns() - start
+
             yield new_morsel

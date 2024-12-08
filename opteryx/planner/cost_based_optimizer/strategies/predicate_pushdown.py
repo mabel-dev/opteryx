@@ -11,7 +11,10 @@
 # limitations under the License.
 
 """
-PUSH DOWN
+Optimization Rule - Predicate Pushdown
+
+Type: Heuristic
+Goal: Filter rows as early as possible
 
 One main heuristic strategy is it eliminate rows to be processed as early
 as possible, to do that we try to push filter conditions to as close to the
@@ -62,7 +65,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         ):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
-            self.statistics.optimization_predicate_pushdown += 1
             context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
             if context.last_nid:
                 context.optimized_plan.add_edge(context.node_id, context.last_nid)

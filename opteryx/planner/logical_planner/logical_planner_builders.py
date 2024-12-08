@@ -549,10 +549,18 @@ def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
     negated = branch["negated"]
     left = build(branch["expr"])
     right = build(branch["pattern"])
+    is_any = branch.get("any", False)
     if key in ("PGRegexMatch", "SimilarTo"):
         key = "RLike"
     if negated:
         key = f"Not{key}"
+    if is_any:
+        key = f"AnyOp{key}"
+        if right.node_type == NodeType.NESTED:
+            right = right.centre
+        if right.type != OrsoTypes.ARRAY:
+            right.value = (right.value,)
+            right.type = OrsoTypes.ARRAY
     return Node(
         NodeType.COMPARISON_OPERATOR,
         value=key,

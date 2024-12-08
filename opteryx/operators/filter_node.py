@@ -18,12 +18,10 @@ This is a SQL Query Execution Plan Node.
 This node is responsible for applying filters to datasets.
 """
 
-import time
-from typing import Generator
-
 import numpy
 import pyarrow
 
+from opteryx import EOS
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
@@ -31,16 +29,14 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class FilterNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.filter = config.get("filter")
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.filter = parameters.get("filter")
 
         self.function_evaluations = get_all_nodes_of_type(
             self.filter,
@@ -59,39 +55,30 @@ class FilterNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Filter"
 
-    def execute(self) -> Generator:
-        morsels = self._producers[0]  # type:ignore
-        schema = None
-        at_least_one = False
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        if morsel == EOS:
+            yield None
+            return
 
-        for morsel in morsels.execute():
-            if schema is None:
-                schema = morsel.schema
+        if morsel.num_rows == 0:
+            yield morsel
+            return
 
-            if morsel.num_rows == 0:
-                continue
-
-            start_selection = time.time_ns()
+        if self.function_evaluations:
             morsel = evaluate_and_append(self.function_evaluations, morsel)
-            mask = evaluate(self.filter, morsel)
-            self.statistics.time_evaluating += time.time_ns() - start_selection
+        mask = evaluate(self.filter, morsel)
 
-            if not isinstance(mask, pyarrow.lib.BooleanArray):
-                try:
-                    mask = pyarrow.array(mask, type=pyarrow.bool_())
-                except Exception as err:  # nosec
-                    raise SqlError(
-                        f"Unable to filter on expression '{format_expression(self.filter)} {err}'."
-                    )
-            mask = numpy.nonzero(mask)[0]
+        if not isinstance(mask, pyarrow.lib.BooleanArray):
+            try:
+                mask = pyarrow.array(mask, type=pyarrow.bool_())
+            except Exception as err:  # nosec
+                raise SqlError(
+                    f"Unable to filter on expression '{format_expression(self.filter)} {err}'."
+                )
+        mask = numpy.nonzero(mask)[0]
 
-            self.statistics.time_selecting += time.time_ns() - start_selection
-
-            # if there's no matching rows, just drop the morsel
-            if mask.size > 0 and not numpy.all(mask is None):
-                yield morsel.take(pyarrow.array(mask))
-                at_least_one = True
-
-        # we need to send something to the next operator, send an empty table
-        if not at_least_one:
-            yield pyarrow.Table.from_arrays([[] for i in schema.names], schema=schema)
+        # if there's no matching rows, just drop the morsel
+        if mask.size > 0 and not numpy.all(mask is None):
+            yield morsel.take(pyarrow.array(mask))
+        else:
+            yield morsel.slice(0, 0)

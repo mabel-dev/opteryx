@@ -18,21 +18,20 @@ This is a SQL Query Execution Plan Node.
 This node performs aggregates without performing groupings.
 """
 
-import time
 from dataclasses import dataclass
-from typing import Generator
 
 import numpy
 import pyarrow
 
+from opteryx import EOS
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
 from opteryx.operators.base_plan_node import BasePlanDataObject
+
+from . import BasePlanNode
 
 COUNT_STAR: str = "COUNT(*)"
 
@@ -75,19 +74,18 @@ def _is_count_star(aggregates):
 
 
 def _count_star(morsel_promise, column_name):
-    count = sum(morsel.num_rows for morsel in morsel_promise.execute())
+    count = sum(morsel.num_rows for morsel in morsel_promise)
     table = pyarrow.Table.from_pylist([{column_name: count}])
-    yield table
+    return table
 
 
-def project(tables, column_names):
-    for table in tables:
-        row_count = table.num_rows
-        if len(column_names) > 0:
-            yield table.select(dict.fromkeys(column_names))
-        else:
-            # if we can't find the column, add a placeholder column
-            yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
+def project(table: pyarrow.Table, column_names: list) -> pyarrow.Table:
+    row_count = table.num_rows
+    if len(column_names) > 0:
+        return table.select(dict.fromkeys(column_names))
+    else:
+        # if we can't find the column, add a placeholder column
+        return pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
 def build_aggregations(aggregators):
@@ -188,12 +186,10 @@ class AggregateDataObject(BasePlanDataObject):
 
 
 class AggregateNode(BasePlanNode):
-    operator_type = OperatorType.BLOCKING
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-
-        self.aggregates = config.get("aggregates", [])
+        self.aggregates = parameters.get("aggregates", [])
 
         # get all the columns anywhere in the aggregates
         all_identifiers = [
@@ -208,6 +204,7 @@ class AggregateNode(BasePlanNode):
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
         self.do = AggregateDataObject()
+        self.buffer = []
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -221,46 +218,40 @@ class AggregateNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Aggregation"
 
-    def execute(self) -> Generator[pyarrow.Table, None, None]:
-        morsels = self._producers[0]  # type:ignore
-        if isinstance(morsels, pyarrow.Table):
-            morsels = (morsels,)
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        if morsel == EOS:
+            if _is_count_star(self.aggregates):
+                yield _count_star(
+                    morsel_promise=self.buffer,
+                    column_name=self.aggregates[0].schema_column.identity,
+                )
+                return
 
-        if _is_count_star(self.aggregates):
-            yield from _count_star(
-                morsel_promise=morsels,
-                column_name=self.aggregates[0].schema_column.identity,
-            )
+            # merge all the morsels together into one table, selecting only the columns
+            # we're pretty sure we're going to use - this will fail for datasets
+            # larger than memory until we implement some form of partitioning
+            table = pyarrow.concat_tables(self.buffer, promote_options="none")
+
+            # Allow grouping by functions by evaluating them first
+            if self.evaluatable_nodes:
+                table = evaluate_and_append(self.evaluatable_nodes, table)
+
+            # Add a "*" column, this is an int because when a bool it miscounts
+            if "*" not in table.column_names:
+                table = table.append_column(
+                    "*", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int8)]
+                )
+
+            # we're not a group_by - we're aggregating without grouping
+            aggregates = _non_group_aggregates(self.aggregates, table)
+            del table
+
+            # name the aggregate fields and add them to the Columns data
+            aggregates = aggregates.select(list(self.column_map.keys()))
+
+            yield aggregates
+
             return
 
-        # merge all the morsels together into one table, selecting only the columns
-        # we're pretty sure we're going to use - this will fail for datasets
-        # larger than memory until we implement some form of partitioning
-        table = pyarrow.concat_tables(
-            project(morsels.execute(), self.all_identifiers), promote_options="none"
-        )
-
-        # Allow grouping by functions by evaluating them first
-        start_time = time.time_ns()
-        if self.evaluatable_nodes:
-            table = evaluate_and_append(self.evaluatable_nodes, table)
-
-        # Add a "*" column, this is an int because when a bool it miscounts
-        if "*" not in table.column_names:
-            table = table.append_column(
-                "*", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int8)]
-            )
-        self.statistics.time_evaluating += time.time_ns() - start_time
-
-        start_time = time.time_ns()
-
-        # we're not a group_by - we're aggregating without grouping
-        aggregates = _non_group_aggregates(self.aggregates, table)
-        del table
-
-        # name the aggregate fields and add them to the Columns data
-        aggregates = aggregates.select(list(self.column_map.keys()))
-
-        self.statistics.time_aggregating += time.time_ns() - start_time
-
-        yield aggregates
+        self.buffer.append(project(morsel, self.all_identifiers))
+        yield None

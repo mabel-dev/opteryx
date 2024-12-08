@@ -2,17 +2,20 @@
 name = "compute"
 version = "0.1.0"
 authors = ["@joocer"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20.3", features = ["extension-module", "abi3-py39"] }
-pythonize = "0.20"
+pythonize = "0.23"
 serde = "1.0.171"
 
+[dependencies.pyo3]
+version = "0.23"
+features = ["extension-module"]
+
 [dependencies.sqlparser]
-version = "0.51.0"
+version = "0.52.0"
 features = ["serde", "visitor"]

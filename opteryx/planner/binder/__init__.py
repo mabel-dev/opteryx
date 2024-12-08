@@ -91,7 +91,4 @@ def do_bind_phase(plan: LogicalPlan, connection=None, qid: str = None) -> Logica
 
     plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
 
-    # DEBUG: log ("AFTER BINDING")
-    # DEBUG: log (plan.draw())
-
     return plan

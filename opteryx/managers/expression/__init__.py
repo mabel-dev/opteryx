@@ -96,7 +96,7 @@ ORSO_TO_NUMPY_MAP = {
     OrsoTypes.STRUCT: numpy.dtype("O"),
     OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
     OrsoTypes.TIME: numpy.dtype("O"),
-    OrsoTypes.VARCHAR: numpy.unicode_(),
+    OrsoTypes.VARCHAR: numpy.dtype("U"),
     OrsoTypes.NULL: numpy.dtype("O"),
 }
 
@@ -343,8 +343,9 @@ def evaluate_and_append(expressions, table: Table):
             if table.num_rows > 0:
                 new_column = evaluate_statement(statement, table)
             else:
+                # we make all unknown fields int64s, this can be cast to _most_ other types
                 new_column = numpy.array(
-                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, numpy.str_)
+                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, numpy.int64)
                 )
                 new_column = pyarrow.array(new_column)
 

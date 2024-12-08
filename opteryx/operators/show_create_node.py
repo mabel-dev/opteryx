@@ -16,25 +16,21 @@ Show Create Node
 This is a SQL Query Execution Plan Node.
 """
 
-from typing import Generator
-
 import pyarrow
 
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class ShowCreateNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-
-        self.object_type = config.get("object_type")
-        self.object_name = config.get("object_name")
+        self.object_type = parameters.get("object_type")
+        self.object_name = parameters.get("object_name")
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -48,7 +44,7 @@ class ShowCreateNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Generator:
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if self.object_type == "VIEW":
             from opteryx.planner.views import is_view
             from opteryx.planner.views import view_as_sql
@@ -57,8 +53,7 @@ class ShowCreateNode(BasePlanNode):
                 view_sql = view_as_sql(self.object_name)
                 buffer = [{self.object_name: view_sql}]
                 table = pyarrow.Table.from_pylist(buffer)
-                yield table
-                return
+                return table
 
             raise DatasetNotFoundError(self.object_name)
 

@@ -104,5 +104,5 @@ def test_predicate_pushdown_multiple_mixed():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
-
+    test_predicate_pushdown_multiple_equals()
     run_tests()

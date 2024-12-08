@@ -19,6 +19,7 @@ import time
 from typing import Any
 from typing import Dict
 from typing import Generator
+from typing import Optional
 from typing import Tuple
 
 import pyarrow
@@ -34,6 +35,7 @@ from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -55,7 +57,7 @@ def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
     return f":{name}", parameters
 
 
-class SqlConnector(BaseConnector, PredicatePushable):
+class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
     __mode__ = "Sql"
     __type__ = "SQL"
 
@@ -95,6 +97,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
         BaseConnector.__init__(self, **kwargs)
+        LimitPushable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
         try:
@@ -129,6 +132,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
         columns: list = None,
         predicates: list = None,
         chunk_size: int = INITIAL_CHUNK_SIZE,  # type:ignore
+        limit: Optional[int] = None,
     ) -> Generator[pyarrow.Table, None, None]:  # type:ignore
         from sqlalchemy.sql import text
 
@@ -168,6 +172,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
                 query_builder.WHERE(f"{left_value} {operator} {right_value}")
 
+        if limit is not None:
+            query_builder.LIMIT(str(limit))
+
         at_least_once = False
 
         convert_time = 0.0
@@ -191,8 +198,6 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 b = time.monotonic_ns()
                 morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
                 convert_time += time.monotonic_ns() - b
-                yield morsel
-                at_least_once = True
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
                 # 500 records to get an idea of the row size, assuming these 500 are
@@ -205,6 +210,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     self.chunk_size = min(self.chunk_size, 1000000)  # cap at 1 million
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
+
+                yield morsel
+                at_least_once = True
 
         if not at_least_once:
             yield DataFrame(schema=result_schema).arrow()
@@ -229,9 +237,16 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         name=column.name,
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
                         precision=(
-                            column.type.precision if column.type.precision is not None else 38
+                            column.type.precision
+                            if hasattr(column.type, "precision")
+                            and column.type.precision is not None
+                            else 38
                         ),
-                        scale=(column.type.scale if column.type.scale is not None else 14),
+                        scale=(
+                            column.type.scale
+                            if hasattr(column.type, "scale") and column.type.scale is not None
+                            else 14
+                        ),
                         nullable=column.nullable,
                     )
                     for column in table.columns

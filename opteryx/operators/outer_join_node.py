@@ -23,17 +23,16 @@ We also have our own INNER JOIN implementations, it's really just the less
 popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
-import time
-from typing import Generator
 from typing import List
 
 import pyarrow
 
+from opteryx import EOS
 from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
 from opteryx.utils.arrow import align_tables
+
+from . import JoinNode
 
 
 def left_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
@@ -60,47 +59,41 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     left_indexes: deque = deque()
     right_indexes: deque = deque()
 
-    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
-
     if len(set(left_columns) & set(right_relation.column_names)) > 0:
         left_columns, right_columns = right_columns, left_columns
 
     right_hash = hash_join_map(right_relation, right_columns)
+    left_hash = hash_join_map(left_relation, left_columns)
 
-    for left_batch in left_relation.execute():
-        left_hash = hash_join_map(left_batch, left_columns)
-        for hash_value, left_rows in left_hash.hash_table.items():
-            right_rows = right_hash.get(hash_value)
-            if right_rows:
-                for l in left_rows:
-                    for r in right_rows:
-                        left_indexes.append(l)
-                        right_indexes.append(r)
-            else:
-                for l in left_rows:
+    for hash_value, left_rows in left_hash.hash_table.items():
+        right_rows = right_hash.get(hash_value)
+        if right_rows:
+            for l in left_rows:
+                for r in right_rows:
                     left_indexes.append(l)
-                    right_indexes.append(None)
+                    right_indexes.append(r)
+        else:
+            for l in left_rows:
+                left_indexes.append(l)
+                right_indexes.append(None)
 
-            if len(left_indexes) > 50_000:
-                table = align_tables(
-                    right_relation, left_batch, list(right_indexes), list(left_indexes)
-                )
-                yield table
-                left_indexes.clear()
-                right_indexes.clear()
-
-        if len(left_indexes) > 0:
+        if len(left_indexes) > 50_000:
             table = align_tables(
-                right_relation, left_batch, list(right_indexes), list(left_indexes)
+                right_relation, left_relation, list(right_indexes), list(left_indexes)
             )
             yield table
             left_indexes.clear()
             right_indexes.clear()
 
+    # this may return an empty table each time - fix later
+    table = align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
+    yield table
+    left_indexes.clear()
+    right_indexes.clear()
+
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
     chunk_size = 1000
-    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
 
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
@@ -110,7 +103,6 @@ def full_join(left_relation, right_relation, left_columns: List[str], right_colu
     left_indexes = []
     right_indexes = []
 
-    left_relation = pyarrow.concat_tables(left_relation.execute(), promote_options="none")
     left_values = left_relation.select(left_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*left_values)):
         rows = hash_table.get(hash(value_tuple))
@@ -152,7 +144,6 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
         pyarrow.Table: A chunk of the result of the RIGHT JOIN operation.
     """
     chunk_size = 1000
-    left_relation = pyarrow.concat_tables(left_relation.execute(), promote_options="none")
 
     hash_table = HashTable()
     non_null_left_values = left_relation.select(left_columns).itercolumns()
@@ -160,26 +151,25 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
         hash_table.insert(hash(value_tuple), i)
 
     # Iterate over the right_relation in chunks
-    right_batches = right_relation.execute()
-    for right_batch in right_batches:
-        for right_chunk in right_batch.to_batches(chunk_size):
-            left_indexes = []
-            right_indexes = []
 
-            right_values = right_chunk.select(right_columns).itercolumns()
-            for i, value_tuple in enumerate(zip(*right_values)):
-                rows = hash_table.get(hash(value_tuple))
-                if rows:
-                    left_indexes.extend(rows)
-                    right_indexes.extend([i] * len(rows))
-                else:
-                    left_indexes.append(None)
-                    right_indexes.append(i)
+    for right_chunk in right_relation.to_batches(chunk_size):
+        left_indexes = []
+        right_indexes = []
 
-            # Yield the aligned chunk
-            # we intentionally swap them to the other calls so we're building a table
-            # not a record batch (what the chunk is)
-            yield align_tables(left_relation, right_chunk, left_indexes, right_indexes)
+        right_values = right_chunk.select(right_columns).itercolumns()
+        for i, value_tuple in enumerate(zip(*right_values)):
+            rows = hash_table.get(hash(value_tuple))
+            if rows:
+                left_indexes.extend(rows)
+                right_indexes.extend([i] * len(rows))
+            else:
+                left_indexes.append(None)
+                right_indexes.append(i)
+
+        # Yield the aligned chunk
+        # we intentionally swap them to the other calls so we're building a table
+        # not a record batch (what the chunk is)
+        yield align_tables(left_relation, right_chunk, left_indexes, right_indexes)
 
 
 def left_anti_join(
@@ -200,30 +190,23 @@ def left_anti_join(
     Returns:
         A pyarrow.Table containing the result of the LEFT ANTI JOIN operation.
     """
-    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
-
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
         hash_table.insert(hash(value_tuple), i)
 
-    at_least_once = False
-    # Iterate over the left_relation in chunks
-    for left_batch in left_relation.execute():
-        left_indexes = []
-        left_values = left_batch.select(left_columns).itercolumns()
-        for i, value_tuple in enumerate(zip(*left_values)):
-            rows = hash_table.get(hash(value_tuple))
-            if not rows:  # Only include left rows that have no match in the right table
-                left_indexes.append(i)
+    left_indexes = []
+    left_values = left_relation.select(left_columns).itercolumns()
+    for i, value_tuple in enumerate(zip(*left_values)):
+        rows = hash_table.get(hash(value_tuple))
+        if not rows:  # Only include left rows that have no match in the right table
+            left_indexes.append(i)
 
-        # Filter the left_chunk based on the anti join condition
-        if left_indexes:
-            yield left_batch.take(left_indexes)
-            at_least_once = True
-
-    if not at_least_once:
-        yield left_batch.slice(0, 0)
+    # Filter the left_chunk based on the anti join condition
+    if left_indexes:
+        yield left_relation.take(left_indexes)
+    else:
+        yield left_relation.slice(0, 0)
 
 
 def left_semi_join(
@@ -244,47 +227,44 @@ def left_semi_join(
     Returns:
         A pyarrow.Table containing the result of the LEFT SEMI JOIN operation.
     """
-    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
 
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
         hash_table.insert(hash(value_tuple), i)
 
-    at_least_once = False
-    # Iterate over the left_relation in chunks
-    for left_batch in left_relation.execute():
-        left_indexes = []
-        left_values = left_batch.select(left_columns).itercolumns()
+    left_indexes = []
+    left_values = left_relation.select(left_columns).itercolumns()
 
-        for i, value_tuple in enumerate(zip(*left_values)):
-            rows = hash_table.get(hash(value_tuple))
-            if rows:  # Only include left rows that have a match in the right table
-                left_indexes.append(i)
+    for i, value_tuple in enumerate(zip(*left_values)):
+        rows = hash_table.get(hash(value_tuple))
+        if rows:  # Only include left rows that have a match in the right table
+            left_indexes.append(i)
 
-        # Filter the left_chunk based on the anti join condition
-        if left_indexes:
-            yield left_batch.take(left_indexes)
-            at_least_once = True
-
-    if not at_least_once:
-        yield left_batch.slice(0, 0)
+    # Filter the left_chunk based on the anti join condition
+    if left_indexes:
+        yield left_relation.take(left_indexes)
+    else:
+        yield left_relation.slice(0, 0)
 
 
-class OuterJoinNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
+class OuterJoinNode(JoinNode):
+    def __init__(self, properties: QueryProperties, **parameters):
+        JoinNode.__init__(self, properties=properties, **parameters)
+        self._join_type = parameters["type"]
+        self._on = parameters.get("on")
+        self._using = parameters.get("using")
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self._join_type = config["type"]
-        self._on = config.get("on")
-        self._using = config.get("using")
+        self._left_columns = parameters.get("left_columns")
+        self._left_relation = parameters.get("left_relation_names")
 
-        self._left_columns = config.get("left_columns")
-        self._left_relation = config.get("left_relation_names")
+        self._right_columns = parameters.get("right_columns")
+        self._right_relation = parameters.get("right_relation_names")
 
-        self._right_columns = config.get("right_columns")
-        self._right_relation = config.get("right_relation_names")
+        self.stream = "left"
+        self.left_buffer = []
+        self.right_buffer = []
+        self.left_relation = None
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -304,22 +284,34 @@ class OuterJoinNode(BasePlanNode):
             return f"{self._join_type.upper()} JOIN (USING {','.join(map(format_expression, self._using))})"
         return f"{self._join_type.upper()}"
 
-    def execute(self) -> Generator:
-        left_node = self._producers[0]  # type:ignore
-        right_node = self._producers[1]  # type:ignore
+    def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
+        if self.stream == "left":
+            if morsel == EOS:
+                self.stream = "right"
+                self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
+                self.left_buffer.clear()
+            else:
+                self.left_buffer.append(morsel)
+            yield None
+            return
 
-        join_provider = providers.get(self._join_type)
+        if self.stream == "right":
+            if morsel == EOS:
+                right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
+                self.right_buffer.clear()
 
-        start = time.monotonic_ns()
-        for morsel in join_provider(
-            left_relation=left_node,
-            right_relation=right_node,
-            left_columns=self._left_columns,
-            right_columns=self._right_columns,
-        ):
-            self.statistics.time_outer_join += time.monotonic_ns() - start
-            yield morsel
-            start = time.monotonic_ns()
+                join_provider = providers.get(self._join_type)
+
+                yield from join_provider(
+                    left_relation=self.left_relation,
+                    right_relation=right_relation,
+                    left_columns=self._left_columns,
+                    right_columns=self._right_columns,
+                )
+
+            else:
+                self.right_buffer.append(morsel)
+                yield None
 
 
 providers = {

@@ -33,12 +33,13 @@ from orso.schema import convert_orso_schema_to_arrow_schema
 
 from opteryx import config
 from opteryx.exceptions import DataError
+from opteryx.models import QueryProperties
 from opteryx.operators.base_plan_node import BasePlanDataObject
-from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
 
+from .read_node import ReaderNode
 from .read_node import normalize_morsel
 from .read_node import struct_to_jsonb
 
@@ -72,18 +73,18 @@ class AsyncReaderDataObject(BasePlanDataObject):
 
 
 class AsyncReaderNode(ReaderNode):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, properties: QueryProperties, **parameters):
+        ReaderNode.__init__(self, properties=properties, **parameters)
         self.pool = MemoryPool(MAX_READ_BUFFER_CAPACITY, f"ReadBuffer <{self.parameters['alias']}>")
 
         self.do = AsyncReaderDataObject()
-        self.predicates = kwargs.get("predicates")
+        self.predicates = parameters.get("predicates")
 
     @classmethod
     def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover
         raise NotImplementedError()
 
-    def execute(self) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         from opteryx import system_statistics
 
         """Perform this step, time how long is spent doing work"""
@@ -186,8 +187,9 @@ class AsyncReaderNode(ReaderNode):
                     arrow_schema = morsel.schema
 
                 self.statistics.blobs_read += 1
+                self.records_out += morsel.num_rows
                 self.statistics.rows_read += morsel.num_rows
-                self.statistics.bytes_processed += morsel.nbytes
+                self.bytes_out += morsel.nbytes
 
                 yield morsel
             except Exception as err:

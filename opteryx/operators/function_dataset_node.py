@@ -26,9 +26,9 @@ import pyarrow
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
 from opteryx.utils import series
+
+from .read_node import ReaderNode
 
 
 def _generate_series(**kwargs):
@@ -83,20 +83,18 @@ DATASET_FUNCTIONS = {
 }
 
 
-class FunctionDatasetNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
-    def __init__(self, properties: QueryProperties, **config):
+class FunctionDatasetNode(ReaderNode):
+    def __init__(self, properties: QueryProperties, **parameters):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(properties=properties)
-        self.alias = config.get("alias")
-        self.function = config["function"]
-        self.parameters = config
-        self.columns = config.get("columns", [])
-        self.args = config.get("args", [])
+        ReaderNode.__init__(self, properties=properties, **parameters)
+        self.alias = parameters.get("alias")
+        self.function = parameters["function"]
+        self.parameters = parameters
+        self.columns = parameters.get("columns", [])
+        self.args = parameters.get("args", [])
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -125,7 +123,7 @@ class FunctionDatasetNode(BasePlanNode):
     def can_push_selection(self):
         return False
 
-    def execute(self) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         try:
             start_time = time.time_ns()
             data = DATASET_FUNCTIONS[self.function](**self.parameters)  # type:ignore
@@ -144,7 +142,8 @@ class FunctionDatasetNode(BasePlanNode):
         else:
             table = data
 
-        self.statistics.rows_read += table.num_rows
+        self.records_out += table.num_rows
+        self.bytes_out += table.nbytes
         self.statistics.columns_read += len(table.column_names)
 
         yield table

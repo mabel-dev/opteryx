@@ -10,6 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Optimization Rule - Split Conjections
+
+Type: Heuristic
+Goal: Break filters into units which are easier to handle
+"""
+
 from orso.tools import random_string
 
 from opteryx.managers.expression import NodeType
@@ -71,6 +78,7 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
                     if col.schema_column is not None:
                         sources.extend(col.schema_column.origin)
                 new_node.relations = set(sources)
+                new_node.all_relations = node.all_relations
                 new_nodes.append(new_node)
         else:
             new_nodes = [node]

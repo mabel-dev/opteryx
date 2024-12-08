@@ -137,6 +137,23 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 node.schema_column = root.schema_column
                 return node
 
+        if root.node_type == NodeType.COMPARISON_OPERATOR:
+            if (
+                root.value in ("Like", "Ilike")
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.node_type == NodeType.LITERAL
+                and root.right.value == "%"
+            ):
+                # column LIKE '%' is True
+                node = Node(node_type=NodeType.UNARY_OPERATOR)
+                node.type = OrsoTypes.BOOLEAN
+                node.value = "IsNotNull"
+                node.schema_column = root.schema_column
+                node.centre = root.left
+                node.query_column = root.query_column
+                statistics.optimization_constant_fold_reduce += 1
+                return node
+
     if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         # try to fold each side of logical operators
         root.left = fold_constants(root.left, statistics)

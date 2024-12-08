@@ -28,8 +28,8 @@ from orso.schema import RelationSchema
 from orso.schema import convert_orso_schema_to_arrow_schema
 
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
@@ -132,10 +132,9 @@ def merge_schemas(
 
 
 class ReaderNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
     def __init__(self, properties: QueryProperties, **parameters):
-        super().__init__(properties=properties, **parameters)
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+
         self.start_date = parameters.get("start_date")
         self.end_date = parameters.get("end_date")
         self.hints = parameters.get("hints", [])
@@ -144,9 +143,13 @@ class ReaderNode(BasePlanNode):
 
         self.connector = parameters.get("connector")
         self.schema = parameters.get("schema")
+        self.limit = parameters.get("limit")
 
         if len(self.hints) != 0:
             self.statistics.add_message("All HINTS are currently ignored")
+
+        self.statistics.rows_read += 0
+        self.statistics.columns_read += 0
 
     def to_dict(self) -> dict:
         return {
@@ -185,12 +188,8 @@ class ReaderNode(BasePlanNode):
             f"{' WITH(' + ','.join(self.parameters.get('hints')) + ')' if self.parameters.get('hints') else ''})"
         )
 
-    def execute(self) -> Generator:
+    def execute(self, morsel, **kwargs) -> Generator:
         """Perform this step, time how long is spent doing work"""
-
-        self.statistics.blobs_read += 0
-        self.statistics.rows_read += 0
-        self.statistics.bytes_processed += 0
 
         morsel = None
         orso_schema = self.schema
@@ -201,7 +200,9 @@ class ReaderNode(BasePlanNode):
         orso_schema.columns = orso_schema_cols
         arrow_schema = None
         start_clock = time.monotonic_ns()
-        reader = self.connector.read_dataset(columns=self.columns, predicates=self.predicates)
+        reader = self.connector.read_dataset(
+            columns=self.columns, predicates=self.predicates, limit=self.limit
+        )
         for morsel in reader:
             # try to make each morsel have the same schema
             morsel = struct_to_jsonb(morsel)
@@ -213,8 +214,9 @@ class ReaderNode(BasePlanNode):
 
             self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             self.statistics.blobs_read += 1
+            self.records_out += morsel.num_rows
             self.statistics.rows_read += morsel.num_rows
-            self.statistics.bytes_processed += morsel.nbytes
+            self.bytes_out += morsel.nbytes
             yield morsel
             start_clock = time.monotonic_ns()
         if morsel:

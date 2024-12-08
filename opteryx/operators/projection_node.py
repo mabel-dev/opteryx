@@ -19,26 +19,24 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 
-import time
-from typing import Generator
+import pyarrow
 
+from opteryx import EOS
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
-
-    def __init__(self, properties: QueryProperties, **config):
+    def __init__(self, properties: QueryProperties, **parameters):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        super().__init__(properties=properties)
+        BasePlanNode.__init__(self, properties=properties, **parameters)
 
-        projection = config["projection"] + config.get("order_by_columns", [])
+        projection = parameters["projection"] + parameters.get("order_by_columns", [])
 
         self.projection = []
         for column in projection:
@@ -48,7 +46,7 @@ class ProjectionNode(BasePlanNode):
             column for column in projection if column.node_type != NodeType.IDENTIFIER
         ]
 
-        self.columns = config["projection"]
+        self.columns = parameters["projection"]
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -64,15 +62,11 @@ class ProjectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Projection"
 
-    def execute(self) -> Generator:
-        morsels = self._producers[0]  # type:ignore
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        if morsel == EOS:
+            yield None
+            return
 
-        for morsel in morsels.execute():
-            # If any of the columns need evaluating, we need to do that here
-            start_time = time.time_ns()
-            morsel = evaluate_and_append(self.evaluations, morsel)
-            self.statistics.time_evaluating += time.time_ns() - start_time
-
-            morsel = morsel.select(self.projection)
-
-            yield morsel
+        # If any of the columns need evaluating, we need to do that here
+        morsel = evaluate_and_append(self.evaluations, morsel)
+        yield morsel.select(self.projection)

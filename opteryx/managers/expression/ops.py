@@ -32,6 +32,12 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "AnyOpGtEq",
         "AnyOpLt",
         "AnyOpLtEq",
+        "AnyOpLike",
+        "AnyOpNotLike",
+        "AnyOpILike",
+        "AnyOpNotILike",
+        "AnyOpRLike",
+        "AnyOpNotRLike",
         "AllOpEq",
         "AllOpNotEq",
         "AtArrow",
@@ -170,6 +176,59 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
 
+    if operator == "AnyOpLike":
+        patterns = value[0]
+        return numpy.array(
+            [
+                None
+                if row is None
+                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
+                for row in arr
+            ],
+            dtype=bool,
+        )
+    if operator == "AnyOpNotLike":
+        patterns = value[0]
+        matches = numpy.array(
+            [
+                None
+                if row is None
+                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
+                for row in arr
+            ],
+            dtype=bool,
+        )
+        return numpy.invert(matches)
+    if operator == "AnyOpILike":
+        patterns = value[0]
+        return numpy.array(
+            [
+                None
+                if row is None
+                else any(
+                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
+                    for pattern in patterns
+                )
+                for row in arr
+            ],
+            dtype=bool,
+        )
+    if operator == "AnyOpNotILike":
+        patterns = value[0]
+        matches = numpy.array(
+            [
+                None
+                if row is None
+                else any(
+                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
+                    for pattern in patterns
+                )
+                for row in arr
+            ],
+            dtype=bool,
+        )
+        return numpy.invert(matches)
+
     if operator == "AtQuestion":
         element = value[0]
 
@@ -178,9 +237,28 @@ def _inner_filter_operations(arr, operator, value):
 
         import simdjson
 
-        # Don't warn on rule SIM118, the object isn't actually a dictionary
+        parser = simdjson.Parser()
+
+        if not element.startswith("$."):
+            # Don't warn on rule SIM118, the object isn't actually a dictionary
+            return pyarrow.array(
+                [element in parser.parse(doc).keys() for doc in arr],
+                type=pyarrow.bool_(),  # type:ignore
+            )
+
+        _keys = element[2:].split(".")
+
+        def json_path_extract(current_value, keys):
+            for key in keys:
+                if key not in current_value:
+                    return False  # Key doesn't exist
+
+                # Proceed to the next level of the JSON object
+                current_value = current_value[key]
+            return True  # Key exists if traversal succeeds
+
         return pyarrow.array(
-            [element in simdjson.Parser().parse(doc).keys() for doc in arr],
+            [json_path_extract(parser.parse(doc), _keys) for doc in arr],
             type=pyarrow.bool_(),  # type:ignore
         )
 

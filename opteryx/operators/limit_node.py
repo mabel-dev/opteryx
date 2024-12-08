@@ -18,24 +18,22 @@ This is a SQL Query Execution Plan Node.
 This Node performs the LIMIT and the OFFSET steps
 """
 
-import time
-from typing import Generator
-
 import pyarrow
 
+from opteryx import EOS
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
-from opteryx.utils import arrow
+
+from . import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
-    operator_type = OperatorType.PASSTHRU
+    def __init__(self, properties: QueryProperties, **parameters):
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+        self.limit = parameters.get("limit", float("inf"))
+        self.offset = parameters.get("offset", 0)
 
-    def __init__(self, properties: QueryProperties, **config):
-        super().__init__(properties=properties)
-        self.limit = config.get("limit")
-        self.offset = config.get("offset", 0)
+        self.remaining_rows = self.limit if self.limit is not None else float("inf")
+        self.rows_left_to_skip = max(0, self.offset)
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -49,9 +47,29 @@ class LimitNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self.limit) + " OFFSET " + str(self.offset)
 
-    def execute(self) -> Generator[pyarrow.Table, None, None]:
-        morsels = self._producers[0]  # type:ignore
-        start_time = time.monotonic_ns()
-        limited = arrow.limit_records(morsels.execute(), limit=self.limit, offset=self.offset)
-        self.statistics.time_limiting += time.monotonic_ns() - start_time
-        return limited  # type: ignore
+    def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        if morsel == EOS:
+            yield None
+            return
+
+        if self.rows_left_to_skip > 0:
+            if self.rows_left_to_skip >= morsel.num_rows:
+                self.rows_left_to_skip -= morsel.num_rows
+                yield morsel.slice(offset=0, length=0)
+                return
+            else:
+                morsel = morsel.slice(
+                    offset=self.rows_left_to_skip, length=morsel.num_rows - self.rows_left_to_skip
+                )
+                self.rows_left_to_skip = 0
+
+        if self.remaining_rows <= 0 or morsel.num_rows == 0:
+            yield morsel.slice(offset=0, length=0)
+
+        elif morsel.num_rows < self.remaining_rows:
+            self.remaining_rows -= morsel.num_rows
+            yield morsel
+        else:
+            rows_to_slice = self.remaining_rows
+            self.remaining_rows = 0
+            yield morsel.slice(offset=0, length=rows_to_slice)
