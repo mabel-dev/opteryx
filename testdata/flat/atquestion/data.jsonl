@@ -1,0 +1,6 @@
+{"id": 1, "dict": {"list": [1, 2, 3], "key": "value"}, "nested": {"level1": {"key": "val"}}}
+{"id": 2, "dict": {"list": [4, 5]}, "nested": {"level1": {"key": null}}}
+{"id": 3, "dict": {"other_list": [6, 7, 8]}, "nested": {"level1": {}}}
+{"id": 4, "dict": {"list": [], "key": "another_value"}, "nested": {}}
+{"id": 5, "dict": {}, "nested": {"level1": {"key": "val"}}}
+{"id": 6, "dict": {"list": [9], "nested_list": [{"key": "a"}, {"key": "b"}]}, "nested": {"level1": {"key": "val"}}}

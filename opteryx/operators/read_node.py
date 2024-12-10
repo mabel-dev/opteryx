@@ -135,6 +135,7 @@ class ReaderNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
 
+        self.uuid = parameters.get("uuid")
         self.start_date = parameters.get("start_date")
         self.end_date = parameters.get("end_date")
         self.hints = parameters.get("hints", [])

@@ -191,6 +191,7 @@ class Graph(object):
         visited = {source}
         queue = deque([(source, 0)])
         seeker = self.ingoing_edges if reverse else self.outgoing_edges
+        offset = 0 if reverse else 1
 
         traversed_edges = []
 
@@ -199,7 +200,7 @@ class Graph(object):
 
             if current_depth < depth:
                 for edge in seeker(current_node):
-                    _, target, _ = edge
+                    target = edge[offset]
 
                     # Add the edge to the traversed edges list
                     traversed_edges.append(edge)

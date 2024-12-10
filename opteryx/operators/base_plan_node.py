@@ -133,4 +133,8 @@ class BasePlanNode:
 
 
 class JoinNode(BasePlanNode):
-    pass
+    def __init__(self, *, properties, **parameters):
+        super().__init__(properties=properties, **parameters)
+
+        self.left_readers = parameters.get("left_readers")
+        self.right_readers = parameters.get("right_readers")

@@ -3,6 +3,8 @@
 
 _A unified SQL interface to unlock insights across your diverse data sources, from blobs stores to databases - **effortless cross-platform data analytics**._
 
+![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/terminal.gif)
+
 Resource      | Location
 ------------- | -------------
 Source Code   | https://github.com/mabel-dev/opteryx

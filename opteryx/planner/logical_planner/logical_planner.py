@@ -168,39 +168,79 @@ class LogicalPlanNode(Node):
 
 def get_subplan_schemas(sub_plan: Graph) -> List[str]:
     """
-    Retrieves schemas related to exit and entry points within a given sub-plan.
+    Collects all schema aliases used within a given sub-plan.
 
-    This function iterates through functions named 'get_exit_points' and 'get_entry_points'
-    in the `sub_plan` object to collect the schemas of the exit and entry points.
+    This function traverses the sub-plan graph to collect aliases, including those from subqueries.
+    Aliases define the schemas used at exit and entry points of the sub-plan.
 
     Parameters:
         sub_plan: Graph
-            The sub-plan object containing the necessary information for processing.
+            The sub-plan object representing a branch of the logical plan.
 
     Returns:
         List[str]:
-            A list of schemas corresponding to the exit and entry points in the sub-plan.
+            A sorted list of unique schema aliases found within the sub-plan.
     """
-    aliases = set()
 
-    def traverse(nid: dict):
-        # get the actual node
-        node = sub_plan[nid["name"]]
-        # If this node is a subquery, capture its alias and stop traversing deeper
-        if node.node_type == LogicalPlanStepType.Subquery:
-            aliases.add(node.alias)
-            return  # Stop traversing this branch as it's a separate scope
-        if node.alias:
-            aliases.add(node.alias)
+    def collect_aliases(node: dict) -> List[str]:
+        """
+        Recursively traverse the graph to collect schema aliases.
 
-        # Otherwise, continue traversing the children
-        for child in nid.get("children", []):
-            traverse(child)
+        Parameters:
+            node: dict
+                The current node in the graph.
 
-    # Start the traversal from the provided node
-    traverse(sub_plan.depth_first_search())
+        Returns:
+            List[str]:
+                A list of unique schema aliases collected from the current node and its children.
+        """
+        current_node = sub_plan[node["name"]]
 
-    return list(aliases)
+        # Start with the alias of the current node, if it exists
+        aliases = [current_node.alias] if current_node.alias else []
+
+        # If this node is a subquery, stop traversal here
+        if current_node.node_type == LogicalPlanStepType.Subquery:
+            return aliases
+
+        # Recursively collect aliases from children
+        for child in node.get("children", []):
+            aliases.extend(collect_aliases(child))
+
+        return aliases
+
+    # Start the traversal from the root node
+    root_node = sub_plan.depth_first_search()
+    aliases = collect_aliases(root_node)
+
+    # Return sorted list of unique aliases
+    return sorted(set(aliases))
+
+
+def get_subplan_reads(sub_plan: Graph) -> List[str]:
+    def collect_reads(node: dict) -> List[str]:
+        current_node = sub_plan[node["name"]]
+
+        # If this node is a subquery, stop traversal here
+        if current_node.node_type in (
+            LogicalPlanStepType.Scan,
+            LogicalPlanStepType.FunctionDataset,
+        ):
+            return [current_node.uuid]
+
+        readers = []
+        # Recursively collect aliases from children
+        for child in node.get("children", []):
+            readers.extend(collect_reads(child))
+
+        return readers
+
+    # Start the traversal from the root node
+    root_node = sub_plan.depth_first_search()
+    readers = collect_reads(root_node)
+
+    # Return sorted list of unique aliases
+    return sorted(set(readers))
 
 
 """
@@ -732,7 +772,9 @@ def create_node_relation(relation):
 
         # add the left and right relation names - we sometimes need these later
         join_step.left_relation_names = get_subplan_schemas(sub_plan)
+        join_step.left_readers = get_subplan_reads(sub_plan)
         join_step.right_relation_names = get_subplan_schemas(right_plan)
+        join_step.right_readers = get_subplan_reads(right_plan)
 
         # add the right side of the join
         sub_plan += right_plan

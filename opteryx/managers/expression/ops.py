@@ -232,34 +232,42 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtQuestion":
         element = value[0]
 
-        if len(arr) > 0 and isinstance(arr[0], dict):
-            return [element in d for d in arr]
-
         import simdjson
 
         parser = simdjson.Parser()
 
         if not element.startswith("$."):
-            # Don't warn on rule SIM118, the object isn't actually a dictionary
+            # Not a JSONPath, treat as a simple key existence check
             return pyarrow.array(
                 [element in parser.parse(doc).keys() for doc in arr],
-                type=pyarrow.bool_(),  # type:ignore
+                type=pyarrow.bool_(),  # type: ignore
             )
 
-        _keys = element[2:].split(".")
+        # Convert "$.key1.list[0]" to JSON Pointer "/key1/list/0"
+        def jsonpath_to_pointer(jsonpath: str) -> str:
+            # Remove "$." prefix
+            json_pointer = jsonpath[1:]
+            # Replace "." with "/" for dict navigation
+            json_pointer = json_pointer.replace(".", "/")
+            # Replace "[index]" with "/index" for list access
+            json_pointer = json_pointer.replace("[", "/").replace("]", "")
+            return json_pointer
 
-        def json_path_extract(current_value, keys):
-            for key in keys:
-                if key not in current_value:
-                    return False  # Key doesn't exist
+        # Convert "$.key1.key2" to JSON Pointer "/key1/key2"
+        json_pointer = jsonpath_to_pointer(element)
 
-                # Proceed to the next level of the JSON object
-                current_value = current_value[key]
-            return True  # Key exists if traversal succeeds
+        def check_json_pointer(doc, pointer):
+            try:
+                # Try accessing the path via JSON Pointer
+                parser.parse(doc).at_pointer(pointer)
+                return True  # If successful, the path exists
+            except Exception:
+                return False  # If an error occurs, the path does not exist
 
+        # Apply the JSON Pointer check
         return pyarrow.array(
-            [json_path_extract(parser.parse(doc), _keys) for doc in arr],
-            type=pyarrow.bool_(),  # type:ignore
+            [check_json_pointer(doc, json_pointer) for doc in arr],
+            type=pyarrow.bool_(),
         )
 
     if operator == "AtArrow":
