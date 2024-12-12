@@ -112,8 +112,10 @@ class BasePlanNode:
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
 
-                # Yield the result to the consumer
-                yield result
+                if result == EOS:
+                    yield None
+                else:
+                    yield result
 
             except StopIteration:
                 # Break the loop when the generator is exhausted

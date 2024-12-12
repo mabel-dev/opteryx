@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from queue import Empty
 from queue import Queue
 from threading import Lock
@@ -30,26 +31,113 @@ from opteryx.third_party.travers import Graph
 morsel_lock = Lock()
 active_task_lock = Lock()
 
-CONCURRENT_WORKERS = 2
+CONCURRENT_WORKERS = 1
 
 
-class PhysicalPlan(Graph):
+class EOSHandlerMixin:
+    def __init__(self, work_queue):
+        self.node_exhaustion = {}  # Tracks which nodes are exhausted
+        self.morsel_accounting = {}  # Tracks active morsels per node/leg
+        self.work_queue = work_queue
+        self.active_tasks = 0
+
+    def active_tasks_increment(self, value: int):
+        with active_task_lock:
+            self.active_tasks += value
+
+    def initialize_eos_tracking(self, nodes):
+        """
+        Initialize EOS tracking and morsel accounting for all nodes.
+        """
+        from opteryx.operators import JoinNode
+
+        self.node_exhaustion = {
+            (nid, None): False for nid, node in nodes if not isinstance(node, JoinNode)
+        }
+        self.morsel_accounting = {
+            (nid, None): 0 for nid, node in nodes if not isinstance(node, JoinNode)
+        }
+
+        for join_nid in (nid for nid, node in nodes if isinstance(node, JoinNode)):
+            self.node_exhaustion[(join_nid, "left")] = False
+            self.node_exhaustion[(join_nid, "right")] = False
+            self.morsel_accounting[(join_nid, "left")] = 0
+            self.morsel_accounting[(join_nid, "right")] = 0
+
+    def mark_node_exhausted(self, node_id: str, leg: Optional[str] = None):
+        """
+        Mark a node and leg as exhausted and propagate EOS downstream.
+        """
+        if self.node_exhaustion[(node_id, leg)]:
+            return  # Already marked exhausted
+
+        self.node_exhaustion[(node_id, leg)] = True
+
+        # Propagate EOS to downstream nodes
+        self.queue_task(node_id, leg, EOS)
+
+    def update_morsel_accounting(self, node_id: str, leg: Optional[str], delta: int):
+        """
+        Update morsel accounting for a node and check for exhaustion.
+        """
+        with morsel_lock:
+            self.morsel_accounting[(node_id, leg)] += delta
+            if self.morsel_accounting[(node_id, leg)] < 0:
+                print(self.morsel_accounting)
+                raise InvalidInternalStateError("Morsel accounting is invalid.")
+
+            # If no more morsels, check if all providers are exhausted
+            if self.morsel_accounting[(node_id, leg)] == 0:
+                self.check_and_mark_exhaustion(node_id, leg)
+
+    def check_and_mark_exhaustion(self, node_id: str, leg: Optional[str]):
+        """
+        Check if all upstream providers for a node are exhausted.
+        """
+        for provider, _, provider_leg in self.ingoing_edges(node_id):
+            if not self.node_exhaustion.get((provider, provider_leg), False):
+                return  # A provider is still active
+
+        self.mark_node_exhausted(node_id, leg)
+
+    def queue_task(self, node_id: str, leg: Optional[str], payload: Any):
+        """
+        Queue a task for a worker.
+        """
+        print(
+            "WORK PUT",
+            node_id,
+            leg,
+            "Table" if isinstance(payload, pyarrow.Table) else "EOS" if payload == EOS else payload,
+            flush=True,
+        )
+        self.work_queue.put((node_id, leg, payload))
+        self.active_tasks_increment(+1)
+        self.morsel_accounting[(node_id, leg)] += 1
+
+    # Process results from the response queue
+    def work_complete(self) -> bool:
+        all_nodes_exhausted = all(self.node_exhaustion.values())
+        no_active_tasks = self.active_tasks <= 0
+        return all_nodes_exhausted and no_active_tasks
+
+
+class PhysicalPlan(Graph, EOSHandlerMixin):
     """
     The execution tree is defined separately from the planner to simplify the
     complex code that is the planner from the tree that describes the plan.
     """
 
     def __init__(self):
-        super().__init__()
-        self.active_tasks: int = 0
-        self.recheck_exhausted: list = []
+        # Work queue for worker tasks
+        self.work_queue = Queue(maxsize=10)
+        # Response queue for results sent back to the engine
+        self.response_queue = Queue(maxsize=10)
 
-    def active_tasks_increment(self, value: int):
-        with active_task_lock:
-            self.active_tasks += value
-        print("AT", self.active_tasks)
+        Graph.__init__(self)
+        EOSHandlerMixin.__init__(self, self.work_queue)
 
-    def depth_first_search_flat(
+    def depth_first_traversal_with_order(
         self, node: Optional[str] = None, visited: Optional[set] = None
     ) -> list:
         """
@@ -69,7 +157,7 @@ class PhysicalPlan(Graph):
 
         for neighbor, _, _ in neighbors:
             if neighbor not in visited:
-                child_list = self.depth_first_search_flat(neighbor, visited)
+                child_list = self.depth_first_traversal_with_order(neighbor, visited)
                 traversal_list.extend(child_list)
 
         return traversal_list
@@ -129,76 +217,6 @@ class PhysicalPlan(Graph):
         from opteryx.operators import ShowCreateNode
         from opteryx.operators import ShowValueNode
 
-        morsel_accounting = {nid: 0 for nid in self.nodes()}
-        node_exhaustion = {nid: False for nid in self.nodes()}
-        # Work queue for worker tasks
-        work_queue = Queue()
-        # Response queue for results sent back to the engine
-        response_queue = Queue()
-
-        def mark_node_exhausted(node_id):
-            """
-            Mark a node as exhausted and propagate exhaustion downstream.
-            """
-            if node_exhaustion[node_id]:
-                return  # Node is already marked as exhausted
-
-            node_exhaustion[node_id] = True
-
-            if isinstance(self[node_id], ReaderNode):
-                return
-
-            for _, _, join_leg in self.ingoing_edges(node_id):
-                # Queue the task for node with the correct join_leg
-                print("EOS PUT", node_id, join_leg, EOS)
-                work_queue.put((node_id, join_leg, EOS))  # EOS signals exhaustion
-                self.active_tasks_increment(+1)
-                morsel_accounting[node_id] += 1
-
-        def update_morsel_accounting(node_id, morsel_count_change: int, join_leg: str):
-            """
-            Updates the morsel accounting for a node and checks for exhaustion.
-
-            Parameters:
-                node_id (str): The ID of the node to update.
-                morsel_count_change (int): The change in morsel count (+1 for increment, -1 for decrement).
-
-            Returns:
-                None
-            """
-
-            nodes_to_check = self.recheck_exhausted.copy() + [node_id]
-            self.recheck_exhausted.clear()
-
-            with morsel_lock:
-                morsel_accounting[node_id] += morsel_count_change
-                print(
-                    "ACCOUNT",
-                    node_id,
-                    morsel_accounting[node_id],
-                    morsel_count_change,
-                    self[node_id].name,
-                )
-
-                for node in nodes_to_check:
-                    if morsel_accounting[node_id] < 0:
-                        raise InvalidInternalStateError(
-                            "Node input and output count in invalid state."
-                        )
-
-                    # Check if the node is exhausted
-                    if morsel_accounting[node] == 0:  # No more pending morsels for this node
-                        # Ensure all parent nodes are exhausted
-                        all_providers_exhausted = all(
-                            node_exhaustion[provider] for provider, _, _ in self.ingoing_edges(node)
-                        )
-                        if all_providers_exhausted:
-                            print("providers exhausted", node_exhaustion)
-                            mark_node_exhausted(node)
-                        else:
-                            print("providers not exhausted", node_exhaustion)
-                            self.recheck_exhausted.append(node)
-
         if not self.is_acyclic():
             raise InvalidInternalStateError("Query plan is cyclic, cannot execute.")
 
@@ -210,6 +228,8 @@ class PhysicalPlan(Graph):
 
         if head_node is None:
             head_node = self[head_nodes[0]]
+
+        self.initialize_eos_tracking(self.nodes(True))
 
         # add the left/right labels to the edges coming into the joins
         joins = ((nid, node) for nid, node in self.nodes(True) if isinstance(node, JoinNode))
@@ -226,10 +246,8 @@ class PhysicalPlan(Graph):
 
                 for s, t, r in reader_edges:
                     if self[s].uuid in join.left_readers:
-                        self.remove_edge(provider, nid, r)
                         self.add_edge(provider, nid, "left")
                     elif self[s].uuid in join.right_readers:
-                        self.remove_edge(provider, nid, r)
                         self.add_edge(provider, nid, "right")
 
             tester = self.breadth_first_search(nid, reverse=True)
@@ -254,21 +272,34 @@ class PhysicalPlan(Graph):
                 Worker thread: Processes tasks from the work queue and sends results to the response queue.
                 """
                 while True:
-                    task = work_queue.get()
+                    task = self.work_queue.get()
                     if task is None:
+                        print("WORK GET", task)
                         break
 
+                    print(
+                        "WORK GET",
+                        task[0],
+                        task[1],
+                        "Table"
+                        if isinstance(task[2], pyarrow.Table)
+                        else "EOS"
+                        if task[2] == EOS
+                        else task[2],
+                        self[task[0]].name,
+                        flush=True,
+                    )
                     node_id, join_leg, morsel = task
                     operator = self[node_id]
                     results = operator(morsel, join_leg)
 
                     for result in results:
                         # Send results back to the response queue
-                        response_queue.put((node_id, join_leg, result))
+                        self.response_queue.put((node_id, join_leg, result))
 
-                    update_morsel_accounting(node_id, -1, join_leg)
+                    self.update_morsel_accounting(node_id, join_leg, -1)
 
-                    work_queue.task_done()
+                    self.work_queue.task_done()
 
             # Launch worker threads
             for _ in range(num_workers):
@@ -278,14 +309,11 @@ class PhysicalPlan(Graph):
                 workers.append(worker)
 
             def inner_execute(plan):
-                # Identify pump nodes
-                global active_tasks
-
                 # Get all the nodes which push data into the plan We use DFS to order the
                 # nodes to ensure left branch is always before the right branch
                 pump_nodes = [
                     (nid, node)
-                    for nid, node in self.depth_first_search_flat()
+                    for nid, node in self.depth_first_traversal_with_order()
                     if isinstance(node, ReaderNode)
                 ]
 
@@ -298,33 +326,21 @@ class PhysicalPlan(Graph):
                             for _, target, join_leg in self.outgoing_edges(pump_nid)
                         ]
                         for consumer_node, join_leg in consumer_nodes:
-                            # DEBUG: log (f"following initial {self[pump_nid].name} triggering {self[consumer_node].name}")
+                            # DEBUG: log (f"following initial {self[pump_nid].name} ({pump_nid}) triggering {self[consumer_node].name} ({consumer_node})")
                             # Queue tasks for consumer operators
-                            print("WORK PUT", consumer_node, join_leg)
-                            work_queue.put((consumer_node, join_leg, morsel))
-                            self.active_tasks_increment(+1)
-                            update_morsel_accounting(consumer_node, +1, join_leg)
+                            self.queue_task(consumer_node, join_leg, morsel)
 
                     # Pump is exhausted after emitting all morsels
                     print("pump exhausted", pump_nid)
-                    mark_node_exhausted(pump_nid)
-                    update_morsel_accounting(pump_nid, 0)
+                    self.update_morsel_accounting(pump_nid, None, 0)
 
-                # Process results from the response queue
-                def should_stop():
-                    all_nodes_exhausted = all(node_exhaustion.values())
-                    all_nodes_inactive = self.active_tasks <= 0
-                    return all_nodes_exhausted and all_nodes_inactive
-
-                while not should_stop():
+                while not self.work_complete():
                     # Wait for results from workers
-                    print(self.active_tasks)
-                    print("*", end="", flush=True)
+                    print(list(self.node_exhaustion.values()), self.active_tasks)
                     try:
-                        node_id, join_leg, result = response_queue.get(timeout=0.1)
-                        print("-", end="")
+                        node_id, join_leg, result = self.response_queue.get(timeout=0.1)
                     except Empty:
-                        print(".", end="")
+                        print(".")
                         continue
 
                     # if a thread threw a error, we get them in the main
@@ -349,17 +365,14 @@ class PhysicalPlan(Graph):
 
                     for downstream_node, join_leg in downstream_nodes:
                         # Queue tasks for downstream operators
-                        self.active_tasks_increment(+1)
-                        # DEBUG: log (f"following {self[node_id].name} triggering {self[downstream_node].name}")
-                        print("WORK PUT", downstream_node, join_leg)
-                        work_queue.put((downstream_node, join_leg, result))
-                        update_morsel_accounting(downstream_node, +1, join_leg)
+                        # DEBUG: log (f"following {self[node_id].name} ({node_id}) triggering {self[downstream_node].name} ({downstream_node})", flush=True)
+                        self.queue_task(downstream_node, join_leg, result)
 
                     # decrement _after_ we've done the work relation to handling the task
                     self.active_tasks_increment(-1)
 
                 for worker in workers:
-                    work_queue.put(None)
+                    self.work_queue.put(None)
 
                 # Wait for all workers to complete
                 for worker in workers:

@@ -101,11 +101,7 @@ class Graph(object):
 
     def add_edge(self, source: str, target: str, relationship: Optional[str] = None):
         """
-        Add edge to the graph
-
-        Note:
-            This does not create an edge if either node does not already exist.
-            This does not create an edge if either node is None.
+        Add or update the relationship of an existing edge in the graph
 
         Parameters:
             source: string
@@ -113,22 +109,29 @@ class Graph(object):
             target: string
                 The target node
             relationship: string
-                The relationship between the source and target nodes
+                The relationship to be added or updated
         """
         if source is None or target is None:
-            print("Trying to create edge with undefined nodes")
+            print("Trying to update edge with undefined nodes")
             return False
 
-        # Check for existing edges and add the new one
+        # Check if the edge exists
         existing_edges = list(self._edges.get(source, ()))
+        edge_found = False
 
-        # Avoid adding duplicate edges
-        edge_to_add = (target, relationship)
-        if edge_to_add not in existing_edges:
-            existing_edges.append(edge_to_add)
+        for i, (existing_target, existing_relationship) in enumerate(existing_edges):
+            if existing_target == target:
+                existing_edges[i] = (target, relationship)
+                edge_found = True
+                break
+
+        if not edge_found:
+            # Add the new edge
+            existing_edges.append((target, relationship))
 
         self._edges[source] = tuple(existing_edges)
         self._cached_edges = None
+        return True
 
     def add_node(self, nid: str, node):
         """
@@ -390,7 +393,7 @@ class Graph(object):
             # wire up the old incoming and outgoing nodes, cartesian style
             for out_nid in out_going:
                 for in_nid in in_coming:
-                    self.add_edge(in_nid[0], out_nid[1], in_nid[1])  # type:ignore
+                    self.add_edge(in_nid[0], out_nid[1], in_nid[2])  # type:ignore
 
             self._cached_edges = None
 
