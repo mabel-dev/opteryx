@@ -2,12 +2,15 @@
 Original code modified for Opteryx.
 """
 
+import re
+
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
+from opteryx.utils.sql import sql_like_to_regex
 
 
 def filter_operations(arr, left_type, operator, value, right_type):
@@ -176,58 +179,72 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
 
-    if operator == "AnyOpLike":
-        patterns = value[0]
-        return numpy.array(
-            [
-                None
-                if row is None
-                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
-                for row in arr
-            ],
-            dtype=bool,
-        )
-    if operator == "AnyOpNotLike":
-        patterns = value[0]
-        matches = numpy.array(
-            [
-                None
-                if row is None
-                else any(compute.match_like(row, pattern).true_count > 0 for pattern in patterns)
-                for row in arr
-            ],
-            dtype=bool,
-        )
-        return numpy.invert(matches)
     if operator == "AnyOpILike":
         patterns = value[0]
-        return numpy.array(
-            [
-                None
-                if row is None
-                else any(
-                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
-                    for pattern in patterns
-                )
-                for row in arr
-            ],
-            dtype=bool,
-        )
+
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
+
+        out = numpy.zeros(arr.size, dtype=bool)
+        for i, row in enumerate(arr):
+            if row is None:
+                out[i] = None
+                continue
+            if row.size == 0:
+                continue
+            out[i] = any(combined_regex.search(elem) for elem in row)
+
+        return out
+
+    if operator == "AnyOpLike":
+        patterns = value[0]
+
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex = re.compile(combined_regex_pattern)
+
+        out = numpy.zeros(arr.size, dtype=bool)
+        for i, row in enumerate(arr):
+            if row is None:
+                out[i] = None
+                continue
+            if row.size == 0:
+                continue
+            out[i] = any(combined_regex.search(elem) for elem in row)
+
+        return out
+    if operator == "AnyOpNotLike":
+        patterns = value[0]
+
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex = re.compile(combined_regex_pattern)
+
+        out = numpy.zeros(arr.size, dtype=bool)
+        for i, row in enumerate(arr):
+            if row is None:
+                out[i] = None
+                continue
+            if row.size == 0:
+                continue
+            out[i] = any(combined_regex.search(elem) for elem in row)
+
+        return numpy.invert(out)
+
     if operator == "AnyOpNotILike":
         patterns = value[0]
-        matches = numpy.array(
-            [
-                None
-                if row is None
-                else any(
-                    compute.match_like(row, pattern, ignore_case=True).true_count > 0
-                    for pattern in patterns
-                )
-                for row in arr
-            ],
-            dtype=bool,
-        )
-        return numpy.invert(matches)
+
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
+
+        out = numpy.zeros(arr.size, dtype=bool)
+        for i, row in enumerate(arr):
+            if row is None:
+                out[i] = None
+                continue
+            if row.size == 0:
+                continue
+            out[i] = any(combined_regex.search(elem) for elem in row)
+
+        return numpy.invert(out)
 
     if operator == "AtQuestion":
         element = value[0]

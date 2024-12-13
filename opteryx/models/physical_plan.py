@@ -31,7 +31,9 @@ from opteryx.third_party.travers import Graph
 morsel_lock = Lock()
 active_task_lock = Lock()
 
-CONCURRENT_WORKERS = 1
+CYCLE_WAIT_TIME: int = 0.05
+
+CONCURRENT_WORKERS = 2
 
 
 class EOSHandlerMixin:
@@ -83,7 +85,7 @@ class EOSHandlerMixin:
         with morsel_lock:
             self.morsel_accounting[(node_id, leg)] += delta
             if self.morsel_accounting[(node_id, leg)] < 0:
-                print(self.morsel_accounting)
+                # print(self.morsel_accounting)
                 raise InvalidInternalStateError("Morsel accounting is invalid.")
 
             # If no more morsels, check if all providers are exhausted
@@ -109,6 +111,7 @@ class EOSHandlerMixin:
             node_id,
             leg,
             "Table" if isinstance(payload, pyarrow.Table) else "EOS" if payload == EOS else payload,
+            self.work_queue.qsize() + 1,
             flush=True,
         )
         self.work_queue.put((node_id, leg, payload))
@@ -130,9 +133,9 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
 
     def __init__(self):
         # Work queue for worker tasks
-        self.work_queue = Queue(maxsize=10)
+        self.work_queue = Queue()
         # Response queue for results sent back to the engine
-        self.response_queue = Queue(maxsize=10)
+        self.response_queue = Queue()
 
         Graph.__init__(self)
         EOSHandlerMixin.__init__(self, self.work_queue)
@@ -162,7 +165,7 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
 
         return traversal_list
 
-    def explain(self, analyze: bool) -> Generator[pyarrow.Table, None, None]:
+    def explain(self, analyze: bool, statistics) -> Generator[pyarrow.Table, None, None]:
         from opteryx import operators
 
         def _inner_explain(node, depth):
@@ -197,7 +200,7 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
             temp = None
             head_node = self.get_exit_points()[0]
             query_head, _, _ = self.ingoing_edges(head_node)[0]
-            results = self.execute(query_head)
+            results = self.execute(head_node=query_head)
             if results is not None:
                 results_generator, _ = next(results, ([], None))
                 for temp in results_generator:
@@ -209,7 +212,18 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
         table = pyarrow.Table.from_pylist(plan)
         return table
 
-    def execute(self, head_node=None) -> Generator[Tuple[Any, ResultType], Any, Any]:
+    def execute(
+        self, head_node=None, statistics=None
+    ) -> Generator[Tuple[Any, ResultType], Any, Any]:
+        """
+        Execute the physical plan starting from the head node.
+
+        Args:
+            head_node (Optional[str]): The starting node for execution. If None, the default head node is used.
+
+        Returns:
+            Generator[Tuple[Any, ResultType], Any, Any]: A generator yielding results and their types.
+        """
         from opteryx.operators import ExplainNode
         from opteryx.operators import JoinNode
         from opteryx.operators import ReaderNode
@@ -258,7 +272,7 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
 
         # Special case handling for 'Explain' queries
         if isinstance(head_node, ExplainNode):
-            yield self.explain(head_node.analyze), ResultType.TABULAR
+            yield self.explain(head_node.analyze, statistics), ResultType.TABULAR
 
         elif isinstance(head_node, (SetVariableNode, ShowValueNode, ShowCreateNode)):
             yield head_node(None), ResultType.TABULAR
@@ -272,9 +286,14 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
                 Worker thread: Processes tasks from the work queue and sends results to the response queue.
                 """
                 while True:
-                    task = self.work_queue.get()
+                    try:
+                        task = self.work_queue.get(timeout=CYCLE_WAIT_TIME)
+                    except Empty:
+                        statistics.worker_wait_time += CYCLE_WAIT_TIME
+                        continue
+
                     if task is None:
-                        print("WORK GET", task)
+                        # print("WORK GET", task)
                         break
 
                     print(
@@ -287,6 +306,7 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
                         if task[2] == EOS
                         else task[2],
                         self[task[0]].name,
+                        self.work_queue.qsize(),
                         flush=True,
                     )
                     node_id, join_leg, morsel = task
@@ -331,16 +351,17 @@ class PhysicalPlan(Graph, EOSHandlerMixin):
                             self.queue_task(consumer_node, join_leg, morsel)
 
                     # Pump is exhausted after emitting all morsels
-                    print("pump exhausted", pump_nid)
+                    # print("pump exhausted", pump_nid)
                     self.update_morsel_accounting(pump_nid, None, 0)
 
                 while not self.work_complete():
                     # Wait for results from workers
-                    print(list(self.node_exhaustion.values()), self.active_tasks)
+                    # print(list(self.node_exhaustion.values()), self.active_tasks)
                     try:
-                        node_id, join_leg, result = self.response_queue.get(timeout=0.1)
+                        node_id, join_leg, result = self.response_queue.get(timeout=CYCLE_WAIT_TIME)
                     except Empty:
-                        print(".")
+                        # print(".")
+                        statistics.cpu_wait_time += CYCLE_WAIT_TIME
                         continue
 
                     # if a thread threw a error, we get them in the main

@@ -204,7 +204,7 @@ class Cursor(DataFrame):
         start = time.time_ns()
         for plan in plans:
             self._statistics.time_planning += time.time_ns() - start
-            results = plan.execute()
+            results = plan.execute(statistics=self._statistics)
             start = time.time_ns()
 
         system_statistics.queries_executed += 1
