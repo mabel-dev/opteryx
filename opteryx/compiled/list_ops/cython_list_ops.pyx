@@ -59,19 +59,35 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_neq(object literal, cnp.nda
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_eq(object literal, cnp.ndarray arr):
-    cdef:
-        cdef Py_ssize_t i, j
-        cdef Py_ssize_t num_rows = arr.shape[0]
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=bool)
-        cnp.ndarray row
+    """
+    Check each row in arr for the presence of `literal`. If found, mark the corresponding
+    position in the result as True, otherwise False.
+
+    Parameters:
+        literal: object
+            The value to search for in each row.
+        arr: cnp.ndarray
+            A two-dimensional array-like structure where each element is a sub-array (row).
+
+    Returns:
+        cnp.ndarray[cnp.npy_bool, ndim=1]
+            A boolean array indicating for each row whether `literal` was found.
+    """
+    cdef Py_ssize_t i, j, num_rows, row_length
+    num_rows = arr.shape[0]
+
+    cdef cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=bool)
+    cdef cnp.ndarray row
 
     for i in range(num_rows):
         row = arr[i]
-        if row is not None and row.shape[0] > 0:
-            for j in range(row.shape[0]):
-                if row[j] == literal:
-                    result[i] = True
-                    break
+        if row is not None:
+            row_length = row.shape[0]
+            if row_length > 0:
+                for j in range(row_length):
+                    if row[j] == literal:
+                        result[i] = True
+                        break
 
     return result
 

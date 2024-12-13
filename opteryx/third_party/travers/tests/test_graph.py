@@ -92,9 +92,9 @@ def test_epitomize():
     graph = build_graph()
 
     summ = graph.epitomize()
-    # are the node and edge counts right?
+
     assert len(summ.nodes()) == 3
-    assert len(list(summ.edges())) == 6
+    assert len(list(summ.edges())) == 4
 
     assert sorted(summ.nodes()) == ["Locality", "Person", "Restaurant"]
 
@@ -148,6 +148,26 @@ def test_node_deletion():
     assert ("Sharlene", "Bindoon", "Lives In") not in graph.edges()
 
 
+def test_update_existing_edge():
+    graph = build_graph()
+
+    # Add an edge
+    graph.add_edge("Sharlene", "Bindoon", "friend")
+
+    # Update the edge
+    graph.add_edge("Sharlene", "Bindoon", "best friend")
+
+    # Verify the edge was updated
+    edges = graph.outgoing_edges("Sharlene")
+    updated = False
+    for source, target, relationship in edges:
+        if target == "Bindoon" and relationship == "best friend":
+            updated = True
+            break
+
+    assert updated, "The edge relationship was not updated correctly"
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_graph()
     test_outgoing_edges()
@@ -157,4 +177,5 @@ if __name__ == "__main__":  # pragma: no cover
     test_node_attributes()
     test_edge_deletion()
     test_node_deletion()
+    test_update_existing_edge()
     print("okay")

@@ -1,6 +1,39 @@
 import re
 from typing import List
 
+ESCAPE_SPECIAL_CHARS = re.compile(r"([.^$*+?{}[\]|()\\])")
+
+
+def sql_like_to_regex(pattern: str) -> str:
+    """
+    Converts an SQL `LIKE` pattern into a regular expression.
+
+    SQL `LIKE` syntax:
+    - `%` matches zero or more characters (similar to `.*` in regex).
+    - `_` matches exactly one character (similar to `.` in regex).
+    - Special regex characters are escaped to ensure literal matching.
+
+    Args:
+        pattern (str): The SQL LIKE pattern.
+
+    Returns:
+        str: The equivalent regex pattern, anchored with `^` and `$`.
+
+    Examples:
+        sql_like_to_regex("a%")       -> "^a.*?$"
+        sql_like_to_regex("_b")       -> "^.b$"
+        sql_like_to_regex("%[test]%") -> "^.*?\[test\].*?$"
+    """
+    if pattern is None:
+        raise ValueError("Pattern cannot be None")
+
+    # Escape special regex characters in the pattern
+    escaped_pattern = ESCAPE_SPECIAL_CHARS.sub(r"\\\1", pattern)
+
+    # Replace SQL wildcards with regex equivalents
+    regex_pattern = "^" + escaped_pattern.replace("%", ".*?").replace("_", ".") + "$"
+    return regex_pattern
+
 
 def remove_comments(string: str) -> str:
     """

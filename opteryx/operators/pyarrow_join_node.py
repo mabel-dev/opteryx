@@ -34,10 +34,10 @@ class PyArrowJoinNode(JoinNode):
         self._using = parameters.get("using")
 
         self._left_columns = parameters.get("left_columns")
-        self._left_relation = parameters.get("left_relation_names")
+        self.left_readers = parameters.get("left_readers")
 
         self._right_columns = parameters.get("right_columns")
-        self._right_relation = parameters.get("right_relation_names")
+        self.right_readers = parameters.get("right_readers")
 
         self.stream = "left"
         self.left_buffer = []

@@ -135,6 +135,7 @@ class CostBasedOptimizerVisitor:
         current_plan = plan
         for strategy in self.strategies:
             current_plan = self.traverse(current_plan, strategy)
+            pass
         # DEBUG: log ("AFTER OPTIMIZATION")
         # DEBUG: log (current_plan.draw())
         return current_plan

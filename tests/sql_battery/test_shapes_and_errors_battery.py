@@ -675,6 +675,7 @@ STATEMENTS = [
         ("SELECT cve -> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve ->> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve -> 'CVE_data_meta' -> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
+        
         ("SELECT dict @? 'list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT struct(dict) @? 'list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT birth_place @? 'town' FROM $astronauts", 357, 1, None),
@@ -686,6 +687,47 @@ STATEMENTS = [
         ("SELECT cve @? '$.CVE_data_meta.REASSIGNER' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),
         ("SELECT struct(dict) @? '$.list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT birth_place @? '$.town' FROM $astronauts", 357, 1, None),
+
+        ("SELECT dict @? 'list' FROM testdata.flat.atquestion", 6, 1, None),  # List exists in all but id=5
+        ("SELECT dict @? 'key' FROM testdata.flat.atquestion", 6, 1, None),  # Key exists in id=1 and id=4
+        ("SELECT dict @? 'other_list' FROM testdata.flat.atquestion", 6, 1, None),  # Only exists in id=3
+        ("SELECT dict @? '$.list[0]' FROM testdata.flat.atquestion", 6, 1, None),  # First element of list exists in id=1, id=2, id=6
+        ("SELECT dict @? '$.list[2]' FROM testdata.flat.atquestion", 6, 1, None),  # Third element of list exists in id=1
+        ("SELECT dict @? '$.nested_list[0].key' FROM testdata.flat.atquestion", 6, 1, None),  # Nested key exists in id=6
+        ("SELECT dict @? '$.non_existent' FROM testdata.flat.atquestion", 6, 1, None),  # Non-existent key
+        ("SELECT dict @? '$.list[100]' FROM testdata.flat.atquestion", 6, 1, None),  # Out-of-bounds index
+        ("SELECT dict @? '$.nested_list[10]' FROM testdata.flat.atquestion", 6, 1, None),  # Non-existent nested list index
+        ("SELECT dict @? '$.nested_list[0].non_existent' FROM testdata.flat.atquestion", 6, 1, None),  # Non-existent nested key
+        ("SELECT nested @? '$.level1.key' FROM testdata.flat.atquestion", 6, 1, None),  # Key exists but null in id=2
+        ("SELECT nested @? '$.level1.non_existent' FROM testdata.flat.atquestion", 6, 1, None),  # Non-existent key in level1
+        ("SELECT nested @? '$.non_existent' FROM testdata.flat.atquestion", 6, 1, None),  # Completely missing structure
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'list'", 4, 1, None),  # Rows where 'list' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'key'", 2, 1, None),  # Rows where 'key' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'other_list'", 1, 1, None),  # Rows where 'other_list' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[0]'", 3, 1, None),  # Rows where the first element of 'list' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[2]'", 1, 1, None),  # Rows where the third element of 'list' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.nested_list[0].key'", 1, 1, None),  # Rows where 'nested_list[0].key' exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.non_existent'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[100]'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.nested_list[10]'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.nested_list[0].non_existent'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE nested @? '$.level1.key'", 4, 1, None),  # Rows where 'level1.key' exists (null is still considered existing)
+        ("SELECT id FROM testdata.flat.atquestion WHERE nested @? '$.level1.non_existent'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE nested @? '$.non_existent'", 0, 1, None),  # No rows should match
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[0]' LIMIT 2", 2, 1, None),  # Limit the matching rows to 2
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[0]' LIMIT 10", 3, 1, None),  # Limit exceeds matching rows
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'list'", 4, 1, None),  # Check existence of 'list'
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'key'", 2, 1, None),  # Check existence of 'key'
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.nested_list[0].key'", 1, 1, None),  # Check nested array structure
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[2]'", 1, 1, None),  # Index exists in one row
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.list[10]'", 0, 1, None),  # Out-of-bounds index
+        ("SELECT id FROM testdata.flat.atquestion WHERE nested @? '$.level1.key'", 4, 1, None),  # Null value still exists
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? '$.key'", 2, 1, None),  # Key is present, but handle null
+        ("SELECT COUNT(*) FROM testdata.flat.atquestion WHERE dict @? 'list'", 1, 1, None),  # Aggregation
+        ("SELECT id FROM testdata.flat.atquestion WHERE dict @? 'list' AND dict @? 'key'", 2, 1, None),  # Compound condition
+        ("SELECT id FROM testdata.flat.atquestion WHERE NOT dict @? 'list'", 2, 1, None),  # Negation
+        ("SELECT id, COUNT(*) FROM testdata.flat.atquestion WHERE dict @? 'list' GROUP BY id", 4, 2, None),  # Group by
+
         ("SELECT birth_place['town'] FROM $astronauts", 357, 1, None),
         ("SELECT missions[0] FROM $astronauts", 357, 1, None),
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1, None),

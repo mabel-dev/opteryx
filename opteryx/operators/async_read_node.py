@@ -31,6 +31,7 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import convert_orso_schema_to_arrow_schema
 
+from opteryx import EOS
 from opteryx import config
 from opteryx.exceptions import DataError
 from opteryx.models import QueryProperties
@@ -85,6 +86,10 @@ class AsyncReaderNode(ReaderNode):
         raise NotImplementedError()
 
     def execute(self, morsel, **kwargs) -> Generator:
+        if morsel == EOS:
+            yield None
+            return
+
         from opteryx import system_statistics
 
         """Perform this step, time how long is spent doing work"""

@@ -112,8 +112,10 @@ class BasePlanNode:
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
 
-                # Yield the result to the consumer
-                yield result
+                if result == EOS:
+                    yield None
+                else:
+                    yield result
 
             except StopIteration:
                 # Break the loop when the generator is exhausted
@@ -133,4 +135,8 @@ class BasePlanNode:
 
 
 class JoinNode(BasePlanNode):
-    pass
+    def __init__(self, *, properties, **parameters):
+        super().__init__(properties=properties, **parameters)
+
+        self.left_readers = parameters.get("left_readers")
+        self.right_readers = parameters.get("right_readers")
