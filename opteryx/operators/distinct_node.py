@@ -59,7 +59,7 @@ class DistinctNode(BasePlanNode):
         # limit processing
 
         if morsel == EOS:
-            yield None
+            yield EOS
             return
 
         unique_indexes, self.hash_set = distinct(

@@ -151,7 +151,9 @@ class SystemVariablesContainer:
         from orso.schema import ConstantColumn
 
         # system variables aren't stored with the @@
-        variable = self._variables[key[2:]] if key.startswith("@@") else self._variables[key]
+        variable = self._variables[key[2:]] if key.startswith("@@") else self._variables.get(key)
+        if not variable:
+            raise VariableNotFoundError(key)
         return ConstantColumn(name=key, type=variable[0], value=variable[1])
 
 

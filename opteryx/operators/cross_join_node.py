@@ -360,6 +360,7 @@ class CrossJoinNode(JoinNode):
             else:
                 self.left_buffer.append(morsel)
             yield None
+            return
 
         if self.stream == "right":
             if morsel == EOS:

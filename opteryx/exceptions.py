@@ -250,7 +250,7 @@ class UnexpectedDatasetReferenceError(SqlError):
 
     def __init__(self, dataset: str):
         self.dataset = dataset
-        message = f"Dataset '{dataset}' referenced in query without being referenced in a FROM or JOIN clause."
+        message = f"Dataset '{dataset}' is referenced in query but it doesn't appear in a FROM or JOIN clause."
         super().__init__(message)
 
 

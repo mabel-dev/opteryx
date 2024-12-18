@@ -103,8 +103,6 @@ class InnerJoinNode(JoinNode):
         return ""
 
     def execute(self, morsel: Table, join_leg: str) -> Table:
-        print(join_leg, type(morsel))
-
         with self.lock:
             if join_leg == "left":
                 if morsel == EOS:
@@ -123,11 +121,9 @@ class InnerJoinNode(JoinNode):
 
                     start = time.monotonic_ns()
                     self.left_hash = hash_join_map(self.left_relation, self.left_columns)
-                    print("BUILD HASH MAP", time.monotonic_ns() - start)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
 
                     for right_morsel in self.right_buffer:
-                        print("CLEAR")
                         yield inner_join_with_preprocessed_left_side(
                             left_relation=self.left_relation,
                             right_relation=right_morsel,
@@ -144,8 +140,7 @@ class InnerJoinNode(JoinNode):
 
             if join_leg == "right":
                 if morsel == EOS:
-                    print("DONE")
-                    yield None
+                    yield EOS
                     return
 
                 if self.left_hash is None:

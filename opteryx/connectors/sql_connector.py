@@ -22,6 +22,7 @@ from typing import Generator
 from typing import Optional
 from typing import Tuple
 
+import orjson
 import pyarrow
 from orso import DataFrame
 from orso.schema import ConstantColumn
@@ -29,6 +30,7 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
 from orso.types import PYTHON_TO_ORSO_MAP
+from orso.types import OrsoTypes
 
 from opteryx.config import OPTERYX_DEBUG
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
@@ -194,6 +196,15 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 if not batch_rows:
                     break
 
+                # If we have a struct column, we need to convert the data to bytes
+                if any(col.type == OrsoTypes.STRUCT for col in self.schema.columns):
+                    batch_rows = list(batch_rows)
+                    for i, row in enumerate(batch_rows):
+                        batch_rows[i] = tuple(
+                            orjson.dumps(field) if isinstance(field, dict) else field
+                            for field in row
+                        )
+
                 # convert the SqlAlchemy Results to Arrow using Orso
                 b = time.monotonic_ns()
                 morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
@@ -209,7 +220,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     self.chunk_size = (self.chunk_size // MIN_CHUNK_SIZE) * MIN_CHUNK_SIZE
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     self.chunk_size = min(self.chunk_size, 1000000)  # cap at 1 million
-                    # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
+                    # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE} ({morsel.nbytes} bytes).")
 
                 yield morsel
                 at_least_once = True

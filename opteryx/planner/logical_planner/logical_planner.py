@@ -326,6 +326,10 @@ def inner_query_planner(ast_branch):
         join_step.right_relation_names = [_table_name(_relations[0])]
         join_step.left_relation_names = [_table_name(_relations[1])]
 
+        reader_nodes = list(inner_plan._nodes.values())
+        join_step.left_readers = [reader_nodes[0].uuid]
+        join_step.right_readers = [reader_nodes[1].uuid]
+
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
         for relation in _relations:

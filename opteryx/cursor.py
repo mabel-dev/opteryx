@@ -171,6 +171,7 @@ class Cursor(DataFrame):
         """
 
         from opteryx import system_statistics
+        from opteryx.managers.execution import execute
         from opteryx.planner import query_planner
 
         if not operation:  # pragma: no cover
@@ -190,22 +191,16 @@ class Cursor(DataFrame):
 
         try:
             start = time.time_ns()
-            first_item = next(plans)
+            plan = next(plans)
             self._statistics.time_planning += time.time_ns() - start
         except RuntimeError as err:  # pragma: no cover
             raise SqlError(f"Error Executing SQL Statement ({err})") from err
 
-        plans = chain([first_item], plans)
-
         if ROLLING_LOG:
             ROLLING_LOG.append(operation)
 
-        results = None
+        results = execute(plan, statistics=self._statistics)
         start = time.time_ns()
-        for plan in plans:
-            self._statistics.time_planning += time.time_ns() - start
-            results = plan.execute(statistics=self._statistics)
-            start = time.time_ns()
 
         system_statistics.queries_executed += 1
 

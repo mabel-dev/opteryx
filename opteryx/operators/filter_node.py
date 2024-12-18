@@ -57,7 +57,7 @@ class FilterNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
-            yield None
+            yield EOS
             return
 
         if morsel.num_rows == 0:

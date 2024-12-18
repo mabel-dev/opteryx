@@ -250,7 +250,7 @@ class AggregateNode(BasePlanNode):
             aggregates = aggregates.select(list(self.column_map.keys()))
 
             yield aggregates
-
+            yield EOS
             return
 
         self.buffer.append(project(morsel, self.all_identifiers))

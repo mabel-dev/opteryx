@@ -133,6 +133,8 @@ def merge_schemas(
 
 
 class ReaderNode(BasePlanNode):
+    is_scan = True
+
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
 

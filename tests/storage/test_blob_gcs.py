@@ -58,6 +58,12 @@ test_cases = [
         expected_columncount=2,
         stats={"columns_read": 4},
     ),
+    TestCase(
+        query=f"SELECT COUNT(*) FROM {BUCKET_NAME}.many",
+        expected_rowcount=1,
+        expected_columncount=1,
+        stats={"blobs_read": 1018, "rows_read": 9162}
+    )
 ]
 
 
