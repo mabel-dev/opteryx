@@ -198,7 +198,7 @@ class GcpCloudStorageConnector(
 
         object_path = urllib.parse.quote(object_path, safe="")
         bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe
-        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name)"
+        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name),nextPageToken"
 
         # Ensure the credentials are valid, refreshing them if necessary
         if not self.client_credentials.valid:  # pragma: no cover
