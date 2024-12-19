@@ -28,13 +28,16 @@ def read(end_date=None, variables={}):
 
     buffer = []
     for variable in variables:
-        variable_type, variable_value, variable_owner = variables.details(variable)
+        variable_type, variable_value, variable_owner, variable_visibility = variables.details(
+            variable
+        )
         buffer.append(
             {
                 "name": variable,
                 "value": str(variable_value),
                 "type": variable_type,
                 "owner": variable_owner.name,
+                "visibility": variable_visibility.name,
             }
         )
 
@@ -50,6 +53,7 @@ def schema():
             FlatColumn(name="value", type=OrsoTypes.VARCHAR),
             FlatColumn(name="type", type=OrsoTypes.VARCHAR),
             FlatColumn(name="owner", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="visibility", type=OrsoTypes.VARCHAR),
         ],
     )
     # fmt:on

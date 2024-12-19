@@ -120,8 +120,6 @@ class BasePlanNode:
             except StopIteration:
                 # Break the loop when the generator is exhausted
                 break
-            except Exception as err:
-                yield err
 
     def sensors(self):
         return {

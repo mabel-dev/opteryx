@@ -23,6 +23,7 @@ from orso.types import OrsoTypes
 from opteryx.shared.variables import SystemVariables
 from opteryx.shared.variables import SystemVariablesContainer
 from opteryx.shared.variables import VariableOwner
+from opteryx.shared.variables import Visibility
 
 # History Item = [statement, success, execution start]
 HistoryItem = Tuple[str, bool, datetime.datetime]
@@ -66,4 +67,5 @@ class ConnectionContext:
             OrsoTypes.ARRAY,
             self.memberships or [],
             VariableOwner.SERVER,
+            Visibility.UNRESTRICTED,
         )

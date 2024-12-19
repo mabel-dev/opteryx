@@ -43,6 +43,6 @@ class SetVariableNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return f"{self.variable} TO {self.value}"
 
-    def execute(self, morsel, **kwargs) -> NonTabularResult:
+    def __call__(self, morsel, **kwargs) -> NonTabularResult:
         self.variables[self.variable] = self.value
         return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)  # type: ignore

@@ -131,7 +131,6 @@ def query_planner(
     from opteryx.planner.ast_rewriter import do_ast_rewriter
     from opteryx.planner.binder import do_bind_phase
     from opteryx.planner.cost_based_optimizer import do_cost_based_optimizer
-    from opteryx.planner.logical_planner import LogicalPlan
     from opteryx.planner.logical_planner import apply_visibility_filters
     from opteryx.planner.logical_planner import do_logical_planning_phase
     from opteryx.planner.physical_planner import create_physical_plan
@@ -158,48 +157,45 @@ def query_planner(
         raise SqlError(parser_error) from parser_error
     # AST Rewriter adds temporal filters and parameters to the AST
     start = time.monotonic_ns()
-    parsed_statements = do_ast_rewriter(
+    parsed_statement = do_ast_rewriter(
         parsed_statements,
         temporal_filters=temporal_filters,
         parameters=params,
         connection=connection,
-    )
+    )[0]
     statistics.time_planning_ast_rewriter += time.monotonic_ns() - start
 
-    logical_plan: LogicalPlan = None
-    ast: dict = {}
-
     # Logical Planner converts ASTs to logical plans
-    for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):  # type: ignore
-        # check user has permission for this query type
-        query_type = next(iter(ast))
-        if query_type not in connection.permissions:
-            from opteryx.exceptions import PermissionsError
 
-            raise PermissionsError(
-                f"User does not have permission to execute '{query_type}' queries."
-            )
+    logical_plan, ast, ctes = do_logical_planning_phase(parsed_statement)  # type: ignore
+    # check user has permission for this query type
+    query_type = next(iter(ast))
+    if query_type not in connection.permissions:
+        from opteryx.exceptions import PermissionsError
 
-        if visibility_filters:
-            logical_plan = apply_visibility_filters(logical_plan, visibility_filters)
+        raise PermissionsError(f"User does not have permission to execute '{query_type}' queries.")
 
-        # The Binder adds schema information to the logical plan
-        start = time.monotonic_ns()
-        bound_plan = do_bind_phase(
-            logical_plan,
-            connection=connection.context,
-            qid=qid,
-            # common_table_expressions=ctes,
-        )
-        statistics.time_planning_binder += time.monotonic_ns() - start
+    if visibility_filters:
+        logical_plan = apply_visibility_filters(logical_plan, visibility_filters)
 
-        start = time.monotonic_ns()
-        optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
-        statistics.time_planning_optimizer += time.monotonic_ns() - start
+    # The Binder adds schema information to the logical plan
+    start = time.monotonic_ns()
+    bound_plan = do_bind_phase(
+        logical_plan,
+        connection=connection.context,
+        qid=qid,
+        # common_table_expressions=ctes,
+    )
+    statistics.time_planning_binder += time.monotonic_ns() - start
 
-        # before we write the new optimizer and execution engine, convert to a V1 plan
-        start = time.monotonic_ns()
-        query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
-        physical_plan = create_physical_plan(optimized_plan, query_properties)
-        statistics.time_planning_physical_planner += time.monotonic_ns() - start
-        yield physical_plan
+    start = time.monotonic_ns()
+    optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
+    statistics.time_planning_optimizer += time.monotonic_ns() - start
+
+    # before we write the new optimizer and execution engine, convert to a V1 plan
+    start = time.monotonic_ns()
+    query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
+    physical_plan = create_physical_plan(optimized_plan, query_properties)
+    statistics.time_planning_physical_planner += time.monotonic_ns() - start
+
+    return physical_plan

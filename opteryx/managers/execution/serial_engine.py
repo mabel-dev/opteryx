@@ -36,28 +36,25 @@ def execute(
 
     # Special case handling for 'Explain' queries
     if isinstance(head_node, ExplainNode):
-        yield plan.explain(head_node.analyze), ResultType.TABULAR
+        return plan.explain(head_node.analyze), ResultType.TABULAR
 
-    # Special case handling for 'Set' queries
-    elif isinstance(head_node, SetVariableNode):
-        yield head_node(None, None), ResultType.NON_TABULAR
+    # Special case handling
+    if isinstance(head_node, SetVariableNode):
+        # Set the variables and return a non-tabular result
+        return head_node(None), ResultType.NON_TABULAR
+    if isinstance(head_node, (ShowValueNode, ShowCreateNode)):
+        # There's no execution plan to execute, just return the result
+        return head_node(None, None), ResultType.TABULAR
 
-    elif isinstance(head_node, (ShowValueNode, ShowCreateNode)):
-        yield head_node(None, None), ResultType.TABULAR
+    def inner_execute(plan: PhysicalPlan) -> Generator:
+        # Get the pump nodes from the plan and execute them in order
+        pump_nodes = [(nid, node) for nid, node in plan.depth_first_search_flat() if node.is_scan]
+        for pump_nid, pump_instance in pump_nodes:
+            for morsel in pump_instance(None, None):
+                yield from process_node(plan, pump_nid, morsel, None)
+            yield from process_node(plan, pump_nid, EOS, None)
 
-    else:
-
-        def inner_execute(plan):
-            # Get the pump nodes from the plan and execute them in order
-            pump_nodes = [
-                (nid, node) for nid, node in plan.depth_first_search_flat() if node.is_scan
-            ]
-            for pump_nid, pump_instance in pump_nodes:
-                for morsel in pump_instance(None, None):
-                    yield from process_node(plan, pump_nid, morsel, None)
-                yield from process_node(plan, pump_nid, EOS, None)
-
-        yield inner_execute(plan), ResultType.TABULAR
+    return inner_execute(plan), ResultType.TABULAR
 
 
 def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None, None]:
@@ -107,7 +104,7 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
     yield table
 
 
-def process_node(plan: PhysicalPlan, nid: str, morsel, join_leg: str):
+def process_node(plan: PhysicalPlan, nid: str, morsel: pyarrow.Table, join_leg: str) -> Generator:
     node = plan[nid]
 
     if node.is_scan:
@@ -122,8 +119,6 @@ def process_node(plan: PhysicalPlan, nid: str, morsel, join_leg: str):
         if results is None:
             yield None
             return
-        if isinstance(results, Exception):
-            raise results
         for result in results:
             if result is not None:
                 children = [(t, r) for s, t, r in plan.outgoing_edges(nid)]

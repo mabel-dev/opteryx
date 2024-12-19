@@ -18,7 +18,6 @@ The plan does not try to be efficient or clever, at this point it is only trying
 
 from enum import Enum
 from enum import auto
-from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -1200,16 +1199,14 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
     return logical_plan
 
 
-def do_logical_planning_phase(parsed_statements) -> Generator:
+def do_logical_planning_phase(parsed_statement: dict) -> tuple:
     # The sqlparser ast is an array of asts
-    for parsed_statement in parsed_statements:
-        statement_type = next(iter(parsed_statement))
-        if statement_type not in QUERY_BUILDERS:
-            from opteryx.exceptions import UnsupportedSyntaxError
 
-            raise UnsupportedSyntaxError(
-                f"Version 2 Planner does not support '{statement_type}' type queries yet."
-            )
-        # CTEs are Common Table Expressions, they're variations of subqueries
-        ctes = extract_ctes(parsed_statement, inner_query_planner)
-        yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes
+    statement_type = next(iter(parsed_statement))
+    if statement_type not in QUERY_BUILDERS:
+        from opteryx.exceptions import UnsupportedSyntaxError
+
+        raise UnsupportedSyntaxError(f"VPlanner does not support '{statement_type}' type queries.")
+    # CTEs are Common Table Expressions, they're variations of subqueries
+    ctes = extract_ctes(parsed_statement, inner_query_planner)
+    return QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes

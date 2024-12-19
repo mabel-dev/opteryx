@@ -280,11 +280,13 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
     return node
 
 
-def do_ast_rewriter(ast: list, temporal_filters: list, parameters: Union[list, dict], connection):
+def do_ast_rewriter(
+    asts: List[dict], temporal_filters: list, parameters: Union[list, dict], connection
+):
     # get the query type
-    query_type = next(iter(ast))
+    query_type = next(iter(asts))
     # bind the temporal ranges, we do that here because the order in the AST matters
-    with_temporal_ranges = temporal_range_binder(ast, temporal_filters)
+    with_temporal_ranges = temporal_range_binder(asts, temporal_filters)
     # bind the user provided parameters, we this that here because we want it after the
     # AST has been created (to avoid injection flaws) but also because the order
     # matters
