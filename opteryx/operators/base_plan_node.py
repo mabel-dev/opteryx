@@ -120,6 +120,8 @@ class BasePlanNode:
             except StopIteration:
                 # Break the loop when the generator is exhausted
                 break
+            except Exception as err:
+                print(f"Exception {err} in operator", self.name)
 
     def sensors(self):
         return {

@@ -1,14 +1,13 @@
 """
-Test we can read from SQLite.
+This module tests the ability to read from SQLite using the SQLConnector.
 
-SQLite is also used to test the SQLConnector harder than the other
-SQL sources. We use SQLite for this because the file is local and therefore
-we're not going to cause contention with remote services.
+SQLite is used to rigorously test the SQLConnector due to its local file nature,
+which avoids contention with remote services. This allows for more intensive
+testing without the overhead of network latency or remote service limitations.
 
-Note: DuckDB also has additional tests to the standard battery but because
-DuckDB doesn't have a stable file format, it only covers a subset of
-the required use cases (to save time, loading it with a lot of different
-tables is time consuming)
+Note: DuckDB also includes additional tests beyond the standard battery. However,
+due to DuckDB's unstable file format, it only covers a subset of the required use
+cases to save time, as loading it with numerous different tables can be time-consuming.
 """
 
 import os
@@ -53,7 +52,7 @@ STATEMENTS = [
     ("SELECT avg(num_moons) FROM (SELECT numberOfMoons as num_moons FROM sqlite.planets) AS subquery;", 1, 1, None),
     ("SELECT p.name, s.name FROM sqlite.planets p LEFT OUTER JOIN sqlite.satellites s ON p.id = s.planetId;", 179, 2, None),
     ("SELECT A.name, B.name FROM sqlite.planets A, sqlite.planets B WHERE A.gravity = B.gravity AND A.id != B.id;", 2, 2, None),
-#    ("SELECT * FROM sqlite.planets p JOIN sqlite.satellites s ON p.id = s.planetId AND p.gravity > 1;", 6, 28, None),
+    ("SELECT * FROM sqlite.planets p JOIN sqlite.satellites s ON p.id = s.planetId WHERE p.gravity > 1;", 172, 28, None),
     ("SELECT planetId, COUNT(*) AS num_satellites FROM sqlite.satellites GROUP BY planetId HAVING COUNT(*) > 1;", 6, 2, None),
     ("SELECT * FROM sqlite.planets ORDER BY name;", 9, 20, None),
     ("SELECT DISTINCT name FROM sqlite.planets;", 9, 1, None),
@@ -89,11 +88,90 @@ STATEMENTS = [
     ("SELECT name FROM sqlite.planets WHERE name LIKE '____';", 1, 1, None), 
     ("SELECT name FROM sqlite.planets WHERE name NOT LIKE '____';", 8, 1, None),  # All except Mars, Earth
     ("SELECT name FROM sqlite.planets WHERE name ILIKE '%o';", 1, 1, None),  # Pluto
-    ("SELECT name FROM sqlite.planets WHERE name NOT ILIKE '%o';", 8, 1, None)  # All except Pluto
-
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE '^M';", 2, 1, None),  # Mars, Mercury
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE 'e';", 4, 1, None),  # Earth, Jupiter, Neptune, Mercury, Venus
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE '^.a';", 3, 1, None),  # Mars, Saturn, Uranus
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE '^.{4}$';", 1, 1, None),  # Mars
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE 't$';", 0, 1, None), 
+    ("SELECT name FROM sqlite.planets WHERE name RLIKE 'o$';", 1, 1, None),  # Pluto
+    ("SELECT name FROM sqlite.planets WHERE name NOT RLIKE 'o$';", 8, 1, None),  # All except Pluto
+    ("SELECT COUNT(DISTINCT name) FROM sqlite.planets;", 1, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE id NOT IN (1, 2, 3);", 6, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 1;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 2;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 3;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 4;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 5;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 6;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 7;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 8;", 1, 1, None),
+    ("SELECT COUNT(*) FROM sqlite.satellites WHERE planetId = 9;", 1, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE user_verified is true;", 711, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE user_verified is false;", 99289, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE user_verified = true;", 711, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE user_verified = false;", 99289, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%happy%';", 1174, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%sad%';", 697, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%excited%';", 280, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%angry%';", 147, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%bored%';", 102, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%tired%';", 359, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%hungry%';", 74, 1, None),
+    ("SELECT user_name FROM sqlite_tweets.tweets WHERE text LIKE '%thirsty%';", 10, 1, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 2 AND 5;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 2 AND 5;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name IN ('Earth', 'Mars');", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT IN ('Earth', 'Mars');", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name LIKE 'M%';", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT LIKE 'M%';", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name LIKE '%e%';", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT LIKE '%e%';", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name LIKE '_a%';", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT LIKE '_a%';", 6, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name LIKE '____';", 1, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT LIKE '____';", 8, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name ILIKE 'p%';", 1, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT ILIKE 'p%';", 8, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name ILIKE '%U%';", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT ILIKE '%U%';", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE '^M';", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE 'e';", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE '^.a';", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE '^.{4}$';", 1, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE 't$';", 0, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name RLIKE 'o$';", 1, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE name NOT RLIKE 'o$';", 8, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id > 3 AND id < 7;", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id <= 3 OR id >= 7;", 6, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id = 1 OR id = 9;", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id != 1 AND id != 9;", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id > 1 AND id < 9;", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id <= 1 OR id >= 9;", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id IN (1, 3, 5, 7, 9);", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT IN (1, 3, 5, 7, 9);", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 1 AND 3;", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 1 AND 3;", 6, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 7 AND 9;", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 7 AND 9;", 6, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 4 AND 6;", 3, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 4 AND 6;", 6, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 2 AND 8;", 7, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 2 AND 8;", 2, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 1 AND 9;", 9, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 1 AND 9;", 0, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 3 AND 7;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 3 AND 7;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 5 AND 9;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 5 AND 9;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 1 AND 5;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 1 AND 5;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 2 AND 6;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 2 AND 6;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 4 AND 8;", 5, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 4 AND 8;", 4, 20, None),
+    ("SELECT * FROM sqlite.planets WHERE id BETWEEN 3 AND 9;", 7, 20, None),
+    ("SELECT user_name, name FROM sqlite_tweets.tweets JOIN sqlite.planets ON sqlite_tweets.tweets.followers = sqlite.planets.id;", 3962, 2, None),
 ]
-# fmt: on
-
 
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
 def test_sql_battery(statement, rows, columns, exception):
@@ -131,6 +209,7 @@ def test_sql_battery(statement, rows, columns, exception):
     except AssertionError as err:  # pragma: no cover
         raise Exception(err) from err
     except Exception as err:  # pragma: no cover
+        print(err)
         if type(err) != exception:
             raise Exception(
                 f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
