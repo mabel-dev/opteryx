@@ -60,6 +60,40 @@ def test_truncate_to_week():
 
     dt = datetime(2012, 7, 9, 12, 14, 14, 342, timezone.utc)
     expected = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    actual = date_trunc("week", dt)
+    assert actual == expected
+
+
+def test_truncate_to_quarter():
+    dt = datetime(2012, 7, 12, 12, 14, 14, 342, timezone.utc)
+    expected = datetime(2012, 7, 1, 0, 0, 0, 0, timezone.utc)
+    actual = date_trunc("quarter", dt)
+    assert actual == expected, f"{actual}, {expected}"
+
+    dt = datetime(2012, 1, 15, 10, 30, 45, 123, timezone.utc)
+    expected = datetime(2012, 1, 1, 0, 0, 0, 0, timezone.utc)
+    actual = date_trunc("quarter", dt)
+    assert actual == expected, f"{actual}, {expected}"
+
+    dt = datetime(2012, 6, 25, 5, 20, 30, 456, timezone.utc)
+    expected = datetime(2012, 4, 1, 0, 0, 0, 0, timezone.utc)
+    actual = date_trunc("quarter", dt)
+    assert actual == expected, f"{actual}, {expected}"
+
+    dt = datetime(2012, 11, 5, 23, 59, 59, 999, timezone.utc)
+    expected = datetime(2012, 10, 1, 0, 0, 0, 0, timezone.utc)
+    actual = date_trunc("quarter", dt)
+    assert actual == expected, f"{actual}, {expected}"
+
+
+def test_truncate_to_decade():
+    dt = datetime(2012, 7, 12, 12, 14, 14, 342, timezone.utc)
+    try:
+        date_trunc("decade", dt)
+    except ValueError:
+        pass
+    except Exception as e:
+        assert False, f"Unexpected exception: {e}"
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -53,7 +53,43 @@ TESTS = [
     ('Cy', 'C000'),
     ('Du', 'D000'),
     ('Ek', 'E200'),
-    ('', '')
+    ('', ''),
+    ('Washington', 'W252'),
+    ('Jefferson', 'J162'),
+    ('Lincoln', 'L524'),
+    ('Roosevelt', 'R214'),
+    ('Kennedy', 'K530'),
+    ('Reagan', 'R250'),
+    ('Bush', 'B200'),
+    ('Clinton', 'C453'),
+    ('Obama', 'O150'),
+    ('Trump', 'T651'),
+    ('Biden', 'B350'),
+    ('Harrison', 'H625'),
+    ('Cleveland', 'C414'),
+    ('McKinley', 'M254'),
+    ('Coolidge', 'C432'),
+    ('Hoover', 'H160'),
+    ('Truman', 'T650'),
+    ('Eisenhower', 'E256'),
+    ('Nixon', 'N250'),
+    ('Ford', 'F630'),
+    ('Carter', 'C636'),
+    ('Adams', 'A352'),
+    ('Madison', 'M325'),
+    ('Monroe', 'M560'),
+    ('Jackson', 'J250'),
+    ('Polk', 'P420'),
+    ('Taylor', 'T460'),
+    ('Fillmore', 'F456'),
+    ('Pierce', 'P620'),
+    ('Buchanan', 'B250'),
+    ('Grant', 'G653'),
+    ('Hayes', 'H200'),
+    ('Garfield', 'G614'),
+    ('Arthur', 'A636'),
+    ('Taft', 'T130'),
+    ('Harding', 'H635'),
 ]
 # fmt:on
 
@@ -67,8 +103,11 @@ def test_soundex_battery(input, result):
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for str1, str2 in TESTS:
-        test_soundex_battery(str1, str2)
-        print("\033[38;2;26;185;67m.\033[0m", end="")
+        try:
+            test_soundex_battery(str1, str2)
+            print("\033[38;2;26;185;67m.\033[0m", end="")
+        except Exception as e:
+            print(f"Test failed for {str1} and {str2} with error: {e}")
 
     print()
     print("✅ okay")

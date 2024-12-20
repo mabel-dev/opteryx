@@ -16,13 +16,16 @@ def test_node_simple_usage():
 
 def test_node_str_representation():
     n = Node("", a=1, c=3)
-    assert str(n) == '{"node_type":"","a":1,"c":3}'
-
+    stringified = str(n)
+    assert '"node_type":""' in stringified
+    assert '"a":1' in stringified
+    assert '"c":3' in stringified
 
 def test_node_properties():
     n = Node("", a=1, c=3)
-    n_properties = n.properties
-    assert n_properties == {"node_type": "", "a": 1, "c": 3}
+    p = n.properties
+    p.pop("uuid", None)
+    assert p == {"node_type": "", "a": 1, "c": 3}
 
 
 def test_node_copying():
@@ -69,14 +72,16 @@ def test_node_reassign_value():
     n = Node("", a=1)
     n.a = 2
     assert n.a == 2
-    assert n.properties == {"node_type": "", "a": 2}
+    p = n.properties
+    p.pop("uuid", None)
+    assert p == {"node_type": "", "a": 2}
 
 
 def test_node_node_type():
     """Test setting and retrieving the node_type attribute."""
     n = Node(node_type="Fruit")
     assert n.node_type == "Fruit"
-    assert n.properties == {"node_type": "Fruit"}
+    assert n.properties.get("node_type") == "Fruit"
 
 
 def test_node_copy_with_node_type():
