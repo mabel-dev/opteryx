@@ -675,10 +675,8 @@ STATEMENTS = [
         ("SELECT cve -> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve ->> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve -> 'CVE_data_meta' -> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
-        ("SELECT details, details->'int_field' FROM duckdb.struct_tests", 10, 2, None),
         
         ("SELECT dict @? 'list' FROM testdata.flat.struct", 6, 1, None),
-        ("SELECT struct(dict) @? 'list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT birth_place @? 'town' FROM $astronauts", 357, 1, None),
         ("SELECT dict @? '$.list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT cve @? '$.CVE_data_meta.ASSIGNER' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),

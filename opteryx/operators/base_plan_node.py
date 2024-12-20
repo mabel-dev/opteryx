@@ -93,7 +93,6 @@ class BasePlanNode:
         pass
 
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
-
         if hasattr(morsel, "num_rows"):
             self.records_in += morsel.num_rows
             self.bytes_in += morsel.nbytes

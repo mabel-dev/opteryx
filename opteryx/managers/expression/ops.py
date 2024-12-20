@@ -247,9 +247,9 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(out)
 
     if operator == "AtQuestion":
-        element = value[0]
-
         import simdjson
+
+        element = value[0]
 
         parser = simdjson.Parser()
 

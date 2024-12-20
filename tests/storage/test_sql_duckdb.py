@@ -49,6 +49,7 @@ STATEMENTS = [
     ("SELECT * FROM duckdb.satellites ORDER BY name DESC;", 177, 8, None),
     ("SELECT * FROM duckdb.planets LIMIT 5;", 5, 20, None),
     ("SELECT * FROM duckdb.satellites LIMIT 10 OFFSET 5;", 10, 8, None),
+    ("SELECT details, details->'int_field' FROM duckdb.struct_tests", 10, 2, None),
 ]
 # fmt: on
 
