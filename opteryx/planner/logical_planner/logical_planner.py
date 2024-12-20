@@ -844,7 +844,7 @@ def plan_execute_query(statement) -> LogicalPlan:
             "EXECUTE does not support USING syntax, please provide parameters in parenthesis."
         )
 
-    statement_name = statement["Execute"]["name"]["value"].upper()
+    statement_name = statement["Execute"]["name"][0]["value"].upper()
     parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
         with open("prepared_statements.json", "r") as ps:
@@ -883,7 +883,7 @@ def plan_execute_query(statement) -> LogicalPlan:
         parameters=parameters,
         connection=None,
     )
-    return list(do_logical_planning_phase(parsed_statements))[0][0]
+    return do_logical_planning_phase(parsed_statements[0])[0]
 
 
 def plan_explain(statement) -> LogicalPlan:

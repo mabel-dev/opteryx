@@ -121,7 +121,8 @@ class BasePlanNode:
                 # Break the loop when the generator is exhausted
                 break
             except Exception as err:
-                print(f"Exception {err} in operator", self.name)
+                # print(f"Exception {err} in operator", self.name)
+                raise err
 
     def sensors(self):
         return {

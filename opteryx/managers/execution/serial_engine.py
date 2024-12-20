@@ -90,7 +90,7 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
         temp = None
         head_node = plan.get_exit_points()[0]
         query_head, _, _ = plan.ingoing_edges(head_node)[0]
-        results = plan.execute(query_head)
+        results, result_type = execute(plan, query_head)
         if results is not None:
             results_generator, _ = next(results, ([], None))
             for temp in results_generator:

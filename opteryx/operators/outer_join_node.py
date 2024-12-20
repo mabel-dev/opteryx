@@ -304,6 +304,7 @@ class OuterJoinNode(JoinNode):
                     left_columns=self.left_columns,
                     right_columns=self.right_columns,
                 )
+                yield EOS
 
             else:
                 self.right_buffer.append(morsel)
