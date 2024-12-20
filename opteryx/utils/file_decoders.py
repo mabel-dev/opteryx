@@ -326,12 +326,10 @@ def jsonl_decoder(
     if not isinstance(buffer, bytes):
         buffer = buffer.read()
 
-    parser = simdjson.Parser()
-
     for line in buffer.split(b"\n"):
         if not line:
             continue
-        dict_line = parser.parse(line)
+        dict_line = simdjson.Parser().parse(line)
         rows.append(
             {k: orjson.dumps(v) if isinstance(v, dict) else v for k, v in dict_line.items()}
         )
