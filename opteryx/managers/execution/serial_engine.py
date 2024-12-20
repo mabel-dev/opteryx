@@ -36,7 +36,7 @@ def execute(
 
     # Special case handling for 'Explain' queries
     if isinstance(head_node, ExplainNode):
-        return plan.explain(head_node.analyze), ResultType.TABULAR
+        return explain(plan, analyze=head_node.analyze), ResultType.TABULAR
 
     # Special case handling
     if isinstance(head_node, SetVariableNode):
