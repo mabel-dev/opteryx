@@ -59,6 +59,7 @@ class RedisCache(BaseKeyValueStore):
         self._server = _redis_server(**kwargs)
         if self._server is None:
             import datetime
+
             print(f"{datetime.datetime.now()} [CACHE] Unable to set up redis cache.")
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:

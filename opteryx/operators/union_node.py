@@ -55,6 +55,7 @@ class UnionNode(BasePlanNode):
         elif morsel == EOS:
             self.seen_first_eos = True
             yield None
+            return
 
         elif self.schema is None:
             self.schema = morsel.schema

@@ -23,10 +23,8 @@ def _valkey_server(**kwargs):
     # the server must be set in the environment
     valkey_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
 
-
     if valkey_config is None:
         return None
-
 
     try:
         import valkey  # Assuming `valkey` is the client library's name
@@ -51,6 +49,7 @@ class ValkeyCache(BaseKeyValueStore):
         self._server = _valkey_server(**kwargs)
         if self._server is None:
             import datetime
+
             print(f"{datetime.datetime.now()} [CACHE] Unable to set up valkey cache.")
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:
