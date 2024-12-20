@@ -51,7 +51,8 @@ def execute(
         pump_nodes = [(nid, node) for nid, node in plan.depth_first_search_flat() if node.is_scan]
         for pump_nid, pump_instance in pump_nodes:
             for morsel in pump_instance(None, None):
-                yield from process_node(plan, pump_nid, morsel, None)
+                if morsel is not None:
+                    yield from process_node(plan, pump_nid, morsel, None)
             yield from process_node(plan, pump_nid, EOS, None)
 
     return inner_execute(plan), ResultType.TABULAR

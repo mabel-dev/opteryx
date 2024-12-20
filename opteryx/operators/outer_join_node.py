@@ -290,6 +290,8 @@ class OuterJoinNode(JoinNode):
                 self.left_buffer.clear()
             else:
                 self.left_buffer.append(morsel)
+            yield None
+            return
 
         if join_leg == "right":
             if morsel == EOS:
@@ -308,6 +310,7 @@ class OuterJoinNode(JoinNode):
 
             else:
                 self.right_buffer.append(morsel)
+                yield None
 
 
 providers = {
