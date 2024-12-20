@@ -1,3 +1,10 @@
+# This is the main regression test script which tests the entire application.
+# Other GitHub Actions test subsets primarily to ensure compatibility for different OSes.
+
+# This script is run on Ubuntu, the most common OS for CI/CD pipelines.
+# The script is run on Python 3.10, 3.11, and 3.12.
+# The script is run at 4:00 AM UTC every day and on every push to the repository.
+
 name: Regression Suite
 
 on:
@@ -74,7 +81,7 @@ jobs:
           DATA_CATALOG_PROVIDER: 'TARCHIA'
           DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
           TARCHIA_KEY: '${{ secrets.TARCHIA_KEY }}'
-          EXPERIMENTAL_EXECUTION_ENGINE: 'true'
+          REDIS_CONNECTION: '${{ secrets.VALKEY_CONFIG }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=90 -m

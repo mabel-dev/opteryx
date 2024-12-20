@@ -83,6 +83,8 @@ class MemcachedCache(BaseKeyValueStore):
         """
         self._server = _memcached_server(**kwargs)
         if self._server is None:
+            import datetime
+            print(f"{datetime.datetime.now()} [CACHE] Unable to set up memcached cache.")
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:
             self._consecutive_failures = 0

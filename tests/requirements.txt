@@ -13,6 +13,7 @@ pycln
 pandas
 pymemcache
 redis
+valkey
 requests
 rich
 zstandard
