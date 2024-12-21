@@ -54,6 +54,7 @@ class ShowCreateNode(BasePlanNode):
                 buffer = [{self.object_name: view_sql}]
                 table = pyarrow.Table.from_pylist(buffer)
                 yield table
+                return
 
             raise DatasetNotFoundError(self.object_name)
 

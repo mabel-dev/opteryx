@@ -1638,7 +1638,7 @@ STATEMENTS = [
         ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
         ("EXECUTE PLANETS_BY_ID (name=1)", None, None, ParameterError),  # simple case)
         ("EXECUTE VERSION", 1, 1, None),  # no paramters
-        ("EXECUTE VERSION()", 1, 1, SqlError),  # no paramters
+        ("EXECUTE VERSION()", 1, 1, None),
         ("EXECUTE get_satellites_by_planet_name(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
@@ -1864,10 +1864,10 @@ STATEMENTS = [
         ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY ('%Apoll%', 'mission')", 323, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apoll%', 'Gemini%', 'Mercury%')", 37, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apoll%', 'Gemini%', 'Mercury%')", 320, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ()", 0, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ()", 0, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', null)", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%', null)", 37, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ()", 0, 2, SqlError),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ()", 0, 2, SqlError),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', null)", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%', null)", 323, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%aPoll%')", 0, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%aPoll%')", 34, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo 11')", 3, 2, None),

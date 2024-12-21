@@ -182,7 +182,7 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpILike":
         patterns = value[0]
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
         combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
 
         out = numpy.zeros(arr.size, dtype=bool)
@@ -199,7 +199,7 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpLike":
         patterns = value[0]
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
         combined_regex = re.compile(combined_regex_pattern)
 
         out = numpy.zeros(arr.size, dtype=bool)
@@ -215,7 +215,7 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpNotLike":
         patterns = value[0]
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
         combined_regex = re.compile(combined_regex_pattern)
 
         out = numpy.zeros(arr.size, dtype=bool)
@@ -232,7 +232,7 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpNotILike":
         patterns = value[0]
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns)
+        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
         combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
 
         out = numpy.zeros(arr.size, dtype=bool)
