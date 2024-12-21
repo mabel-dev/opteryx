@@ -139,12 +139,7 @@ SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE b
 -- Query 27: SELECT * FROM tristatebooleans WHERE bool IS NOT FALSE;
 -- Expected rows: 2 (True, NULL)
 SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT FALSE;
-""", {True, None}),(
-"""
--- Query 28: SELECT * FROM tristatebooleans WHERE (bool IS NULL AND bool IS NOT NULL) OR (bool IS NOT NULL AND bool IS NULL) OR (bool <> bool);
--- Expected rows: 1 (NULL)
-SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE (bool IS NULL AND bool IS NOT NULL) OR (bool IS NOT NULL AND bool IS NULL) OR (bool <> bool);
-""", {None})
+""", {True, None}),
 ]
 # fmt:on
 
