@@ -49,6 +49,52 @@ test_cases = [
     (["restricted", "opteryx"], "db.schema.table", True),
     (["restricted", "opteryx"], "opteryx.schema.deeply.nested.table", True),
     (["restricted", "opteryx"], "other.schema.table", True),
+    (["opteryx"], "", True),  # Empty table name
+    ([], "", False),  # Empty roles and table name
+    ([""], "", False),  # Empty role and table name
+    (["opteryx"], " ", True),  # Table name with space
+    ([" "], "opteryx.table1", False),  # Role with space
+    (["opteryx"], "opteryx..table", True),  # Table name with double dots
+    (["opteryx"], ".opteryx.table", False),  # Table name starting with dot
+    (["opteryx"], "opteryx.table.", True),  # Table name ending with dot
+    (["opteryx"], "opteryx..schema.table", True),  # Table name with double dots in schema
+    (["opteryx"], "opteryx.schema..table", True),  # Table name with double dots in table
+    (["opteryx"], "opteryx.schema.table..", True),  # Table name ending with double dots
+    (["opteryx"], "opteryx.table_with_special_chars!@#$%^&*()", True),  # Special characters in table name
+    (["opteryx"], "Opteryx.Table", True),  # Mixed case table name
+    (["opteryx"], "opteryx." + "a" * 255, True),  # Very long table name
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table1", False),  # Role with special characters
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table1", False),  # Role with special characters
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table_with_special_chars!@#$%^&*()", False),  # Role and table with special characters
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table_with_underscore", False),  # Role with special characters and table with underscore
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table-with-dash", False),  # Role with special characters and table with dash
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table/with/slash", False),  # Role with special characters and table with slash
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table\\with\\backslash", False),  # Role with special characters and table with backslash
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table:with:colon", False),  # Role with special characters and table with colon
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table;with:semicolon", False),  # Role with special characters and table with semicolon
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table,with,comma", False),  # Role with special characters and table with comma
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table<with<less<than", False),  # Role with special characters and table with less than
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table>with>greater>than", False),  # Role with special characters and table with greater than
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table|with|pipe", False),  # Role with special characters and table with pipe
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table?with?question?mark", False),  # Role with special characters and table with question mark
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table*with*asterisk", False),  # Role with special characters and table with asterisk
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table\"with\"double\"quote", False),  # Role with special characters and table with double quote
+    (["table_with_special_chars!@#$%^&*()"], "opteryx.table'with'single'quote", False),  # Role with special characters and table with single quote
+    (["opteryx"], "opteryx.table_with_underscore", True),  # Table name with underscore
+    (["opteryx"], "opteryx.table-with-dash", True),  # Table name with dash
+    (["opteryx"], "opteryx.table/with/slash", True),  # Table name with slash
+    (["opteryx"], "opteryx.table\\with\\backslash", True),  # Table name with backslash
+    (["opteryx"], "opteryx.table:with:colon", True),  # Table name with colon
+    (["opteryx"], "opteryx.table;with:semicolon", True),  # Table name with semicolon
+    (["opteryx"], "opteryx.table,with,comma", True),  # Table name with comma
+    (["opteryx"], "opteryx.table<with<less<than", True),  # Table name with less than
+    (["opteryx"], "opteryx.table>with>greater>than", True),  # Table name with greater than
+    (["opteryx"], "opteryx.table|with|pipe", True),  # Table name with pipe
+    (["opteryx"], "opteryx.table?with?question?mark", True),  # Table name with question mark
+    (["opteryx"], "opteryx.table*with*asterisk", True),  # Table name with asterisk
+    (["opteryx"], "opteryx.table\"with\"double\"quote", True),  # Table name with double quote
+    (["opteryx"], "opteryx.table'with'single'quote", True),  # Table name with single quote
+
 ]
 
 @pytest.mark.parametrize("roles, table, expected", test_cases)
@@ -69,7 +115,7 @@ if __name__ == "__main__":  # pragma: no cover
     for index, (roles, table, expected) in enumerate(test_cases):
         print(
             f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
-            f" .",
+            f" {', '.join(roles).ljust(35)} {table.ljust(25)}",
             end="",
             flush=True,
         )
