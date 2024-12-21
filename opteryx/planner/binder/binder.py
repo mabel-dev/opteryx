@@ -138,7 +138,13 @@ def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
 
     # if there are no candidates, we probably don't know the relation
     if not candidate_schemas:
-        raise UnexpectedDatasetReferenceError(dataset=node.source)
+        if node.source in context.relations:
+            raise UnexpectedDatasetReferenceError(
+                dataset=node.source,
+                message=f"Dataset `{node.source}` is not available after being used on the right side of a ANTI or SEMI JOIN",
+            )
+        else:
+            raise UnexpectedDatasetReferenceError(dataset=node.source)
 
     # look up the column in the candidate schemas
     column, found_source_relation = locate_identifier_in_loaded_schemas(

@@ -23,11 +23,13 @@ We also have our own INNER JOIN implementations, it's really just the less
 popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
+from collections import deque
 from typing import List
 
 import pyarrow
 
 from opteryx import EOS
+from opteryx.compiled.structures import HashSet
 from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
@@ -52,8 +54,6 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     Returns:
         A pyarrow.Table containing the result of the LEFT JOIN operation.
     """
-    from collections import deque
-
     from opteryx.compiled.structures.hash_table import hash_join_map
 
     left_indexes: deque = deque()
@@ -190,16 +190,15 @@ def left_anti_join(
     Returns:
         A pyarrow.Table containing the result of the LEFT ANTI JOIN operation.
     """
-    hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
-    for i, value_tuple in enumerate(zip(*non_null_right_values)):
-        hash_table.insert(hash(value_tuple), i)
+    right_hash_set = set(zip(*non_null_right_values))
 
     left_indexes = []
     left_values = left_relation.select(left_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*left_values)):
-        rows = hash_table.get(hash(value_tuple))
-        if not rows:  # Only include left rows that have no match in the right table
+        if (
+            value_tuple not in right_hash_set
+        ):  # Only include left rows that have no match in the right table
             left_indexes.append(i)
 
     # Filter the left_chunk based on the anti join condition

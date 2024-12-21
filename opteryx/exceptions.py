@@ -248,9 +248,10 @@ class AmbiguousDatasetError(SqlError):
 class UnexpectedDatasetReferenceError(SqlError):
     """Exception raised for unexpected dataset references."""
 
-    def __init__(self, dataset: str):
+    def __init__(self, dataset: str, message: Optional[str] = None):
         self.dataset = dataset
-        message = f"Dataset '{dataset}' is referenced in query but it doesn't appear in a FROM or JOIN clause."
+        if not message:
+            message = f"Dataset '{dataset}' is referenced in query but it doesn't appear in a FROM or JOIN clause."
         super().__init__(message)
 
 
