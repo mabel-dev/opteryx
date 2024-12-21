@@ -225,6 +225,7 @@ class AggregateNode(BasePlanNode):
                     morsel_promise=self.buffer,
                     column_name=self.aggregates[0].schema_column.identity,
                 )
+                yield EOS
                 return
 
             # merge all the morsels together into one table, selecting only the columns
@@ -250,7 +251,7 @@ class AggregateNode(BasePlanNode):
             aggregates = aggregates.select(list(self.column_map.keys()))
 
             yield aggregates
-
+            yield EOS
             return
 
         self.buffer.append(project(morsel, self.all_identifiers))

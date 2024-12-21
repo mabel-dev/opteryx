@@ -15,7 +15,6 @@ import time
 from enum import Enum
 from enum import auto
 from functools import wraps
-from itertools import chain
 from typing import Any
 from typing import Dict
 from typing import Iterable
@@ -169,8 +168,8 @@ class Cursor(DataFrame):
         Returns:
             Results of the query execution.
         """
-
         from opteryx import system_statistics
+        from opteryx.managers.execution import execute
         from opteryx.planner import query_planner
 
         if not operation:  # pragma: no cover
@@ -178,34 +177,25 @@ class Cursor(DataFrame):
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
 
-        start = time.time_ns()
-        plans = query_planner(
-            operation=operation,
-            parameters=params,
-            visibility_filters=visibility_filters,
-            connection=self._connection,
-            qid=self.id,
-            statistics=self._statistics,
-        )
-
         try:
             start = time.time_ns()
-            first_item = next(plans)
+            plan = query_planner(
+                operation=operation,
+                parameters=params,
+                visibility_filters=visibility_filters,
+                connection=self._connection,
+                qid=self.id,
+                statistics=self._statistics,
+            )
             self._statistics.time_planning += time.time_ns() - start
         except RuntimeError as err:  # pragma: no cover
             raise SqlError(f"Error Executing SQL Statement ({err})") from err
 
-        plans = chain([first_item], plans)
-
         if ROLLING_LOG:
             ROLLING_LOG.append(operation)
 
-        results = None
+        results = execute(plan, statistics=self._statistics)
         start = time.time_ns()
-        for plan in plans:
-            self._statistics.time_planning += time.time_ns() - start
-            results = plan.execute(statistics=self._statistics)
-            start = time.time_ns()
 
         system_statistics.queries_executed += 1
 
@@ -219,7 +209,7 @@ class Cursor(DataFrame):
 
     def _execute_statements(
         self,
-        operation,
+        operation: str,
         params: Optional[Iterable] = None,
         visibility_filters: Optional[Dict[str, Any]] = None,
     ):
@@ -280,7 +270,7 @@ class Cursor(DataFrame):
             operation = operation.decode()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
-            result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
+            result_data, self._result_type = results
             if self._result_type == ResultType.NON_TABULAR:
                 import orso
 
@@ -346,7 +336,7 @@ class Cursor(DataFrame):
             operation = operation.decode()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
-            result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
+            result_data, self._result_type = results
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         if isinstance(result_data, pyarrow.Table):

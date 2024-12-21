@@ -317,17 +317,25 @@ def jsonl_decoder(
     just_schema: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    import orjson
     import pyarrow.json
+    import simdjson
 
-    stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    elif isinstance(buffer, bytes):
-        stream = io.BytesIO(buffer)
-    else:
-        stream = buffer
+    rows = []
 
-    table = pyarrow.json.read_json(stream)
+    if not isinstance(buffer, bytes):
+        buffer = buffer.read()
+
+    for line in buffer.split(b"\n"):
+        if not line:
+            continue
+        dict_line = simdjson.Parser().parse(line)
+        rows.append(
+            {k: orjson.dumps(v) if isinstance(v, dict) else v for k, v in dict_line.items()}
+        )
+
+    table = pyarrow.Table.from_pylist(rows)
+
     schema = table.schema
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)

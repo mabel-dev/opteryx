@@ -161,19 +161,16 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 class InnerJoinSingleNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
-        self._join_type = parameters["type"]
-        self._on = parameters.get("on")
-        self._using = parameters.get("using")
 
-        self._left_columns = parameters.get("left_columns")
+        self.left_columns = parameters.get("left_columns")
         self.left_readers = parameters.get("left_readers")
 
-        self._right_columns = parameters.get("right_columns")
+        self.right_columns = parameters.get("right_columns")
         self.right_readers = parameters.get("right_readers")
 
-        self.stream = "left"
         self.left_buffer = []
         self.left_hash = None
+        self.left_relation = None
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -188,34 +185,25 @@ class InnerJoinSingleNode(JoinNode):
         return ""
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
-        if self.stream == "left":
+        if join_leg == "left":
             if morsel == EOS:
-                self.stream = "right"
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
-
-                # in place until #1295 resolved
-                if self._left_columns[0] not in self.left_relation.column_names:
-                    self._right_columns, self._left_columns = (
-                        self._left_columns,
-                        self._right_columns,
-                    )
-
-                self.left_hash = preprocess_left(self.left_relation, self._left_columns)
+                self.left_hash = preprocess_left(self.left_relation, self.left_columns)
             else:
                 self.left_buffer.append(morsel)
             yield None
             return
 
         if morsel == EOS:
-            yield None
+            yield EOS
             return
 
         # do the join
         new_morsel = inner_join_with_preprocessed_left_side(
             left_relation=self.left_relation,
             right_relation=morsel,
-            join_columns=self._right_columns,
+            join_columns=self.right_columns,
             hash_table=self.left_hash,
         )
 

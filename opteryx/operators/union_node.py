@@ -50,11 +50,12 @@ class UnionNode(BasePlanNode):
         coercible types are coerced.
         """
         if morsel == EOS and self.seen_first_eos:
-            yield None
+            yield EOS
             return
         elif morsel == EOS:
             self.seen_first_eos = True
             yield None
+            return
 
         elif self.schema is None:
             self.schema = morsel.schema

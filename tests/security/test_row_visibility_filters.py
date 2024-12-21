@@ -43,6 +43,18 @@ test_cases = [
     ("SELECT * FROM $planets p LEFT JOIN $satellites s ON p.id = s.planetId",  {"$satellites": [("id", "Lt", 4)]}, (10, 28)),
 
     ("SELECT * FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id", {"$planets": [("id", "Gt", 3)], "p2": [("name", "NotEq", "X")]}, (6, 40)),
+
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("id", "Eq", 4)]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE name = 'Mars'", {"$planets": [("name", "Eq", "Mars")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [("name", "Like", "M%")]}, (2, 20)),
+    ("SELECT * FROM $planets WHERE id > 3 AND name LIKE 'M%'", {"$planets": [("id", "Gt", 3), ("name", "Like", "M%")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE id < 4 OR name LIKE 'M%'", {"$planets": [("id", "Lt", 4), ("name", "Like", "M%")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE id = 4 AND name = 'Mars'", {"$planets": [("id", "Eq", 4), ("name", "Eq", "Mars")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE id = 4 OR name = 'Mars'", {"$planets": [("id", "Eq", 4), ("name", "Eq", "Mars")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE id = 4 AND name LIKE 'M%'", {"$planets": [("id", "Eq", 4), ("name", "Like", "M%")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [("id", "Eq", 4), ("name", "Like", "M%")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
 ]
 
 
@@ -102,6 +114,3 @@ if __name__ == "__main__":  # pragma: no cover
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
-
-
-        

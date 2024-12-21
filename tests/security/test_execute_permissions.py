@@ -37,6 +37,37 @@ def test_security_permissions_cursor():
         curr.execute("EXPLAIN SELECT * FROM $planets")
         curr.arrow()
 
+def test_security_permissions_invalid():
+    """test edge cases for permissions"""
+    # empty permissions set
+    with pytest.raises(opteryx.exceptions.PermissionsError):
+        opteryx.query("SELECT * FROM $planets", permissions=set()).arrow()
+
+    # permissions with invalid type
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions={"InvalidPermission"}).arrow()
+
+    # permissions with mixed valid and invalid types
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions={"Query", "InvalidPermission"}).arrow()
+
+    # permissions with empty string
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions="").arrow()
+
+    # permissions with numeric values
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions={1, 2, 3}).arrow()
+
+    # permissions with boolean values
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions={True, False}).arrow()
+
+    # permissions with mixed valid and invalid types in a list
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        opteryx.query("SELECT * FROM $planets", permissions=["Query", 123, None]).arrow()
+
+
 
 def test_security_permissions_query():
     """test we can stop users performing some query types"""
@@ -44,6 +75,8 @@ def test_security_permissions_query():
     opteryx.query("EXPLAIN SELECT * FROM $planets").arrow()
     # shouldn't have any issues
     opteryx.query("SELECT * FROM $planets").arrow()
+    # None is equivalent to all permissions
+    opteryx.query("SELECT * FROM $planets", permissions=None).arrow()
 
     # shouldn't have any issues
     opteryx.query("SELECT * FROM $planets", permissions={"Query"}).arrow()
@@ -59,28 +92,7 @@ def test_security_permissions_validation():
     opteryx.query("SELECT * FROM $planets", permissions={"Analyze", "Execute", "Query"}).arrow()
     opteryx.query("SELECT * FROM $planets", permissions=["Analyze", "Execute", "Query"]).arrow()
     opteryx.query("SELECT * FROM $planets", permissions=("Analyze", "Execute", "Query")).arrow()
-    # should fail
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # invalid permission
-        opteryx.query("SELECT * FROM $planets", permissions={"Select"}).arrow()
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # no permissions
-        opteryx.query("SELECT * FROM $planets", permissions={}).arrow()
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # invalid permission
-        opteryx.query("SELECT * FROM $planets", permissions={"Query", "Select"}).arrow()
 
-
-def test_security_permissions_invalid_values():
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # invalid permission
-        opteryx.query("SELECT * FROM $planets", permissions=[1]).arrow()
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # invalid permission
-        opteryx.query("SELECT * FROM $planets", memberships=[1]).arrow()
-    with pytest.raises(opteryx.exceptions.ProgrammingError):
-        # invalid permission
-        opteryx.query("SELECT * FROM $planets", user=1).arrow()
 
 
 if __name__ == "__main__":  # pragma: no cover

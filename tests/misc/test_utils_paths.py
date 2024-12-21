@@ -18,11 +18,22 @@ PATH_PARTS_TEST = [
         ("bucket/path/path/path/path/path/file.ext", ("bucket", "path/path/path/path/path", "file", ".ext"), None),
         ("bucket/path/file.ext", ("bucket", "path", "file", ".ext"), None),
         ("bucket.ext/path.ext/file.ext", ("bucket.ext", "path.ext", "file", ".ext"), None),
-        # can't traverse up the folder structure
         ("../../path/file.ext", None, ValueError),
         ("path/../../path/file.ext", None, ValueError),
         ("~/path/file.ext", None, ValueError),
         ("~/file.ext", None, ValueError),
+        ("/absolute/path/to/file.ext", ("", "absolute/path/to", "file", ".ext"), None),
+        ("relative/path/to/file.ext", ("relative", "path/to", "file", ".ext"), None),
+        ("./relative/path/to/file.ext", (".", "relative/path/to", "file", ".ext"), None),
+        ("../relative/path/to/file.ext", None, ValueError),
+        ("C:\\users\\opteryx\\file.ext", ("", "", "C:\\users\\opteryx\\file", ".ext"), None),
+        ("bucket/path.with.dots/file.ext", ("bucket", "path.with.dots", "file", ".ext"), None),
+        ("bucket/path with spaces/file.ext", ("bucket", "path with spaces", "file", ".ext"), None),
+        ("bucket/path_with_underscores/file.ext", ("bucket", "path_with_underscores", "file", ".ext"), None),
+        ("bucket/path-with-hyphens/file.ext", ("bucket", "path-with-hyphens", "file", ".ext"), None),
+        ("bucket/path123/file.ext", ("bucket", "path123", "file", ".ext"), None),
+        ("bucket/123path/file.ext", ("bucket", "123path", "file", ".ext"), None),
+
     ]
 # fmt:on
 

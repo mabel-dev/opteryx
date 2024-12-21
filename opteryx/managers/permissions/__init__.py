@@ -37,18 +37,32 @@ PERMISSIONS: List[Dict] = load_permissions()
 
 def can_read_table(roles: Iterable[str], table: str, action: str = "READ") -> bool:
     """
-    Check if any of the provided roles have READ permission for the specified table.
+    Check if any of the provided roles have READ access to the specified table.
+
+    When we call this function, we provide the current user's roles and the table name.
+    We then check if any of the permissions in the system match those roles and if those permissions
+    grant access to the table.
+
+    Tables can have wildcards in their names, so we use fnmatch to check the table name.
+
+    We have a default role 'opteryx' with READ access to all tables.
 
     Parameters:
         roles (List[str]): A list of roles to check against permissions.
         table (str): The name of the table to check access for.
 
     Returns:
-        bool: True if any role has READ permission for the table, False otherwise.
+        bool: True if any role has READ access to the table, False otherwise.
     """
+
+    def escape_special_chars(pattern: str) -> str:
+        return pattern.replace(r"\*", "*").replace(r"\?", "?")
+
     # If no permissions are loaded, default to allowing all reads.
     if not PERMISSIONS:
         return True
+
+    table = escape_special_chars(table)
 
     for entry in PERMISSIONS:
         # Check if the permission, the role is in the provided roles,
@@ -58,6 +72,9 @@ def can_read_table(roles: Iterable[str], table: str, action: str = "READ") -> bo
             and entry["role"] in roles
             and fnmatch.fnmatch(table, entry["table"])
         ):
+            # Additional check for leading dots
+            if table.startswith(".") and not entry["table"].startswith("."):
+                continue
             return True
 
     # If no matching permission is found, deny access.

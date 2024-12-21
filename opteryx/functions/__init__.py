@@ -334,6 +334,7 @@ DEPRECATED_FUNCTIONS = {
     "TRUNCATE": "TRUNC",  # deprecated, remove 0.19.0
     "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, remove 0.20.0
     "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, remove 0.20.0
+    "STRUCT": None,  # deprecated, remove 0.21.0
 }
 
 # fmt:off

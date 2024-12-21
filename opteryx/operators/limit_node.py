@@ -49,7 +49,7 @@ class LimitNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
-            yield None
+            yield EOS
             return
 
         if self.rows_left_to_skip > 0:

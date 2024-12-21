@@ -124,10 +124,22 @@ SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = 
 """
 -- Query 24: Expected rows: 3 (1, -1, NULL)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE NOT bool IS NULL;
-""", {1, -1})
-
-
-
+""", {1, -1}),(
+"""
+-- Query 25: SELECT * FROM tristatebooleans WHERE bool IS NULL;
+-- Expected rows: 1 (NULL)
+SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
+""", {None}),(
+"""
+-- Query 26: SELECT * FROM tristatebooleans WHERE bool IS NOT TRUE;
+-- Expected rows: 2 (False, NULL)
+SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT TRUE;
+""", {False, None}),(
+"""
+-- Query 27: SELECT * FROM tristatebooleans WHERE bool IS NOT FALSE;
+-- Expected rows: 2 (True, NULL)
+SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT FALSE;
+""", {True, None}),
 ]
 # fmt:on
 

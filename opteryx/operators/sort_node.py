@@ -100,3 +100,4 @@ class SortNode(BasePlanNode):
                     )
 
         yield table.sort_by(mapped_order)
+        yield EOS

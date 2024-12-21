@@ -283,7 +283,11 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             if node.value in DEPRECATED_FUNCTIONS:
                 import warnings
 
-                message = f"Function '{node.value}' is deprecated and will be removed in a future version. Use '{DEPRECATED_FUNCTIONS[node.value]}' instead."
+                replacement = DEPRECATED_FUNCTIONS[node.value]
+                if replacement is not None:
+                    message = f"Function '{node.value}' is deprecated and will be removed in a future version. Use '{DEPRECATED_FUNCTIONS[node.value]}' instead."
+                else:
+                    message = f"Function '{node.value}' is deprecated and will be removed in a future version."
                 context.statistics.add_message(message)
                 warnings.warn(message, category=DeprecationWarning, stacklevel=2)
 

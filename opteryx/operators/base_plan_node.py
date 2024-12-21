@@ -36,6 +36,9 @@ class BasePlanDataObject:
 
 
 class BasePlanNode:
+    is_join: bool = False
+    is_scan: bool = False
+
     def __init__(self, *, properties, **parameters):
         """
         This is the base class for nodes in the execution plan.
@@ -112,16 +115,14 @@ class BasePlanNode:
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
 
-                if result == EOS:
-                    yield None
-                else:
-                    yield result
+                yield result
 
             except StopIteration:
                 # Break the loop when the generator is exhausted
                 break
             except Exception as err:
-                yield err
+                # print(f"Exception {err} in operator", self.name)
+                raise err
 
     def sensors(self):
         return {
@@ -135,6 +136,8 @@ class BasePlanNode:
 
 
 class JoinNode(BasePlanNode):
+    is_join = True
+
     def __init__(self, *, properties, **parameters):
         super().__init__(properties=properties, **parameters)
 

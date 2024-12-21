@@ -85,6 +85,7 @@ class HeapSortNode(BasePlanNode):
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
             yield self.table
+            yield EOS
             return
 
         if self.table:

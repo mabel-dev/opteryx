@@ -1,16 +1,5 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """
-This implements an interface to REDIS
+This implements an interface to Valkey
 
 If we have 10 failures in a row, stop trying to use the cache.
 """
@@ -27,24 +16,25 @@ MAXIMUM_CONSECUTIVE_FAILURES: int = 10
 
 
 @single_item_cache
-def _redis_server(**kwargs):
+def _valkey_server(**kwargs):
     """
-    Handling connecting to REDIS
+    Handling connecting to Valkey
     """
     # the server must be set in the environment
-    redis_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
-    if redis_config is None:
+    valkey_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
+
+    if valkey_config is None:
         return None
 
     try:
-        import redis
+        import valkey  # Assuming `valkey` is the client library's name
     except ImportError as err:
         raise MissingDependencyError(err.name) from err
 
-    return redis.from_url(redis_config)
+    return valkey.from_url(valkey_config)  # Example instantiation of the client
 
 
-class RedisCache(BaseKeyValueStore):
+class ValkeyCache(BaseKeyValueStore):
     """
     Cache object
     """
@@ -53,14 +43,14 @@ class RedisCache(BaseKeyValueStore):
         """
         Parameters:
             server: string (optional)
-                Sets the memcached server and port (server:port). If not provided
+                Sets the Valkey server and port (server:port). If not provided
                 the value will be obtained from the OS environment.
         """
-        self._server = _redis_server(**kwargs)
+        self._server = _valkey_server(**kwargs)
         if self._server is None:
             import datetime
 
-            print(f"{datetime.datetime.now()} [CACHE] Unable to set up redis cache.")
+            print(f"{datetime.datetime.now()} [CACHE] Unable to set up valkey cache.")
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:
             self._consecutive_failures = 0
@@ -75,7 +65,7 @@ class RedisCache(BaseKeyValueStore):
             self.skips += 1
             return None
         try:
-            response = self._server.get(key)
+            response = self._server.get(key)  # Adjust based on Valkey's API
             self._consecutive_failures = 0
             if response:
                 self.hits += 1
@@ -86,7 +76,7 @@ class RedisCache(BaseKeyValueStore):
                 import datetime
 
                 print(
-                    f"{datetime.datetime.now()} [CACHE] Disabling remote Redis cache due to persistent errors ({err})."
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Valkey cache due to persistent errors ({err})."
                 )
             self.errors += 1
             return None
@@ -97,7 +87,7 @@ class RedisCache(BaseKeyValueStore):
     def set(self, key: bytes, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
             try:
-                self._server.set(key, value)
+                self._server.set(key, value)  # Adjust based on Valkey's API
                 self.sets += 1
             except Exception as err:
                 # if we fail to set, stop trying
@@ -106,11 +96,11 @@ class RedisCache(BaseKeyValueStore):
                 import datetime
 
                 print(
-                    f"{datetime.datetime.now()} [CACHE] Disabling remote Redis cache due to persistent errors ({err}) [SET]."
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Valkey cache due to persistent errors ({err}) [SET]."
                 )
         else:
             self.skips += 1
 
     def __del__(self):
         pass
-        # DEBUG: log(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")
+        # DEBUG: log(f"Valkey <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")

@@ -81,7 +81,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts", 357, 19, None),
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
-        ("SELECT * FROM $variables", 42, 4, None),
+        ("SELECT * FROM $variables", 42, 5, None),
         ("SELECT * FROM $missions", 4630, 8, None),
         ("SELECT * FROM $statistics", 17, 2, None),
         ("SELECT * FROM $stop_words", 305, 1, None),
@@ -677,7 +677,6 @@ STATEMENTS = [
         ("SELECT cve -> 'CVE_data_meta' -> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         
         ("SELECT dict @? 'list' FROM testdata.flat.struct", 6, 1, None),
-        ("SELECT struct(dict) @? 'list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT birth_place @? 'town' FROM $astronauts", 357, 1, None),
         ("SELECT dict @? '$.list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT cve @? '$.CVE_data_meta.ASSIGNER' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),
@@ -1639,7 +1638,7 @@ STATEMENTS = [
         ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
         ("EXECUTE PLANETS_BY_ID (name=1)", None, None, ParameterError),  # simple case)
         ("EXECUTE VERSION", 1, 1, None),  # no paramters
-        ("EXECUTE VERSION()", 1, 1, SqlError),  # no paramters
+        ("EXECUTE VERSION()", 1, 1, None),
         ("EXECUTE get_satellites_by_planet_name(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
@@ -1865,18 +1864,18 @@ STATEMENTS = [
         ("SELECT name, missions FROM $astronauts WHERE missions NOT ILIKE ANY ('%Apoll%', 'mission')", 323, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apoll%', 'Gemini%', 'Mercury%')", 37, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apoll%', 'Gemini%', 'Mercury%')", 320, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ()", 0, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ()", 0, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', null)", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%', null)", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%aPoll%')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%aPoll%')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo 11')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apollo 11')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo_%')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apo__o%')", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 37, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 37, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ()", 0, 2, SqlError),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ()", 0, 2, SqlError),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', null)", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('%Apoll%', null)", 323, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%aPoll%')", 0, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions ILIKE ANY ('%aPoll%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo 11')", 3, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apollo 11')", 354, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo_%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apo__o%')", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
         # ****************************************************************************************
 

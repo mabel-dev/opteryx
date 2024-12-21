@@ -18,7 +18,6 @@ The plan does not try to be efficient or clever, at this point it is only trying
 
 from enum import Enum
 from enum import auto
-from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -325,6 +324,10 @@ def inner_query_planner(ast_branch):
 
         join_step.right_relation_names = [_table_name(_relations[0])]
         join_step.left_relation_names = [_table_name(_relations[1])]
+
+        reader_nodes = list(inner_plan._nodes.values())
+        join_step.left_readers = [reader_nodes[0].uuid]
+        join_step.right_readers = [reader_nodes[1].uuid]
 
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
@@ -841,7 +844,7 @@ def plan_execute_query(statement) -> LogicalPlan:
             "EXECUTE does not support USING syntax, please provide parameters in parenthesis."
         )
 
-    statement_name = statement["Execute"]["name"]["value"].upper()
+    statement_name = statement["Execute"]["name"][0]["value"].upper()
     parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
         with open("prepared_statements.json", "r") as ps:
@@ -880,7 +883,7 @@ def plan_execute_query(statement) -> LogicalPlan:
         parameters=parameters,
         connection=None,
     )
-    return list(do_logical_planning_phase(parsed_statements))[0][0]
+    return do_logical_planning_phase(parsed_statements[0])[0]
 
 
 def plan_explain(statement) -> LogicalPlan:
@@ -1196,16 +1199,14 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
     return logical_plan
 
 
-def do_logical_planning_phase(parsed_statements) -> Generator:
+def do_logical_planning_phase(parsed_statement: dict) -> tuple:
     # The sqlparser ast is an array of asts
-    for parsed_statement in parsed_statements:
-        statement_type = next(iter(parsed_statement))
-        if statement_type not in QUERY_BUILDERS:
-            from opteryx.exceptions import UnsupportedSyntaxError
 
-            raise UnsupportedSyntaxError(
-                f"Version 2 Planner does not support '{statement_type}' type queries yet."
-            )
-        # CTEs are Common Table Expressions, they're variations of subqueries
-        ctes = extract_ctes(parsed_statement, inner_query_planner)
-        yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes
+    statement_type = next(iter(parsed_statement))
+    if statement_type not in QUERY_BUILDERS:
+        from opteryx.exceptions import UnsupportedSyntaxError
+
+        raise UnsupportedSyntaxError(f"VPlanner does not support '{statement_type}' type queries.")
+    # CTEs are Common Table Expressions, they're variations of subqueries
+    ctes = extract_ctes(parsed_statement, inner_query_planner)
+    return QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes

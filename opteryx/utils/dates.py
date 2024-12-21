@@ -212,7 +212,7 @@ def date_trunc(truncate_to, date_value):
         return datetime.datetime(date_value.year, 1, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "quarter":
         quarter = (date_value.month - 1) // 3 + 1
-        return datetime.datetime(date_value.year, 3 * quarter - 2, 1, tzinfo=date_value.tzinfo)
+        return datetime.datetime(date_value.year, 3 * (quarter - 1) + 1, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "month":
         return datetime.datetime(date_value.year, date_value.month, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "week":

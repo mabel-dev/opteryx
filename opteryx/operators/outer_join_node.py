@@ -251,17 +251,16 @@ def left_semi_join(
 class OuterJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
-        self._join_type = parameters["type"]
-        self._on = parameters.get("on")
-        self._using = parameters.get("using")
+        self.join_type = parameters["type"]
+        self.on = parameters.get("on")
+        self.using = parameters.get("using")
 
-        self._left_columns = parameters.get("left_columns")
+        self.left_columns = parameters.get("left_columns")
         self.left_readers = parameters.get("left_readers")
 
-        self._right_columns = parameters.get("right_columns")
+        self.right_columns = parameters.get("right_columns")
         self.right_readers = parameters.get("right_readers")
 
-        self.stream = "left"
         self.left_buffer = []
         self.right_buffer = []
         self.left_relation = None
@@ -272,22 +271,21 @@ class OuterJoinNode(JoinNode):
 
     @property
     def name(self):  # pragma: no cover
-        return self._join_type
+        return self.join_type
 
     @property
-    def config(self):  # pragma: no cover
+    def config(self) -> str:  # pragma: no cover
         from opteryx.managers.expression import format_expression
 
-        if self._on:
-            return f"{self._join_type.upper()} JOIN ({format_expression(self._on, True)})"
-        if self._using:
-            return f"{self._join_type.upper()} JOIN (USING {','.join(map(format_expression, self._using))})"
-        return f"{self._join_type.upper()}"
+        if self.on:
+            return f"{self.join_type.upper()} JOIN ({format_expression(self.on, True)})"
+        if self.using:
+            return f"{self.join_type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
+        return f"{self.join_type.upper()}"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
-        if self.stream == "left":
+        if join_leg == "left":
             if morsel == EOS:
-                self.stream = "right"
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
             else:
@@ -295,19 +293,20 @@ class OuterJoinNode(JoinNode):
             yield None
             return
 
-        if self.stream == "right":
+        if join_leg == "right":
             if morsel == EOS:
                 right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
                 self.right_buffer.clear()
 
-                join_provider = providers.get(self._join_type)
+                join_provider = providers.get(self.join_type)
 
                 yield from join_provider(
                     left_relation=self.left_relation,
                     right_relation=right_relation,
-                    left_columns=self._left_columns,
-                    right_columns=self._right_columns,
+                    left_columns=self.left_columns,
+                    right_columns=self.right_columns,
                 )
+                yield EOS
 
             else:
                 self.right_buffer.append(morsel)

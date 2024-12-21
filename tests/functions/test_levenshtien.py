@@ -66,6 +66,22 @@ TESTS = [
     ("hello world", "helloworld", 1),  # space removed
     ("hello world", "hello  world", 1),  # extra space
     ("hello world", " hello world", 1),  # space added at the beginning
+
+    # strings with special characters
+    ("hello@world", "hello#world", 1),  # at replaced with hash
+    ("hello@world", "hello world", 1),  # at replaced with space
+    ("hello@world", "hello@wor1d", 1),  # l replaced with 1
+
+    # strings with mixed case
+    ("HelloWorld", "helloworld", 2),  # H replaced with h
+    ("HelloWorld", "Helloworld", 1),  # W replaced with w
+    ("HelloWorld", "helloworld!", 3),  # H replaced with h and exclamation mark added
+
+    # strings with unicode characters
+    ("hello", "héllo", 1),  # e replaced with é
+    ("hello", "hellö", 1),  # o replaced with ö
+    ("你好", "你号", 1),  # 好 replaced with 号
+    ("こんにちは", "こんばんは", 2),  # こん replaced with こん and は replaced with ば
     ("hello world", "hello world ", 1),  # space added at the end
     ("hello world", "h e l l o world", 4),  # spaces added in between characters
 ]

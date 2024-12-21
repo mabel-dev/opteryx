@@ -50,6 +50,7 @@ def test_hash_join_map_multicolumn():
     assert hash_table.get(hash(1) * 31 + hash('x')) == [0]
     assert hash_table.get(hash(2) * 31 + hash('y')) == [1]
     assert hash_table.get(hash(3) * 31 + hash('z')) == [2]
+    assert hash_table.get(hash(4) * 31 + hash('w')) == [3]
 
 def test_hash_join_map_large_dataset():
     # Create a large dataset to test performance and availability
@@ -65,6 +66,37 @@ def test_hash_join_map_large_dataset():
     # Verify it doesn’t crash and handles the large data set
     assert hash_table.get(hash(99999) * 31 + hash('x')) == [99999]
 
+def test_hash_join_map_duplicate_keys():
+    # Create a pyarrow Table with duplicate keys
+    data = {
+        'a': [1, 2, 2, 4],
+        'b': ['x', 'y', 'y', 'z']
+    }
+    table = pyarrow.table(data)
+    
+    # Run the hash join map function
+    hash_table = hash_join_map(table, ['a', 'b'])
+    
+    # Check for correct hash mappings with duplicates
+    assert hash_table.get(hash(1) * 31 + hash('x')) == [0]
+    assert hash_table.get(hash(2) * 31 + hash('y')) == [1, 2]
+    assert hash_table.get(hash(4) * 31 + hash('z')) == [3]
+
+
+def test_hash_join_map_large_null_values():
+    # Create a large dataset with null values
+    data = {
+        'a': [None] * 50000 + list(range(50000)),
+        'b': ['x'] * 100000
+    }
+    table = pyarrow.table(data)
+    
+    # Run the hash join map function
+    hash_table = hash_join_map(table, ['a', 'b'])
+    
+    # Verify it handles the large data set with null values
+    assert hash_table.get(hash(49999) * 31 + hash('x')) == [99999]
+    assert hash_table.get(hash(None)) == []
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

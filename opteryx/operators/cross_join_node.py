@@ -299,7 +299,6 @@ class CrossJoinNode(JoinNode):
                 self._unnest_target.identity,
             }
 
-        self.stream = "left"
         self.left_buffer = []
         self.right_buffer = []
         self.left_relation = None
@@ -331,7 +330,7 @@ class CrossJoinNode(JoinNode):
         if self._unnest_column is not None:
             if morsel == EOS:
                 self.continue_executing = False
-                yield None
+                yield EOS
                 return
             if isinstance(self._unnest_column.value, tuple):
                 yield from _cross_join_unnest_literal(
@@ -352,20 +351,21 @@ class CrossJoinNode(JoinNode):
             )
             return
 
-        if self.stream == "left":
+        if join_leg == "left":
             if morsel == EOS:
-                self.stream = "right"
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
             else:
                 self.left_buffer.append(morsel)
             yield None
+            return
 
-        if self.stream == "right":
+        if join_leg == "right":
             if morsel == EOS:
                 right_table = pyarrow.concat_tables(self.right_buffer, promote_options="none")  # type:ignore
                 self.right_buffer = None
                 yield from _cross_join(self.left_relation, right_table)
+                yield EOS
             else:
                 self.right_buffer.append(morsel)
                 yield None
