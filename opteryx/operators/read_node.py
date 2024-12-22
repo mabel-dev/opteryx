@@ -221,9 +221,7 @@ class ReaderNode(BasePlanNode):
 
             self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             self.statistics.blobs_read += 1
-            self.records_out += morsel.num_rows
             self.statistics.rows_read += morsel.num_rows
-            self.bytes_out += morsel.nbytes
             yield morsel
             start_clock = time.monotonic_ns()
         if morsel:

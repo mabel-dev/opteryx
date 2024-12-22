@@ -125,17 +125,6 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 root.left.schema_column = root.schema_column
                 statistics.optimization_constant_fold_reduce += 1
                 return root.left  # anything
-            if (
-                root.value == "Divide"
-                and root.right.node_type == NodeType.IDENTIFIER
-                and root.left.node_type == NodeType.IDENTIFIER
-                and root.right.schema_column.identity == root.left.schema_column.identity
-            ):
-                # anything / itself = 1 (0 is an exception)
-                node = build_literal_node(1, root, OrsoTypes.INTEGER)
-                statistics.optimization_constant_fold_reduce += 1
-                node.schema_column = root.schema_column
-                return node
 
         if root.node_type == NodeType.COMPARISON_OPERATOR:
             if (

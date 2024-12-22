@@ -142,8 +142,6 @@ class FunctionDatasetNode(ReaderNode):
         else:
             table = data
 
-        self.records_out += table.num_rows
-        self.bytes_out += table.nbytes
         self.statistics.columns_read += len(table.column_names)
 
         yield table
