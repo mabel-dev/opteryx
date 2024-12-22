@@ -168,6 +168,7 @@ class AsyncReaderNode(ReaderNode):
                     # due to a read-after-free type error
                     start = time.monotonic_ns()
                     blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
+                    self.statistics.bytes_read += len(blob_bytes)
                     decoded = decoder(
                         blob_bytes, projection=self.columns, selection=self.predicates
                     )
@@ -193,6 +194,7 @@ class AsyncReaderNode(ReaderNode):
 
                 self.statistics.blobs_read += 1
                 self.statistics.rows_read += morsel.num_rows
+                self.statistics.bytes_processed += morsel.nbytes
 
                 yield morsel
             except Exception as err:
