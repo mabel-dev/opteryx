@@ -2180,6 +2180,8 @@ STATEMENTS = [
         # 2059
         ("SELECT g FROM generate_series(10) as g CROSS JOIN UNNEST (g) as g1", 0, 0, TypeError),
         ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
+        # 2112
+        ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),
 ]
 # fmt:on
 

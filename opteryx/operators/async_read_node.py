@@ -192,9 +192,7 @@ class AsyncReaderNode(ReaderNode):
                     arrow_schema = morsel.schema
 
                 self.statistics.blobs_read += 1
-                self.records_out += morsel.num_rows
                 self.statistics.rows_read += morsel.num_rows
-                self.bytes_out += morsel.nbytes
 
                 yield morsel
             except Exception as err:

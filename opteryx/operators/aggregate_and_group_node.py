@@ -102,7 +102,7 @@ class AggregateAndGroupNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "Group"
+        return "Group By"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
         if morsel == EOS:
