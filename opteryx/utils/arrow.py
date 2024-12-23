@@ -26,7 +26,7 @@ INTERNAL_BATCH_SIZE = 500
 
 def limit_records(
     morsels: Iterator[pyarrow.Table], limit: Optional[int] = None, offset: int = 0
-) -> Optional[Iterator[pyarrow.Table]]:
+) -> Optional[Iterator[pyarrow.Table]]:  # pragma: no cover
     """
     Cycle over an iterable of morsels, limiting the response to a given
     number of records with an optional offset.

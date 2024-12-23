@@ -152,7 +152,7 @@ def do_cost_based_optimizer(plan: LogicalPlan, statistics: QueryStatistics) -> L
     Returns:
         LogicalPlan: The optimized logical plan.
     """
-    if DISABLE_OPTIMIZER:
+    if DISABLE_OPTIMIZER:  # pragma: no cover
         message = "[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' variable is TRUE."
         print(message)
         statistics.add_message(message)

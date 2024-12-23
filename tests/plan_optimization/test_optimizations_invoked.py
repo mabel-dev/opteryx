@@ -19,7 +19,9 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = 4 + 4", "optimization_constant_fold_expression"),
         ("SELECT * FROM $planets WHERE id * 0 = 1", "optimization_constant_fold_reduce"),
         ("SELECT id ^ 1 = 1 FROM $planets LIMIT 10", "optimization_limit_pushdown"),
-        ("SELECT name FROM $astronauts WHERE name = 'Neil A. Armstrong'", "optimization_predicate_pushdown")
+        ("SELECT name FROM $astronauts WHERE name = 'Neil A. Armstrong'", "optimization_predicate_pushdown"),
+        ("SELECT name FROM $planets WHERE name LIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
+        ("SELECT name FROM $planets WHERE name ILIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
     ]
 # fmt:on
 

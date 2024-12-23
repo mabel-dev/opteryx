@@ -73,7 +73,7 @@ class LogicalPlanNode(Node):
     def copy(self) -> "Node":
         return LogicalPlanNode(**super().copy().properties)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         try:
             # fmt:off
             node_type = self.node_type
@@ -502,12 +502,6 @@ def inner_query_planner(ast_branch):
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
 
-        if distinct_step.on and _projection[0].source_column == "FROM":
-            cols = ", ".join([format_expression(c) for c in distinct_step.on])
-            raise UnsupportedSyntaxError(
-                f"Did you mean 'SELECT DISTINCT ON ({cols}) {cols} FROM {_projection[0].alias};'?"
-            )
-
     # order
     if _order_by:
         order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
@@ -792,28 +786,6 @@ def create_node_relation(relation):
         root_node = join_step_id
 
     return root_node, sub_plan
-
-
-def analyze_query(statement) -> LogicalPlan:
-    root_node = "Analyze"
-    plan = LogicalPlan()
-
-    from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
-    table = statement[root_node]["table_name"]
-    from_step.relation = ".".join(part["value"] for part in table)
-    from_step.alias = from_step.relation
-    from_step.start_date = table[0].get("start_date")
-    from_step.end_date = table[0].get("end_date")
-    step_id = random_string()
-    plan.add_node(step_id, from_step)
-
-    metadata_step = LogicalPlanNode(node_type=LogicalPlanStepType.MetadataWriter)
-    previous_step_id, step_id = step_id, random_string()
-    plan.add_node(step_id, metadata_step)
-    plan.add_edge(previous_step_id, step_id)
-
-    return plan
-    # write manifest
 
 
 def plan_execute_query(statement) -> LogicalPlan:
@@ -1112,7 +1084,7 @@ def plan_show_variables(statement):
 
 
 QUERY_BUILDERS = {
-    "Analyze": analyze_query,
+    #    "Analyze": analyze_query,
     "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,

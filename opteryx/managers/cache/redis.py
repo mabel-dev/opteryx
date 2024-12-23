@@ -38,7 +38,7 @@ def _redis_server(**kwargs):
 
     try:
         import redis
-    except ImportError as err:
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(err.name) from err
 
     return redis.from_url(redis_config)
@@ -80,7 +80,7 @@ class RedisCache(BaseKeyValueStore):
             if response:
                 self.hits += 1
                 return bytes(response)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self._consecutive_failures += 1
             if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
                 import datetime
@@ -99,7 +99,7 @@ class RedisCache(BaseKeyValueStore):
             try:
                 self._server.set(key, value)
                 self.sets += 1
-            except Exception as err:
+            except Exception as err:  # pragma: no cover
                 # if we fail to set, stop trying
                 self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
                 self.errors += 1

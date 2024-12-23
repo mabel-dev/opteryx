@@ -28,7 +28,7 @@ def _valkey_server(**kwargs):
 
     try:
         import valkey  # Assuming `valkey` is the client library's name
-    except ImportError as err:
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(err.name) from err
 
     return valkey.from_url(valkey_config)  # Example instantiation of the client
@@ -70,7 +70,7 @@ class ValkeyCache(BaseKeyValueStore):
             if response:
                 self.hits += 1
                 return bytes(response)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self._consecutive_failures += 1
             if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
                 import datetime
@@ -89,7 +89,7 @@ class ValkeyCache(BaseKeyValueStore):
             try:
                 self._server.set(key, value)  # Adjust based on Valkey's API
                 self.sets += 1
-            except Exception as err:
+            except Exception as err:  # pragma: no cover
                 # if we fail to set, stop trying
                 self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
                 self.errors += 1
