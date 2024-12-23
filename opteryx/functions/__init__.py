@@ -529,8 +529,8 @@ def apply_function(function: str = None, *parameters):
         if null_positions.all():
             return numpy.array([None] * morsel_size)
 
-        if null_positions.any():
-            # if we have nulls and both columns are numpy arrays, we can speed things
+        if null_positions.any() and all(isinstance(arr, numpy.ndarray) for arr in parameters):
+            # if we have nulls and the value array is a numpy arrays, we can speed things
             # up by removing the nulls from the calculations, we add the rows back in
             # later
             valid_positions = ~null_positions
