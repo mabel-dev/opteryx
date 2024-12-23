@@ -304,6 +304,7 @@ class IncompatibleTypesError(Exception):
         right_column: Optional[str] = None,
         left_node: Optional[Any] = None,
         right_node: Optional[Any] = None,
+        message: Optional[str] = None,
     ):
         def _format_col(_type, _node, _name):
             if _node.node_type == 42:
@@ -317,7 +318,9 @@ class IncompatibleTypesError(Exception):
         self.column = column
         self.left_column = left_column
         self.right_column = right_column
-        if self.column:
+        if message:
+            super().__init__(message)
+        elif self.column:
             super().__init__(
                 f"Incompatible types for column '{column}': {left_type} and {right_type}"
             )

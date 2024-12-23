@@ -2185,6 +2185,10 @@ STATEMENTS = [
         ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
         # 2112
         ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),
+        #2144
+        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->'town' AS town FROM $astronauts) AS T", 357, 2, None),
+        ("SELECT town, LENGTH(NULLIF(town, b'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
+        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", None, None, IncompatibleTypesError),
 ]
 # fmt:on
 
