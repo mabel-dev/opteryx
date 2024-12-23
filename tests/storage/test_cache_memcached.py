@@ -6,6 +6,7 @@ the files are in the cache (they may or may not be) for the second time to defin
 
 import os
 import sys
+import pytest
 
 os.environ["OPTERYX_DEBUG"] = "1"
 
@@ -126,6 +127,15 @@ def test_memcache_threaded():
         result = cache.get(load)
         if result:
             assert result == load, f"Post-thread check failed: {result} != {load}"
+
+
+def test_skip_on_error():
+    from opteryx.managers.cache import MemcachedCache
+    cache = MemcachedCache()
+    cache.set(b"key", b"value")
+    assert cache.get(b"key") == b"value"
+    cache._consecutive_failures = 10
+    assert cache.get(b"key") is None
 
 
 if __name__ == "__main__":  # pragma: no cover

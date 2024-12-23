@@ -148,7 +148,7 @@ class DatasetReader:
         """
         raise NotImplementedError("Subclasses must implement __next__ method.")
 
-    def close(self) -> None:
+    def close(self) -> None:  # pragma: no cover
         """
         Close the reader and release any resources.
         """

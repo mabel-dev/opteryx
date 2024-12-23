@@ -85,16 +85,3 @@ class LogicalColumn:
 
     def __repr__(self) -> str:
         return f"<LogicalColumn name: '{self.current_name}' fullname: '{self.qualified_name}'>"
-
-    def to_dict(self) -> dict:
-        from opteryx.utils import dataclass_to_dict
-
-        return {
-            "class": "LogicalColumn",
-            "node_type": self.node_type.name,
-            "source_column": self.source_column,
-            "source_connector": self.source_connector,
-            "source": self.source,
-            "alias": self.alias,
-            "schema_column": dataclass_to_dict(self.schema_column),
-        }

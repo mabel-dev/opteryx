@@ -85,7 +85,10 @@ def generate_random_sql_select(columns, table):
     else:
         select_clause = "SELECT *"
     # Add table name
-    select_clause = select_clause + " FROM " + table
+    if random.random() < 0.1:
+        return f"SELECT * FROM ({generate_random_sql_select(columns, table)}) as table_{random_string(4)}"
+    else:
+        select_clause = select_clause + " FROM " + table
     # Generate a WHERE clause with 70% chance
     if random.random() < 0.7:
         where_clause = generate_condition(columns)

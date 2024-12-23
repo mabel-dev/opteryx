@@ -128,7 +128,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
 
         if root.node_type == NodeType.COMPARISON_OPERATOR:
             if (
-                root.value in ("Like", "Ilike")
+                root.value in ("Like", "ILike")
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.node_type == NodeType.LITERAL
                 and root.right.value == "%"

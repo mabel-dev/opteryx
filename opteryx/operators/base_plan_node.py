@@ -61,13 +61,6 @@ class BasePlanNode:
         self.records_out = 0
         self.bytes_out = 0
 
-    def to_json(self) -> bytes:  # pragma: no cover
-        import orjson
-
-        from opteryx.utils import dataclass_to_dict
-
-        return orjson.dumps(dataclass_to_dict(self.do))
-
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()

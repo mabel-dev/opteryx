@@ -49,7 +49,7 @@ def _memcached_server(**kwargs):
 
     try:
         from pymemcache.client import base
-    except ImportError as err:
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(err.name) from err
 
     try:

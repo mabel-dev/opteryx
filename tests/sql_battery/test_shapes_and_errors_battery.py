@@ -257,6 +257,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name != 'Calypso'", 176, 8, None),
         ("SELECT * FROM $satellites WHERE name = '********'", 0, 8, None),
         ("SELECT * FROM $satellites WHERE name LIKE '_a_y_s_'", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE name LIKE 'Cal%%'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE name LIKE 'Cal%'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE name like 'Cal%'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE name ILIKE '_a_y_s_'", 1, 8, None),
@@ -1125,6 +1126,7 @@ STATEMENTS = [
         ("SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts", 357, 2, None),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2, None),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2, None),
+        ("SELECT SEARCH($satellites.name, 'a') FROM $planets LEFT JOIN $satellites ON $planets.id = $satellites.planetId", 179, 1, None),
 
         ("SELECT birth_date FROM $astronauts WHERE EXTRACT(year FROM birth_date) < 1930;", 14, 1, None),
         ("SELECT EXTRACT(month FROM birth_date) FROM $astronauts", 357, 1, None),
@@ -1474,6 +1476,7 @@ STATEMENTS = [
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
 
         ("SELECT mission, LIST(name) FROM $missions INNER JOIN (SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission) AS astronauts ON Mission = mission GROUP BY mission", 16, 2, None),
+        ("SELECT alma_matered FROM (SELECT alma_mater FROM $astronauts CROSS JOIN $satellites) AS bulked CROSS JOIN UNNEST(alma_mater) AS alma_matered", 120537, 1, None),
 
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),

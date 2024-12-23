@@ -95,16 +95,6 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             raise Exception(f"something unexpected happed - {node_type.name}")
         # fmt: on
 
-        # DEBUG: from opteryx.exceptions import InvalidInternalStateError
-        # DEBUG:
-        # DEBUG: try:
-        # DEBUG:    config = node.to_json()
-        ## DEBUG:    print(config)
-        # DEBUG: except Exception as err:
-        # DEBUG:    message = f"Internal Error - node '{node}' unable to be serialized"
-        # DEBUG:    print(message)
-        ## DEBUG:    raise InvalidInternalStateError(message)
-
         plan.add_node(nid, node)
 
     for source, destination, relation in logical_plan.edges():

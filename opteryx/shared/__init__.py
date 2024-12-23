@@ -14,12 +14,5 @@ from opteryx.compiled.structures import MemoryPool
 from opteryx.shared.async_memory_pool import AsyncMemoryPool
 from opteryx.shared.buffer_pool import BufferPool
 from opteryx.shared.materialized_datasets import MaterializedDatasets
-from opteryx.shared.rolling_log import RollingLog
 
-__all__ = (
-    "AsyncMemoryPool",
-    "BufferPool",
-    "MaterializedDatasets",
-    "MemoryPool",
-    "RollingLog",
-)
+__all__ = ("AsyncMemoryPool", "BufferPool", "MaterializedDatasets", "MemoryPool")
