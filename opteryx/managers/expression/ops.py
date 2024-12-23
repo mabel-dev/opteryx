@@ -180,71 +180,24 @@ def _inner_filter_operations(arr, operator, value):
         return list_ops.cython_allop_neq(arr[0], value)
 
     if operator == "AnyOpILike":
-        patterns = value[0]
+        from opteryx.utils.sql import regex_match_any
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
-        combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
-
-        out = numpy.zeros(arr.size, dtype=bool)
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-                continue
-            if row.size == 0:
-                continue
-            out[i] = any(combined_regex.search(elem) for elem in row)
-
-        return out
+        return regex_match_any(arr, value[0], flags=re.IGNORECASE)
 
     if operator == "AnyOpLike":
-        patterns = value[0]
+        from opteryx.utils.sql import regex_match_any
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
-        combined_regex = re.compile(combined_regex_pattern)
+        return regex_match_any(arr, value[0])
 
-        out = numpy.zeros(arr.size, dtype=bool)
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-                continue
-            if row.size == 0:
-                continue
-            out[i] = any(combined_regex.search(elem) for elem in row)
-
-        return out
     if operator == "AnyOpNotLike":
-        patterns = value[0]
+        from opteryx.utils.sql import regex_match_any
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
-        combined_regex = re.compile(combined_regex_pattern)
-
-        out = numpy.zeros(arr.size, dtype=bool)
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-                continue
-            if row.size == 0:
-                continue
-            out[i] = any(combined_regex.search(elem) for elem in row)
-
-        return numpy.invert(out)
+        return regex_match_any(arr, value[0], invert=True)
 
     if operator == "AnyOpNotILike":
-        patterns = value[0]
+        from opteryx.utils.sql import regex_match_any
 
-        combined_regex_pattern = r"|".join(sql_like_to_regex(p) for p in patterns if p)
-        combined_regex = re.compile(combined_regex_pattern, re.IGNORECASE)
-
-        out = numpy.zeros(arr.size, dtype=bool)
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-                continue
-            if row.size == 0:
-                continue
-            out[i] = any(combined_regex.search(elem) for elem in row)
-
-        return numpy.invert(out)
+        return regex_match_any(arr, value[0], flags=re.IGNORECASE, invert=True)
 
     if operator == "AtQuestion":
         import simdjson
