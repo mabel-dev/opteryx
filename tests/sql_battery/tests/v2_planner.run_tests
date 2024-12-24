@@ -4,24 +4,14 @@
 # NEW JOINS
 SELECT * FROM $planets LEFT ANTI JOIN $satellites USING(id);
 SELECT * FROM $planets LEFT SEMI JOIN $satellites USING(id);
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites USING(id);
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites USING(id);
 SELECT * FROM $planets LEFT ANTI JOIN $satellites ON $planets.id = $satellites.id;
 SELECT * FROM $planets LEFT SEMI JOIN $satellites ON $planets.id = $satellites.id;
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites ON $planets.id = $satellites.id;
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites ON $planets.id = $satellites.id;
 SELECT * FROM $planets LEFT ANTI JOIN $satellites ON $satellites.id = $planets.id;
 SELECT * FROM $planets LEFT SEMI JOIN $satellites ON $satellites.id = $planets.id;
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites ON $satellites.id = $planets.id;
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites ON $satellites.id = $planets.id;
 SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S ON P.id = S.id;
 SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON P.id = S.id;
-SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON P.id = S.id;
-SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S ON P.id = S.id;
 SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S USING(id);
 SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S USING(id);
-SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S USING(id);
-SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S USING(id);
 
 # EXPLAIN FORMAT
 EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);

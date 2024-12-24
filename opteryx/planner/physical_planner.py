@@ -14,8 +14,8 @@
 from orso.schema import OrsoTypes
 
 from opteryx import operators as operators
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.models import LogicalColumn
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
@@ -55,15 +55,17 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
                     node = operators.InnerJoinSingleNode(query_properties, **node_config)
                 else:
                     node = operators.InnerJoinNode(query_properties, **node_config)
-            elif node_config.get("type") in ("left outer", "full outer", "right outer", "left anti", "left semi"):
+            elif node_config.get("type") in ("left outer", "full outer", "right outer"):
                 # We use out own implementation of OUTER JOINS
                 node = operators.OuterJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":
                 # Pyarrow doesn't have a CROSS JOIN
                 node = operators.CrossJoinNode(query_properties, **node_config)
+            elif node_config.get("type") in ("left anti", "left semi"):
+                # We use our own implementation of LEFT SEMI and LEFT ANTI JOIN
+                node = operators.FilterJoinNode(query_properties, **node_config)
             else:
-                # Use Pyarrow for all other joins (right semi, right anti)
-                node = operators.PyArrowJoinNode(query_properties, **node_config)
+                raise InvalidInternalStateError(f"Unsupported JOIN type '{node_config['type']}'")
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, **{k:v for k,v in node_config.items() if k in ("limit", "offset", "all_relations")})
         elif node_type == LogicalPlanStepType.Order:

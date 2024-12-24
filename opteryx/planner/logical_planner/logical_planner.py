@@ -622,6 +622,12 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
     join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
 
     join_step.type = extract_join_type(join)
+
+    if join_step.type in ("right semi", "right anti"):
+        raise UnsupportedSyntaxError(
+            f"{join_step.type.upper()} JOIN not supported, use LEFT variations only."
+        )
+
     join_step.on, join_step.using = extract_join_condition(join)
     # At this stage, CROSS JOIN UNNEST are represented in a single JOIN node
     join_step.unnest_column, join_step.unnest_alias = extract_unnest_dataset(join, join_step.type)

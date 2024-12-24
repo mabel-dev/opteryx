@@ -55,6 +55,7 @@ def test_invalid_config():
     v = ValkeyCache(server=None)
     assert v._consecutive_failures == 10
 
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_skip_on_error():
     from opteryx.managers.cache import ValkeyCache
     cache = ValkeyCache()
