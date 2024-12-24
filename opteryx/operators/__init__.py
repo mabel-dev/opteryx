@@ -26,6 +26,7 @@ from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
+from .filter_join_node import FilterJoinNode  # filter unwanted rows
 from .filter_node import FilterNode  # filter unwanted rows
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
@@ -34,7 +35,6 @@ from .heap_sort_node import HeapSortNode  # Heap
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
 from .limit_node import LimitNode  # select the first N records
-from .pyarrow_join_node import PyArrowJoinNode
 
 from .outer_join_node import OuterJoinNode
 from .projection_node import ProjectionNode  # remove unwanted columns including renames

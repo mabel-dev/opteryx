@@ -76,6 +76,9 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinNode(JoinNode):
+
+    join_type = "inner"
+
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 
@@ -111,13 +114,6 @@ class InnerJoinNode(JoinNode):
                         self.left_buffer, promote_options="none"
                     )
                     self.left_buffer.clear()
-
-                    # in place until #1295 resolved
-                    if self.left_columns[0] not in self.left_relation.column_names:
-                        self.right_columns, self.left_columns = (
-                            self.left_columns,
-                            self.right_columns,
-                        )
 
                     start = time.monotonic_ns()
                     self.left_hash = hash_join_map(self.left_relation, self.left_columns)

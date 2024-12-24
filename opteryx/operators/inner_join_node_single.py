@@ -159,6 +159,9 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinSingleNode(JoinNode):
+
+    join_type = "inner"
+
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 

@@ -55,6 +55,10 @@ class PhysicalPlan(Graph):
         # Sort neighbors based on relationship to ensure left, right, then unlabelled order
         neighbors = sorted(self.ingoing_edges(node), key=lambda x: (x[2] == "right", x[2] == ""))
 
+        # left semi and anti joins we hash the right side first, usually we want the left side first
+        if self[node].is_join and self[node].join_type in ("left anti", "left semi"):
+            neighbors.reverse()
+
         # Traverse each child, prioritizing left, then right, then unlabelled
         for neighbor, _, _ in neighbors:
             if neighbor not in visited:
