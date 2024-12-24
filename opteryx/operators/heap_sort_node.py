@@ -17,8 +17,6 @@ This is faster, particularly when working with large datasets even though we're 
 sorting smaller chunks over and over again.
 """
 
-from dataclasses import dataclass
-
 import numpy
 import pyarrow
 import pyarrow.compute
@@ -27,15 +25,8 @@ from pyarrow import concat_tables
 from opteryx import EOS
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
-
-
-@dataclass
-class HeapSortDataObject(BasePlanDataObject):
-    order_by: list = None
-    limit: int = -1
 
 
 class HeapSortNode(BasePlanNode):
@@ -44,7 +35,6 @@ class HeapSortNode(BasePlanNode):
         self.order_by = parameters.get("order_by", [])
         self.limit: int = parameters.get("limit", -1)
 
-        self.do = HeapSortDataObject(order_by=self.order_by, limit=self.limit)
         self.mapped_order = []
         self.table = None
 

@@ -14,8 +14,6 @@ the aggregation node doesn't need the grouping node.
 
 """
 
-from dataclasses import dataclass
-
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
@@ -28,20 +26,8 @@ from opteryx.models import QueryProperties
 from opteryx.operators.aggregate_node import build_aggregations
 from opteryx.operators.aggregate_node import extract_evaluations
 from opteryx.operators.aggregate_node import project
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
-
-
-@dataclass
-class AggregateAndGroupDataObject(BasePlanDataObject):
-    groups: list = None
-    aggregates: list = None
-    all_identifiers: list = None
-    evaluatable_nodes: list = None
-    group_by_columns: list = None
-    column_map: list = None
-    aggregate_functions: list = None
 
 
 class AggregateAndGroupNode(BasePlanNode):
@@ -78,8 +64,6 @@ class AggregateAndGroupNode(BasePlanNode):
         # get the aggregated groupings and functions
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
-
-        self.do = AggregateAndGroupDataObject()
 
         self.buffer = []
 

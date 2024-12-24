@@ -5,27 +5,10 @@
 
 
 import time
-from dataclasses import dataclass
 from typing import Optional
 
 import pyarrow
 from orso.tools import random_string
-
-from opteryx import EOS
-
-
-@dataclass
-class BasePlanDataObject:
-    operation: Optional[str] = None
-    query_id: str = None
-    identity: str = None
-
-    def __post_init__(self):
-        # Perform actions after initialization
-        if self.identity is None:
-            self.identity = random_string()
-        if self.operation is None:
-            self.operation = self.__class__.__name__.replace("DataObject", "Node")
 
 
 class BasePlanNode:
@@ -47,7 +30,6 @@ class BasePlanNode:
         self.parameters = parameters
         self.execution_time = 0
         self.identity = random_string()
-        self.do: Optional[BasePlanDataObject] = None
         self.calls = 0
         self.records_in = 0
         self.bytes_in = 0

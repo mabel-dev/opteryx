@@ -12,7 +12,6 @@ This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so 
 here rather than calling the join() functions
 """
 
-from dataclasses import dataclass
 from typing import Generator
 from typing import Set
 from typing import Tuple
@@ -26,7 +25,6 @@ from opteryx.compiled.structures import HashSet
 from opteryx.managers.expression import NodeType
 from opteryx.models import LogicalColumn
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import JoinNode
 
@@ -248,15 +246,6 @@ def _cross_join(left_morsel, right):
         yield pyarrow.Table.from_arrays(
             [pyarrow.array([]) for _ in combined_schemas], schema=combined_schemas
         )
-
-
-@dataclass
-class CrossJoinDataObject(BasePlanDataObject):
-    source: str = None
-    _unnest_column: str = None
-    _unnest_target: str = None
-    _filters: str = None
-    _distinct: bool = False
 
 
 class CrossJoinNode(JoinNode):

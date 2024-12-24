@@ -11,8 +11,6 @@ This is a SQL Query Execution Plan Node.
 This node performs aggregates without performing groupings.
 """
 
-from dataclasses import dataclass
-
 import numpy
 import pyarrow
 
@@ -22,7 +20,6 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
 
@@ -166,16 +163,11 @@ def extract_evaluations(aggregates):
         if len(aggregators) == 0:
             evaluatable_nodes.append(node)
 
+    literal_count = len([n for n in evaluatable_nodes if n.node_type == NodeType.LITERAL])
+    if literal_count > 0 and literal_count < len(evaluatable_nodes):
+        evaluatable_nodes = [n for n in evaluatable_nodes if n.node_type != NodeType.LITERAL]
+
     return evaluatable_nodes
-
-
-@dataclass
-class AggregateDataObject(BasePlanDataObject):
-    aggregates: list = None
-    all_identifiers: list = None
-    evaluatable_nodes: list = None
-    column_map: list = None
-    aggregate_functions: list = None
 
 
 class AggregateNode(BasePlanNode):
@@ -196,7 +188,6 @@ class AggregateNode(BasePlanNode):
 
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
-        self.do = AggregateDataObject()
         self.buffer = []
 
     @classmethod
