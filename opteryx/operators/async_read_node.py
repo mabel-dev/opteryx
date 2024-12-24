@@ -16,7 +16,6 @@ import asyncio
 import queue
 import threading
 import time
-from dataclasses import dataclass
 from typing import Generator
 
 import aiohttp
@@ -28,7 +27,6 @@ from opteryx import EOS
 from opteryx import config
 from opteryx.exceptions import DataError
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
@@ -61,17 +59,11 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
     await session.close()
 
 
-@dataclass
-class AsyncReaderDataObject(BasePlanDataObject):
-    pass
-
-
 class AsyncReaderNode(ReaderNode):
     def __init__(self, properties: QueryProperties, **parameters):
         ReaderNode.__init__(self, properties=properties, **parameters)
         self.pool = MemoryPool(MAX_READ_BUFFER_CAPACITY, f"ReadBuffer <{self.parameters['alias']}>")
 
-        self.do = AsyncReaderDataObject()
         self.predicates = parameters.get("predicates")
 
     @classmethod

@@ -6,7 +6,6 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
-from .base_plan_node import BasePlanDataObject  # isort: skip
 from .base_plan_node import BasePlanNode, JoinNode  # isort: skip
 
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
