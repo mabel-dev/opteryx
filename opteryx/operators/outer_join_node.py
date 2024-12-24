@@ -207,7 +207,6 @@ class OuterJoinNode(JoinNode):
         return f"{self.join_type.upper()}"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
-        print("OuterJoinNode.execute", join_leg, type(morsel))
         if join_leg == "left":
             if morsel == EOS:
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")

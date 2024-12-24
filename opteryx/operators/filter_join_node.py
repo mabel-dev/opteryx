@@ -141,7 +141,9 @@ class FilterJoinNode(JoinNode):
             if morsel == EOS:
                 right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
                 self.right_buffer.clear()
-                non_null_right_values = right_relation.select(self.right_columns).drop_null().itercolumns()
+                non_null_right_values = (
+                    right_relation.select(self.right_columns).drop_null().itercolumns()
+                )
                 self.right_hash_set = set(map(hash, zip(*non_null_right_values)))
             else:
                 self.right_buffer.append(morsel)

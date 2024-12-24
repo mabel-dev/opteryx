@@ -271,6 +271,8 @@ class CrossJoinNode(JoinNode):
     Implements a SQL CROSS JOIN
     """
 
+    join_type = "cross"
+
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 

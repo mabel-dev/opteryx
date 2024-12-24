@@ -76,7 +76,6 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinNode(JoinNode):
-
     join_type = "inner"
 
     def __init__(self, properties: QueryProperties, **parameters):

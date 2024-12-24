@@ -121,7 +121,7 @@ def split_sql_statements(sql: str) -> List[str]:
 def regex_match_any(
     arr: numpy.ndarray,
     patterns: List[str],
-    flags: int = re.NOFLAG,
+    flags: int = 0,
     invert: bool = False,
 ) -> numpy.ndarray:
     """

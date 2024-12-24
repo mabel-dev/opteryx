@@ -78,6 +78,7 @@ def format_sql(sql):  # pragma: no cover
             "OUTER",
             "RIGHT",
             "SELECT",
+            "SEMI",
             "SET",
             "SHOW",
             "SINCE",
