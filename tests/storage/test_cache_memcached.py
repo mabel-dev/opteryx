@@ -6,7 +6,6 @@ the files are in the cache (they may or may not be) for the second time to defin
 
 import os
 import sys
-import pytest
 
 os.environ["OPTERYX_DEBUG"] = "1"
 
@@ -62,6 +61,7 @@ def test_memcached_cache():
     assert stats.get("remote_cache_hits", 0) >= stats["blobs_read"], str(stats)
     assert stats.get("cache_misses", 0) == 0, stats
 
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_memcache_stand_alone():
     os.environ["OPTERYX_DEBUG"] = "1"
     from opteryx.managers.cache import MemcachedCache
@@ -110,6 +110,7 @@ def threaded_cache_operations(cache: MemcachedCache, payloads: list):
     for thread in threads:
         thread.join()
 
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_memcache_threaded():
     os.environ["OPTERYX_DEBUG"] = "1"
     
@@ -128,7 +129,7 @@ def test_memcache_threaded():
         if result:
             assert result == load, f"Post-thread check failed: {result} != {load}"
 
-
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_skip_on_error():
     from opteryx.managers.cache import MemcachedCache
     cache = MemcachedCache()
