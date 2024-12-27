@@ -1911,6 +1911,24 @@ STATEMENTS = [
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
+        ("SELECT max(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT max(1), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT max(1) FROM $satellites", 1, 1, None),
+        ("SELECT max('a'), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT max('a') FROM $satellites", 1, 1, None),
+        ("SELECT min(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT min(1), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT min(1) FROM $satellites", 1, 1, None),
+        ("SELECT min('a'), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT min('a') FROM $satellites", 1, 1, None),
+        ("SELECT count(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT count(1), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT count(1) FROM $satellites", 1, 1, None),
+        ("SELECT count('a'), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT count('a') FROM $satellites", 1, 1, None),
+        ("SELECT avg(1), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT avg(1) FROM $satellites", 1, 1, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
