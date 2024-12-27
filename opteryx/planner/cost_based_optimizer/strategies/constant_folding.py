@@ -124,6 +124,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 return root.left  # anything
 
         if root.node_type == NodeType.COMPARISON_OPERATOR:
+            # anything LIKE '%' is true for non null values
             if (
                 root.value in ("Like", "ILike")
                 and root.left.node_type == NodeType.IDENTIFIER
@@ -229,15 +230,16 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
     functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
     aggregators = get_all_nodes_of_type(root, (NodeType.AGGREGATOR,))
 
-    if any(func.value in {"RANDOM", "RAND", "NORMAL", "RANDOM_STRING"} for func in functions):
+    if any(func.value in ("RANDOM", "RAND", "NORMAL", "RANDOM_STRING") for func in functions):
         # Although they have no params, these are evaluated per row
         return root
 
-    # fold costants in function parameters
+    # fold costants in function parameters - this is generally aggregations we're affecting here
     if root.parameters:
         for i, param in enumerate(root.parameters):
             root.parameters[i] = fold_constants(param, statistics)
 
+    # rewrite aggregations to constants where possible
     for agg in aggregators:
         if len(agg.parameters) == 1 and agg.parameters[0].node_type == NodeType.LITERAL:
             if agg.value == "COUNT":
