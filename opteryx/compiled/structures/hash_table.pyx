@@ -72,9 +72,7 @@ cdef inline object recast_column(column):
 
 
 
-@cython.boundscheck(False)
 @cython.wraparound(False)
-@cython.cdivision(True)
 cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
     """
     Perform a distinct operation on the given table using an external HashSet.
@@ -142,9 +140,8 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
 
     return keep, seen_hashes
 
-@cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, cnp.ndarray[int64_t] hashes):
+cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef cnp.float64_t value
     for i in range(n):
@@ -154,9 +151,8 @@ cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_has
         else:
             hashes[i] = hash(value)
 
-@cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, cnp.ndarray[int64_t] hashes):
+cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef cnp.int64_t value
     for i in range(n):
@@ -168,9 +164,8 @@ cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, c
         else:
             hashes[i] = value  # Hash of int is the int itself in Python 3
 
-@cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, cnp.ndarray[int64_t] hashes):
+cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef object value
     for i in range(n):
@@ -209,7 +204,6 @@ cpdef tuple list_distinct(cnp.ndarray values, cnp.int32_t[::1] indices, HashSet 
 
 
 
-@cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef HashTable hash_join_map(relation, list join_columns):
     """
@@ -276,3 +270,94 @@ cpdef HashTable hash_join_map(relation, list join_columns):
             ht.insert(hash_value, non_null_indices[i])
 
     return ht
+
+
+cpdef filter_join_set(relation, list join_columns, HashSet seen_hashes):
+
+    cdef int64_t num_columns = len(join_columns)
+
+    if seen_hashes is None:
+        seen_hashes = HashSet()
+
+    # Memory view for the values array (for the join columns)
+    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
+
+    cdef int64_t hash_value, i
+
+    if num_columns == 1:
+        col = values_array[0, :]
+        for i in range(len(col)):
+            hash_value = <int64_t>hash(col[i])
+            seen_hashes.insert(hash_value)
+    else:
+        for i in range(values_array.shape[1]):
+            # Combine the hashes of each value in the row
+            hash_value = 0
+            for value in values_array[:, i]:
+                hash_value = <int64_t>(hash_value * 31 + hash(value))
+            seen_hashes.insert(hash_value)
+
+    return seen_hashes
+
+cpdef anti_join(relation, list join_columns, HashSet seen_hashes):
+    cdef int64_t num_columns = len(join_columns)
+    cdef int64_t num_rows = relation.shape[0]
+    cdef int64_t hash_value, i
+    cdef cnp.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
+    cdef int64_t idx_count = 0
+
+    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
+
+    if num_columns == 1:
+        col = values_array[0, :]
+        for i in range(len(col)):
+            hash_value = <int64_t>hash(col[i])
+            if not seen_hashes.contains(hash_value):
+                index_buffer[idx_count] = i
+                idx_count += 1
+    else:
+        for i in range(values_array.shape[1]):
+            # Combine the hashes of each value in the row
+            hash_value = 0
+            for value in values_array[:, i]:
+                hash_value = <int64_t>(hash_value * 31 + hash(value))
+            if not seen_hashes.contains(hash_value):
+                index_buffer[idx_count] = i
+                idx_count += 1
+
+    if idx_count > 0:
+        return relation.take(index_buffer[:idx_count])
+    else:
+        return relation.slice(0, 0)
+
+
+cpdef semi_join(relation, list join_columns, HashSet seen_hashes):
+    cdef int64_t num_columns = len(join_columns)
+    cdef int64_t num_rows = relation.shape[0]
+    cdef int64_t hash_value, i
+    cdef cnp.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
+    cdef int64_t idx_count = 0
+
+    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
+
+    if num_columns == 1:
+        col = values_array[0, :]
+        for i in range(len(col)):
+            hash_value = <int64_t>hash(col[i])
+            if seen_hashes.contains(hash_value):
+                index_buffer[idx_count] = i
+                idx_count += 1
+    else:
+        for i in range(values_array.shape[1]):
+            # Combine the hashes of each value in the row
+            hash_value = 0
+            for value in values_array[:, i]:
+                hash_value = <int64_t>(hash_value * 31 + hash(value))
+            if seen_hashes.contains(hash_value):
+                index_buffer[idx_count] = i
+                idx_count += 1
+
+    if idx_count > 0:
+        return relation.take(index_buffer[:idx_count])
+    else:
+        return relation.slice(0, 0)
