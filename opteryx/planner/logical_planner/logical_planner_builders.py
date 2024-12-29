@@ -242,6 +242,22 @@ def expression_with_alias(branch, alias: Optional[List[str]] = None, key=None):
     return build(branch["expr"], alias=branch["alias"]["value"])
 
 
+def exists(branch, alias: Optional[List[str]] = None, key=None):
+    from opteryx.planner.logical_planner.logical_planner import plan_query
+
+    subplan = plan_query(branch["subquery"])
+    not_exists = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=branch["negated"])
+
+    raise UnsupportedSyntaxError("EXISTS is not supported in Opteryx")
+
+    return Node(
+        NodeType.UNARY_OPERATOR,
+        value="EXISTS",
+        parameters=[Node(NodeType.SUBQUERY, plan=subplan), not_exists],
+        alias=alias,
+    )
+
+
 def expressions(branch, alias: Optional[List[str]] = None, key=None):
     return [build(part) for part in branch]
 
@@ -715,6 +731,7 @@ BUILDERS = {
     "Ceil": ceiling,
     "CompoundIdentifier": compound_identifier,
     "DoubleQuotedString": literal_string,
+    "Exists": exists,
     "Expr": build,
     "Expressions": expressions,
     "ExprWithAlias": expression_with_alias,

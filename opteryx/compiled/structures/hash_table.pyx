@@ -4,7 +4,7 @@
 # cython: cdivision=True
 # cython: initializedcheck=False
 # cython: infer_types=True
-# cython: wraparound=True
+# cython: wraparound=False
 # cython: boundscheck=False
 
 from libcpp.unordered_map cimport unordered_map
@@ -59,7 +59,7 @@ cdef class HashSet:
     cdef inline bint contains(self, int64_t value):
         return self.c_set.find(value) != self.c_set.end()
 
-@cython.wraparound(False)
+
 cdef inline object recast_column(column):
     cdef column_type = column.type
 
@@ -70,9 +70,6 @@ cdef inline object recast_column(column):
     return column
 
 
-
-
-@cython.wraparound(False)
 cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
     """
     Perform a distinct operation on the given table using an external HashSet.
@@ -140,7 +137,6 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
 
     return keep, seen_hashes
 
-@cython.wraparound(False)
 cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef cnp.float64_t value
@@ -151,7 +147,7 @@ cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_has
         else:
             hashes[i] = hash(value)
 
-@cython.wraparound(False)
+
 cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef cnp.int64_t value
@@ -164,7 +160,6 @@ cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, i
         else:
             hashes[i] = value  # Hash of int is the int itself in Python 3
 
-@cython.wraparound(False)
 cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef object value
@@ -176,18 +171,13 @@ cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] 
             hashes[i] = hash(value)
 
 
-@cython.wraparound(False)
-cpdef tuple list_distinct(cnp.ndarray values, cnp.int32_t[::1] indices, HashSet seen_hashes=None):
+cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet seen_hashes=None):
     cdef:
         Py_ssize_t i, j = 0
         Py_ssize_t n = values.shape[0]
-        object v
         int64_t hash_value
-        int32_t[::1] new_indices = numpy.empty(n, dtype=numpy.int32)
-
-        # Determine the dtype of the `values` array
+        int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
         cnp.dtype dtype = values.dtype
-
         cnp.ndarray new_values = numpy.empty(n, dtype=dtype)
 
     if seen_hashes is None:
@@ -200,11 +190,11 @@ cpdef tuple list_distinct(cnp.ndarray values, cnp.int32_t[::1] indices, HashSet 
             new_values[j] = v
             new_indices[j] = indices[i]
             j += 1
+
     return new_values[:j], new_indices[:j], seen_hashes
 
 
 
-@cython.wraparound(False)
 cpdef HashTable hash_join_map(relation, list join_columns):
     """
     Build a hash table for the join operations.
@@ -272,7 +262,10 @@ cpdef HashTable hash_join_map(relation, list join_columns):
     return ht
 
 
-cpdef filter_join_set(relation, list join_columns, HashSet seen_hashes):
+cpdef HashSet filter_join_set(relation, list join_columns, HashSet seen_hashes):
+    """
+    Build the set for the right of a filter join (ANTI/SEMI)
+    """
 
     cdef int64_t num_columns = len(join_columns)
 

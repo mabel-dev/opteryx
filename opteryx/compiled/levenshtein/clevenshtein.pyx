@@ -1,17 +1,26 @@
 # cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=False
+# cython: boundscheck=False
 
 import numpy as np  # Required for array allocation
+from libc.stdint cimport int64_t, int32_t
+cimport cython
 
-cdef int min3(int x, int y, int z):
+cdef inline int64_t min3(int64_t x, int64_t y, int64_t z) nogil:
     """Utility function to find the minimum of three integers."""
-    cdef int m = x
-    if y < m:
-        m = y
-    if z < m:
-        m = z
-    return m
+    if x <= y:
+        if x <= z:
+            return x
+        return z
+    if y <= z:
+        return y
+    return z
 
-def levenshtein(str string1, str string2):
+cpdef int64_t levenshtein(str string1, str string2):
     """
     Calculate the Levenshtein distance between two strings.
 
@@ -22,26 +31,30 @@ def levenshtein(str string1, str string2):
     Returns:
         int: The Levenshtein distance between string1 and string2.
     """
+    if len(string1) < len(string2):
+        string1, string2 = string2, string1
+
     cdef int len1 = len(string1)
-    cdef int len2 = len(string2)
-    cdef int i, j
+    cdef int len2 = len(string2) + 1
+
+    cdef int64_t i, j
 
     # Allocate a numpy array and create a memory view from it
-    cdef int[:] dp = np.zeros((len1 + 1) * (len2 + 1), dtype=np.int32)
+    cdef int64_t[:] dp = np.zeros((len1 + 1) * len2, dtype=np.int64)
 
     for i in range(len1 + 1):
-        for j in range(len2 + 1):
+        for j in range(len2):
             if i == 0:
-                dp[i * (len2 + 1) + j] = j  # First string is empty
+                dp[j] = j
             elif j == 0:
-                dp[i * (len2 + 1) + j] = i  # Second string is empty
+                dp[i * len2] = i
             elif string1[i - 1] == string2[j - 1]:
-                dp[i * (len2 + 1) + j] = dp[(i - 1) * (len2 + 1) + (j - 1)]
+                dp[i * len2 + j] = dp[(i - 1) * len2 + (j - 1)]
             else:
-                dp[i * (len2 + 1) + j] = 1 + min3(
-                    dp[(i - 1) * (len2 + 1) + j],      # Remove
-                    dp[i * (len2 + 1) + (j - 1)],      # Insert
-                    dp[(i - 1) * (len2 + 1) + (j - 1)] # Replace
+                dp[i * len2 + j] = 1 + min3(
+                    dp[(i - 1) * len2 + j],      # Remove
+                    dp[i * len2 + (j - 1)],      # Insert
+                    dp[(i - 1) * len2 + (j - 1)] # Replace
                 )
 
-    return dp[len1 * (len2 + 1) + len2]
+    return dp[len1 * len2 + (len2 - 1)]

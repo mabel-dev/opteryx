@@ -9,15 +9,15 @@
 import numpy as np
 cimport numpy as cnp
 cimport cython
-from libc.stdint cimport int32_t
+from libc.stdint cimport int64_t
 from libc.math cimport INFINITY
 
 cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
-    cdef Py_ssize_t row_count = column_data.shape[0]
-    cdef cnp.int32_t[::1] lengths = np.empty(row_count, dtype=np.int32)
-    cdef cnp.int32_t[::1] offsets = np.empty(row_count + 1, dtype=np.int32)
-    cdef Py_ssize_t i
-    cdef Py_ssize_t total_size = 0
+    cdef int64_t row_count = column_data.shape[0]
+    cdef cnp.int64_t[::1] lengths = np.empty(row_count, dtype=np.int64)
+    cdef cnp.int64_t[::1] offsets = np.empty(row_count + 1, dtype=np.int64)
+    cdef int64_t i
+    cdef int64_t total_size = 0
     cdef cnp.dtype element_dtype = column_data[0].dtype
 
     if not isinstance(column_data[0], np.ndarray):
@@ -30,13 +30,13 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     
     # Early exit if total_size is zero
     if total_size == 0:
-        return (np.array([], dtype=np.int32), np.array([], dtype=object))
+        return (np.array([], dtype=np.int64), np.array([], dtype=object))
 
     # Compute offsets for efficient slicing
     offsets[0] = 0
     for i in range(row_count):
         offsets[i + 1] = offsets[i] + lengths[i]
-    cdef cnp.int32_t[::1] indices = np.empty(total_size, dtype=np.int32)
+    cdef cnp.int64_t[::1] indices = np.empty(total_size, dtype=np.int64)
     cdef cnp.ndarray flat_data = np.empty(total_size, dtype=element_dtype)
 
     # Fill indices and flat_data
@@ -65,13 +65,13 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
         tuple of (ndarray, ndarray)
             Returns a tuple containing an array of indices and an array of flattened data for rows that match the filter.
     """
-    cdef Py_ssize_t row_count = column_data.shape[0]
-    cdef Py_ssize_t allocated_size = row_count * 4  # Initial allocation size
-    cdef Py_ssize_t index = 0
-    cdef Py_ssize_t i, j, len_i
+    cdef int64_t row_count = column_data.shape[0]
+    cdef int64_t allocated_size = row_count * 4  # Initial allocation size
+    cdef int64_t index = 0
+    cdef int64_t i, j, len_i
     cdef object array_i
     cdef cnp.ndarray flat_data
-    cdef cnp.int32_t[::1] indices
+    cdef cnp.int64_t[::1] indices
     cdef cnp.dtype element_dtype = None
     cdef object value
 
@@ -92,7 +92,7 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
         element_dtype = np.object_
 
     # Initialize indices and flat_data arrays
-    indices = np.empty(allocated_size, dtype=np.int32)
+    indices = np.empty(allocated_size, dtype=np.int64)
     flat_data = np.empty(allocated_size, dtype=element_dtype)
 
     # Handle set initialization based on element dtype
@@ -127,7 +127,7 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
                 index += 1
 
     if index == 0:
-        return (np.array([], dtype=np.int32), np.array([], dtype=element_dtype))
+        return (np.array([], dtype=np.int64), np.array([], dtype=element_dtype))
 
     # Slice arrays to the actual used size
     indices = indices[:index]

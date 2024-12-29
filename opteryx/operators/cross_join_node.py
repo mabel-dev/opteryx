@@ -90,7 +90,7 @@ def _cross_join_unnest_column(
 
         if single_column and distinct and indices.size > 0:
             # if the unnest target is the only field in the SELECT and we're DISTINCTING
-            indices = numpy.array(indices, dtype=numpy.int32)
+            indices = numpy.array(indices, dtype=numpy.int64)
             new_column_data, indices, hash_set = list_distinct(new_column_data, indices, hash_set)
 
         if len(indices) > 0:
