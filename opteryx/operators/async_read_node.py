@@ -78,7 +78,7 @@ class AsyncReaderNode(ReaderNode):
 
         from opteryx import system_statistics
 
-        """Perform this step, time how long is spent doing work"""
+        # Perform this step, time how long is spent doing work
         orso_schema = self.parameters["schema"]
         reader = self.parameters["connector"]
 
