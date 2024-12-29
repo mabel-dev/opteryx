@@ -54,18 +54,18 @@ def parse_yaml(yaml_str: str) -> dict:
     def line_value(value: str) -> typing.Any:
         value = value.strip()
         if value.isdigit():
-            value = int(value)
-        elif value.replace(".", "", 1).isdigit():
-            value = float(value)
-        elif value.lower() == "true":
+            return int(value)
+        if value.replace(".", "", 1).isdigit():
+            return float(value)
+        if value.lower() == "true":
             return True
-        elif value.lower() == "false":
+        if value.lower() == "false":
             return False
-        elif value.lower() == "none":
+        if value.lower() == "none":
             return None
-        elif value.startswith("["):
+        if value.startswith("["):
             return [val.strip() for val in value[1:-1].split(",")]
-        elif value.startswith("-"):
+        if value.startswith("-"):
             return [val.strip() for val in value.split("-") if val.strip()]
         return value
 

@@ -82,8 +82,6 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
                 raise UnsupportedSyntaxError(f"Unsupported SHOW type '{node_config['object_type']}'")
         elif node_type == LogicalPlanStepType.ShowColumns:
             node = operators.ShowColumnsNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.Subquery:
-            node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
             node = operators.UnionNode(query_properties, **node_config)
         else:  # pragma: no cover
