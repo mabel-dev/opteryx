@@ -11,6 +11,7 @@ It is defined as an expression tree of binary and unary operators, and functions
 Expressions are evaluated against an entire morsel at a time.
 """
 
+from collections import deque
 from enum import Enum
 from typing import Callable
 from typing import Dict
@@ -289,7 +290,7 @@ def evaluate(expression: Node, table: Table):
     return result
 
 
-def get_all_nodes_of_type(root, select_nodes):
+def get_all_nodes_of_type(root, select_nodes: tuple) -> list:
     """
     Walk an expression tree collecting all nodes of a specified type.
     """
@@ -299,7 +300,7 @@ def get_all_nodes_of_type(root, select_nodes):
         root = [root]
 
     identifiers = []
-    stack = list(root)
+    stack = deque(root)
 
     while stack:
         node = stack.pop()

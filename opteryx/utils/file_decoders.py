@@ -219,9 +219,8 @@ def parquet_decoder(
     Returns:
         Tuple containing number of rows, number of columns, and the table or schema.
     """
-    stream = pyarrow.BufferReader(buffer)
-
     # Open the parquet file only once
+    stream = pyarrow.BufferReader(buffer)
     parquet_file = parquet.ParquetFile(stream)
 
     # Return just the schema if that's all that's needed
@@ -263,6 +262,7 @@ def parquet_decoder(
         filters=dnf_filter,
         use_threads=False,
         use_pandas_metadata=False,
+        schema=parquet_file.schema_arrow,
     )
 
     # Any filters we couldn't push to PyArrow to read we run here

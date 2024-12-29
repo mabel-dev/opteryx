@@ -18,6 +18,7 @@ accept filters and others don't so we 'fake' the read-time filtering.
 import datetime
 from typing import Dict
 
+from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.exceptions import NotSupportedError
@@ -59,6 +60,7 @@ class PredicatePushable:
         pass
 
     @staticmethod
+    @single_item_cache
     def to_dnf(root):
         """
         Convert a filter to DNF form, this is the form used by PyArrow.
