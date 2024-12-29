@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Aggregation Node
@@ -17,8 +10,6 @@ This is a SQL Query Execution Plan Node.
 
 This node performs aggregates without performing groupings.
 """
-
-from dataclasses import dataclass
 
 import numpy
 import pyarrow
@@ -29,7 +20,6 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
 
@@ -173,16 +163,11 @@ def extract_evaluations(aggregates):
         if len(aggregators) == 0:
             evaluatable_nodes.append(node)
 
+    literal_count = len([n for n in evaluatable_nodes if n.node_type == NodeType.LITERAL])
+    if literal_count > 0 and literal_count < len(evaluatable_nodes):
+        evaluatable_nodes = [n for n in evaluatable_nodes if n.node_type != NodeType.LITERAL]
+
     return evaluatable_nodes
-
-
-@dataclass
-class AggregateDataObject(BasePlanDataObject):
-    aggregates: list = None
-    all_identifiers: list = None
-    evaluatable_nodes: list = None
-    column_map: list = None
-    aggregate_functions: list = None
 
 
 class AggregateNode(BasePlanNode):
@@ -203,7 +188,6 @@ class AggregateNode(BasePlanNode):
 
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
-        self.do = AggregateDataObject()
         self.buffer = []
 
     @classmethod

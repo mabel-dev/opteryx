@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 MinIo Reader - also works with AWS
@@ -68,10 +61,6 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
         self.minio = Minio(end_point, access_key, secret_key, secure=secure)
         self.dataset = self.dataset.replace(".", OS_SEP)
 
-        # we're going to cache the first blob as the schema and dataset reader
-        # sometimes both start here
-        self.cached_first_blob = None
-
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         bucket, object_path, _, _ = paths.get_parts(prefix)
@@ -93,12 +82,6 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
             blob_list_getter=self.get_list_of_blob_names,
             prefix=self.dataset,
         )
-
-        # Check if the first blob was cached earlier
-        if self.cached_first_blob is not None:
-            yield self.cached_first_blob  # Use cached blob
-            blob_names = blob_names[1:]  # Skip first blob
-        self.cached_first_blob = None
 
         for blob_name in blob_names:
             try:

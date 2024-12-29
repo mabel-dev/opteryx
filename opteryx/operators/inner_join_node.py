@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Inner Join Node
@@ -76,6 +69,8 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinNode(JoinNode):
+    join_type = "inner"
+
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 
@@ -111,13 +106,6 @@ class InnerJoinNode(JoinNode):
                         self.left_buffer, promote_options="none"
                     )
                     self.left_buffer.clear()
-
-                    # in place until #1295 resolved
-                    if self.left_columns[0] not in self.left_relation.column_names:
-                        self.right_columns, self.left_columns = (
-                            self.left_columns,
-                            self.right_columns,
-                        )
 
                     start = time.monotonic_ns()
                     self.left_hash = hash_join_map(self.left_relation, self.left_columns)

@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Outer Join Node
@@ -29,7 +22,6 @@ from typing import List
 import pyarrow
 
 from opteryx import EOS
-from opteryx.compiled.structures import HashSet
 from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
@@ -172,81 +164,6 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
         yield align_tables(left_relation, right_chunk, left_indexes, right_indexes)
 
 
-def left_anti_join(
-    left_relation, right_relation, left_columns: List[str], right_columns: List[str]
-):
-    """
-    Perform a LEFT ANTI JOIN.
-
-    This implementation ensures that all rows from the left table are included in the result set,
-    where there are no matching rows in the right table based on the join columns.
-
-    Parameters:
-        left_relation (pyarrow.Table): The left pyarrow.Table to join.
-        right_relation (pyarrow.Table): The right pyarrow.Table to join.
-        left_columns (list of str): Column names from the left table to join on.
-        right_columns (list of str): Column names from the right table to join on.
-
-    Returns:
-        A pyarrow.Table containing the result of the LEFT ANTI JOIN operation.
-    """
-    non_null_right_values = right_relation.select(right_columns).itercolumns()
-    right_hash_set = set(zip(*non_null_right_values))
-
-    left_indexes = []
-    left_values = left_relation.select(left_columns).itercolumns()
-    for i, value_tuple in enumerate(zip(*left_values)):
-        if (
-            value_tuple not in right_hash_set
-        ):  # Only include left rows that have no match in the right table
-            left_indexes.append(i)
-
-    # Filter the left_chunk based on the anti join condition
-    if left_indexes:
-        yield left_relation.take(left_indexes)
-    else:
-        yield left_relation.slice(0, 0)
-
-
-def left_semi_join(
-    left_relation, right_relation, left_columns: List[str], right_columns: List[str]
-):
-    """
-    Perform a LEFT SEMI JOIN.
-
-    This implementation ensures that all rows from the left table that have a matching row in the right table
-    based on the join columns are included in the result set.
-
-    Parameters:
-        left_relation (pyarrow.Table): The left pyarrow.Table to join.
-        right_relation (pyarrow.Table): The right pyarrow.Table to join.
-        left_columns (list of str): Column names from the left table to join on.
-        right_columns (list of str): Column names from the right table to join on.
-
-    Returns:
-        A pyarrow.Table containing the result of the LEFT SEMI JOIN operation.
-    """
-
-    hash_table = HashTable()
-    non_null_right_values = right_relation.select(right_columns).itercolumns()
-    for i, value_tuple in enumerate(zip(*non_null_right_values)):
-        hash_table.insert(hash(value_tuple), i)
-
-    left_indexes = []
-    left_values = left_relation.select(left_columns).itercolumns()
-
-    for i, value_tuple in enumerate(zip(*left_values)):
-        rows = hash_table.get(hash(value_tuple))
-        if rows:  # Only include left rows that have a match in the right table
-            left_indexes.append(i)
-
-    # Filter the left_chunk based on the anti join condition
-    if left_indexes:
-        yield left_relation.take(left_indexes)
-    else:
-        yield left_relation.slice(0, 0)
-
-
 class OuterJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
@@ -312,10 +229,4 @@ class OuterJoinNode(JoinNode):
                 yield None
 
 
-providers = {
-    "left outer": left_join,
-    "full outer": full_join,
-    "right outer": right_join,
-    "left anti": left_anti_join,
-    "left semi": left_semi_join,
-}
+providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}

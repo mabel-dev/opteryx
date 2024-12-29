@@ -185,6 +185,15 @@ def test_execute_unsupported_syntax_error():
     with pytest.raises(UnsupportedSyntaxError):
         cursor.execute("SELECT * FROM table; SELECT * FROM table2", params=[1])
 
+def test_non_tabular_result():
+    cursor = setup_function()
+    cursor.execute("SET @name = 'tim'")
+    cursor.fetchall()
+
+def test_limit():
+    cursor = setup_function()
+    dataset = cursor.execute_to_arrow("SELECT * FROM $planets", limit=3)
+    assert dataset.num_rows == 3
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

@@ -51,7 +51,7 @@ def generate_condition(table, columns):
     return f"{table}.{where_column.name} {where_operator} {where_value}"
 
 def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
-    join_type = random.choice(["JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"])
+    join_type = random.choice(["JOIN", "INNER JOIN", "LEFT JOIN", "LEFT OUTER JOIN", "RIGHT JOIN", "FULL OUTER JOIN", "LEFT ANTI JOIN", "LEFT SEMI JOIN"])
 
     last_value = -1
     this_value = random.random()
@@ -70,7 +70,11 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
         conditions.append(condition)
 
     join_condition = " AND ".join(conditions)
-    selected_columns = [f"{table1}.{col.name}" for col in columns1 if random.random() < 0.2] + [f"{table2}.{col.name}" for col in columns2 if random.random() < 0.2]
+
+    if join_type in ("LEFT ANTI JOIN", "LEFT SEMI JOIN"):
+        selected_columns = [f"{table1}.{col.name}" for col in columns1 if random.random() < 0.2]
+    else:
+        selected_columns = [f"{table1}.{col.name}" for col in columns1 if random.random() < 0.2] + [f"{table2}.{col.name}" for col in columns2 if random.random() < 0.2]
     if len(selected_columns) == 0:
         selected_columns = ["*"]
     select_clause = "SELECT " + ", ".join(selected_columns)
@@ -86,7 +90,7 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
             linking_condition = random.choice(["AND", "OR", "AND NOT"])
             where_clause += f" {linking_condition} {generate_condition(table1, columns1)}"
     
-    if random.random() < 0.3:
+    if join_type not in ("LEFT ANTI JOIN", "LEFT SEMI JOIN") and random.random() < 0.3:
         if where_clause == "--":
             where_clause = " WHERE "
         else:

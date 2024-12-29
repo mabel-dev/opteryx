@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 """
 This implements an interface to Memcached
 
@@ -49,7 +42,7 @@ def _memcached_server(**kwargs):
 
     try:
         from pymemcache.client import base
-    except ImportError as err:
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(err.name) from err
 
     try:

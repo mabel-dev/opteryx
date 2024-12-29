@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Heap Sort Node
@@ -24,8 +17,6 @@ This is faster, particularly when working with large datasets even though we're 
 sorting smaller chunks over and over again.
 """
 
-from dataclasses import dataclass
-
 import numpy
 import pyarrow
 import pyarrow.compute
@@ -34,15 +25,8 @@ from pyarrow import concat_tables
 from opteryx import EOS
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.models import QueryProperties
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
-
-
-@dataclass
-class HeapSortDataObject(BasePlanDataObject):
-    order_by: list = None
-    limit: int = -1
 
 
 class HeapSortNode(BasePlanNode):
@@ -51,7 +35,6 @@ class HeapSortNode(BasePlanNode):
         self.order_by = parameters.get("order_by", [])
         self.limit: int = parameters.get("limit", -1)
 
-        self.do = HeapSortDataObject(order_by=self.order_by, limit=self.limit)
         self.mapped_order = []
         self.table = None
 

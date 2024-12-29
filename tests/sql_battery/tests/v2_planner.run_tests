@@ -4,24 +4,14 @@
 # NEW JOINS
 SELECT * FROM $planets LEFT ANTI JOIN $satellites USING(id);
 SELECT * FROM $planets LEFT SEMI JOIN $satellites USING(id);
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites USING(id);
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites USING(id);
 SELECT * FROM $planets LEFT ANTI JOIN $satellites ON $planets.id = $satellites.id;
 SELECT * FROM $planets LEFT SEMI JOIN $satellites ON $planets.id = $satellites.id;
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites ON $planets.id = $satellites.id;
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites ON $planets.id = $satellites.id;
 SELECT * FROM $planets LEFT ANTI JOIN $satellites ON $satellites.id = $planets.id;
 SELECT * FROM $planets LEFT SEMI JOIN $satellites ON $satellites.id = $planets.id;
-SELECT * FROM $planets RIGHT ANTI JOIN $satellites ON $satellites.id = $planets.id;
-SELECT * FROM $planets RIGHT SEMI JOIN $satellites ON $satellites.id = $planets.id;
 SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S ON P.id = S.id;
 SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON P.id = S.id;
-SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON P.id = S.id;
-SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S ON P.id = S.id;
 SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S USING(id);
 SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S USING(id);
-SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S USING(id);
-SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S USING(id);
 
 # EXPLAIN FORMAT
 EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);
@@ -31,3 +21,78 @@ SELECT DISTINCT ON (planetId) planetId, name FROM $satellites;
 
 # CONDITIONS IN AGGREGATES
 SELECT SUM(DISTINCT id ORDER BY id) FROM $planets
+
+# INNER JOIN with FULL OUTER JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id FULL OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# INNER JOIN with LEFT OUTER JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id LEFT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# INNER JOIN with RIGHT OUTER JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id RIGHT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# INNER JOIN with NATURAL JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id NATURAL JOIN $planets AS p3;
+
+# INNER JOIN with LEFT ANTI JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id LEFT ANTI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# INNER JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# FULL OUTER JOIN with LEFT OUTER JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# FULL OUTER JOIN with RIGHT OUTER JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id RIGHT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# FULL OUTER JOIN with NATURAL JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id NATURAL JOIN $planets AS p3;
+
+# FULL OUTER JOIN with LEFT ANTI JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT ANTI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# FULL OUTER JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT OUTER JOIN with RIGHT OUTER JOIN
+SELECT * FROM $planets AS p1 LEFT OUTER JOIN $planets AS p2 ON p1.id = p2.id RIGHT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT OUTER JOIN with NATURAL JOIN
+SELECT * FROM $planets AS p1 LEFT OUTER JOIN $planets AS p2 ON p1.id = p2.id NATURAL JOIN $planets AS p3;
+
+# LEFT OUTER JOIN with LEFT ANTI JOIN
+SELECT * FROM $planets AS p1 LEFT OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT ANTI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT OUTER JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 LEFT OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# RIGHT OUTER JOIN with NATURAL JOIN
+SELECT * FROM $planets AS p1 RIGHT OUTER JOIN $planets AS p2 ON p1.id = p2.id NATURAL JOIN $planets AS p3;
+
+# RIGHT OUTER JOIN with LEFT ANTI JOIN
+SELECT * FROM $planets AS p1 RIGHT OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT ANTI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# RIGHT OUTER JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 RIGHT OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT ANTI JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 LEFT ANTI JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# INNER JOIN with INNER JOIN
+SELECT * FROM $planets AS p1 INNER JOIN $planets AS p2 ON p1.id = p2.id INNER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# FULL OUTER JOIN with FULL OUTER JOIN
+SELECT * FROM $planets AS p1 FULL OUTER JOIN $planets AS p2 ON p1.id = p2.id FULL OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT OUTER JOIN with LEFT OUTER JOIN
+SELECT * FROM $planets AS p1 LEFT OUTER JOIN $planets AS p2 ON p1.id = p2.id LEFT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# RIGHT OUTER JOIN with RIGHT OUTER JOIN
+SELECT * FROM $planets AS p1 RIGHT OUTER JOIN $planets AS p2 ON p1.id = p2.id RIGHT OUTER JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT ANTI JOIN with LEFT ANTI JOIN
+SELECT * FROM $planets AS p1 LEFT ANTI JOIN $planets AS p2 ON p1.id = p2.id LEFT ANTI JOIN $planets AS p3 ON p1.id = p3.id;
+
+# LEFT SEMI JOIN with LEFT SEMI JOIN
+SELECT * FROM $planets AS p1 LEFT SEMI JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;

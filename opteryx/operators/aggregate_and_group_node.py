@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Grouping Node
@@ -20,8 +13,6 @@ the aggregation node doesn't need the grouping node.
 
 
 """
-
-from dataclasses import dataclass
 
 import numpy
 import pyarrow
@@ -35,20 +26,8 @@ from opteryx.models import QueryProperties
 from opteryx.operators.aggregate_node import build_aggregations
 from opteryx.operators.aggregate_node import extract_evaluations
 from opteryx.operators.aggregate_node import project
-from opteryx.operators.base_plan_node import BasePlanDataObject
 
 from . import BasePlanNode
-
-
-@dataclass
-class AggregateAndGroupDataObject(BasePlanDataObject):
-    groups: list = None
-    aggregates: list = None
-    all_identifiers: list = None
-    evaluatable_nodes: list = None
-    group_by_columns: list = None
-    column_map: list = None
-    aggregate_functions: list = None
 
 
 class AggregateAndGroupNode(BasePlanNode):
@@ -85,8 +64,6 @@ class AggregateAndGroupNode(BasePlanNode):
         # get the aggregated groupings and functions
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
-
-        self.do = AggregateAndGroupDataObject()
 
         self.buffer = []
 

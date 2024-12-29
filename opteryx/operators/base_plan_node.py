@@ -1,38 +1,14 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
 import time
-from dataclasses import dataclass
 from typing import Optional
 
 import pyarrow
 from orso.tools import random_string
-
-from opteryx import EOS
-
-
-@dataclass
-class BasePlanDataObject:
-    operation: Optional[str] = None
-    query_id: str = None
-    identity: str = None
-
-    def __post_init__(self):
-        # Perform actions after initialization
-        if self.identity is None:
-            self.identity = random_string()
-        if self.operation is None:
-            self.operation = self.__class__.__name__.replace("DataObject", "Node")
 
 
 class BasePlanNode:
@@ -54,19 +30,11 @@ class BasePlanNode:
         self.parameters = parameters
         self.execution_time = 0
         self.identity = random_string()
-        self.do: Optional[BasePlanDataObject] = None
         self.calls = 0
         self.records_in = 0
         self.bytes_in = 0
         self.records_out = 0
         self.bytes_out = 0
-
-    def to_json(self) -> bytes:  # pragma: no cover
-        import orjson
-
-        from opteryx.utils import dataclass_to_dict
-
-        return orjson.dumps(dataclass_to_dict(self.do))
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

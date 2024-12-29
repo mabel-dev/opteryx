@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
 import asyncio
@@ -88,7 +81,7 @@ def async_read_thru_cache(func):
                 remote_cache.touch(key)  # help the remote cache track LRU
                 statistics.bufferpool_hits += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
-                while read_buffer_ref is None:
+                while read_buffer_ref is None:  # pragma: no cover
                     await asyncio.sleep(0.1)
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
@@ -103,7 +96,7 @@ def async_read_thru_cache(func):
                 statistics.remote_cache_hits += 1
                 system_statistics.remote_cache_reads += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
-                while read_buffer_ref is None:
+                while read_buffer_ref is None:  # pragma: no cover
                     await asyncio.sleep(0.1)
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
@@ -119,7 +112,7 @@ def async_read_thru_cache(func):
                 statistics.cache_misses += 1
                 system_statistics.origin_reads += 1
                 return read_buffer_ref
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 print(f"Error in {func.__name__}: {e}")
                 raise  # Optionally re-raise the error after logging it
 
@@ -136,7 +129,7 @@ def async_read_thru_cache(func):
             ):
                 # if we didn't get it from the buffer pool (origin or remote cache) we add it
                 evicted = buffer_pool.set(key, payload)
-                if evicted:
+                if evicted:  # pragma: no cover
                     # if we're evicting items we just put in the cache, stop
                     if evicted in my_keys:
                         evictions_remaining = 0

@@ -2,18 +2,10 @@
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
-from .base_plan_node import BasePlanDataObject  # isort: skip
 from .base_plan_node import BasePlanNode, JoinNode  # isort: skip
 
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
@@ -26,6 +18,7 @@ from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
+from .filter_join_node import FilterJoinNode  # filter unwanted rows
 from .filter_node import FilterNode  # filter unwanted rows
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
@@ -34,7 +27,6 @@ from .heap_sort_node import HeapSortNode  # Heap
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
 from .limit_node import LimitNode  # select the first N records
-from .pyarrow_join_node import PyArrowJoinNode
 
 from .outer_join_node import OuterJoinNode
 from .projection_node import ProjectionNode  # remove unwanted columns including renames

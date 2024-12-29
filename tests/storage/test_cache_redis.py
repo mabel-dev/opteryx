@@ -6,6 +6,7 @@ the files are in the cache (they may or may not be) for the second time to defin
 
 import os
 import sys
+import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -45,6 +46,24 @@ def test_redis_cache():
     assert stats.get("remote_cache_hits", 0) >= stats["blobs_read"], stats
     assert stats.get("cache_misses", 0) == 0, stats
 
+
+def test_invalid_config():
+    from opteryx.managers.cache import RedisCache
+
+    with pytest.raises(Exception):
+        RedisCache(server="")
+
+    v = RedisCache(server=None)
+    assert v._consecutive_failures == 10
+
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_skip_on_error():
+    from opteryx.managers.cache import RedisCache
+    cache = RedisCache()
+    cache.set(b"key", b"value")
+    assert cache.get(b"key") == b"value"
+    cache._consecutive_failures = 10
+    assert cache.get(b"key") is None
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

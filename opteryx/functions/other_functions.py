@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 from typing import List
 from typing import Optional
@@ -18,6 +11,7 @@ import pyarrow
 import simdjson
 from pyarrow import compute
 
+from opteryx.exceptions import IncompatibleTypesError
 from opteryx.exceptions import SqlError
 
 
@@ -150,13 +144,34 @@ def null_if(col1, col2):
             An array where elements from col1 are replaced with None if they match the corresponding elements in col2.
     """
     if isinstance(col1, pyarrow.Array):
-        values = values.to_numpy(False)
+        col1 = col1.to_numpy(False)
     if isinstance(col1, list):
-        values = numpy.array(values)
+        col1 = col1.array(col1)
     if isinstance(col2, pyarrow.Array):
-        values = values.to_numpy(False)
+        col2 = col2.to_numpy(False)
     if isinstance(col2, list):
-        values = numpy.array(values)
+        col2 = col2.array(col2)
+
+    from orso.types import PYTHON_TO_ORSO_MAP
+    from orso.types import OrsoTypes
+
+    def get_first_non_null_type(array):
+        for item in array:
+            if item is not None:
+                return PYTHON_TO_ORSO_MAP.get(type(item), OrsoTypes._MISSING_TYPE)
+        return OrsoTypes.NULL
+
+    col1_type = get_first_non_null_type(col1.tolist())
+    col2_type = get_first_non_null_type(col2.tolist())
+
+    if col1_type != col2_type:
+        print(col1_type, col2_type)
+
+        raise IncompatibleTypesError(
+            left_type=col1_type,
+            right_type=col2_type,
+            message=f"`NULLIF` called with input arrays of different types, {col1_type} and {col2_type}.",
+        )
 
     # Create a mask where elements in col1 are equal to col2
     mask = col1 == col2

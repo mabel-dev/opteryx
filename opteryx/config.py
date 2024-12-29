@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 import datetime
 import typing
@@ -183,9 +176,6 @@ DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 # size of morsels to push between steps
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
-# query log
-QUERY_LOG_LOCATION:str = get("QUERY_LOG_LOCATION", False)
-QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
 # not GA
 PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 # fmt:on

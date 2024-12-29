@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Converts the AST to a logical query plan.
@@ -73,7 +66,7 @@ class LogicalPlanNode(Node):
     def copy(self) -> "Node":
         return LogicalPlanNode(**super().copy().properties)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         try:
             # fmt:off
             node_type = self.node_type
@@ -502,12 +495,6 @@ def inner_query_planner(ast_branch):
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
 
-        if distinct_step.on and _projection[0].source_column == "FROM":
-            cols = ", ".join([format_expression(c) for c in distinct_step.on])
-            raise UnsupportedSyntaxError(
-                f"Did you mean 'SELECT DISTINCT ON ({cols}) {cols} FROM {_projection[0].alias};'?"
-            )
-
     # order
     if _order_by:
         order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
@@ -628,6 +615,12 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
     join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
 
     join_step.type = extract_join_type(join)
+
+    if join_step.type in ("right semi", "right anti"):
+        raise UnsupportedSyntaxError(
+            f"{join_step.type.upper()} JOIN not supported, use LEFT variations only."
+        )
+
     join_step.on, join_step.using = extract_join_condition(join)
     # At this stage, CROSS JOIN UNNEST are represented in a single JOIN node
     join_step.unnest_column, join_step.unnest_alias = extract_unnest_dataset(join, join_step.type)
@@ -794,28 +787,6 @@ def create_node_relation(relation):
         root_node = join_step_id
 
     return root_node, sub_plan
-
-
-def analyze_query(statement) -> LogicalPlan:
-    root_node = "Analyze"
-    plan = LogicalPlan()
-
-    from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
-    table = statement[root_node]["table_name"]
-    from_step.relation = ".".join(part["value"] for part in table)
-    from_step.alias = from_step.relation
-    from_step.start_date = table[0].get("start_date")
-    from_step.end_date = table[0].get("end_date")
-    step_id = random_string()
-    plan.add_node(step_id, from_step)
-
-    metadata_step = LogicalPlanNode(node_type=LogicalPlanStepType.MetadataWriter)
-    previous_step_id, step_id = step_id, random_string()
-    plan.add_node(step_id, metadata_step)
-    plan.add_edge(previous_step_id, step_id)
-
-    return plan
-    # write manifest
 
 
 def plan_execute_query(statement) -> LogicalPlan:
@@ -1115,7 +1086,7 @@ def plan_show_variables(statement):
 
 
 QUERY_BUILDERS = {
-    "Analyze": analyze_query,
+    #    "Analyze": analyze_query,
     "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,

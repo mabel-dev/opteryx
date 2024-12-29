@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 The Physical Plan is a tree of nodes that represent the execution plan for a query.
@@ -54,6 +47,10 @@ class PhysicalPlan(Graph):
 
         # Sort neighbors based on relationship to ensure left, right, then unlabelled order
         neighbors = sorted(self.ingoing_edges(node), key=lambda x: (x[2] == "right", x[2] == ""))
+
+        # left semi and anti joins we hash the right side first, usually we want the left side first
+        if self[node].is_join and self[node].join_type in ("left anti", "left semi"):
+            neighbors.reverse()
 
         # Traverse each child, prioritizing left, then right, then unlabelled
         for neighbor, _, _ in neighbors:

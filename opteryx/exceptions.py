@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Bespoke error types for Opteryx and error types and structure as defined in PEP-0249.
@@ -304,6 +297,7 @@ class IncompatibleTypesError(Exception):
         right_column: Optional[str] = None,
         left_node: Optional[Any] = None,
         right_node: Optional[Any] = None,
+        message: Optional[str] = None,
     ):
         def _format_col(_type, _node, _name):
             if _node.node_type == 42:
@@ -317,7 +311,9 @@ class IncompatibleTypesError(Exception):
         self.column = column
         self.left_column = left_column
         self.right_column = right_column
-        if self.column:
+        if message:
+            super().__init__(message)
+        elif self.column:
             super().__init__(
                 f"Incompatible types for column '{column}': {left_type} and {right_type}"
             )

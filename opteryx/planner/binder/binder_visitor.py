@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 import re
 from typing import List
@@ -689,12 +682,8 @@ class BinderVisitor:
                     right_column = context.schemas[right_relation_name].pop_column(column_name)
 
                 # we need to decide which column we're going to keep
-                if node.type in ("right anti", "right semi"):
-                    right_column.origin = [left_relation_name, right_relation_name]
-                    columns.append(right_column)
-                else:
-                    left_column.origin = [left_relation_name, right_relation_name]
-                    columns.append(left_column)
+                left_column.origin = [left_relation_name, right_relation_name]
+                columns.append(left_column)
 
             # shared columns exist in both schemas in some uses and in neither in others
             context.schemas[f"$shared-{random_string()}"] = RelationSchema(
@@ -704,9 +693,6 @@ class BinderVisitor:
         # SEMI and ANTI joins only return columns from one table
         if node.type in ("left anti", "left semi"):
             for schema in node.right_relation_names:
-                context.schemas.pop(schema)
-        if node.type in ("right anti", "right semi"):
-            for schema in node.left_relation_names:
                 context.schemas.pop(schema)
 
         # If we have an unnest_column, how how it is bound is different to other columns

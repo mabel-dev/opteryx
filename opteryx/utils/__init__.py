@@ -1,17 +1,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
-from enum import Enum
 from itertools import permutations
 from typing import Iterable
 from typing import Optional
@@ -47,7 +39,7 @@ def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
     best_match_column = None
     best_match_score = 100  # Large number indicates no match found yet.
 
-    # Function to find the best match
+    # Function to find the best match based on levenstein distance
     def find_best_match(name: str):
         nonlocal best_match_column, best_match_score
         for raw, candidate in ((ca, "".join(ch for ch in ca if ch.isalnum())) for ca in candidates):
@@ -74,16 +66,3 @@ def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
                 return result
 
     return best_match_column  # Return the best match found, or None if no suitable match is found.
-
-
-def dataclass_to_dict(instance):
-    if isinstance(instance, Enum):
-        return instance.name
-    elif hasattr(instance, "to_dict"):
-        return instance.to_dict()
-    elif hasattr(instance, "__dataclass_fields__"):
-        return {k: dataclass_to_dict(getattr(instance, k)) for k in instance.__dataclass_fields__}
-    elif isinstance(instance, (list, tuple)):
-        return [dataclass_to_dict(k) for k in instance]
-    else:
-        return instance

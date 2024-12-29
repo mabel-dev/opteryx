@@ -1,14 +1,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
 Optimization Rule - Constant Folding
@@ -46,6 +39,10 @@ from .optimization_strategy import OptimizerContext
 def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
     if root.node_type == NodeType.LITERAL:
         # if we're already a literal (constant), we can't fold
+        return root
+
+    if root.node_type == NodeType.EXPRESSION_LIST:
+        # we currently don't fold CASE expressions
         return root
 
     if root.node_type in {NodeType.COMPARISON_OPERATOR, NodeType.BINARY_OPERATOR}:
@@ -127,8 +124,9 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 return root.left  # anything
 
         if root.node_type == NodeType.COMPARISON_OPERATOR:
+            # anything LIKE '%' is true for non null values
             if (
-                root.value in ("Like", "Ilike")
+                root.value in ("Like", "ILike")
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.node_type == NodeType.LITERAL
                 and root.right.value == "%"
@@ -232,9 +230,26 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
     functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
     aggregators = get_all_nodes_of_type(root, (NodeType.AGGREGATOR,))
 
-    if any(func.value in {"RANDOM", "RAND", "NORMAL", "RANDOM_STRING"} for func in functions):
+    if any(func.value in ("RANDOM", "RAND", "NORMAL", "RANDOM_STRING") for func in functions):
         # Although they have no params, these are evaluated per row
         return root
+
+    # fold costants in function parameters - this is generally aggregations we're affecting here
+    if root.parameters:
+        for i, param in enumerate(root.parameters):
+            root.parameters[i] = fold_constants(param, statistics)
+
+    # rewrite aggregations to constants where possible
+    for agg in aggregators:
+        if len(agg.parameters) == 1 and agg.parameters[0].node_type == NodeType.LITERAL:
+            if agg.value == "COUNT":
+                # COUNT(1) is always the number of rows
+                root.parameters[0] = Node(NodeType.WILDCARD)
+                statistics.optimization_constant_aggregation += 1
+                return root
+            if agg.value in ("AVG", "MIN", "MAX"):
+                statistics.optimization_constant_aggregation += 1
+                return build_literal_node(agg.parameters[0].value, root, root.schema_column.type)
 
     if len(identifiers) == 0 and len(aggregators) == 0:
         table = no_table_data.read()
