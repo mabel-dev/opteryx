@@ -10,6 +10,8 @@ from typing import Optional
 import pyarrow
 from orso.tools import random_string
 
+from opteryx.config import MORSEL_SIZE
+
 
 class BasePlanNode:
     is_join: bool = False
@@ -68,6 +70,8 @@ class BasePlanNode:
 
         # set up the execution of the operator
         generator = self.execute(morsel, join_leg=join_leg)
+        empty_morsel = None
+        at_least_one = False
 
         while True:
             try:
@@ -83,10 +87,20 @@ class BasePlanNode:
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
 
-                yield result
+                    # if we get empty sets, don't yield them unless they're the only one
+                    if result.num_rows > 0:
+                        self.statistics.avoided_empty_datasets += 1
+                        at_least_one = True
+                        yield result
+                    else:
+                        empty_morsel = result
+                else:
+                    yield result
 
             except StopIteration:
                 # Break the loop when the generator is exhausted
+                if not at_least_one and empty_morsel is not None:
+                    yield empty_morsel
                 break
             except Exception as err:
                 # print(f"Exception {err} in operator", self.name)

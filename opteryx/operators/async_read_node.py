@@ -66,9 +66,10 @@ class AsyncReaderNode(ReaderNode):
 
         self.predicates = parameters.get("predicates")
 
-    @classmethod
-    def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover
-        raise NotImplementedError()
+    @property
+    def name(self):  # pragma: no cover
+        """friendly name for this step"""
+        return "Async Read"
 
     def execute(self, morsel, **kwargs) -> Generator:
         if morsel == EOS:
@@ -99,7 +100,6 @@ class AsyncReaderNode(ReaderNode):
 
         if len(blob_names) == 0:
             # if we don't have any matching blobs, create an empty dataset
-            # TODO: rewrite
             from orso import DataFrame
 
             as_arrow = DataFrame(rows=[], schema=orso_schema).arrow()
