@@ -10,7 +10,9 @@ from typing import Optional
 import pyarrow
 from orso.tools import random_string
 
-from opteryx.config import MORSEL_SIZE
+from opteryx import EOS
+
+END = object()
 
 
 class BasePlanNode:
@@ -77,31 +79,34 @@ class BasePlanNode:
             try:
                 # Time the production of the next result
                 start_time = time.monotonic_ns()
-                result = next(generator)  # Retrieve the next item from the generator
+                result = next(generator, END)  # Retrieve the next item from the generator
                 execution_time = time.monotonic_ns() - start_time
                 self.execution_time += execution_time
                 self.statistics.increase("time_" + self.name.lower(), execution_time)
 
                 # Update metrics for valid results
+                if result == END:
+                    # Break the loop when the generator is exhausted
+                    if not at_least_one:
+                        yield empty_morsel
+                    break
+
                 if hasattr(result, "num_rows"):
                     self.records_out += result.num_rows
                     self.bytes_out += result.nbytes
+
+                    if empty_morsel is None:
+                        empty_morsel = result.slice(0, 0)
 
                     # if we get empty sets, don't yield them unless they're the only one
                     if result.num_rows > 0:
                         self.statistics.avoided_empty_datasets += 1
                         at_least_one = True
                         yield result
-                    else:
-                        empty_morsel = result
-                else:
-                    yield result
+                        continue
 
-            except StopIteration:
-                # Break the loop when the generator is exhausted
-                if not at_least_one and empty_morsel is not None:
-                    yield empty_morsel
-                break
+                yield result
+
             except Exception as err:
                 # print(f"Exception {err} in operator", self.name)
                 raise err
