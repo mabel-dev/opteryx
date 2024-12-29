@@ -95,8 +95,13 @@ def ceiling(values, scales=None) -> List:
         scale = scales[0]
     if scale == 0:
         return numpy.ceil(values)
-    scale = 10**scale
-    return numpy.ceil(values * scale) / scale
+
+    if scale > 0:
+        scale_factor = 10**scale
+        return numpy.ceil(values * scale_factor) / scale_factor
+    else:
+        scale_factor = 10 ** (-scale)
+        return numpy.ceil(values / scale_factor) * scale_factor
 
 
 def floor(values, scales=None) -> List:
@@ -111,5 +116,10 @@ def floor(values, scales=None) -> List:
         scale = scales[0]
     if scale == 0:
         return numpy.floor(values)
-    scale = 10**scale
-    return numpy.floor(values * scale) / scale
+
+    if scale > 0:
+        scale_factor = 10**scale
+        return numpy.floor(values * scale_factor) / scale_factor
+    else:
+        scale_factor = 10 ** (-scale)
+        return numpy.floor(values / scale_factor) * scale_factor

@@ -681,7 +681,9 @@ def create_node_relation(relation):
                     node_type=LogicalPlanStepType.FunctionDataset, function="VALUES"
                 )
                 values_step.alias = subquery["alias"]["name"]["value"]
-                values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
+                values_step.columns = tuple(
+                    col["name"]["value"] for col in subquery["alias"]["columns"]
+                )
                 values_step.values = [
                     tuple(logical_planner_builders.build(value) for value in row)
                     for row in subquery["subquery"]["body"]["Values"]["rows"]
@@ -738,7 +740,7 @@ def create_node_relation(relation):
         function_step.args = [
             logical_planner_builders.build(arg) for arg in function["args"]["args"]
         ]
-        function_step.columns = tuple(col["value"] for col in function["alias"]["columns"])
+        function_step.columns = tuple(col["name"]["value"] for col in function["alias"]["columns"])
 
         step_id = random_string()
         sub_plan.add_node(step_id, function_step)
@@ -1018,7 +1020,7 @@ def plan_show_columns(statement):
     plan = LogicalPlan()
 
     from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
-    table = statement[root_node]["table_name"]
+    table = statement[root_node]["show_options"]["show_in"]["parent_name"]
     from_step.relation = ".".join(part["value"] for part in table)
     from_step.alias = from_step.relation
     from_step.start_date = table[0].get("start_date")
@@ -1034,8 +1036,9 @@ def plan_show_columns(statement):
     plan.add_node(step_id, show_step)
     plan.add_edge(previous_step_id, step_id)
 
-    _filter = statement[root_node]["filter"]
+    _filter = statement[root_node]["show_options"].get("filter_position")
     if _filter:
+        _filter = _filter["Suffix"]
         filter_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
         filter_node.condition = extract_simple_filter(_filter, "name")
         previous_step_id, step_id = step_id, random_string()
