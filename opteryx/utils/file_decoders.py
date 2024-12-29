@@ -26,7 +26,6 @@ from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.utils.arrow import post_read_projector
-from opteryx.utils.memory_view_stream import MemoryViewStream
 
 
 class ExtentionType(str, Enum):
@@ -163,8 +162,7 @@ def zstd_decoder(
     """
     import zstandard
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
 
     with zstandard.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -185,8 +183,7 @@ def lzma_decoder(
     """
     import lzma
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
 
     with lzma.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -285,8 +282,7 @@ def orc_decoder(
     """
     import pyarrow.orc as orc
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
 
     if just_schema:
@@ -303,7 +299,7 @@ def orc_decoder(
 
 
 def jsonl_decoder(
-    buffer: Union[memoryview, bytes],
+    buffer: Union[memoryview, bytes, BinaryIO],
     *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
@@ -317,7 +313,7 @@ def jsonl_decoder(
     rows = []
 
     if not isinstance(buffer, bytes):
-        buffer = buffer.read()
+        buffer = buffer.read()  # type: ignore
 
     for line in buffer.split(b"\n"):
         if not line:
@@ -354,8 +350,7 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
     schema = table.schema
@@ -415,8 +410,7 @@ def arrow_decoder(
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.feather as pf
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
     table = pf.read_table(stream)
     schema = table.schema
     if just_schema:
@@ -454,8 +448,7 @@ def avro_decoder(
 
         raise MissingDependencyError("fastavro")
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
     reader = fastavro.reader(stream)
 
     if just_schema:
@@ -496,8 +489,7 @@ def ipc_decoder(
 
     from pyarrow import ipc
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = io.BytesIO(buffer)
     reader = ipc.open_stream(stream)
 
     batch_one = next(reader, None)

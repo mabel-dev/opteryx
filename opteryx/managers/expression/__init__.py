@@ -53,29 +53,29 @@ class NodeType(int, Enum):
     # fmt:off
 
     # 00000000
-    UNKNOWN: int = 0
+    UNKNOWN = 0
 
     # LOGICAL OPERATORS
     # 0001 nnnn
-    AND: int = 17  # 0001 0001
-    OR: int = 18  # 0001 0010 
-    XOR: int = 19  # 0001 0011
-    NOT: int = 20  # 0001 0100
+    AND = 17  # 0001 0001
+    OR = 18  # 0001 0010 
+    XOR = 19  # 0001 0011
+    NOT = 20  # 0001 0100
 
     # INTERAL IDENTIFIERS
     # 0010 nnnn
-    WILDCARD: int = 33  # 0010 0001
-    COMPARISON_OPERATOR: int = 34  # 0010 0010
-    BINARY_OPERATOR: int = 35  # 0010 0011
-    UNARY_OPERATOR: int = 36  # 0010 0100
-    FUNCTION: int = 37  # 0010 0101
-    IDENTIFIER: int = 38  # 0010 0110
-    SUBQUERY: int = 39  # 0010 0111
-    NESTED: int = 40  # 0010 1000
-    AGGREGATOR:int = 41  # 0010 1001
-    LITERAL:int = 42  # 0010 1010
-    EXPRESSION_LIST: int = 43  # 0010 1011 (CASE WHEN)
-    EVALUATED: int = 44  # 0010 1100 - memoize results
+    WILDCARD = 33  # 0010 0001
+    COMPARISON_OPERATOR = 34  # 0010 0010
+    BINARY_OPERATOR = 35  # 0010 0011
+    UNARY_OPERATOR = 36  # 0010 0100
+    FUNCTION = 37  # 0010 0101
+    IDENTIFIER = 38  # 0010 0110
+    SUBQUERY = 39  # 0010 0111
+    NESTED = 40  # 0010 1000
+    AGGREGATOR = 41  # 0010 1001
+    LITERAL = 42  # 0010 1010
+    EXPRESSION_LIST = 43  # 0010 1011 (CASE WHEN)
+    EVALUATED = 44  # 0010 1100 - memoize results
 
 
 ORSO_TO_NUMPY_MAP = {
