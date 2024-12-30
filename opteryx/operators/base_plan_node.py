@@ -39,6 +39,7 @@ class BasePlanNode:
         self.bytes_in = 0
         self.records_out = 0
         self.bytes_out = 0
+        self.columns = parameters.get("columns", [])
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

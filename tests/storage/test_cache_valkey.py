@@ -61,6 +61,7 @@ def test_skip_on_error():
     cache = ValkeyCache()
     cache.set(b"key", b"value")
     assert cache.get(b"key") == b"value"
+    assert cache.hits > 0
     cache._consecutive_failures = 10
     assert cache.get(b"key") is None
 

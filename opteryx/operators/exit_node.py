@@ -30,7 +30,7 @@ from . import BasePlanNode
 class ExitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
-        self.columns = parameters.get("columns", [])
+        self.at_least_one = False
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -47,8 +47,21 @@ class ExitNode(BasePlanNode):
     def execute(self, morsel: Table, **kwargs) -> Table:
         # Exit doesn't return EOS
         if morsel == EOS:
+            if not self.at_least_one:
+                import pyarrow
+
+                yield pyarrow.Table.from_arrays(
+                    [pyarrow.array([]) for _ in self.columns],
+                    names=[column.current_name for column in self.columns],
+                )
             yield EOS
             return
+
+        if morsel.num_columns == 0:
+            yield None
+            return
+
+        self.at_least_one = True
 
         final_columns = []
         final_names = []

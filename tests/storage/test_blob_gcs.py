@@ -63,7 +63,13 @@ test_cases = [
         expected_rowcount=1,
         expected_columncount=1,
         stats={"blobs_read": 1018, "rows_read": 9162}
-    )
+    ),
+    TestCase(
+        query=f"SELECT kepler_name FROM {BUCKET_NAME}.exoplanets AS exoplanets WHERE kepler_name = 'non-existant' ORDER BY kepler_name LIMIT 5",
+        expected_rowcount=0,
+        expected_columncount=1,
+        stats={"columns_read": 1},
+    ),
 ]
 
 

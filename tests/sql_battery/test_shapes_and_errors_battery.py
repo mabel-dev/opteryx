@@ -1240,6 +1240,7 @@ STATEMENTS = [
         ("SELECT CONCAT_WS('-', ('1', '2', '3'))", 1, 1, None),
         ("SELECT CONCAT_WS('-', ('1', '2', '3')) FROM $planets", 9, 1, None),
         ("SELECT IFNULL(death_date, '1970-01-01') FROM $astronauts", 357, 1, None),
+        ("SELECT IFNOTNULL(death_date, '1970-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT RANDOM_STRING(88) FROM $planets", 9, 1, None),
         ("SELECT * FROM $planets WHERE STARTS_WITH(name, 'M')", 2, 20, None),
         ("SELECT * FROM $astronauts WHERE STARTS_WITH(name, 'Jo')", 23, 19, None),
@@ -1690,6 +1691,9 @@ STATEMENTS = [
         ("SELECT IFNULL(NULL, 'default') as result", 1, 1, None),
         ("SELECT IFNULL('value', 'default') as result", 1, 1, None),
         ("SELECT IFNULL(NULL, NULL) as result", 1, 1, None),
+        ("SELECT IFNOTNULL(NULL, 'default') as result", 1, 1, None),
+        ("SELECT IFNOTNULL('value', 'default') as result", 1, 1, None),
+        ("SELECT IFNOTNULL(NULL, NULL) as result", 1, 1, None),
         ("SELECT COALESCE(NULL, 'default') as coalesced_value", 1, 1, None),
         ("SELECT COALESCE(NULL, 'default', 'fallback') as coalesced_value", 1, 1, None),
         ("SELECT COALESCE('first', NULL, 'fallback') as coalesced_value", 1, 1, None),
@@ -1928,6 +1932,8 @@ STATEMENTS = [
         ("SELECT count('a') FROM $satellites", 1, 1, None),
         ("SELECT avg(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT avg(1) FROM $satellites", 1, 1, None),
+        ("SELECT surface_pressure FROM $planets WHERE IFNOTNULL(surface_pressure, 0.0) == 0.0", 5, 1, None),
+        
 
         # ****************************************************************************************
 

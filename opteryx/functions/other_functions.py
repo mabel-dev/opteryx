@@ -85,23 +85,6 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
     return results_mask
 
 
-def iif(mask, true_values, false_values):
-    # we have three columns, the first is TRUE offsets
-    # the second is TRUE response
-    # the third is FAST response
-
-    if isinstance(mask, pyarrow.lib.BooleanArray) or (
-        isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
-    ):
-        mask = numpy.nonzero(mask)[0]
-
-    response = false_values
-
-    for index in mask:
-        response[index] = true_values[index]
-    return response
-
-
 def if_null(values, replacement):
     """
     Replace null values in the input array with corresponding values from the replacement array.
@@ -118,17 +101,29 @@ def if_null(values, replacement):
     """
     from opteryx.managers.expression.unary_operations import _is_null
 
-    # Check if the values array is a pyarrow array and convert it to a numpy array if necessary
-    if isinstance(values, pyarrow.Array):
-        values = values.to_numpy(False)
-    if isinstance(values, list):
-        values = numpy.array(values)
-
     # Create a mask for null values
     is_null_array = _is_null(values)
 
     # Use NumPy's where function to vectorize the operation
     return numpy.where(is_null_array, replacement, values)
+
+
+def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.ndarray:
+    """
+    Retain non-null values in `values`, replacing null values with `replacements`.
+
+    Parameters:
+        values: A NumPy array containing the original values.
+        replacements: A NumPy array of replacement values.
+        is_null: A function that identifies null values in `values`.
+
+    Returns:
+        A NumPy array with non-null values retained.
+    """
+    from opteryx.managers.expression.unary_operations import _is_not_null
+
+    not_null_mask = _is_not_null(values)
+    return numpy.where(not_null_mask, replacements, values)
 
 
 def null_if(col1, col2):

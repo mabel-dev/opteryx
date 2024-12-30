@@ -230,14 +230,6 @@ def parquet_decoder(
         PredicatePushable.to_dnf(selection) if selection else (None, None)
     )
 
-    if projection == [] and selection is None:
-        # Create a boolean array with True values, one for each column in the Parquet file
-        bool_array = pyarrow.array([True] * parquet_file.metadata.num_rows, type=pyarrow.bool_())
-        # Create a PyArrow Table with the column name '*'
-        table = pyarrow.Table.from_arrays([bool_array], ["*"])
-
-        return (parquet_file.metadata.num_rows, 0, table)
-
     # Determine the columns needed for projection and filtering
     projection_set = set(p.source_column for p in projection or [])
     filter_columns = {
