@@ -49,10 +49,17 @@ class ExitNode(BasePlanNode):
         if morsel == EOS:
             if not self.at_least_one:
                 import pyarrow
+                from orso.schema import RelationSchema
+                from orso.schema import convert_orso_schema_to_arrow_schema
+
+                orso_schema = RelationSchema(
+                    name="Relation", columns=[c.schema_column for c in self.columns]
+                )
+                arrow_shema = convert_orso_schema_to_arrow_schema(orso_schema)
 
                 yield pyarrow.Table.from_arrays(
                     [pyarrow.array([]) for _ in self.columns],
-                    names=[column.current_name for column in self.columns],
+                    schema=arrow_shema,
                 )
             yield EOS
             return
