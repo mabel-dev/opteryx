@@ -125,7 +125,7 @@ class AsyncReaderNode(ReaderNode):
         read_thread.start()
 
         morsel = None
-        arrow_schema = None
+        arrow_schema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
 
         while True:
             try:
@@ -171,11 +171,8 @@ class AsyncReaderNode(ReaderNode):
 
                 morsel = struct_to_jsonb(morsel)
                 morsel = normalize_morsel(orso_schema, morsel)
-
-                if arrow_schema:
+                if morsel.column_names != ["*"]:
                     morsel = morsel.cast(arrow_schema)
-                else:
-                    arrow_schema = morsel.schema
 
                 self.statistics.blobs_read += 1
                 self.statistics.rows_read += morsel.num_rows

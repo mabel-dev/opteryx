@@ -45,8 +45,13 @@ class SortNode(BasePlanNode):
 
     def execute(self, morsel: Table, **kwargs) -> Table:
         if morsel != EOS:
-            self.morsels.append(morsel)
+            if morsel.num_rows > 0:
+                self.morsels.append(morsel)
             yield None
+            return
+
+        if len(self.morsels) == 0:
+            yield EOS
             return
 
         table = concat_tables(self.morsels, promote_options="permissive")

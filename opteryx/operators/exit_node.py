@@ -30,25 +30,7 @@ from . import BasePlanNode
 class ExitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
-        self.columns = parameters.get("columns", [])
-
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
-    @property
-    def config(self):  # pragma: no cover
-        return None
-
-    @property
-    def name(self):  # pragma: no cover
-        return "Exit"
-
-    def execute(self, morsel: Table, **kwargs) -> Table:
-        # Exit doesn't return EOS
-        if morsel == EOS:
-            yield EOS
-            return
+        self.at_least_one = False
 
         final_columns = []
         final_names = []
@@ -73,17 +55,66 @@ class ExitNode(BasePlanNode):
                 # else:
                 final_names.append(column.qualified_name)
 
-        if not set(final_columns).issubset(morsel.column_names):  # pragma: no cover
-            mapping = {name: int_name for name, int_name in zip(final_columns, final_names)}
+        self.final_columns = final_columns
+        self.final_names = final_names
+
+    @classmethod
+    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
+    @property
+    def config(self):  # pragma: no cover
+        return None
+
+    @property
+    def name(self):  # pragma: no cover
+        return "Exit"
+
+    def execute(self, morsel: Table, **kwargs) -> Table:
+        # Exit doesn't return EOS
+        if morsel == EOS:
+            if not self.at_least_one:
+                import pyarrow
+                from orso.schema import RelationSchema
+                from orso.schema import convert_orso_schema_to_arrow_schema
+
+                orso_schema = RelationSchema(
+                    name="Relation", columns=[c.schema_column for c in self.columns]
+                )
+                arrow_shema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
+
+                morsel = pyarrow.Table.from_arrays(
+                    [pyarrow.array([]) for _ in self.columns],
+                    schema=arrow_shema,
+                )
+                morsel = morsel.select(self.final_columns)
+                morsel = morsel.rename_columns(self.final_names)
+                yield morsel
+
+            yield EOS
+            return
+
+        if morsel.num_rows == 0:
+            yield None
+            return
+
+        self.at_least_one = True
+
+        if not set(self.final_columns).issubset(morsel.column_names):  # pragma: no cover
+            mapping = {
+                name: int_name for name, int_name in zip(self.final_columns, self.final_names)
+            }
             missing_references = {
-                mapping.get(ref): ref for ref in final_columns if ref not in morsel.column_names
+                mapping.get(ref): ref
+                for ref in self.final_columns
+                if ref not in morsel.column_names
             }
 
             raise InvalidInternalStateError(
                 f"The following fields were not in the resultset - {', '.join(missing_references.keys())}"
             )
 
-        morsel = morsel.select(final_columns)
-        morsel = morsel.rename_columns(final_names)
+        morsel = morsel.select(self.final_columns)
+        morsel = morsel.rename_columns(self.final_names)
 
         yield morsel

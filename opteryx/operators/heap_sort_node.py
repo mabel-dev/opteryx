@@ -71,6 +71,10 @@ class HeapSortNode(BasePlanNode):
             yield EOS
             return
 
+        if morsel.num_rows == 0:
+            yield None
+            return
+
         if self.table:
             # Concatenate the accumulated table with the new morsel
             self.table = concat_tables([self.table, morsel], promote_options="permissive")

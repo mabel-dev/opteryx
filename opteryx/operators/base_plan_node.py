@@ -39,6 +39,7 @@ class BasePlanNode:
         self.bytes_in = 0
         self.records_out = 0
         self.bytes_out = 0
+        self.columns = parameters.get("columns", [])
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -82,7 +83,9 @@ class BasePlanNode:
                 result = next(generator, END)  # Retrieve the next item from the generator
                 execution_time = time.monotonic_ns() - start_time
                 self.execution_time += execution_time
-                self.statistics.increase("time_" + self.name.lower(), execution_time)
+                self.statistics.increase(
+                    "time_" + self.name.lower().replace(" ", "_"), execution_time
+                )
 
                 # Update metrics for valid results
                 if result == END:
@@ -100,7 +103,7 @@ class BasePlanNode:
 
                     # if we get empty sets, don't yield them unless they're the only one
                     if result.num_rows > 0:
-                        self.statistics.avoided_empty_datasets += 1
+                        self.statistics.avoided_empty_morsels += 1
                         at_least_one = True
                         yield result
                         continue
