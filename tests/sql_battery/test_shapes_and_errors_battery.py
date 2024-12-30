@@ -1933,6 +1933,8 @@ STATEMENTS = [
         ("SELECT avg(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT avg(1) FROM $satellites", 1, 1, None),
         ("SELECT surface_pressure FROM $planets WHERE IFNOTNULL(surface_pressure, 0.0) == 0.0", 5, 1, None),
+        ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 10 ORDER BY followers DESC LIMIT 10", 1, 1, None),
+        ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 15 ORDER BY followers DESC LIMIT 10", 0, 1, None),
         
 
         # ****************************************************************************************

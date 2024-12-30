@@ -83,7 +83,9 @@ class BasePlanNode:
                 result = next(generator, END)  # Retrieve the next item from the generator
                 execution_time = time.monotonic_ns() - start_time
                 self.execution_time += execution_time
-                self.statistics.increase("time_" + self.name.lower(), execution_time)
+                self.statistics.increase(
+                    "time_" + self.name.lower().replace(" ", "_"), execution_time
+                )
 
                 # Update metrics for valid results
                 if result == END:
