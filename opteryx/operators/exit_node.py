@@ -64,7 +64,7 @@ class ExitNode(BasePlanNode):
             yield EOS
             return
 
-        if morsel.num_columns == 0:
+        if morsel.num_rows == 0:
             yield None
             return
 
