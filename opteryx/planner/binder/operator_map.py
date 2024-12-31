@@ -279,6 +279,9 @@ def determine_type(node) -> OrsoTypes:
     if node.value in ("NotInSubQuery", "InSubQuery"):
         return OrsoTypes.BOOLEAN
 
+    if node.schema_column:
+        return node.schema_column.type
+
     if node.left.node_type == NodeType.LITERAL:
         left_type = node.left.type
     elif node.left.schema_column:
