@@ -22,6 +22,8 @@ def tokenize_string(string):
 def format_sql(sql):  # pragma: no cover
     """
     Adds colorization to SQL statements to make it easier to find keywords and literals
+
+    It's not intended to be perfect, it's just to assist reading test outputs
     """
 
     def color_comments(string):  # pragma: no cover
@@ -56,16 +58,24 @@ def format_sql(sql):  # pragma: no cover
             if word.endswith("'"):
                 in_string_literal = False
                 formatted_sql += "\033[0m "
-        elif word in ("(", ")", ",", ";"):
+        elif word in ("(", ")", ",", ";", "[", "]"):
             formatted_sql += "\033[38;5;102m" + word + "\033[0m "
         elif word.upper() in {
             "ANALYZE",
             "ANTI",
             "AS",
+            "ASC",
             "BY",
+            "CASE",
+            "CREATE",
             "CROSS",
+            "DATE",
             "DATES",
+            "DESC",
             "DISTINCT",
+            "ELSE",
+            "END",
+            "EXECUTE",
             "EXPLAIN",
             "FOR",
             "FROM",
@@ -77,6 +87,7 @@ def format_sql(sql):  # pragma: no cover
             "JOIN",
             "LEFT",
             "LIMIT",
+            "MONTH",
             "OFFSET",
             "ON",
             "ORDER",
@@ -87,43 +98,62 @@ def format_sql(sql):  # pragma: no cover
             "SET",
             "SHOW",
             "SINCE",
+            "THEN",
             "TODAY",
             "UNION",
+            "UNNEST",
             "USE",
             "USING",
+            "WHEN",
             "WHERE",
             "WITH",
             "YESTERDAY",
         }:
             formatted_sql += "\033[38;2;139;233;253m" + word.upper() + "\033[0m "
-        elif word.upper() in ("TRUE", "FALSE", "NULL", "DAY", "MONTH", "MINUTE"):
-            formatted_sql += "\033[38;2;255;184;108m" + word.upper() + "\033[0m "
-        elif (i + 1) < len(words) and words[i + 1] == "(":
+        elif word.upper() in ("TRUE", "FALSE", "NULL"):
+            formatted_sql += "\033[38;2;255;184;188m" + word.upper() + "\033[0m "
+        elif ((i + 1) < len(words) and words[i + 1] == "(") or word.upper() in (
+            "ANY",
+            "CURRENT_TIME",
+        ):
             formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
         elif word.upper() in (
             "=",
+            "==",
             ">=",
             "<=",
             "!=",
+            "%",
             "<",
             ">",
             "<>",
             "-",
             "+",
+            "*",
+            "/",
+            "//",
+            "||",
+            "|",
+            "DIV",
             "LIKE",
             "ILIKE",
             "RLIKE",
             "NOT",
             "AND",
             "OR",
+            "XOR",
             "IN",
             "SIMILAR",
             "TO",
             "BETWEEN",
             "IS",
+            "->",
+            "->>",
+            "::",
+            "@?",
         ):
             formatted_sql += "\033[38;2;189;147;249m" + word.upper() + "\033[0m "
-        elif word.replace(".", "", 1).isdigit():
+        elif word.replace(".", "", 1).lstrip("-").isdigit():
             formatted_sql += "\033[38;2;255;184;108m" + word + "\033[0m "
         elif word == "\n":
             formatted_sql = formatted_sql.strip() + "\n"
@@ -132,7 +162,27 @@ def format_sql(sql):  # pragma: no cover
 
     formatted_sql += "\033[0m"
 
+    spaces_after = (
+        "FROM",
+        "WHERE",
+        "JOIN",
+        "/",
+        "AND",
+        "OR",
+        "NOT",
+        "XOR",
+        "+",
+        "-",
+        "*",
+        "UNION",
+        "ON",
+    )
+
     formatted_sql = formatted_sql.replace(" \033[38;5;102m(", "\033[38;5;102m(")
+    for item in spaces_after:
+        formatted_sql = formatted_sql.replace(
+            f"{item}\033[0m\033[38;5;102m(", f"{item}\033[0m \033[38;5;102m("
+        )
     formatted_sql = formatted_sql.replace("(\033[0m ", "(\033[0m")
     formatted_sql = formatted_sql.replace(" \033[38;5;102m)", "\033[38;5;102m)")
     formatted_sql = formatted_sql.replace(" \033[38;5;102m,", "\033[38;5;102m,")

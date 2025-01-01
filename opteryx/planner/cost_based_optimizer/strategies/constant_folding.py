@@ -36,6 +36,27 @@ from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
 
+def _build_if_not_null_node(root, value, value_if_not_null) -> Node:
+    node = Node(node_type=NodeType.FUNCTION)
+    node.value = "IFNOTNULL"
+    node.parameters = [value, value_if_not_null]
+    node.schema_column = root.schema_column
+    node.query_column = root.query_column
+    return node
+
+
+def _build_passthru_node(root, value) -> Node:
+    if root.node_type == NodeType.COMPARISON_OPERATOR:
+        return root
+
+    node = Node(node_type=NodeType.FUNCTION)
+    node.value = "PASSTHRU"
+    node.parameters = [value]
+    node.schema_column = root.schema_column
+    node.query_column = root.query_column
+    return node
+
+
 def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
     if root.node_type == NodeType.LITERAL:
         # if we're already a literal (constant), we can't fold
@@ -58,70 +79,70 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 and root.right.node_type == NodeType.IDENTIFIER
                 and root.left.value == 0
             ):
-                # 0 * anything = 0
-                root.left.schema_column = root.schema_column
+                # 0 * anything = 0 (except NULL)
+                node = _build_if_not_null_node(root, root.right, build_literal_node(0))
                 statistics.optimization_constant_fold_reduce += 1
-                return root.left  # 0
+                return node
             if (
                 root.value == "Multiply"
                 and root.right.node_type == NodeType.LITERAL
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.value == 0
             ):
-                # anything * 0 = 0
-                root.right.schema_column = root.schema_column
+                # anything * 0 = 0 (except NULL)
+                node = _build_if_not_null_node(root, root.left, build_literal_node(0))
                 statistics.optimization_constant_fold_reduce += 1
-                return root.right  # 0
+                return node
             if (
                 root.value == "Multiply"
                 and root.left.node_type == NodeType.LITERAL
                 and root.right.node_type == NodeType.IDENTIFIER
                 and root.left.value == 1
             ):
-                # 1 * anything = anything
-                root.right.query_column = root.query_column
+                # 1 * anything = anything (except NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_reduce += 1
-                return root.right  # anything
+                return node
             if (
                 root.value == "Multiply"
                 and root.right.node_type == NodeType.LITERAL
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.value == 1
             ):
-                # anything * 1 = anything
-                root.left.query_column = root.query_column
+                # anything * 1 = anything (except NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_reduce += 1
-                return root.left  # anything
+                return node
             if (
                 root.value in "Plus"
                 and root.left.node_type == NodeType.LITERAL
                 and root.right.node_type == NodeType.IDENTIFIER
                 and root.left.value == 0
             ):
-                # 0 + anything = anything
-                root.right.query_column = root.query_column
+                # 0 + anything = anything (except NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_reduce += 1
-                return root.right  # anything
+                return node
             if (
                 root.value in ("Plus", "Minus")
                 and root.right.node_type == NodeType.LITERAL
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.value == 0
             ):
-                # anything +/- 0 = anything
-                root.left.query_column = root.query_column
+                # anything +/- 0 = anything (except NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_reduce += 1
-                return root.left  # anything
+                return node
             if (
                 root.value == "Divide"
                 and root.right.node_type == NodeType.LITERAL
                 and root.left.node_type == NodeType.IDENTIFIER
                 and root.right.value == 1
             ):
-                # anything / 1 = anything
-                root.left.schema_column = root.schema_column
+                # anything / 1 = anything (except NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_reduce += 1
-                return root.left  # anything
+                return node
 
         if root.node_type == NodeType.COMPARISON_OPERATOR:
             # anything LIKE '%' is true for non null values
@@ -138,6 +159,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 node.schema_column = root.schema_column
                 node.centre = root.left
                 node.query_column = root.query_column
+                node.alias = root.alias
                 statistics.optimization_constant_fold_reduce += 1
                 return node
 
@@ -154,37 +176,37 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 and root.left.type == OrsoTypes.BOOLEAN
                 and root.left.value
             ):
-                # True OR anything is True
-                root.left.schema_column = root.schema_column
+                # True OR anything is True (including NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.left
+                return node
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and root.right.value
             ):
-                # anything OR True is True
-                root.right.schema_column = root.schema_column
+                # anything OR True is True (including NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.right
+                return node
             if (
                 root.left.node_type == NodeType.LITERAL
                 and root.left.type == OrsoTypes.BOOLEAN
                 and not root.left.value
             ):
-                # False OR anything is anything
-                root.right.schema_column = root.schema_column
+                # False OR anything is anything (except NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.right
+                return node
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and not root.right.value
             ):
-                # anything OR False is anything
-                root.left.schema_column = root.schema_column
+                # anything OR False is anything (except NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.left
+                return node
 
         elif root.node_type == NodeType.AND:
             if (
@@ -192,37 +214,38 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 and root.left.type == OrsoTypes.BOOLEAN
                 and not root.left.value
             ):
-                # False AND anything is False
-                root.left.schema_column = root.schema_column
+                # False AND anything is False (including NULL)
+                node = _build_passthru_node(root, root.left)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.left
+                return node
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and not root.right.value
             ):
-                # anything AND False is False
-                root.right.schema_column = root.schema_column
+                # anything AND False is False (including NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.right
+                return node
             if (
                 root.left.node_type == NodeType.LITERAL
                 and root.left.type == OrsoTypes.BOOLEAN
                 and root.left.value
             ):
-                # True AND anything is anything
-                root.right.schema_column = root.schema_column
+                # True AND anything is anything (except NULL)
+                node = _build_passthru_node(root, root.right)
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.right
+                return node
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and root.right.value
             ):
-                # anything AND True is anything
-                root.left.schema_column = root.schema_column
+                # anything AND True is anything (except NULL)
+                node = _build_passthru_node(root, root.left)
+                node.type = OrsoTypes.BOOLEAN
                 statistics.optimization_constant_fold_boolean_reduce += 1
-                return root.left
+                return node
 
         return root
 
@@ -248,6 +271,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 statistics.optimization_constant_aggregation += 1
                 return root
             if agg.value in ("AVG", "MIN", "MAX"):
+                # AVG, MIN, MAX of a constant is the constant
                 statistics.optimization_constant_aggregation += 1
                 return build_literal_node(agg.parameters[0].value, root, root.schema_column.type)
 
@@ -284,6 +308,20 @@ class ConstantFoldingStrategy(OptimizationStrategy):
         # fold constants when referenced in the SELECT clause
         if node.node_type == LogicalPlanStepType.Project:
             node.columns = [fold_constants(c, self.statistics) for c in node.columns]
+            context.optimized_plan[context.node_id] = node
+
+        # remove nesting in order by and group by clauses
+        if node.node_type == LogicalPlanStepType.Order:
+            new_order_by = []
+            for field, order in node.order_by:
+                while field.node_type == NodeType.NESTED:
+                    field = field.centre
+                new_order_by.append((field, order))
+            node.order_by = new_order_by
+            context.optimized_plan[context.node_id] = node
+
+        if node.node_type == LogicalPlanStepType.AggregateAndGroup:
+            node.groups = [g.centre if g.node_type == NodeType.NESTED else g for g in node.groups]
             context.optimized_plan[context.node_id] = node
 
         return context

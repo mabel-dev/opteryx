@@ -266,7 +266,6 @@ def substring(
             _from -= 1
         _for = int(_for) if _for and _for == _for else None  # nosec
         if _for is None:
-            print(val, _from)
             return val[_from:]
         return val[_from : _for + _from]
 
