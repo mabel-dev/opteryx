@@ -354,6 +354,7 @@ FUNCTIONS = {
     "STR": cast_varchar,
     "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x)) if x is not None else None),
     "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
+    "PASSTHRU": lambda x: x,
     "BLOB": cast_blob,
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),

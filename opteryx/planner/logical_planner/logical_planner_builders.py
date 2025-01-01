@@ -575,6 +575,7 @@ def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
         value=key,
         left=left,
         right=right,
+        alias=alias,
     )
 
 

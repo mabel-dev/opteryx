@@ -85,7 +85,7 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
     return results_mask
 
 
-def if_null(values, replacement):
+def if_null(values, replacements):
     """
     Replace null values in the input array with corresponding values from the replacement array.
 
@@ -102,10 +102,10 @@ def if_null(values, replacement):
     from opteryx.managers.expression.unary_operations import _is_null
 
     # Create a mask for null values
-    is_null_array = _is_null(values)
+    is_null_mask = _is_null(values)
 
     # Use NumPy's where function to vectorize the operation
-    return numpy.where(is_null_array, replacement, values)
+    return numpy.where(is_null_mask, replacements, values).astype(replacements.dtype)
 
 
 def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.ndarray:
@@ -122,8 +122,8 @@ def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.nda
     """
     from opteryx.managers.expression.unary_operations import _is_not_null
 
-    not_null_mask = _is_not_null(values)
-    return numpy.where(not_null_mask, replacements, values)
+    is_not_null_mask = _is_not_null(values)
+    return numpy.where(is_not_null_mask, replacements, values).astype(replacements.dtype)
 
 
 def null_if(col1, col2):

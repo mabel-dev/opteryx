@@ -28,7 +28,7 @@ from opteryx.models import QueryProperties
 
 from . import JoinNode
 
-INTERNAL_BATCH_SIZE: int = 7500  # config
+INTERNAL_BATCH_SIZE: int = 10000  # config
 MAX_JOIN_SIZE: int = 1000  # config
 MORSEL_SIZE_BYTES: int = 16 * 1024 * 1024
 CROSS_JOIN_UNNEST_BATCH_SIZE = 10000
@@ -115,9 +115,9 @@ def _cross_join_unnest_column(
             else:
                 # Rebuild the block with the new column data if we have any rows to build for
 
-                total_rows = len(indices)  # Both arrays have the same length
+                total_rows = indices.size  # Both arrays have the same length
                 block_size = MORSEL_SIZE_BYTES / (left_block.nbytes / left_block.num_rows)
-                block_size = int(block_size // 1000) * 1000
+                block_size = int(block_size / 1000) * 1000
 
                 for start_block in range(0, total_rows, block_size):
                     # Compute the end index for the current chunk
@@ -128,7 +128,7 @@ def _cross_join_unnest_column(
                     new_column_data_chunk = new_column_data[start_block:end_block]
 
                     # Create a new block using the chunk of indices
-                    indices_chunk = numpy.array(indices_chunk, dtype=numpy.int32)
+                    indices_chunk = numpy.array(indices_chunk, dtype=numpy.int64)
                     new_block = left_block.take(indices_chunk)
                     new_block = pyarrow.Table.from_batches([new_block], schema=morsel.schema)
 
