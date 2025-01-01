@@ -334,6 +334,7 @@ We’re actively adding features and improving performance.
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
 - **[tarchia](https://github.com/mabel-dev/mabel)** Data Catalog  
 
+<!---
 ## Thank You
 
 A huge thank you to our amazing sponsor:
@@ -345,3 +346,4 @@ A huge thank you to our amazing sponsor:
 
 Want to see your name here?  
 [Become a sponsor](https://github.com/sponsors/mabel-dev) to support Opteryx and join our journey!
+--->

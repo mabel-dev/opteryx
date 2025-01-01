@@ -21,6 +21,7 @@ import pyarrow
 from orso.tools import random_string
 from orso.types import OrsoTypes
 from pyarrow import Table
+from pyarrow import compute
 
 from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -107,7 +108,8 @@ def short_cut_and(root, table):
 
     # Evaluate left expression
     left_result = numpy.array(evaluate(root.left, table))
-    left_result = numpy.asarray(left_result, dtype=bool)
+    null_indices = compute.is_null(left_result, nan_is_null=True).to_numpy(False)
+    left_result = numpy.asarray(left_result, dtype=numpy.bool_)
 
     # If all values in left_result are False, no need to evaluate the right expression
     if not left_result.any():
@@ -123,8 +125,13 @@ def short_cut_and(root, table):
     right_result = numpy.array(evaluate(root.right, subset_table))
 
     # Combine results
-    # Iterate over subset_indices and update left_result at those positions
     left_result[subset_indices] = right_result
+
+    # handle nulls
+    if null_indices.any():
+        left_result = left_result.astype(object)
+        numpy.place(left_result, null_indices, [None])
+        return left_result
 
     return left_result
 
@@ -134,7 +141,9 @@ def short_cut_or(root, table):
     false_indices = numpy.arange(table.num_rows)
 
     # Evaluate left expression
-    left_result = numpy.array(evaluate(root.left, table), dtype=numpy.bool_)
+    left_result = numpy.array(evaluate(root.left, table))
+    null_indices = compute.is_null(left_result, nan_is_null=True).to_numpy(False)
+    left_result = numpy.asarray(left_result, dtype=numpy.bool_)
 
     # Filter out indices where left_result is TRUE
     subset_indices = false_indices[~left_result]
@@ -151,6 +160,12 @@ def short_cut_or(root, table):
     # Combine results
     # Update left_result with the right_result where left_result was False
     left_result[subset_indices] = left_result[subset_indices] | right_result
+
+    # handle nulls
+    if null_indices.any():
+        left_result = left_result.astype(object)
+        numpy.place(left_result, null_indices, [None])
+        return left_result
 
     return left_result
 
