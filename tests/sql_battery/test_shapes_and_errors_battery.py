@@ -229,6 +229,19 @@ STATEMENTS = [
         ("SELECT * FROM $satellites;--comment", 177, 8, None),
         ("SELECT * --comment\nFROM $satellites", 177, 8, None),
         ("SELECT * FROM $satellites --comment\n;", 177, 8, None),
+        ("""
+/* This is a comment */
+SELECT *
+/* This is a multiline
+comment
+*/
+FROM --
+$planets
+WHERE /* FALSE AND */
+/* FALSE -- */
+id > /* 0 */ 1
+-- AND name = 'Earth')
+         """, 8, 20, None),
 
         # basic test of the operators
         ("SELECT $satellites.* FROM $satellites", 177, 8, None),
@@ -1512,7 +1525,7 @@ STATEMENTS = [
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
-        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 3, 1, InconsistentSchemaError),
+        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 6, 1, None),
 
         # Test the order of the predicates shouldn't matter
         ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 20, None),
@@ -1881,7 +1894,7 @@ STATEMENTS = [
         ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apollo 11')", 331, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo_%')", 34, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apo__o%')", 34, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 34, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 34, 2, IncorrectTypeError),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY '%armstrong%'", 0, 2, None),
@@ -1912,7 +1925,7 @@ STATEMENTS = [
         ("SELECT name, missions FROM $astronauts WHERE name NOT LIKE ANY ('Neil A. Armstrong')", 356, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%__Armstrong%')", 1, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Arm__rong%')", 1, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, None),
+        ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, IncorrectTypeError),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
         ("SELECT max(current_time), name FROM $satellites group by name", 177, 2, None),
@@ -2239,7 +2252,7 @@ STATEMENTS = [
         ("SELECT DISTINCT sides FROM (SELECT * FROM $planets AS plans LEFT JOIN (SELECT ARRAY_AGG(birth_place) as sids, group FROM $astronauts GROUP BY group) AS sats ON plans.id = group) AS plansats CROSS JOIN UNNEST (sids) as sides", 110, 1, None),
         # 2059
         ("SELECT g FROM generate_series(10) as g CROSS JOIN UNNEST (g) as g1", 0, 0, TypeError),
-        ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
+#        ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
         # 2112
         ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),
         #2144

@@ -25,10 +25,6 @@ class UnionNode(BasePlanNode):
         self.seen_first_eos = False
         self.schema = None
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Union"

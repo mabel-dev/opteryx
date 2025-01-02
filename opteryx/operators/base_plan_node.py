@@ -41,10 +41,7 @@ class BasePlanNode:
         self.bytes_out = 0
         self.columns = parameters.get("columns", [])
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
+    @property
     def config(self) -> str:
         return ""
 

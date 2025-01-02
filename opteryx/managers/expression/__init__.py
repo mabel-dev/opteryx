@@ -203,7 +203,7 @@ def _inner_evaluate(root: Node, table: Table):
         literal_type = root.type
         if literal_type == OrsoTypes.ARRAY:
             # creating ARRAY columns is expensive, so we don't create one full length
-            return numpy.array([root.value])
+            return numpy.array([root.value], dtype=numpy.ndarray)
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if literal_type == OrsoTypes.BLOB:
@@ -319,7 +319,7 @@ def get_all_nodes_of_type(root, select_nodes: tuple) -> list:
 
     while stack:
         node = stack.pop()
-        if node.node_type in select_nodes:
+        if select_nodes == ("*",) or node.node_type in select_nodes:
             identifiers.append(node)
         if node.parameters:
             stack.extend(
@@ -360,7 +360,26 @@ def evaluate_and_append(expressions, table: Table):
 
             if isinstance(new_column, pyarrow.ChunkedArray):
                 new_column = new_column.combine_chunks()
-            table = table.append_column(statement.schema_column.identity, new_column)
+
+            # if we know the intended type of the result column, cast it
+            field = statement.schema_column.identity
+            if statement.schema_column.type in (OrsoTypes.ARRAY,):
+                pass
+            elif statement.schema_column.type not in (
+                0,
+                OrsoTypes._MISSING_TYPE,
+                OrsoTypes.INTERVAL,
+            ):
+                field = pyarrow.field(
+                    name=statement.schema_column.identity,
+                    type=statement.schema_column.arrow_field.type,
+                )
+                if isinstance(new_column, pyarrow.Array):
+                    new_column = new_column.cast(field.type)
+                else:
+                    new_column = pyarrow.array(new_column[0], type=field.type)
+
+            table = table.append_column(field, new_column)
 
     return table
 

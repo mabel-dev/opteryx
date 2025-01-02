@@ -31,10 +31,6 @@ class SortNode(BasePlanNode):
         self.order_by = parameters.get("order_by", [])
         self.morsels = []
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def config(self):  # pragma: no cover
         return ", ".join([f"{i[0].value} {i[1][0:3].upper()}" for i in self.order_by])

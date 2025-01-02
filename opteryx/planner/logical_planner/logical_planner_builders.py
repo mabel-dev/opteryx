@@ -565,6 +565,10 @@ def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
         key = f"Not{key}"
     if is_any:
         key = f"AnyOp{key}"
+        if right.node_type == NodeType.IDENTIFIER:
+            raise UnsupportedSyntaxError(
+                "LIKE ANY syntax incorrect, `column LIKE ANY (patterns)` expected."
+            )
         if right.node_type == NodeType.NESTED:
             right = right.centre
         if right.type != OrsoTypes.ARRAY:

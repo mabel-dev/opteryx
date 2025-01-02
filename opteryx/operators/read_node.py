@@ -157,10 +157,6 @@ class ReaderNode(BasePlanNode):
             "filters": self.predicates,
         }
 
-    @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         """friendly name for this step"""

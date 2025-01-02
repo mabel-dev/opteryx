@@ -23,6 +23,7 @@ from orso.types import OrsoTypes
 
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 
 
@@ -52,8 +53,17 @@ class PredicatePushable:
     PUSHABLE_TYPES: set = {t for t in OrsoTypes}
 
     def can_push(self, operator: Node, types: set = None) -> bool:
+        # we can only push simple expressions
+        all_nodes = get_all_nodes_of_type(operator.condition, ("*",))
+        if any(
+            n.node_type not in (NodeType.IDENTIFIER, NodeType.LITERAL, NodeType.COMPARISON_OPERATOR)
+            for n in all_nodes
+        ):
+            return False
+        # we can only push certain types
         if types and not types.issubset(self.PUSHABLE_TYPES):
             return False
+        # we can only push certain operators
         return self.PUSHABLE_OPS.get(operator.condition.value, False)
 
     def __init__(self, **kwargs):

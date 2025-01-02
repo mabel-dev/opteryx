@@ -291,10 +291,6 @@ class CrossJoinNode(JoinNode):
 
         self.continue_executing = True
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Cross Join"

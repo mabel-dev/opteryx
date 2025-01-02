@@ -85,10 +85,6 @@ class InnerJoinNode(JoinNode):
 
         self.lock = Lock()
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Inner Join"
@@ -110,17 +106,6 @@ class InnerJoinNode(JoinNode):
                     start = time.monotonic_ns()
                     self.left_hash = hash_join_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
-
-                    for right_morsel in self.right_buffer:
-                        yield inner_join_with_preprocessed_left_side(
-                            left_relation=self.left_relation,
-                            right_relation=right_morsel,
-                            join_columns=self.right_columns,
-                            hash_table=self.left_hash,
-                        )
-                    self.right_buffer.clear()
-
-                    return
                 else:
                     self.left_buffer.append(morsel)
                 yield None
@@ -129,12 +114,6 @@ class InnerJoinNode(JoinNode):
             if join_leg == "right":
                 if morsel == EOS:
                     yield EOS
-                    return
-
-                if self.left_hash is None:
-                    # if we've not built the hash map, cache this morsel
-                    self.right_buffer.append(morsel)
-                    yield None
                     return
 
                 # do the join

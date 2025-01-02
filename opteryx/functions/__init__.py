@@ -15,6 +15,7 @@ import numpy
 import orjson
 import pyarrow
 from orso.cityhash import CityHash64
+from orso.types import OrsoTypes
 from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
@@ -202,7 +203,7 @@ def try_cast(_type):
         "DECIMAL": decimal.Decimal,
         "VARCHAR": lambda x: str(x) if x is not None else x,
         "TIMESTAMP": dates.parse_iso,
-        "STRUCT": orjson.loads,
+        "STRUCT": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
         "DATE": lambda x: dates.parse_iso(x).date(),
     }
     if _type in casters:
@@ -335,161 +336,159 @@ DEPRECATED_FUNCTIONS = {
 # The type is needed particularly when returning Python objects that
 # the first entry is NONE.
 FUNCTIONS = {
-    "VERSION": lambda x: None, # *
-    "CONNECTION_ID": lambda x: None, # *
-    "DATABASE": lambda x: None, # *
-    "USER": lambda x: None, # *
-    # DEBUG: "SLEEP": lambda x: [sleep(x)], # SLEEP is only available in 'debug' mode
+    "VERSION": (lambda x: None, OrsoTypes.VARCHAR, 1.0),
+    "CONNECTION_ID": (lambda x: None, OrsoTypes.VARCHAR, 1.0),
+    "DATABASE": (lambda x: None, OrsoTypes.VARCHAR, 1.0),
+    "USER": (lambda x: None, OrsoTypes.VARCHAR, 1.0),
+    # DEBUG: "SLEEP": (lambda x: [sleep(x)], OrsoTypes.NULL, 1.0), # SLEEP is only available in 'debug' mode
 
     # TYPE CONVERSION
-    "TIMESTAMP": lambda x: compute.cast(x, pyarrow.timestamp("us")),
-    "BOOLEAN": lambda x: compute.cast(x, "bool"),
-    "NUMERIC": lambda x: compute.cast(x, "float64"),
-    "INTEGER": lambda x: compute.cast(x, "int64", safe=False),
-    "DOUBLE": lambda x: compute.cast(x, "float64"),
-    "FLOAT": lambda x: compute.cast(x, "float64"),
-    "DECIMAL": lambda x: compute.cast(x, pyarrow.decimal128(19)),
-    "VARCHAR": cast_varchar,
-    "STRING": cast_varchar,
-    "STR": cast_varchar,
-    "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x)) if x is not None else None),
-    "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
-    "PASSTHRU": lambda x: x,
-    "BLOB": cast_blob,
-    "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
-    "TRY_BOOLEAN": try_cast("BOOLEAN"),
-    "TRY_NUMERIC": try_cast("DOUBLE"),
-    "TRY_VARCHAR": try_cast("VARCHAR"),
-    "TRY_BLOB": try_cast("BLOB"),
-    "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
-    "TRY_STRUCT": try_cast("STRUCT"),
-    "TRY_INTEGER": try_cast("INTEGER"),
-    "TRY_DECIMAL": try_cast("DECIMAL"),
-    "TRY_DOUBLE": try_cast("DOUBLE"),
-    "TRY_DATE": try_cast("DATE"),
+    "TIMESTAMP": (lambda x: compute.cast(x, pyarrow.timestamp("us")), OrsoTypes.TIMESTAMP, 1.0),
+    "BOOLEAN": (lambda x: compute.cast(x, "bool"), OrsoTypes.BOOLEAN, 1.0),
+    "NUMERIC": (lambda x: compute.cast(x, "float64"), OrsoTypes.DOUBLE, 1.0),
+    "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), OrsoTypes.INTEGER, 1.0),
+    "DOUBLE": (lambda x: compute.cast(x, "float64"), OrsoTypes.DOUBLE, 1.0),
+    "FLOAT": (lambda x: compute.cast(x, "float64"), OrsoTypes.DOUBLE, 1.0),
+    "DECIMAL": (lambda x: compute.cast(x, pyarrow.decimal128(19)), OrsoTypes.DECIMAL, 1.0),
+    "VARCHAR": (cast_varchar, OrsoTypes.VARCHAR, 1.0),
+    "STRING": (cast_varchar, OrsoTypes.VARCHAR, 1.0),
+    "STR": (cast_varchar, OrsoTypes.VARCHAR, 1.0),
+    "STRUCT": (try_cast("BLOB"), OrsoTypes.BLOB, 1.0),
+    "DATE": (lambda x: compute.cast(x, pyarrow.date32()), OrsoTypes.DATE, 1.0),
+    "PASSTHRU": (lambda x: x, 0, 1.0),
+    "BLOB": (cast_blob, OrsoTypes.BLOB, 1.0),
+    "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), OrsoTypes.TIMESTAMP, 1.0),
+    "TRY_BOOLEAN": (try_cast("BOOLEAN"), OrsoTypes.BOOLEAN, 1.0),
+    "TRY_NUMERIC": (try_cast("DOUBLE"), OrsoTypes.DOUBLE, 1.0),
+    "TRY_VARCHAR": (try_cast("VARCHAR"), OrsoTypes.VARCHAR, 1.0),
+    "TRY_BLOB": (try_cast("BLOB"), OrsoTypes.BLOB, 1.0),
+    "TRY_STRING": (try_cast("VARCHAR"), OrsoTypes.VARCHAR, 1.0),
+    "TRY_STRUCT": (try_cast("STRUCT"), OrsoTypes.STRUCT, 1.0),
+    "TRY_INTEGER": (try_cast("INTEGER"), OrsoTypes.INTEGER, 1.0),
+    "TRY_DECIMAL": (try_cast("DECIMAL"), OrsoTypes.DECIMAL, 1.0),
+    "TRY_DOUBLE": (try_cast("DOUBLE"), OrsoTypes.DOUBLE, 1.0),
+    "TRY_DATE": (try_cast("DATE"), OrsoTypes.DATE, 1.0),
 
     # CHARS
-    "CHAR": string_functions.to_char,
-    "ASCII": string_functions.to_ascii,
+    "CHAR": (string_functions.to_char, OrsoTypes.VARCHAR, 1.0),
+    "ASCII": (string_functions.to_ascii, OrsoTypes.INTEGER, 1.0),
 
     # STRINGS
-    "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
-    "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
-    "UPPER": compute.utf8_upper,  # UPPER(str) -> str
-    "LOWER": compute.utf8_lower,  # LOWER(str) -> str
-    "LEFT": string_functions.string_slicer_left,
-    "RIGHT": string_functions.string_slicer_right,
-    "REVERSE": compute.utf8_reverse,
-    "SOUNDEX": string_functions.soundex,
-    "TITLE": compute.utf8_title,
-    "CONCAT": string_functions.concat,
-    "CONCAT_WS": string_functions.concat_ws,
-    "STARTS_WITH": string_functions.starts_w,
-    "ENDS_WITH": string_functions.ends_w,
-    "SUBSTRING": string_functions.substring,
-    "POSITION": _iterate_double_parameter(string_functions.position),
-    "TRIM": string_functions.trim,
-    "LTRIM": string_functions.ltrim,
-    "RTRIM": string_functions.rtrim,
-    "LPAD": string_functions.left_pad,
-    "RPAD": string_functions.right_pad,
-    "LEVENSHTEIN": string_functions.levenshtein,
-    "SPLIT": string_functions.split,
-    "MATCH_AGAINST": string_functions.match_against,
-    "REGEXP_REPLACE": string_functions.regex_replace,
+    "LEN": (_iterate_single_parameter(get_len), OrsoTypes.INTEGER, 1.0),  # LENGTH(str) -> int
+    "LENGTH": (_iterate_single_parameter(get_len), OrsoTypes.INTEGER, 1.0),  # LENGTH(str) -> int
+    "UPPER": (compute.utf8_upper, OrsoTypes.VARCHAR, 1.0),  # UPPER(str) -> str
+    "LOWER": (compute.utf8_lower, OrsoTypes.VARCHAR, 1.0),  # LOWER(str) -> str
+    "LEFT": (string_functions.string_slicer_left, OrsoTypes.VARCHAR, 1.0),
+    "RIGHT": (string_functions.string_slicer_right, OrsoTypes.VARCHAR, 1.0),
+    "REVERSE": (compute.utf8_reverse, OrsoTypes.VARCHAR, 1.0),
+    "SOUNDEX": (string_functions.soundex, OrsoTypes.VARCHAR, 1.0),
+    "TITLE": (compute.utf8_title, OrsoTypes.VARCHAR, 1.0),
+    "CONCAT": (string_functions.concat, OrsoTypes.VARCHAR, 1.0),
+    "CONCAT_WS": (string_functions.concat_ws, OrsoTypes.VARCHAR, 1.0),
+    "STARTS_WITH": (string_functions.starts_w, OrsoTypes.BOOLEAN, 1.0),
+    "ENDS_WITH": (string_functions.ends_w, OrsoTypes.BOOLEAN, 1.0),
+    "SUBSTRING": (string_functions.substring, OrsoTypes.VARCHAR, 1.0),
+    "POSITION": (_iterate_double_parameter(string_functions.position), OrsoTypes.INTEGER, 1.0),
+    "TRIM": (string_functions.trim, OrsoTypes.VARCHAR, 1.0),
+    "LTRIM": (string_functions.ltrim, OrsoTypes.VARCHAR, 1.0),
+    "RTRIM": (string_functions.rtrim, OrsoTypes.VARCHAR, 1.0),
+    "LPAD": (string_functions.left_pad, OrsoTypes.VARCHAR, 1.0),
+    "RPAD": (string_functions.right_pad, OrsoTypes.VARCHAR, 1.0),
+    "LEVENSHTEIN": (string_functions.levenshtein, OrsoTypes.INTEGER, 1.0),
+    "SPLIT": (string_functions.split, OrsoTypes.ARRAY, 1.0),
+    "MATCH_AGAINST": (string_functions.match_against, OrsoTypes.BOOLEAN, 1.0),
+    "REGEXP_REPLACE": (string_functions.regex_replace, OrsoTypes.VARCHAR, 1.0),
 
     # HASHING & ENCODING
-    "HASH": _iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]),
-    "MD5": _iterate_single_parameter(string_functions.get_md5),
-    "SHA1": _iterate_single_parameter(string_functions.get_sha1),
-    "SHA224": _iterate_single_parameter(string_functions.get_sha224),
-    "SHA256": _iterate_single_parameter(string_functions.get_sha256),
-    "SHA384": _iterate_single_parameter(string_functions.get_sha384),
-    "SHA512": _iterate_single_parameter(string_functions.get_sha512),
-    "RANDOM": number_functions.random_number,
-    "RAND": number_functions.random_number,
-    "NORMAL": number_functions.random_normal,
-    "RANDOM_STRING": number_functions.random_string,
-    "BASE64_ENCODE": _iterate_single_parameter(string_functions.get_base64_encode),
-    "BASE64_DECODE": _iterate_single_parameter(string_functions.get_base64_decode),
-    "BASE85_ENCODE": _iterate_single_parameter(string_functions.get_base85_encode),
-    "BASE85_DECODE": _iterate_single_parameter(string_functions.get_base85_decode),
-    "HEX_ENCODE": _iterate_single_parameter(string_functions.get_hex_encode),
-    "HEX_DECODE": _iterate_single_parameter(string_functions.get_hex_decode),
+    "HASH": (_iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]), OrsoTypes.BLOB, 1.0),
+    "MD5": (_iterate_single_parameter(string_functions.get_md5), OrsoTypes.BLOB, 1.0),
+    "SHA1": (_iterate_single_parameter(string_functions.get_sha1), OrsoTypes.BLOB, 1.0),
+    "SHA224": (_iterate_single_parameter(string_functions.get_sha224), OrsoTypes.BLOB, 1.0),
+    "SHA256": (_iterate_single_parameter(string_functions.get_sha256), OrsoTypes.BLOB, 1.0),
+    "SHA384": (_iterate_single_parameter(string_functions.get_sha384), OrsoTypes.BLOB, 1.0),
+    "SHA512": (_iterate_single_parameter(string_functions.get_sha512), OrsoTypes.BLOB, 1.0),
+    "RANDOM": (number_functions.random_number, OrsoTypes.DOUBLE, 1.0),
+    "RAND": (number_functions.random_number, OrsoTypes.DOUBLE, 1.0),
+    "NORMAL": (number_functions.random_normal, OrsoTypes.DOUBLE, 1.0),
+    "RANDOM_STRING": (number_functions.random_string, OrsoTypes.BLOB, 1.0),
+    "BASE64_ENCODE": (_iterate_single_parameter(string_functions.get_base64_encode), OrsoTypes.BLOB, 1.0),
+    "BASE64_DECODE": (_iterate_single_parameter(string_functions.get_base64_decode), OrsoTypes.BLOB, 1.0),
+    "BASE85_ENCODE": (_iterate_single_parameter(string_functions.get_base85_encode), OrsoTypes.BLOB, 1.0),
+    "BASE85_DECODE": (_iterate_single_parameter(string_functions.get_base85_decode), OrsoTypes.BLOB, 1.0),
+    "HEX_ENCODE": (_iterate_single_parameter(string_functions.get_hex_encode), OrsoTypes.BLOB, 1.0),
+    "HEX_DECODE": (_iterate_single_parameter(string_functions.get_hex_decode), OrsoTypes.BLOB, 1.0),
+
 
     # OTHER
-    "GET": _get,
-    "GET_STRING": _get_string,
-    "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
-    "ARRAY_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
-    "LIST_CONTAINS_ANY": list_contains_any, 
-    "ARRAY_CONTAINS_ANY": list_contains_any, 
-    "LIST_CONTAINS_ALL": other_functions.list_contains_all,
-    "ARRAY_CONTAINS_ALL": other_functions.list_contains_all,
-    "SEARCH": other_functions.search,
-    "COALESCE": _coalesce,
-    "IFNULL": other_functions.if_null,
-    "IFNOTNULL": other_functions.if_not_null,
-    "SORT": _sort(numpy.sort),
-    "GREATEST": _iterate_single_parameter(numpy.nanmax),
-    "LEAST": _iterate_single_parameter(numpy.nanmin),
-    "IIF": numpy.where,
-#    "GENERATE_SERIES": series.generate_series,
-    "NULLIF": other_functions.null_if,
-    "CASE": select_values, #other_functions.case_when,
-    "JSONB_OBJECT_KEYS": other_functions.jsonb_object_keys,
+    "GET": (_get, 0, 1.0),
+    "GET_STRING": (_get_string, OrsoTypes.VARCHAR, 1.0),
+    "LIST_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), OrsoTypes.BOOLEAN, 1.0),
+    "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), OrsoTypes.BOOLEAN, 1.0),
+    "LIST_CONTAINS_ANY": (list_contains_any, OrsoTypes.BOOLEAN, 1.0),
+    "ARRAY_CONTAINS_ANY": (list_contains_any, OrsoTypes.BOOLEAN, 1.0),
+    "LIST_CONTAINS_ALL": (other_functions.list_contains_all, OrsoTypes.BOOLEAN, 1.0),
+    "ARRAY_CONTAINS_ALL": (other_functions.list_contains_all, OrsoTypes.BOOLEAN, 1.0),
+    "SEARCH": (other_functions.search, OrsoTypes.BOOLEAN, 1.0),
+    "COALESCE": (_coalesce, 0, 1.0),
+    "IFNULL": (other_functions.if_null, 0, 1.0),
+    "IFNOTNULL": (other_functions.if_not_null, 0, 1.0),
+    "SORT": (_sort(numpy.sort), OrsoTypes.ARRAY, 1.0),
+    "GREATEST": (_iterate_single_parameter(numpy.nanmax), 0, 1.0),
+    "LEAST": (_iterate_single_parameter(numpy.nanmin), 0, 1.0),
+    "IIF": (numpy.where, 0, 1.0),
+    "NULLIF": (other_functions.null_if, 0, 1.0),
+    "CASE": (select_values, 0, 1.0),
+    "JSONB_OBJECT_KEYS": (other_functions.jsonb_object_keys, OrsoTypes.ARRAY, 1.0),
+
 
     # Vector
-    "COSINE_SIMILARITY": other_functions.cosine_similarity,
+    "COSINE_SIMILARITY": (other_functions.cosine_similarity, OrsoTypes.DOUBLE, 1.0),
 
     # NUMERIC
-    "ROUND": number_functions.round,
-    "FLOOR": number_functions.floor,
-    "CEIL": number_functions.ceiling,
-    "CEILING": number_functions.ceiling, # deprecated, remove 0.19.0
-    "ABS": compute.abs,
-    "ABSOLUTE": compute.abs, # deprecated, remove 0.19.0
-    "SIGN": compute.sign,
-    "SIGNUM": compute.sign,
-    "SQRT": compute.sqrt,
-    "TRUNC": compute.trunc,
-    "TRUNCATE": compute.trunc,  # deprecated, remove 0.19.0
-    "PI": lambda x: None, # *
-    "PHI": lambda x: None, # *
-    "E": lambda x: None, # *
-    "INT": _iterate_single_parameter(int),
-    "POWER": number_functions.safe_power,
-    "LN": compute.ln,
-    "LOG10": compute.log10,
-    "LOG2": compute.log2,
-    "LOG": compute.logb,
+    "ROUND": (number_functions.round, OrsoTypes.DOUBLE, 1.0),
+    "FLOOR": (number_functions.floor, OrsoTypes.DOUBLE, 1.0),
+    "CEIL": (number_functions.ceiling, OrsoTypes.DOUBLE, 1.0),
+    "CEILING": (number_functions.ceiling, OrsoTypes.DOUBLE, 1.0),  # deprecated, remove 0.19.0
+    "ABS": (compute.abs, 0, 1.0),
+    "ABSOLUTE": (compute.abs, 0, 1.0),  # deprecated, remove 0.19.0
+    "SIGN": (compute.sign, OrsoTypes.INTEGER, 1.0),
+    "SIGNUM": (compute.sign, OrsoTypes.INTEGER, 1.0),
+    "SQRT": (compute.sqrt, OrsoTypes.DOUBLE, 1.0),
+    "TRUNC": (compute.trunc, OrsoTypes.INTEGER, 1.0),
+    "TRUNCATE": (compute.trunc, OrsoTypes.INTEGER, 1.0),  # deprecated, remove 0.19.0
+    "PI": (lambda x: None, OrsoTypes.DOUBLE, 1.0),
+    "PHI": (lambda x: None, OrsoTypes.DOUBLE, 1.0),
+    "E": (lambda x: None, OrsoTypes.DOUBLE, 1.0),
+    "INT": (_iterate_single_parameter(int), OrsoTypes.INTEGER, 1.0),
+    "POWER": (number_functions.safe_power, OrsoTypes.DOUBLE, 1.0),
+    "LN": (compute.ln, OrsoTypes.DOUBLE, 1.0),
+    "LOG10": (compute.log10, OrsoTypes.DOUBLE, 1.0),
+    "LOG2": (compute.log2, OrsoTypes.DOUBLE, 1.0),
+    "LOG": (compute.logb, OrsoTypes.DOUBLE, 1.0),
 
     # DATES & TIMES
-    "DATE_TRUNC": _iterate_double_parameter_field_second(dates.date_trunc),
-    "TIME_BUCKET": date_functions.date_floor,
-    "DATEDIFF": date_functions.date_diff,
-    "TIMEDIFF": date_functions.time_diff,
-    "DATEPART": date_functions.date_part,
-    "DATE_FORMAT": date_functions.date_format,
-    "CURRENT_TIME": lambda x: None, # *
-    "UTC_TIMESTAMP": lambda x: None, # *
-    "NOW": lambda x: None, # *
-    "CURRENT_DATE": lambda x: None, # *
-    "TODAY": lambda x: None, # *
-#    "TIME": _repeat_no_parameters(date_functions.get_time),
-    "YESTERDAY": lambda x: None, # *
-#    "DATE": lambda x: compute.cast(x, "date32"), #_iterate_single_parameter(date_functions.get_date),
-    "YEAR": compute.year,
-    "MONTH": compute.month,
-    "DAY": compute.day,
-    "WEEK": compute.iso_week,
-    "HOUR": compute.hour,
-    "MINUTE": compute.minute,
-    "SECOND": compute.second,
-    "QUARTER": compute.quarter,
-    "FROM_UNIXTIME": date_functions.from_unixtimestamp,
-    "UNIXTIME": date_functions.unixtime,
-
+    "DATE_TRUNC": (_iterate_double_parameter_field_second(dates.date_trunc), OrsoTypes.TIMESTAMP, 1.0),
+    "TIME_BUCKET": (date_functions.date_floor, OrsoTypes.TIMESTAMP, 1.0),
+    "DATEDIFF": (date_functions.date_diff, OrsoTypes.INTEGER, 1.0),
+    "TIMEDIFF": (date_functions.time_diff, OrsoTypes.INTEGER, 1.0),
+    "DATEPART": (date_functions.date_part, 0, 1.0),
+    "DATE_FORMAT": (date_functions.date_format, OrsoTypes.VARCHAR, 1.0),
+    "CURRENT_TIME": (lambda x: None, OrsoTypes.TIMESTAMP, 1.0),
+    "UTC_TIMESTAMP": (lambda x: None, OrsoTypes.INTEGER, 1.0),
+    "NOW": (lambda x: None, OrsoTypes.TIMESTAMP, 1.0),
+    "CURRENT_DATE": (lambda x: None, OrsoTypes.TIMESTAMP, 1.0),
+    "TODAY": (lambda x: None, OrsoTypes.TIME, 1.0),
+    "YESTERDAY": (lambda x: None, OrsoTypes.TIME, 1.0),
+    "YEAR": (compute.year, OrsoTypes.INTEGER, 1.0),
+    "MONTH": (compute.month, OrsoTypes.INTEGER, 1.0),
+    "DAY": (compute.day, OrsoTypes.INTEGER, 1.0),
+    "WEEK": (compute.iso_week, OrsoTypes.INTEGER, 1.0),
+    "HOUR": (compute.hour, OrsoTypes.INTEGER, 1.0),
+    "MINUTE": (compute.minute, OrsoTypes.INTEGER, 1.0),
+    "SECOND": (compute.second, OrsoTypes.INTEGER, 1.0),
+    "QUARTER": (compute.quarter, OrsoTypes.INTEGER, 1.0),
+    "FROM_UNIXTIME": (date_functions.from_unixtimestamp, OrsoTypes.TIMESTAMP, 1.0),
+    "UNIXTIME": (date_functions.unixtime, OrsoTypes.INTEGER, 1.0),
 }
 # fmt:on
 
@@ -532,7 +531,7 @@ def apply_function(function: str = None, *parameters):
             parameters = [arr.compress(valid_positions) for arr in parameters]
             compressed = True
 
-    interim_results = FUNCTIONS[function](*parameters)
+    interim_results = FUNCTIONS[function][0](*parameters)
 
     if compressed:
         # fill the result set

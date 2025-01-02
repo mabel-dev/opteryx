@@ -22,6 +22,7 @@ from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import DEPRECATED_FUNCTIONS
+from opteryx.functions import FUNCTIONS
 from opteryx.functions import fixed_value_function
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
@@ -306,7 +307,8 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                 node.type = result_type
                 node.value = fixed_function_result
             else:
-                schema_column = FunctionColumn(name=column_name, type=0, aliases=aliases)
+                _, result_type, _ = FUNCTIONS.get(node.value, (None, 0, None))
+                schema_column = FunctionColumn(name=column_name, type=result_type, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []
             node.schema_column = schema_column

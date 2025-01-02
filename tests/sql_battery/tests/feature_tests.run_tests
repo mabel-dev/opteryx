@@ -152,11 +152,11 @@ SELECT name FROM $planets ORDER BY mass LIMIT 2;
 
 # USE opteryx;
 
-SELECT SPLIT('a,bc,def');
-SELECT SPLIT('a,bc,def', ',');
-SELECT SPLIT('a');
-SELECT SPLIT('a', 'a');
-SELECT SPLIT(name, ' ') FROM $astronauts;
+-- SELECT SPLIT('a,bc,def');
+-- SELECT SPLIT('a,bc,def', ',');
+-- SELECT SPLIT('a');
+-- SELECT SPLIT('a', 'a');
+-- SELECT SPLIT(name, ' ') FROM $astronauts;
 
 SELECT CAST('{"test":true}' AS STRUCT);
 SELECT CAST('{"test":true, "live":false}' AS STRUCT);

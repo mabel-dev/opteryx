@@ -51,10 +51,6 @@ class HeapSortNode(BasePlanNode):
                     f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                 )
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def config(self):  # pragma: no cover
         return f"LIMIT = {self.limit} ORDER = " + ", ".join(

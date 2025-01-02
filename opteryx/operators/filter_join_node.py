@@ -39,10 +39,6 @@ class FilterJoinNode(JoinNode):
 
         self.right_hash_set = None
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return self.join_type.replace(" ", "_")
