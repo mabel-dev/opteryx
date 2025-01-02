@@ -27,14 +27,14 @@ SELECT * FROM (SELECT 0 + surface_pressure as opt, surface_pressure FROM $planet
 SELECT * FROM (SELECT surface_pressure + 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT surface_pressure - 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT surface_pressure / 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT TRUE AND surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT FALSE AND surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT TRUE OR surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT FALSE OR surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT surface_pressure AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT surface_pressure AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT surface_pressure OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
-SELECT * FROM (SELECT surface_pressure OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT TRUE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT FALSE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT TRUE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT FALSE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT (surface_pressure != 0) AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT (surface_pressure != 0) AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT (surface_pressure != 0) OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+SELECT * FROM (SELECT (surface_pressure != 0) OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT 1 + surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT surface_pressure + 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT 1 - surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL

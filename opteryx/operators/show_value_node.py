@@ -34,10 +34,6 @@ class ShowValueNode(ReaderNode):
             self.key = self.value
             self.value = properties.variables[self.value]
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Show Value"

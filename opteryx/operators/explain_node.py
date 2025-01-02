@@ -32,10 +32,6 @@ class ExplainNode(BasePlanNode):
     def config(self):
         return ""
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     def execute(self, morsel: Table, **kwargs) -> Table:
         if self._query_plan:
             yield self._query_plan.explain(self.analyze)

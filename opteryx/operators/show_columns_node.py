@@ -48,10 +48,6 @@ class ShowColumnsNode(BasePlanNode):
         self.collector = None
         self.seen = False
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Show Columns"

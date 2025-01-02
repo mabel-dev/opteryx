@@ -36,10 +36,6 @@ class FilterNode(BasePlanNode):
             select_nodes=(NodeType.FUNCTION,),
         )
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def config(self):  # pragma: no cover
         return format_expression(self.filter)
@@ -70,7 +66,7 @@ class FilterNode(BasePlanNode):
                 )
         mask = numpy.nonzero(mask)[0]
 
-        # if there's no matching rows, return empty morsel
+        # if there's no matching rows, don't return anything
         if mask.size > 0 and not numpy.all(mask is None):
             yield morsel.take(pyarrow.array(mask))
         else:

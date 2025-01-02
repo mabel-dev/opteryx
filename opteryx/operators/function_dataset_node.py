@@ -89,10 +89,6 @@ class FunctionDatasetNode(ReaderNode):
         self.columns = parameters.get("columns", [])
         self.args = parameters.get("args", [])
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def config(self):  # pragma: no cover
         from opteryx.managers.expression import format_expression

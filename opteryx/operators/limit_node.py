@@ -28,10 +28,6 @@ class LimitNode(BasePlanNode):
         self.remaining_rows = self.limit if self.limit is not None else float("inf")
         self.rows_left_to_skip = max(0, self.offset)
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "LIMIT"

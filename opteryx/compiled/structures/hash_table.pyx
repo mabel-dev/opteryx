@@ -30,15 +30,19 @@ cdef class HashTable:
     cpdef bint insert(self, int64_t key, int64_t row_id):
         # If the key is already in the hash table, append the row_id to the existing list.
         # Otherwise, create a new list with the row_id.
-        if self.hash_table.find(key) != self.hash_table.end():
-            self.hash_table[key].push_back(row_id)
-            return False
-        self.hash_table[key] = vector[int64_t](1, row_id)
+        cdef unordered_map[int64_t, vector[int64_t]].iterator it
+        it = self.hash_table.find(key)
+        if it == self.hash_table.end():
+            self.hash_table[key] = vector[int64_t]()
+            self.hash_table[key].reserve(16)
+        self.hash_table[key].push_back(row_id)
         return True
 
     cpdef vector[int64_t] get(self, int64_t key):
         # Return the list of row IDs for the given key, or an empty list if the key is not found.
-        if self.hash_table.find(key) != self.hash_table.end():
+        cdef unordered_map[int64_t, vector[int64_t]].iterator it
+        it = self.hash_table.find(key)
+        if it != self.hash_table.end():
             return self.hash_table[key]
         return vector[int64_t]()
 

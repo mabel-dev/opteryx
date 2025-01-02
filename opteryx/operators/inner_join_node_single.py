@@ -167,10 +167,6 @@ class InnerJoinSingleNode(JoinNode):
         self.left_hash = None
         self.left_relation = None
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Inner Join (Single)"

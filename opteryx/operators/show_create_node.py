@@ -25,10 +25,6 @@ class ShowCreateNode(BasePlanNode):
         self.object_type = parameters.get("object_type")
         self.object_name = parameters.get("object_name")
 
-    @classmethod
-    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
-
     @property
     def name(self):  # pragma: no cover
         return "Show"

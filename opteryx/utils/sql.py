@@ -50,7 +50,7 @@ def remove_comments(string: str) -> str:
     """
     # First group captures quoted strings (double or single)
     # Second group captures comments (/* multi-line */ or -- single-line)
-    pattern = r"(\"[^\"]*\"|\'[^\']*\')|(/\*[\s\S]*?\*/|--[^\r\n]*$)"
+    pattern = r"(\"[^\"]*\"|\'[^\']*\')|(/\*.*?\*/|--[^\r\n]*$)"
 
     regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
@@ -145,6 +145,11 @@ def regex_match_any(
             A 1D object array with True, False, or None,
             indicating whether each row did (or did not) match the patterns.
     """
+    if any(not isinstance(p, str) for p in patterns if p):
+        from opteryx.exceptions import IncorrectTypeError
+
+        raise IncorrectTypeError("Patterns for LIKE ANY comparisons must be strings.")
+
     # 1) Combine the LIKE patterns into a single compiled regex
     #    (Empty patterns list => empty string => matches nothing)
     combined_pattern_str = r"|".join(sql_like_to_regex(p) for p in patterns if p)
