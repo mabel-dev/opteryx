@@ -7,17 +7,20 @@
 Used when there is no provider, we basically return none to everything
 """
 
+from typing import List
 from typing import Optional
 
 from .catalog_provider import CatalogProvider
 
 
 class NullCatalogProvider(CatalogProvider):
-    def list_tables(self):
-        return None
+    def list_tables(self) -> List[str]:
+        return []
 
-    def get_blobs_in_table(self, table: str, commit: str = "latest", filters: Optional[str] = None):
-        return None
+    def get_blobs_in_table(
+        self, table: str, commit: str = "latest", filters: Optional[str] = None
+    ) -> List[str]:
+        return []
 
     def get_view(self, view_name):
         return None

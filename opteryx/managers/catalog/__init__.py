@@ -7,10 +7,10 @@
 def catalog_factory():
     from opteryx import config
 
-    if config.DATA_CATALOG_PROVIDER is None or config.DATA_CATALOG_PROVIDER.upper() == "TARCHIA":
-        from opteryx.managers.catalog.tarchia_provider import TarchiaCatalogProvider
+    if config.DATA_CATALOG_PROVIDER is None or config.DATA_CATALOG_PROVIDER.upper() == "ICEBERG":
+        from opteryx.managers.catalog.iceberg import IcebergProvider
 
-        return TarchiaCatalogProvider()
+        return IcebergProvider()
     else:
         from opteryx.managers.catalog.null_provider import NullCatalogProvider
 

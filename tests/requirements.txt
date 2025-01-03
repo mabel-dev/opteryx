@@ -35,6 +35,7 @@ sqlalchemy-cockroachdb
 sqlalchemy-bigquery
 pyodbc
 cassandra-driver
+pyiceberg[sql-sqlite, pyarrow]
 
 setuptools_rust
 

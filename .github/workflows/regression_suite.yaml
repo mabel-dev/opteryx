@@ -78,9 +78,8 @@ jobs:
           OPTERYX_DEBUG: 1
           MAX_LOCAL_BUFFER_CAPACITY: 100
           MAX_CACHE_EVICTIONS_PER_QUERY: 4
-          DATA_CATALOG_PROVIDER: 'TARCHIA'
+          DATA_CATALOG_PROVIDER: 'ICEBERG'
           DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
-          TARCHIA_KEY: '${{ secrets.TARCHIA_KEY }}'
           VALKEY_CONNECTION: '${{ secrets.VALKEY_CONFIG }}'
 
       - name: Check Coverage
