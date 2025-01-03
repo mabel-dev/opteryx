@@ -15,7 +15,6 @@ from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnect
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
 from opteryx.connectors.sql_connector import SqlConnector
-from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
 from opteryx.shared import MaterializedDatasets
 
 # load the base set of prefixes

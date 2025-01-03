@@ -9,6 +9,7 @@ This module provides the execution engine for processing physical plans in a ser
 
 from typing import Any
 from typing import Generator
+from typing import Optional
 from typing import Tuple
 
 import pyarrow
@@ -110,25 +111,23 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
     yield table
 
 
-def process_node(plan: PhysicalPlan, nid: str, morsel: pyarrow.Table, join_leg: str) -> Generator:
+def process_node(
+    plan: PhysicalPlan, nid: str, morsel: pyarrow.Table, join_leg: Optional[str]
+) -> Generator:
     node = plan[nid]
 
     if node.is_scan:
-        children = ((t, r) for s, t, r in plan.outgoing_edges(nid))
-        for child, leg in children:
+        for _, child, leg in plan.outgoing_edges(nid):
             results = process_node(plan, child, morsel, leg)
-            for result in results:
-                if result is not None:
-                    yield result
+            yield from (result for result in results if result is not None)
     else:
         results = node(morsel, join_leg)
         if results is None:
             yield None
             return
-        for result in results:
-            if result is not None:
-                children = [(t, r) for s, t, r in plan.outgoing_edges(nid)]
-                for child, leg in children:
-                    yield from process_node(plan, child, result, leg)
-                if len(children) == 0 and result != EOS:
-                    yield result
+        for result in (result for result in results if result is not None):
+            children = plan.outgoing_edges(nid)
+            if len(children) == 0 and result != EOS:
+                yield result
+            for _, child, leg in children:
+                yield from process_node(plan, child, result, leg)

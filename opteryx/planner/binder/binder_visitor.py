@@ -835,38 +835,12 @@ class BinderVisitor:
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.managers.catalog import catalog_factory
         from opteryx.managers.permissions import can_read_table
-        from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
 
         if node.alias in context.relations:
             raise AmbiguousDatasetError(dataset=node.alias)
 
-        catalog_table = None
-        node.found_in_catalog = False
-
-        if node.relation.count(".") == 1:
-            catalog_provider = catalog_factory()
-            catalog_table = catalog_provider.table_exists(node.relation)
-            if catalog_table:
-                node.found_in_catalog = True
-                node.disposition = catalog_table.get("disposition")
-                node.location = catalog_table.get("location")
-
-                if node.disposition == "EXTERNAL":
-                    # explicitly told it's external
-                    node.connector = connector_factory(node.location, statistics=context.statistics)
-                else:
-                    node.connector = connector_factory(
-                        node.location, statistics=context.statistics, partition_scheme=TarchiaScheme
-                    )
-                    node.connector.dataset = node.relation
-
-                catalog_schema = catalog_table.get("schema", {})
-                catalog_schema["name"] = catalog_table.get("location")
-                node.schema = RelationSchema.from_dict(catalog_schema)
-
-        if not catalog_table:
-            # work out which connector will be serving this request
-            node.connector = connector_factory(node.relation, statistics=context.statistics)
+        # work out which connector will be serving this request
+        node.connector = connector_factory(node.relation, statistics=context.statistics)
 
         # ensure this user can read the table
         if not can_read_table(context.connection.memberships, node.relation):
@@ -892,14 +866,11 @@ class BinderVisitor:
 
                 raise InvalidInternalStateError("Connector is Cachable but not Async")
 
-        if not node.found_in_catalog:
-            node.schema = node.connector.get_dataset_schema()
+        node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
             column.origin = [node.alias]
-            if catalog_table:
-                column.origin.append(catalog_table["location"])
         context.relations[node.alias] = node.connector.__mode__
 
         return node, context
@@ -928,7 +899,7 @@ class BinderVisitor:
         node, context = self.visit_exit(node, context)
 
         # Extract the column names to check for duplicates
-        column_names = [n.schema_column.name for n in node.columns]
+        column_names = (n.schema_column.name for n in node.columns)
         seen = set()
         duplicates = [name for name in column_names if name in seen or seen.add(name)]  # type: ignore
 
@@ -1012,7 +983,7 @@ class BinderVisitor:
         seen: dict = {}
 
         def _inner(branch):
-            if branch.fully_bound == False:
+            if branch.fully_bound is False:
                 if branch.schema_column.identity in seen:
                     branch = seen[branch.schema_column.identity]
             elif branch.schema_column:

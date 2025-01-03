@@ -332,7 +332,6 @@ We’re actively adding features and improving performance.
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
-- **[tarchia](https://github.com/mabel-dev/mabel)** Data Catalog  
 
 <!---
 ## Thank You

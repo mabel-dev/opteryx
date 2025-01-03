@@ -160,8 +160,6 @@ def null_if(col1, col2):
     col2_type = get_first_non_null_type(col2.tolist())
 
     if col1_type != col2_type:
-        print(col1_type, col2_type)
-
         raise IncompatibleTypesError(
             left_type=col1_type,
             right_type=col2_type,

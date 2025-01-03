@@ -179,3 +179,4 @@ space_missions.parquet
 **.disabled
 **.psv
 planets.parquet
+tmp/iceberg/**
