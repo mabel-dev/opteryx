@@ -48,22 +48,22 @@ Key Concepts:
 - Context: Maintains the state during optimization, including the pre-optimized and optimized plans.
 
 The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each strategy
-in sequence. The `do_cost_based_optimizer` function serves as the entry point for optimizing a logical plan.
+in sequence. The `do_optimizer` function serves as the entry point for optimizing a logical plan.
 
 Example Usage:
-    optimized_plan = do_cost_based_optimizer(logical_plan)
+    optimized_plan = do_optimizer(logical_plan)
 
 This module aims to enhance query performance through systematic and incremental optimization steps.
 """
 
 from opteryx.config import DISABLE_OPTIMIZER
 from opteryx.models import QueryStatistics
-from opteryx.planner.cost_based_optimizer.strategies import *
 from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.optimizer.strategies import *
 
 from .strategies.optimization_strategy import OptimizerContext
 
-__all__ = "do_cost_based_optimizer"
+__all__ = "do_optimizer"
 
 
 class CostBasedOptimizerVisitor:
@@ -134,9 +134,9 @@ class CostBasedOptimizerVisitor:
         return current_plan
 
 
-def do_cost_based_optimizer(plan: LogicalPlan, statistics: QueryStatistics) -> LogicalPlan:
+def do_optimizer(plan: LogicalPlan, statistics: QueryStatistics) -> LogicalPlan:
     """
-    Perform cost-based optimization on the given logical plan.
+    Perform optimization on the given logical plan.
 
     Parameters:
         plan (LogicalPlan): The logical plan to optimize.

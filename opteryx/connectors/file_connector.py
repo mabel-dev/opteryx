@@ -28,6 +28,10 @@ if not hasattr(os, "O_BINARY"):
 
 
 class FileConnector(BaseConnector, PredicatePushable):
+    """
+    Connector for reading datasets from a file.
+    """
+
     __mode__ = "Blob"
     __type__ = "FILE"
     _byte_array: Optional[bytes] = None  # Instance attribute to store file bytes

@@ -75,9 +75,9 @@ def query_planner(
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter
     from opteryx.planner.binder import do_bind_phase
-    from opteryx.planner.cost_based_optimizer import do_cost_based_optimizer
     from opteryx.planner.logical_planner import LogicalPlan
     from opteryx.planner.logical_planner import do_logical_planning_phase
+    from opteryx.planner.optimizer import do_optimizer
     from opteryx.planner.sql_rewriter import do_sql_rewrite
     from opteryx.planner.temporary_physical_planner import create_physical_plan
     from opteryx.third_party import sqloxide
@@ -130,7 +130,7 @@ def query_planner(
             # common_table_expressions=ctes,
         )
 
-        optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
+        optimized_plan = do_optimizer(bound_plan, statistics)
 
         # before we write the new optimizer and execution engine, convert to a V1 plan
         query_properties = QueryProperties(qid=qid, variables=conn.context.variables)
