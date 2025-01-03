@@ -123,9 +123,9 @@ def query_planner(
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter
     from opteryx.planner.binder import do_bind_phase
-    from opteryx.planner.cost_based_optimizer import do_cost_based_optimizer
     from opteryx.planner.logical_planner import apply_visibility_filters
     from opteryx.planner.logical_planner import do_logical_planning_phase
+    from opteryx.planner.optimizer import do_optimizer
     from opteryx.planner.physical_planner import create_physical_plan
     from opteryx.planner.sql_rewriter import do_sql_rewrite
     from opteryx.third_party import sqloxide
@@ -182,7 +182,7 @@ def query_planner(
     statistics.time_planning_binder += time.monotonic_ns() - start
 
     start = time.monotonic_ns()
-    optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
+    optimized_plan = do_optimizer(bound_plan, statistics)
     statistics.time_planning_optimizer += time.monotonic_ns() - start
 
     # before we write the new optimizer and execution engine, convert to a V1 plan

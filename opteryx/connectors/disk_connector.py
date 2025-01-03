@@ -37,6 +37,10 @@ if not hasattr(os, "O_BINARY"):
 
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous):
+    """
+    Connector for reading datasets from files on local storage.
+    """
+
     __mode__ = "Blob"
     __type__ = "LOCAL"
 

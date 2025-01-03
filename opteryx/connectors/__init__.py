@@ -13,6 +13,7 @@ from opteryx.connectors.cql_connector import CqlConnector
 from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
+from opteryx.connectors.iceberg_connector import IcebergConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
 from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets
@@ -35,6 +36,7 @@ __all__ = (
     "DiskConnector",
     "GcpCloudStorageConnector",
     "GcpFireStoreConnector",
+    "IcebergConnector",
     "MongoDbConnector",
     "SqlConnector",
 )
