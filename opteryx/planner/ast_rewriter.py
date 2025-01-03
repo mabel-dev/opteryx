@@ -219,11 +219,37 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
         "AtQuestion",
         "AtArrow",
     ):
+        # these names are for `document->element = value` style expressions
         document = node["BinaryOp"]["left"]
         accessor = node["BinaryOp"]["op"]
         right_node = node["BinaryOp"]["right"]
 
+        if "BinaryOp" in document and "Value" in right_node:
+            # for expressions like `value = document->element`
+            element = right_node
+            comparitor = document["BinaryOp"]["left"]
+            operator = document["BinaryOp"]["op"]
+            if operator not in (
+                "Arrow",
+                "LongArrow",
+                "AtQuestion",
+                "AtArrow",
+            ):
+                # if we're cascading accessors as are document->element order.
+                document = document["BinaryOp"]["right"]
+
+                return {
+                    "BinaryOp": {
+                        "left": {
+                            "BinaryOp": {"left": document, "op": accessor, "right": element},
+                        },
+                        "op": operator,
+                        "right": comparitor,
+                    }
+                }
+
         if "BinaryOp" in right_node:
+            # for expressions like `document->element = value`
             element = right_node["BinaryOp"]["left"]
             comparitor = right_node["BinaryOp"]["right"]
             operator = right_node["BinaryOp"]["op"]
@@ -238,35 +264,59 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
                 }
             }
 
-        operator = next(iter(right_node))
-        if operator in (
-            "Like",
-            "ILike",
-            "NotLike",
-            "NotILike",
-            "RLike",
-            "NotRLike",
-        ):
-            element = right_node[operator]["expr"]
-            comparitor = right_node[operator]["pattern"]
+        if "BinaryOp" in right_node:
+            operator = next(iter(right_node))
+            if operator in (
+                "Like",
+                "ILike",
+                "NotLike",
+                "NotILike",
+                "RLike",
+                "NotRLike",
+            ):
+                element = right_node[operator]["expr"]
+                comparitor = right_node[operator]["pattern"]
 
-            return {
-                "BinaryOp": {
-                    "left": {
-                        "BinaryOp": {"left": document, "op": accessor, "right": element},
-                    },
-                    "op": operator,
-                    "right": comparitor,
+                return {
+                    "BinaryOp": {
+                        "left": {
+                            "BinaryOp": {"left": document, "op": accessor, "right": element},
+                        },
+                        "op": operator,
+                        "right": comparitor,
+                    }
                 }
-            }
-        if operator in ("IsNull", "IsNotFalse", "IsNotNull", "IsNotTrue", "IsTrue", "IsFalse"):
-            element = right_node[operator]["Value"]
+            if operator in ("IsNull", "IsNotFalse", "IsNotNull", "IsNotTrue", "IsTrue", "IsFalse"):
+                element = right_node[operator]["Value"]
 
-            return {
-                operator: {
-                    "Nested": {"BinaryOp": {"left": document, "op": accessor, "right": element}}
+                return {
+                    operator: {
+                        "Nested": {"BinaryOp": {"left": document, "op": accessor, "right": element}}
+                    }
                 }
-            }
+        else:
+            operator = next(iter(document))
+            if operator in (
+                "Like",
+                "ILike",
+                "NotLike",
+                "NotILike",
+                "RLike",
+                "NotRLike",
+            ):
+                element = right_node
+                comparitor = document[operator]["expr"]
+                document = document[operator]["pattern"]
+
+                return {
+                    "BinaryOp": {
+                        "left": {
+                            "BinaryOp": {"left": document, "op": accessor, "right": element},
+                        },
+                        "op": operator,
+                        "right": comparitor,
+                    }
+                }
 
     # Recursively process other types of nodes if needed
     for key, value in node.items():

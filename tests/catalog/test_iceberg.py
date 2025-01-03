@@ -11,7 +11,6 @@ from opteryx.connectors import IcebergConnector
 
 BASE_PATH: str = "tmp/iceberg"
 
-@skip_if(is_arm() or is_windows() or is_mac())
 def set_up_iceberg():
     """
     Set up a local Iceberg catalog for testing with NVD data.
@@ -56,7 +55,7 @@ def set_up_iceberg():
     print(f"Iceberg table set up at {BASE_PATH}")
     return BASE_PATH
 
-
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_basic():
 
     from pyiceberg.catalog import load_catalog
