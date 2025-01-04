@@ -67,17 +67,6 @@ class FileConnector(BaseConnector, PredicatePushable):
             raise DatasetNotFoundError(dataset=self.dataset)
         self.decoder = get_decoder(self.dataset)
 
-    def _read_file(self) -> None:
-        """
-        Reads the dataset file and stores its content in _byte_array attribute.
-        """
-        if self._byte_array is None:
-            file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
-            try:
-                self._byte_array = os.read(file_descriptor, os.path.getsize(self.dataset))
-            finally:
-                os.close(file_descriptor)
-
     def read_dataset(
         self, columns: list = None, predicates: list = None, **kwargs
     ) -> pyarrow.Table:
@@ -87,12 +76,13 @@ class FileConnector(BaseConnector, PredicatePushable):
         Returns:
             An iterator containing a single decoded pyarrow.Table.
         """
-        self._read_file()
+        import mmap
 
         try:
-            num_rows, num_columns, decoded = self.decoder(
-                self._byte_array, projection=columns, selection=predicates
-            )
+            file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
+            size = os.path.getsize(self.dataset)
+            _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
+            num_rows, _, decoded = self.decoder(_map, projection=columns, selection=predicates)
         except Exception as err:
             raise DataError(f"Unable to read file ({err})") from err
 
@@ -106,9 +96,13 @@ class FileConnector(BaseConnector, PredicatePushable):
         Returns:
             The schema of the dataset.
         """
+        import mmap
+
         if self.schema is not None:
             return self.schema
 
-        self._read_file()
-        self.schema = self.decoder(self._byte_array, just_schema=True)
+        file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
+        size = os.path.getsize(self.dataset)
+        _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
+        self.schema = self.decoder(_map, just_schema=True)
         return self.schema
