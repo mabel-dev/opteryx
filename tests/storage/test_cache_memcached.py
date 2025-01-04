@@ -26,6 +26,10 @@ def test_memcached_cache():
     from opteryx import CacheManager
     from opteryx.managers.cache import MemcachedCache
     from opteryx.shared import BufferPool
+    from opteryx import register_store
+    from opteryx.connectors import GcpCloudStorageConnector
+
+    register_store("opteryx", GcpCloudStorageConnector)
 
     cache = MemcachedCache()
     #cache._server.flush_all()
@@ -37,7 +41,7 @@ def test_memcached_cache():
     for i in range(10):
         cur = conn.cursor()
         time.sleep(0.01)
-        cur.execute("SELECT count(*) FROM testdata.flat.ten_files;")
+        cur.execute("SELECT count(*) FROM opteryx.ten_files;")
 
     print(f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}")
 
@@ -47,7 +51,7 @@ def test_memcached_cache():
         buffer.reset()
 
         cur = conn.cursor()
-        cur.execute("SELECT count(*) FROM testdata.flat.ten_files;")
+        cur.execute("SELECT count(*) FROM opteryx.ten_files;")
 
     stats = cur.stats
 

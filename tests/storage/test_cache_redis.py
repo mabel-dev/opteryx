@@ -23,19 +23,23 @@ def test_redis_cache():
     from opteryx import CacheManager
     from opteryx.managers.cache import RedisCache
     from opteryx.shared import BufferPool
+    from opteryx import register_store
+    from opteryx.connectors import GcpCloudStorageConnector
+
+    register_store("opteryx", GcpCloudStorageConnector)
 
     cache = RedisCache()
     opteryx.set_cache_manager(CacheManager(cache_backend=cache))
 
     # read the data once, this should populate the cache if it hasn't already
-    cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
-    stats = cur.stats
+    cur = opteryx.query("SELECT * FROM opteryx.ten_files;")
+    cur.fetchall()
 
     buffer = BufferPool()
     buffer.reset()
 
     # read the data a second time, this should hit the cache
-    cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
+    cur = opteryx.query("SELECT * FROM opteryx.ten_files;")
 
     assert cache.hits > 0
     assert cache.misses < 12
