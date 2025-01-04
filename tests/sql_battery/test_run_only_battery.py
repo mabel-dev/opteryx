@@ -65,6 +65,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     nl = "\n"
 
+    batch_start = time.monotonic_ns()
     print(f"RUNNING BATTERY OF {len(RUN_ONLY_TESTS)} RUN_ONLY TESTS")
     for index, statement in enumerate(RUN_ONLY_TESTS):
         start = time.monotonic_ns()
@@ -80,3 +81,4 @@ if __name__ == "__main__":  # pragma: no cover
         print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅")
 
     print("--- ✅ \033[0;32mdone\033[0m")
+    print(f"Total time: {str(int((time.monotonic_ns() - batch_start)/1000000)).rjust(4)}ms")

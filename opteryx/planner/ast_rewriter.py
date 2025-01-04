@@ -264,36 +264,35 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
                 }
             }
 
-        if "BinaryOp" in right_node:
-            operator = next(iter(right_node))
-            if operator in (
-                "Like",
-                "ILike",
-                "NotLike",
-                "NotILike",
-                "RLike",
-                "NotRLike",
-            ):
-                element = right_node[operator]["expr"]
-                comparitor = right_node[operator]["pattern"]
+        operator = next(iter(right_node))
+        if operator in (
+            "Like",
+            "ILike",
+            "NotLike",
+            "NotILike",
+            "RLike",
+            "NotRLike",
+        ):
+            element = right_node[operator]["expr"]
+            comparitor = right_node[operator]["pattern"]
 
-                return {
-                    "BinaryOp": {
-                        "left": {
-                            "BinaryOp": {"left": document, "op": accessor, "right": element},
-                        },
-                        "op": operator,
-                        "right": comparitor,
-                    }
+            return {
+                "BinaryOp": {
+                    "left": {
+                        "BinaryOp": {"left": document, "op": accessor, "right": element},
+                    },
+                    "op": operator,
+                    "right": comparitor,
                 }
-            if operator in ("IsNull", "IsNotFalse", "IsNotNull", "IsNotTrue", "IsTrue", "IsFalse"):
-                element = right_node[operator]["Value"]
+            }
+        elif operator in ("IsNull", "IsNotFalse", "IsNotNull", "IsNotTrue", "IsTrue", "IsFalse"):
+            element = right_node[operator]["Value"]
 
-                return {
-                    operator: {
-                        "Nested": {"BinaryOp": {"left": document, "op": accessor, "right": element}}
-                    }
+            return {
+                operator: {
+                    "Nested": {"BinaryOp": {"left": document, "op": accessor, "right": element}}
                 }
+            }
         else:
             operator = next(iter(document))
             if operator in (
