@@ -162,7 +162,10 @@ def zstd_decoder(
     """
     import zstandard
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
 
     with zstandard.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -183,7 +186,10 @@ def lzma_decoder(
     """
     import lzma
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
 
     with lzma.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -217,7 +223,11 @@ def parquet_decoder(
         Tuple containing number of rows, number of columns, and the table or schema.
     """
     # Open the parquet file only once
-    stream = pyarrow.BufferReader(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream = pyarrow.BufferReader(buffer)
+    else:
+        stream = pyarrow.input_stream(buffer)
+
     parquet_file = parquet.ParquetFile(stream)
 
     # Return just the schema if that's all that's needed
@@ -274,7 +284,11 @@ def orc_decoder(
     """
     import pyarrow.orc as orc
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     orc_file = orc.ORCFile(stream)
 
     if just_schema:
@@ -342,7 +356,11 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
     schema = table.schema
@@ -402,7 +420,11 @@ def arrow_decoder(
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.feather as pf
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     table = pf.read_table(stream)
     schema = table.schema
     if just_schema:
@@ -440,7 +462,11 @@ def avro_decoder(
 
         raise MissingDependencyError("fastavro")
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     reader = fastavro.reader(stream)
 
     if just_schema:
@@ -481,7 +507,11 @@ def ipc_decoder(
 
     from pyarrow import ipc
 
-    stream: BinaryIO = io.BytesIO(buffer)
+    if isinstance(buffer, (memoryview, bytes)):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     reader = ipc.open_stream(stream)
 
     batch_one = next(reader, None)
