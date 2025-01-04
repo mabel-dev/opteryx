@@ -8,7 +8,6 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
-import asyncio
 import os
 from typing import Dict
 from typing import List
@@ -18,8 +17,6 @@ from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.connectors.capabilities import Asynchronous
-from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DataError
@@ -36,7 +33,7 @@ if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
 
-class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous):
+class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
     """
     Connector for reading datasets from files on local storage.
     """
@@ -73,15 +70,15 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         """
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
-        Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
-        Asynchronous.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
         self.blob_list = {}
 
-    def read_blob(self, *, blob_name, **kwargs) -> bytes:
+    def read_blob(
+        self, *, blob_name, decoder, just_schema=False, projection=None, selection=None, **kwargs
+    ):
         """
         Read a blob (binary large object) from disk.
 
@@ -99,30 +96,19 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         Returns:
             The blob as bytes.
         """
-        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+        import mmap
+
         try:
+            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
             size = os.path.getsize(blob_name)
+            _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
+            result = decoder(
+                _map, just_schema=just_schema, projection=projection, selection=selection
+            )
             self.statistics.bytes_read += size
-            return os.read(file_descriptor, size)
+            return result
         finally:
             os.close(file_descriptor)
-
-    async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
-        from opteryx import system_statistics
-
-        # DEBUG: log ("READ   ", blob_name)
-        with open(blob_name, "rb") as file:
-            data = file.read()
-            if len(data) > pool.size():
-                raise ValueError(f"File {blob_name} is too large for read buffer")
-            ref = await pool.commit(data)
-            while ref is None:
-                statistics.stalls_writing_to_read_buffer += 1
-                await asyncio.sleep(0.1)
-                system_statistics.cpu_wait_seconds += 0.1
-                ref = await pool.commit(data)
-            statistics.bytes_read += len(data)
-            return ref
 
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         """
@@ -141,7 +127,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
 
         blobs = sorted(
             os.path.join(root, file)
-            for root, _, files in os.walk(prefix)
+            for root, _, files in os.walk(prefix + OS_SEP)
             for file in files
             if file.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
@@ -170,26 +156,31 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         )
 
         for blob_name in blob_names:
+            decoder = get_decoder(blob_name)
             try:
-                decoder = get_decoder(blob_name)
-                blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                try:
-                    decoded = decoder(
-                        blob_bytes,
+                if not just_schema:
+                    num_rows, _, decoded = self.read_blob(
+                        blob_name=blob_name,
+                        decoder=decoder,
+                        just_schema=just_schema,
                         projection=columns,
                         selection=predicates,
+                    )
+                    self.statistics.rows_seen += num_rows
+                    yield decoded
+                else:
+                    yield self.read_blob(
+                        blob_name=blob_name,
+                        decoder=decoder,
                         just_schema=just_schema,
                     )
-                except Exception as err:
-                    raise DataError(f"Unable to read file {blob_name} ({err})") from err
-                if not just_schema:
-                    num_rows, num_columns, decoded = decoded
-                    self.statistics.rows_seen += num_rows
-                yield decoded
+
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
             except pyarrow.ArrowInvalid:
                 self.statistics.unreadable_data_blobs += 1
+            except Exception as err:
+                raise DataError(f"Unable to read file {blob_name} ({err})") from err
 
     def get_dataset_schema(self) -> RelationSchema:
         """

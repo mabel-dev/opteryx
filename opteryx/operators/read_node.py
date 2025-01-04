@@ -148,15 +148,6 @@ class ReaderNode(BasePlanNode):
         self.statistics.rows_read += 0
         self.statistics.columns_read += 0
 
-    def to_dict(self) -> dict:
-        return {
-            "identity": f"read-{self.identity}",
-            "opterator": "ReadNode",
-            "schema": self.columns,
-            "projection": self.columns,
-            "filters": self.predicates,
-        }
-
     @property
     def name(self):  # pragma: no cover
         """friendly name for this step"""
