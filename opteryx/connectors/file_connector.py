@@ -18,13 +18,9 @@ from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import PredicatePushable
-from opteryx.exceptions import DataError
+from opteryx.connectors.disk_connector import read_blob
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.utils.file_decoders import get_decoder
-
-# Define os.O_BINARY for non-Windows platforms if it's not already defined
-if not hasattr(os, "O_BINARY"):
-    os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
 
 class FileConnector(BaseConnector, PredicatePushable):
@@ -70,24 +66,13 @@ class FileConnector(BaseConnector, PredicatePushable):
     def read_dataset(
         self, columns: list = None, predicates: list = None, **kwargs
     ) -> pyarrow.Table:
-        """
-        Reads the dataset file and decodes it.
-
-        Returns:
-            An iterator containing a single decoded pyarrow.Table.
-        """
-        import mmap
-
-        try:
-            file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
-            size = os.path.getsize(self.dataset)
-            _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
-            num_rows, _, decoded = self.decoder(_map, projection=columns, selection=predicates)
-        except Exception as err:
-            raise DataError(f"Unable to read file ({err})") from err
-
-        self.statistics.rows_seen += num_rows
-        yield decoded
+        yield read_blob(
+            blob_name=self.dataset,
+            decoder=self.decoder,
+            statistics=self.statistics,
+            projection=columns,
+            selection=predicates,
+        )[2]
 
     def get_dataset_schema(self) -> RelationSchema:
         """

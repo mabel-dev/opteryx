@@ -53,7 +53,7 @@ class HeapSortNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return f"LIMIT = {self.limit} ORDER = " + ", ".join(
+        return f"LIMIT = {self.limit}, ORDER = " + ", ".join(
             f"{i[0].value} {i[1][0:3].upper()}" for i in self.order_by
         )
 
@@ -71,49 +71,43 @@ class HeapSortNode(BasePlanNode):
             yield None
             return
 
-        if self.table:
-            # Concatenate the accumulated table with the new morsel
-            self.table = concat_tables([self.table, morsel], promote_options="permissive")
-        else:
-            self.table = morsel
-
         # Determine if any columns are string-based
         use_pyarrow_sort = any(
-            pyarrow.types.is_string(self.table.column(column_name).type)
-            or pyarrow.types.is_binary(self.table.column(column_name).type)
+            pyarrow.types.is_string(morsel.column(column_name).type)
+            or pyarrow.types.is_binary(morsel.column(column_name).type)
             for column_name, _ in self.mapped_order
         )
 
-        # strings are sorted faster user pyarrow, single columns faster using compute
+        # strings are sorted faster using pyarrow, single columns faster using compute
         if len(self.mapped_order) == 1 and use_pyarrow_sort:
             column_name, sort_direction = self.mapped_order[0]
-            column = self.table.column(column_name)
+            column = morsel.column(column_name)
             if sort_direction == "ascending":
                 sort_indices = pyarrow.compute.sort_indices(column)
             else:
                 sort_indices = pyarrow.compute.sort_indices(column)[::-1]
-            self.table = self.table.take(sort_indices[: self.limit])
+            morsel = morsel.take(sort_indices[: self.limit])
         # strings are sorted faster using pyarrow
         elif use_pyarrow_sort:
-            self.table = self.table.sort_by(self.mapped_order).slice(offset=0, length=self.limit)
+            morsel = morsel.sort_by(self.mapped_order).slice(offset=0, length=self.limit)
         # single column sort using numpy
         elif len(self.mapped_order) == 1:
             # Single-column sort using mergesort to take advantage of partially sorted data
             column_name, sort_direction = self.mapped_order[0]
-            column = self.table.column(column_name).to_numpy()
+            column = morsel.column(column_name).to_numpy()
             if sort_direction == "ascending":
                 sort_indices = numpy.argsort(column)
             else:
                 sort_indices = numpy.argsort(column)[::-1]  # Reverse for descending
             # Slice the sorted table
-            self.table = self.table.take(sort_indices[: self.limit])
+            morsel = morsel.take(sort_indices[: self.limit])
         # multi column sort using numpy
         else:
             # Multi-column sort using lexsort
             columns_for_sorting = []
             directions = []
             for column_name, sort_direction in self.mapped_order:
-                column = self.table.column(column_name).to_numpy()
+                column = morsel.column(column_name).to_numpy()
                 columns_for_sorting.append(column)
                 directions.append(1 if sort_direction == "ascending" else -1)
 
@@ -121,6 +115,13 @@ class HeapSortNode(BasePlanNode):
                 [col[::direction] for col, direction in zip(columns_for_sorting, directions)]
             )
             # Slice the sorted table
-            self.table = self.table.take(sort_indices[: self.limit])
+            morsel = morsel.take(sort_indices[: self.limit])
+
+        if self.table:
+            # Concatenate the accumulated table with the new morsel
+            self.table = concat_tables([self.table, morsel], promote_options="permissive")
+            self.table = self.table.sort_by(self.mapped_order).slice(offset=0, length=self.limit)
+        else:
+            self.table = morsel
 
         yield None

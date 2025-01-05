@@ -32,6 +32,59 @@ OS_SEP = os.sep
 if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
+    def read_blob(
+        *, blob_name: str, decoder, statistics, just_schema=False, projection=None, selection=None
+    ):
+        """
+        Read a blob (binary large object) from disk using memory-mapped file access.
+
+        This method uses low-level file reading with memory-mapped files to
+        improve performance. It reads the entire file into memory and then
+        decodes it using the provided decoder function.
+
+        Parameters:
+            blob_name (str):
+                The name of the blob file to read.
+            decoder (callable):
+                A function to decode the memory-mapped file content.
+            just_schema (bool, optional):
+                If True, only the schema of the data is returned. Defaults to False.
+            projection (list, optional):
+                A list of fields to project. Defaults to None.
+            selection (dict, optional):
+                A dictionary of selection criteria. Defaults to None.
+            **kwargs:
+                Additional keyword arguments.
+
+        Returns:
+            The decoded blob content.
+
+        Raises:
+            FileNotFoundError:
+                If the blob file does not exist.
+            OSError:
+                If an I/O error occurs while reading the file.
+        """
+        import mmap
+
+        try:
+            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+            if hasattr(os, "posix_fadvise"):
+                os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
+            size = os.fstat(file_descriptor).st_size
+            _map = mmap.mmap(file_descriptor, length=size, access=mmap.ACCESS_READ)
+            result = decoder(
+                _map,
+                just_schema=just_schema,
+                projection=projection,
+                selection=selection,
+                use_threads=True,
+            )
+            statistics.bytes_read += size
+            return result
+        finally:
+            os.close(file_descriptor)
+
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
     """
@@ -75,40 +128,6 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
         self.blob_list = {}
-
-    def read_blob(
-        self, *, blob_name, decoder, just_schema=False, projection=None, selection=None, **kwargs
-    ):
-        """
-        Read a blob (binary large object) from disk.
-
-        We're using the low-level read, on the whole it's about 5% faster - not
-        much faster considering the effort to bench-mark different disk access
-        methods, but as one of the slowest parts of the system we wanted to find
-        if there was a faster way.
-
-        Parameters:
-            blob_name: str
-                The name of the blob file to read.
-            kwargs: Dict
-                Arbitrary keyword arguments.
-
-        Returns:
-            The blob as bytes.
-        """
-        import mmap
-
-        try:
-            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
-            size = os.path.getsize(blob_name)
-            _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
-            result = decoder(
-                _map, just_schema=just_schema, projection=projection, selection=selection
-            )
-            self.statistics.bytes_read += size
-            return result
-        finally:
-            os.close(file_descriptor)
 
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         """
@@ -159,8 +178,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
             decoder = get_decoder(blob_name)
             try:
                 if not just_schema:
-                    num_rows, _, decoded = self.read_blob(
+                    num_rows, _, decoded = read_blob(
                         blob_name=blob_name,
+                        statistics=self.statistics,
                         decoder=decoder,
                         just_schema=just_schema,
                         projection=columns,
@@ -169,8 +189,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
                     self.statistics.rows_seen += num_rows
                     yield decoded
                 else:
-                    yield self.read_blob(
+                    yield read_blob(
                         blob_name=blob_name,
+                        statistics=self.statistics,
                         decoder=decoder,
                         just_schema=just_schema,
                     )
