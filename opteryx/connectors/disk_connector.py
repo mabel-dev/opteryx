@@ -32,58 +32,64 @@ OS_SEP = os.sep
 if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
-    def read_blob(
-        *, blob_name: str, decoder, statistics, just_schema=False, projection=None, selection=None
-    ):
-        """
-        Read a blob (binary large object) from disk using memory-mapped file access.
 
-        This method uses low-level file reading with memory-mapped files to
-        improve performance. It reads the entire file into memory and then
-        decodes it using the provided decoder function.
+def read_blob(
+    *, blob_name: str, decoder, statistics, just_schema=False, projection=None, selection=None
+):
+    """
+    Read a blob (binary large object) from disk using memory-mapped file access.
 
-        Parameters:
-            blob_name (str):
-                The name of the blob file to read.
-            decoder (callable):
-                A function to decode the memory-mapped file content.
-            just_schema (bool, optional):
-                If True, only the schema of the data is returned. Defaults to False.
-            projection (list, optional):
-                A list of fields to project. Defaults to None.
-            selection (dict, optional):
-                A dictionary of selection criteria. Defaults to None.
-            **kwargs:
-                Additional keyword arguments.
+    This method uses low-level file reading with memory-mapped files to
+    improve performance. It reads the entire file into memory and then
+    decodes it using the provided decoder function.
 
-        Returns:
-            The decoded blob content.
+    Parameters:
+        blob_name (str):
+            The name of the blob file to read.
+        decoder (callable):
+            A function to decode the memory-mapped file content.
+        just_schema (bool, optional):
+            If True, only the schema of the data is returned. Defaults to False.
+        projection (list, optional):
+            A list of fields to project. Defaults to None.
+        selection (dict, optional):
+            A dictionary of selection criteria. Defaults to None.
+        **kwargs:
+            Additional keyword arguments.
 
-        Raises:
-            FileNotFoundError:
-                If the blob file does not exist.
-            OSError:
-                If an I/O error occurs while reading the file.
-        """
-        import mmap
+    Returns:
+        The decoded blob content.
 
-        try:
-            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
-            if hasattr(os, "posix_fadvise"):
-                os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
-            size = os.fstat(file_descriptor).st_size
-            _map = mmap.mmap(file_descriptor, length=size, access=mmap.ACCESS_READ)
-            result = decoder(
-                _map,
-                just_schema=just_schema,
-                projection=projection,
-                selection=selection,
-                use_threads=True,
-            )
-            statistics.bytes_read += size
-            return result
-        finally:
-            os.close(file_descriptor)
+    Raises:
+        FileNotFoundError:
+            If the blob file does not exist.
+        OSError:
+            If an I/O error occurs while reading the file.
+    """
+    import mmap
+
+    try:
+        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+        if hasattr(os, "posix_fadvise"):
+            os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
+        size = os.fstat(file_descriptor).st_size
+        _map = mmap.mmap(
+            file_descriptor,
+            length=size,
+            flags=mmap.MAP_PRIVATE,
+            prot=mmap.PROT_READ,
+        )
+        result = decoder(
+            _map,
+            just_schema=just_schema,
+            projection=projection,
+            selection=selection,
+            use_threads=True,
+        )
+        statistics.bytes_read += size
+        return result
+    finally:
+        os.close(file_descriptor)
 
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
