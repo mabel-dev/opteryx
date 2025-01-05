@@ -204,6 +204,7 @@ def parquet_decoder(
     selection: Optional[list] = None,
     just_schema: bool = False,
     force_read: bool = False,
+    use_threads: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read parquet formatted files.
@@ -259,7 +260,7 @@ def parquet_decoder(
         columns=selected_columns,
         pre_buffer=False,
         filters=dnf_filter,
-        use_threads=False,
+        use_threads=use_threads,
         use_pandas_metadata=False,
         schema=parquet_file.schema_arrow,
     )
