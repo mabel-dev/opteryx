@@ -30,21 +30,11 @@ cdef class HashTable:
     cpdef bint insert(self, int64_t key, int64_t row_id):
         # If the key is already in the hash table, append the row_id to the existing list.
         # Otherwise, create a new list with the row_id.
-        cdef unordered_map[int64_t, vector[int64_t]].iterator it
-        it = self.hash_table.find(key)
-        if it == self.hash_table.end():
-            self.hash_table[key] = vector[int64_t]()
-            self.hash_table[key].reserve(16)
         self.hash_table[key].push_back(row_id)
-        return True
 
     cpdef vector[int64_t] get(self, int64_t key):
         # Return the list of row IDs for the given key, or an empty list if the key is not found.
-        cdef unordered_map[int64_t, vector[int64_t]].iterator it
-        it = self.hash_table.find(key)
-        if it != self.hash_table.end():
-            return self.hash_table[key]
-        return vector[int64_t]()
+        return self.hash_table[key]
 
 
 cdef class HashSet:
@@ -55,124 +45,13 @@ cdef class HashSet:
         self.c_set.reserve(1_048_576)  # try to prevent needing to resize
 
     cdef inline bint insert(self, int64_t value):
-        if self.c_set.find(value) != self.c_set.end():
-            return False
+        cdef unsigned long size_before = self.c_set.size()
         self.c_set.insert(value)
-        return True
+        return self.c_set.size() > size_before
 
     cdef inline bint contains(self, int64_t value):
         return self.c_set.find(value) != self.c_set.end()
 
-
-cdef inline object recast_column(column):
-    cdef column_type = column.type
-
-    if pyarrow.types.is_struct(column_type) or pyarrow.types.is_list(column_type):
-        return numpy.array([str(a) for a in column], dtype=numpy.str_)
-
-    # Otherwise, return the column as-is
-    return column
-
-
-cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
-    """
-    Perform a distinct operation on the given table using an external HashSet.
-    """
-
-    cdef:
-        int64_t null_hash = hash(None)
-        Py_ssize_t num_columns, num_rows, i
-        list columns_of_interest
-        list columns_data = []
-        list columns_hashes = []
-        cnp.ndarray[int64_t] combined_hashes
-        HashSet hash_set
-        list keep = []
-        object column_data
-        cnp.ndarray data_array
-        cnp.ndarray[int64_t] hashes
-
-    if seen_hashes is None:
-        seen_hashes = HashSet()
-
-    columns_of_interest = columns if columns is not None else table.column_names
-    num_columns = len(columns_of_interest)
-    num_rows = table.num_rows  # Use PyArrow's num_rows attribute
-
-    # Prepare data and compute hashes for each column
-    for column_name in columns_of_interest:
-        # Get the column from the table
-        column = table.column(column_name)
-        # Recast column if necessary
-        column_data = recast_column(column)
-        # Convert PyArrow array to NumPy array without copying
-        if isinstance(column_data, pyarrow.ChunkedArray):
-            data_array = column_data.combine_chunks().to_numpy(zero_copy_only=False)
-        elif isinstance(column_data, pyarrow.Array):
-            data_array = column_data.to_numpy(zero_copy_only=False)
-        else:
-            data_array = column_data  # Already a NumPy array
-
-        columns_data.append(data_array)
-        hashes = numpy.empty(num_rows, dtype=numpy.int64)
-
-        # Determine data type and compute hashes accordingly
-        if numpy.issubdtype(data_array.dtype, numpy.integer):
-            compute_int_hashes(data_array, null_hash, hashes)
-        elif numpy.issubdtype(data_array.dtype, numpy.floating):
-            compute_float_hashes(data_array, null_hash, hashes)
-        elif data_array.dtype == numpy.object_:
-            compute_object_hashes(data_array, null_hash, hashes)
-        else:
-            # For other types (e.g., strings), treat as object
-            compute_object_hashes(data_array.astype(numpy.object_), null_hash, hashes)
-
-        columns_hashes.append(hashes)
-
-    # Combine the hashes per row
-    combined_hashes = columns_hashes[0]
-    for hashes in columns_hashes[1:]:
-        combined_hashes = combined_hashes * 31 + hashes
-
-    # Check for duplicates using the HashSet
-    for i in range(num_rows):
-        if seen_hashes.insert(combined_hashes[i]):
-            keep.append(i)
-
-    return keep, seen_hashes
-
-cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef cnp.float64_t value
-    for i in range(n):
-        value = data[i]
-        if isnan(value):
-            hashes[i] = null_hash
-        else:
-            hashes[i] = hash(value)
-
-
-cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef cnp.int64_t value
-    for i in range(n):
-        value = data[i]
-        # Assuming a specific value represents missing data
-        # Adjust this condition based on how missing integers are represented
-        if value == numpy.iinfo(numpy.int64).min:
-            hashes[i] = null_hash
-        else:
-            hashes[i] = value  # Hash of int is the int itself in Python 3
-
-cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef object value
-    for i in range(n):
-        value = data[i]
-        if value is None:
-            hashes[i] = null_hash
-        else:
-            hashes[i] = hash(value)
 
 
 cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet seen_hashes=None):
@@ -196,7 +75,6 @@ cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet 
             j += 1
 
     return new_values[:j], new_indices[:j], seen_hashes
-
 
 
 cpdef HashTable hash_join_map(relation, list join_columns):
@@ -264,97 +142,3 @@ cpdef HashTable hash_join_map(relation, list join_columns):
             ht.insert(hash_value, non_null_indices[i])
 
     return ht
-
-
-cpdef HashSet filter_join_set(relation, list join_columns, HashSet seen_hashes):
-    """
-    Build the set for the right of a filter join (ANTI/SEMI)
-    """
-
-    cdef int64_t num_columns = len(join_columns)
-
-    if seen_hashes is None:
-        seen_hashes = HashSet()
-
-    # Memory view for the values array (for the join columns)
-    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
-
-    cdef int64_t hash_value, i
-
-    if num_columns == 1:
-        col = values_array[0, :]
-        for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
-            seen_hashes.insert(hash_value)
-    else:
-        for i in range(values_array.shape[1]):
-            # Combine the hashes of each value in the row
-            hash_value = 0
-            for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
-            seen_hashes.insert(hash_value)
-
-    return seen_hashes
-
-cpdef anti_join(relation, list join_columns, HashSet seen_hashes):
-    cdef int64_t num_columns = len(join_columns)
-    cdef int64_t num_rows = relation.shape[0]
-    cdef int64_t hash_value, i
-    cdef cnp.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
-    cdef int64_t idx_count = 0
-
-    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
-
-    if num_columns == 1:
-        col = values_array[0, :]
-        for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
-            if not seen_hashes.contains(hash_value):
-                index_buffer[idx_count] = i
-                idx_count += 1
-    else:
-        for i in range(values_array.shape[1]):
-            # Combine the hashes of each value in the row
-            hash_value = 0
-            for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
-            if not seen_hashes.contains(hash_value):
-                index_buffer[idx_count] = i
-                idx_count += 1
-
-    if idx_count > 0:
-        return relation.take(index_buffer[:idx_count])
-    else:
-        return relation.slice(0, 0)
-
-
-cpdef semi_join(relation, list join_columns, HashSet seen_hashes):
-    cdef int64_t num_columns = len(join_columns)
-    cdef int64_t num_rows = relation.shape[0]
-    cdef int64_t hash_value, i
-    cdef cnp.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
-    cdef int64_t idx_count = 0
-
-    cdef object[:, ::1] values_array = numpy.array(list(relation.select(join_columns).drop_null().itercolumns()), dtype=object)
-
-    if num_columns == 1:
-        col = values_array[0, :]
-        for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
-            if seen_hashes.contains(hash_value):
-                index_buffer[idx_count] = i
-                idx_count += 1
-    else:
-        for i in range(values_array.shape[1]):
-            # Combine the hashes of each value in the row
-            hash_value = 0
-            for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
-            if seen_hashes.contains(hash_value):
-                index_buffer[idx_count] = i
-                idx_count += 1
-
-    if idx_count > 0:
-        return relation.take(index_buffer[:idx_count])
-    else:
-        return relation.slice(0, 0)

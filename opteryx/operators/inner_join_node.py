@@ -25,13 +25,14 @@ pyarrow_ops implementation which was a variation of a sort-merge join.
 """
 
 import time
+from collections import deque
 from threading import Lock
 
 import pyarrow
 from pyarrow import Table
 
 from opteryx import EOS
-from opteryx.compiled.structures.hash_table import hash_join_map
+from opteryx.compiled.structures import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
@@ -51,8 +52,8 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     Returns:
         A tuple containing lists of matching row indices from the left and right relations.
     """
-    left_indexes = []
-    right_indexes = []
+    left_indexes = deque()
+    right_indexes = deque()
 
     right_hash = hash_join_map(right_relation, join_columns)
 

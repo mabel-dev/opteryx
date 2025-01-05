@@ -21,7 +21,7 @@ from . import BasePlanNode
 
 class DistinctNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
-        from opteryx.compiled.structures import HashSet
+        from opteryx.compiled.structures.flat_hash_map import FlatHashSet as HashSet
 
         BasePlanNode.__init__(self, properties=properties, **parameters)
         self._distinct_on = parameters.get("on")
@@ -38,7 +38,7 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
-        from opteryx.compiled.structures import distinct
+        from opteryx.compiled.structures.flat_hash_map import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
         # the hash to each run of the distinct which means we don't need to concat

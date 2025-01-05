@@ -18,7 +18,7 @@ def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
 
-COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native"]
+COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
 include_dirs = [numpy.get_include()]
@@ -62,6 +62,20 @@ except:
         required = f.read().splitlines()
 
 extensions = [
+    Extension(
+        name="opteryx.compiled.structures.flat_hash_map",
+        sources=[
+            "opteryx/compiled/structures/absl_flat_hash_map.pyx",
+            "third_party/abseil/absl/hash/internal/hash.cc",
+            "third_party/abseil/absl/hash/internal/city.cc", 
+            "third_party/abseil/absl/container/internal/raw_hash_set.cc",
+            "third_party/abseil/absl/hash/internal/low_level_hash.cc"
+            ],
+        include_dirs=include_dirs + ["third_party/abseil"],
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+        extra_link_args=["-Lthird_party/abseil"],  # Link Abseil library
+    ),
     Extension(
         name="opteryx.third_party.fuzzy.csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
