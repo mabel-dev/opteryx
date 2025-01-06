@@ -1,2 +1,0 @@
-from .cython_cross_join import build_filtered_rows_indices_and_column
-from .cython_cross_join import build_rows_indices_and_column

@@ -1,4 +1,3 @@
-# distutils: language = c++
 # cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
@@ -7,73 +6,13 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-from libcpp.unordered_map cimport unordered_map
-from libcpp.unordered_set cimport unordered_set
-from libcpp.vector cimport vector
-from libc.stdint cimport int64_t, uint8_t
-
 cimport numpy as cnp
-
 import numpy
+from libc.stdint cimport uint8_t, int64_t
 
+from opteryx.third_party.abseil.containers cimport FlatHashMap
 
-cdef class HashTable:
-    cdef public unordered_map[int64_t, vector[int64_t]] hash_table
-
-    def __init__(self):
-        self.hash_table = unordered_map[int64_t, vector[int64_t]]()
-        self.hash_table.reserve(1_048_576)  # try to prevent needing to resize
-
-    cpdef bint insert(self, int64_t key, int64_t row_id):
-        # If the key is already in the hash table, append the row_id to the existing list.
-        # Otherwise, create a new list with the row_id.
-        self.hash_table[key].push_back(row_id)
-
-    cpdef vector[int64_t] get(self, int64_t key):
-        # Return the list of row IDs for the given key, or an empty list if the key is not found.
-        return self.hash_table[key]
-
-
-cdef class HashSet:
-    cdef unordered_set[int64_t] c_set
-
-    def __cinit__(self):
-        self.c_set = unordered_set[int64_t]()
-        self.c_set.reserve(1_048_576)  # try to prevent needing to resize
-
-    cdef inline bint insert(self, int64_t value):
-        cdef unsigned long size_before = self.c_set.size()
-        self.c_set.insert(value)
-        return self.c_set.size() > size_before
-
-    cdef inline bint contains(self, int64_t value):
-        return self.c_set.find(value) != self.c_set.end()
-
-
-cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet seen_hashes=None):
-    cdef:
-        Py_ssize_t i, j = 0
-        Py_ssize_t n = values.shape[0]
-        int64_t hash_value
-        int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
-        cnp.dtype dtype = values.dtype
-        cnp.ndarray new_values = numpy.empty(n, dtype=dtype)
-
-    if seen_hashes is None:
-        seen_hashes = HashSet()
-
-    for i in range(n):
-        v = values[i]
-        hash_value = <int64_t>hash(v)
-        if seen_hashes.insert(hash_value):
-            new_values[j] = v
-            new_indices[j] = indices[i]
-            j += 1
-
-    return new_values[:j], new_indices[:j], seen_hashes
-
-
-cpdef HashTable hash_join_map(relation, list join_columns):
+cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
     """
     Build a hash table for the join operations.
 
@@ -85,7 +24,7 @@ cpdef HashTable hash_join_map(relation, list join_columns):
         A HashTable where keys are hashes of the join column entries and
         values are lists of row indices corresponding to each hash key.
     """
-    cdef HashTable ht = HashTable()
+    cdef FlatHashMap ht = FlatHashMap()
 
     # Get the dimensions of the dataset we're working with
     cdef int64_t num_rows = relation.num_rows

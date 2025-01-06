@@ -35,7 +35,7 @@ cdef class MemoryPool:
     def __cinit__(self, long size, str name="Memory Pool"):
         if size <= 0:
             raise ValueError("MemoryPool size must be a positive integer")
-        
+
         self.size = size
         attempt_size = size
 
@@ -69,7 +69,6 @@ cdef class MemoryPool:
         if DEBUG_MODE:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
-
     def _find_free_segment(self, long size) -> long:
         cdef long i
         cdef MemorySegment segment
@@ -80,9 +79,8 @@ cdef class MemoryPool:
         return -1
 
     def _level1_compaction(self):
-        cdef long i, n
-        cdef MemorySegment last_segment, current_segment, segment
-        cdef vector[MemorySegment] sorted_segments
+        cdef long n
+        cdef MemorySegment last_segment, segment
 
         self.l1_compaction += 1
         n = len(self.free_segments)
@@ -103,7 +101,6 @@ cdef class MemoryPool:
                 new_free_segments.append(segment)
 
         self.free_segments = new_free_segments
-
 
     def _level2_compaction(self):
         """
@@ -131,11 +128,11 @@ cdef class MemoryPool:
         cdef long len_data = len(data)
         cdef long segment_index
         cdef MemorySegment segment
-        cdef long ref_id = random_int() 
+        cdef long ref_id = random_int()
 
         # collisions are rare but possible
         while ref_id in self.used_segments:
-            ref_id = random_int() 
+            ref_id = random_int()
 
         # special case for 0 byte segments
         if len_data == 0:
@@ -198,7 +195,7 @@ cdef class MemoryPool:
                 if ref_id not in self.used_segments:
                     raise ValueError("Invalid reference ID.")
                 segment = self.used_segments[ref_id]
-                
+
                 if zero_copy != 0:
                     raw_data = <char[:segment.length]> (char_ptr + segment.start)
                     data = memoryview(raw_data)  # Create a memoryview from the raw data

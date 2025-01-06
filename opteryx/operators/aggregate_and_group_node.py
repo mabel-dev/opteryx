@@ -29,6 +29,8 @@ from opteryx.operators.aggregate_node import project
 
 from . import BasePlanNode
 
+CHUNK_SIZE = 65536
+
 
 class AggregateAndGroupNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
@@ -111,7 +113,10 @@ class AggregateAndGroupNode(BasePlanNode):
             groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
             groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
 
-            yield groups
+            num_rows = groups.num_rows
+            for start in range(0, num_rows, CHUNK_SIZE):
+                yield groups.slice(start, min(CHUNK_SIZE, num_rows - start))
+
             yield EOS
             return
 

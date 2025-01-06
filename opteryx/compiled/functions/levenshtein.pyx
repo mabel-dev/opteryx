@@ -7,8 +7,8 @@
 # cython: boundscheck=False
 
 import numpy as np  # Required for array allocation
-from libc.stdint cimport int64_t, int32_t
-cimport cython
+from libc.stdint cimport int64_t
+
 
 cdef inline int64_t min3(int64_t x, int64_t y, int64_t z) nogil:
     """Utility function to find the minimum of three integers."""
@@ -52,9 +52,9 @@ cpdef int64_t levenshtein(str string1, str string2):
                 dp[i * len2 + j] = dp[(i - 1) * len2 + (j - 1)]
             else:
                 dp[i * len2 + j] = 1 + min3(
-                    dp[(i - 1) * len2 + j],      # Remove
-                    dp[i * len2 + (j - 1)],      # Insert
-                    dp[(i - 1) * len2 + (j - 1)] # Replace
+                    dp[(i - 1) * len2 + j],  # Remove
+                    dp[i * len2 + (j - 1)],  # Insert
+                    dp[(i - 1) * len2 + (j - 1)]  # Replace
                 )
 
     return dp[len1 * len2 + (len2 - 1)]

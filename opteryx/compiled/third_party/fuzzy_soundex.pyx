@@ -1,4 +1,12 @@
-# cython: language_level=3, c_string_type=unicode, c_string_encoding=ascii
+# cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=False
+# cython: boundscheck=False
+
+# c_string_type=unicode, c_string_encoding=ascii
 # This implementation has evolved from this version:
 # https://github.com/yougov/fuzzy/blob/master/src/fuzzy.pyx
 # Various bug fixes and restructure of the code has been made from the
@@ -12,7 +20,7 @@ cdef extern from "stdlib.h":
     void free(void * buf)
 
 cdef char* soundex_map = "01230120022455012623010202"
-cdef int SOUNDEX_LENGTH = 4;
+cdef int SOUNDEX_LENGTH = 4
 
 cpdef soundex(char* s):
 

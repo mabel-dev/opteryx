@@ -92,15 +92,22 @@ class HeapSortNode(BasePlanNode):
             morsel = morsel.sort_by(self.mapped_order).slice(offset=0, length=self.limit)
         # single column sort using numpy
         elif len(self.mapped_order) == 1:
-            # Single-column sort using mergesort to take advantage of partially sorted data
+            # Single-column sort using argsort to take advantage of partially sorted data
             column_name, sort_direction = self.mapped_order[0]
             column = morsel.column(column_name).to_numpy()
             if sort_direction == "ascending":
                 sort_indices = numpy.argsort(column)
             else:
                 sort_indices = numpy.argsort(column)[::-1]  # Reverse for descending
+
             # Slice the sorted table
-            morsel = morsel.take(sort_indices[: self.limit])
+            try:
+                morsel = morsel.take(sort_indices[: self.limit])
+            except Exception:
+                mask = numpy.zeros(len(morsel), dtype=bool)
+                mask[sort_indices[: self.limit]] = True
+                morsel = morsel.filter(mask)
+
         # multi column sort using numpy
         else:
             # Multi-column sort using lexsort

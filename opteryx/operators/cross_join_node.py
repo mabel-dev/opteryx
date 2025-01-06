@@ -21,10 +21,10 @@ import pyarrow
 from orso.schema import FlatColumn
 
 from opteryx import EOS
-from opteryx.compiled.structures import HashSet
 from opteryx.managers.expression import NodeType
 from opteryx.models import LogicalColumn
 from opteryx.models import QueryProperties
+from opteryx.third_party.abseil.containers import FlatHashSet
 
 from . import JoinNode
 
@@ -55,9 +55,9 @@ def _cross_join_unnest_column(
     Returns:
         A generator that yields the resulting `pyarrow.Table` objects.
     """
-    from opteryx.compiled.cross_join import build_filtered_rows_indices_and_column
-    from opteryx.compiled.cross_join import build_rows_indices_and_column
-    from opteryx.compiled.structures import list_distinct
+    from opteryx.compiled.joins.cross_join import build_filtered_rows_indices_and_column
+    from opteryx.compiled.joins.cross_join import build_rows_indices_and_column
+    from opteryx.compiled.joins.cross_join import list_distinct
 
     # Check if the source node type is an identifier, raise error otherwise
     if source.node_type != NodeType.IDENTIFIER:
@@ -287,7 +287,7 @@ class CrossJoinNode(JoinNode):
         self.right_buffer = []
         self.left_relation = None
         self.right_relation = None
-        self.hash_set = HashSet()
+        self.hash_set = FlatHashSet()
 
         self.continue_executing = True
 

@@ -1,6 +1,10 @@
 # cython: language_level=3
-# cython: boundscheck=False
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
 # cython: wraparound=False
+# cython: boundscheck=False
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -8,7 +12,7 @@ import cython
 import numpy
 cimport numpy as cnp
 from cython import Py_ssize_t
-from numpy cimport int64_t, ndarray
+from numpy cimport ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
 
 cnp.import_array()
@@ -23,7 +27,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_eq(object literal, cnp.ndar
     for i in range(arr.shape[0]):
         row = arr[i]
 
-        if row is None: 
+        if row is None:
             result[i] = False
             break
 
@@ -202,7 +206,7 @@ cpdef cnp.ndarray cython_arrow_op(cnp.ndarray arr, object key):
     # Prepare an object array to store the results
     cdef cnp.ndarray result = numpy.empty(n, dtype=object)
     cdef dict document
-    
+
     cdef Py_ssize_t i
     # Iterate over the list of dictionaries
     for i in range(n):
@@ -236,7 +240,7 @@ cpdef cnp.ndarray cython_long_arrow_op(cnp.ndarray arr, object key):
     cdef Py_ssize_t n = len(arr)
     # Prepare an object array to store the results
     cdef cnp.ndarray result = numpy.empty(n, dtype=object)
-    
+
     cdef Py_ssize_t i
     # Iterate over the list of dictionaries
     for i in range(n):

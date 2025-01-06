@@ -352,9 +352,9 @@ def evaluate_and_append(expressions, table: Table):
             if table.num_rows > 0:
                 new_column = evaluate_statement(statement, table)
             else:
-                # we make all unknown fields int64s, this can be cast to _most_ other types
+                # we make all unknown fields to object type
                 new_column = numpy.array(
-                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, numpy.int64)
+                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, object)
                 )
                 new_column = pyarrow.array(new_column)
 

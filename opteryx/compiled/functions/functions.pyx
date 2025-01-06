@@ -1,15 +1,21 @@
+# cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=False
+# cython: boundscheck=False
+
 cimport numpy as cnp
 import numpy as np
 from libc.time cimport time
-cimport cython
 
 cdef bytes alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_/"
 
 # Seed for xorshift32 PRNG
 cdef unsigned int xorshift32_state = <unsigned int>time(NULL)
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
+
 def generate_random_strings(int row_count, int width) -> cnp.ndarray:
     """
     Generates a NumPy array of random fixed-width strings, repeated `row_count` times.
@@ -38,6 +44,7 @@ def generate_random_strings(int row_count, int width) -> cnp.ndarray:
         ptr += 1
 
     return result
+
 
 cdef inline unsigned int xorshift32():
     global xorshift32_state  # Declare as global to modify the module-level variable

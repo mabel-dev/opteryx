@@ -298,7 +298,7 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-    from opteryx.compiled.levenshtein import levenshtein as lev
+    from opteryx.compiled.functions.levenstein import levenshtein as lev
 
     # Convert numpy arrays to lists
     a_list = a.tolist()
@@ -344,9 +344,9 @@ def match_against(arr, val):
     2 indexes)
     """
 
-    from opteryx.compiled.functions import possible_match_indices
-    from opteryx.compiled.functions import tokenize_and_remove_punctuation
-    from opteryx.compiled.functions import vectorize
+    from opteryx.compiled.functions.vectors import possible_match_indices
+    from opteryx.compiled.functions.vectors import tokenize_and_remove_punctuation
+    from opteryx.compiled.functions.vectors import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
     if len(val) == 0:

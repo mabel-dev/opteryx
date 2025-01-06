@@ -16,9 +16,9 @@ presence or absence of matching rows in the right table.
 import pyarrow
 
 from opteryx import EOS
-from opteryx.compiled.structures.flat_hash_map import anti_join
-from opteryx.compiled.structures.flat_hash_map import filter_join_set
-from opteryx.compiled.structures.flat_hash_map import semi_join
+from opteryx.compiled.joins.filter_join import anti_join
+from opteryx.compiled.joins.filter_join import filter_join_set
+from opteryx.compiled.joins.filter_join import semi_join
 from opteryx.models import QueryProperties
 
 from . import JoinNode

@@ -1,0 +1,154 @@
+# cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=False
+# cython: boundscheck=False
+
+
+import numpy as np
+import pyarrow
+
+cimport numpy as cnp
+from libc.stdint cimport int64_t
+from opteryx.third_party.abseil.containers cimport FlatHashSet
+from libc.math cimport isnan
+
+
+cdef inline object recast_column(column):
+    cdef column_type = column.type
+
+    if pyarrow.types.is_struct(column_type) or pyarrow.types.is_list(column_type):
+        return np.array([str(a) for a in column], dtype=np.str_)
+
+    # Otherwise, return the column as-is
+    return column
+
+cpdef tuple distinct(relation, FlatHashSet seen_hashes=None, list columns=None):
+
+    if columns is None:
+        columns = relation.column_names
+
+    # Memory view for the values array (for the join columns)
+    cdef object[:, ::1] values_array = np.array(list(relation.select(columns).drop_null().itercolumns()), dtype=object)
+
+    cdef int64_t hash_value, i
+    cdef list keep = []
+    cdef int64_t num_columns = len(columns)
+
+    if num_columns == 1:
+        col = values_array[0, :]
+        for i in range(len(col)):
+            hash_value = <int64_t>hash(col[i])
+            if seen_hashes.insert(hash_value):
+                keep.append(i)
+    else:
+        for i in range(values_array.shape[1]):
+            # Combine the hashes of each value in the row
+            hash_value = 0
+            for value in values_array[:, i]:
+                hash_value = <int64_t>(hash_value * 31 + hash(value))
+            if seen_hashes.insert(hash_value):
+                keep.append(i)
+
+    return keep, seen_hashes
+
+
+cpdef tuple _distinct(table, FlatHashSet seen_hashes=None, list columns=None):
+    """
+    Perform a distinct operation on the given table using an external FlatHashSet.
+    """
+
+    cdef:
+        int64_t null_hash = hash(None)
+        Py_ssize_t num_rows, i
+        list columns_of_interest
+        list columns_data = []
+        list columns_hashes = []
+        cnp.ndarray[int64_t] combined_hashes
+        list keep = []
+        object column_data
+        cnp.ndarray data_array
+        cnp.ndarray[int64_t] hashes
+
+    if seen_hashes is None:
+        seen_hashes = FlatHashSet()
+
+    columns_of_interest = columns if columns is not None else table.column_names
+    num_rows = table.num_rows  # Use PyArrow's num_rows attribute
+
+    # Prepare data and compute hashes for each column
+    for column_name in columns_of_interest:
+        # Get the column from the table
+        column = table.column(column_name)
+        # Recast column if necessary
+        column_data = recast_column(column)
+        # Convert PyArrow array to NumPy array without copying
+        if isinstance(column_data, pyarrow.ChunkedArray):
+            data_array = column_data.combine_chunks().to_numpy(zero_copy_only=False)
+        elif isinstance(column_data, pyarrow.Array):
+            data_array = column_data.to_numpy(zero_copy_only=False)
+        else:
+            data_array = column_data  # Already a NumPy array
+
+        columns_data.append(data_array)
+        hashes = np.empty(num_rows, dtype=np.int64)
+
+        # Determine data type and compute hashes accordingly
+        if np.issubdtype(data_array.dtype, np.integer):
+            compute_int_hashes(data_array, null_hash, hashes)
+        elif np.issubdtype(data_array.dtype, np.floating):
+            compute_float_hashes(data_array, null_hash, hashes)
+        elif data_array.dtype == np.object_:
+            compute_object_hashes(data_array, null_hash, hashes)
+        else:
+            # For other types (e.g., strings), treat as object
+            compute_object_hashes(data_array.astype(np.object_), null_hash, hashes)
+
+        columns_hashes.append(hashes)
+
+    # Combine the hashes per row
+    combined_hashes = columns_hashes[0]
+    for hashes in columns_hashes[1:]:
+        combined_hashes = combined_hashes * 31 + hashes
+
+    # Check for duplicates using the HashSet
+    for i in range(num_rows):
+        if seen_hashes.insert(combined_hashes[i]):
+            keep.append(i)
+
+    return keep, seen_hashes
+
+cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, int64_t[:] hashes):
+    cdef Py_ssize_t i, n = data.shape[0]
+    cdef cnp.float64_t value
+    for i in range(n):
+        value = data[i]
+        if isnan(value):
+            hashes[i] = null_hash
+        else:
+            hashes[i] = hash(value)
+
+
+cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, int64_t[:] hashes):
+    cdef Py_ssize_t i, n = data.shape[0]
+    cdef cnp.int64_t value
+    for i in range(n):
+        value = data[i]
+        # Assuming a specific value represents missing data
+        # Adjust this condition based on how missing integers are represented
+        if value == np.iinfo(np.int64).min:
+            hashes[i] = null_hash
+        else:
+            hashes[i] = value  # Hash of int is the int itself in Python 3
+
+cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] hashes):
+    cdef Py_ssize_t i, n = data.shape[0]
+    cdef object value
+    for i in range(n):
+        value = data[i]
+        if value is None:
+            hashes[i] = null_hash
+        else:
+            hashes[i] = hash(value)

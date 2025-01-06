@@ -8,9 +8,10 @@
 
 import numpy as np
 cimport numpy as cnp
-cimport cython
 from libc.stdint cimport int64_t
-from libc.math cimport INFINITY
+
+from opteryx.third_party.abseil.containers cimport FlatHashSet
+
 
 cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     cdef int64_t row_count = column_data.shape[0]
@@ -27,7 +28,7 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     for i in range(row_count):
         lengths[i] = column_data[i].shape[0]
         total_size += lengths[i]
-    
+
     # Early exit if total_size is zero
     if total_size == 0:
         return (np.array([], dtype=np.int64), np.array([], dtype=object))
@@ -48,7 +49,6 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
             flat_data[start:end] = column_data[i]
 
     return (indices, flat_data)
-
 
 
 cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set valid_values):
@@ -76,9 +76,6 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
     cdef object value
 
     # Typed sets for different data types
-    cdef set[int] valid_values_int
-    cdef set[double] valid_values_double
-    cdef set[unicode] valid_values_str
     cdef set valid_values_typed = None
 
     # Determine the dtype of the elements
@@ -134,3 +131,26 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
     flat_data = flat_data[:index]
 
     return (indices, flat_data)
+
+
+cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, FlatHashSet seen_hashes=None):
+    cdef:
+        Py_ssize_t i, j = 0
+        Py_ssize_t n = values.shape[0]
+        int64_t hash_value
+        int64_t[::1] new_indices = np.empty(n, dtype=np.int64)
+        cnp.dtype dtype = values.dtype
+        cnp.ndarray new_values = np.empty(n, dtype=dtype)
+
+    if seen_hashes is None:
+        seen_hashes = FlatHashSet()
+
+    for i in range(n):
+        v = values[i]
+        hash_value = <int64_t>hash(v)
+        if seen_hashes.insert(hash_value):
+            new_values[j] = v
+            new_indices[j] = indices[i]
+            j += 1
+
+    return new_values[:j], new_indices[:j], seen_hashes

@@ -86,7 +86,7 @@ def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optiona
             A list of boolean values indicating if each corresponding IP in 'left' is in 'right'.
     """
 
-    from opteryx.compiled.functions import ip_in_cidr
+    from opteryx.compiled.functions.ip_address import ip_in_cidr
 
     try:
         return ip_in_cidr(left, str(right[0]))
