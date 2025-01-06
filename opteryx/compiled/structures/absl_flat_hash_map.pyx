@@ -40,7 +40,6 @@ cdef class FlatHashMap:
     cpdef vector[int64_t] get(self, int64_t key):
         return self._map[key]
 
-
 cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
     cdef cppclass flat_hash_set[T]:
         flat_hash_set()
@@ -64,7 +63,6 @@ cdef class FlatHashSet:
 
     cdef inline bint contains(self, int64_t value):
         return self._set.contains(value)
-
 
 cimport numpy as cnp
 import numpy
@@ -135,9 +133,6 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
             ht.insert(hash_value, non_null_indices[i])
 
     return ht
-
-
-
 
 
 cpdef FlatHashSet filter_join_set(relation, list join_columns, FlatHashSet seen_hashes):
