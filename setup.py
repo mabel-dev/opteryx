@@ -18,7 +18,7 @@ def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
 
-COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native"]
+COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
 include_dirs = [numpy.get_include()]
@@ -63,32 +63,84 @@ except:
 
 extensions = [
     Extension(
-        name="opteryx.third_party.fuzzy.csoundex",
-        sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
-        extra_compile_args=COMPILE_FLAGS,
-    ),
-    Extension(
-        name="opteryx.compiled.levenshtein.clevenshtein",
-        sources=["opteryx/compiled/levenshtein/clevenshtein.pyx"],
-        extra_compile_args=COMPILE_FLAGS,
-    ),
-    Extension(
-        name="opteryx.compiled.list_ops.cython_list_ops",
+        name="opteryx.third_party.abseil.containers",
         sources=[
-            "opteryx/compiled/list_ops/cython_list_ops.pyx",
-        ],
-        include_dirs=include_dirs,
-        extra_compile_args=COMPILE_FLAGS,
+            "opteryx/compiled/third_party/abseil_containers.pyx",
+            "third_party/abseil/absl/hash/internal/hash.cc",
+            "third_party/abseil/absl/hash/internal/city.cc", 
+            "third_party/abseil/absl/container/internal/raw_hash_set.cc",
+            "third_party/abseil/absl/hash/internal/low_level_hash.cc"
+            ],
+        include_dirs=include_dirs + ["third_party/abseil"],
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+        extra_link_args=["-Lthird_party/abseil"],  # Link Abseil library
     ),
     Extension(
-        name="opteryx.compiled.cross_join.cython_cross_join",
-        sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
+        name="opteryx.compiled.functions.functions",
+        sources=["opteryx/compiled/functions/functions.pyx"],
         include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.functions.ip_address",
         sources=["opteryx/compiled/functions/ip_address.pyx"],
+        include_dirs=include_dirs,
+        extra_compile_args=COMPILE_FLAGS,
+    ),
+    Extension(
+        name="opteryx.compiled.functions.levenstein",
+        sources=["opteryx/compiled/functions/levenshtein.pyx"],
+        extra_compile_args=COMPILE_FLAGS,
+    ),
+    Extension(
+        name="opteryx.compiled.functions.vectors",
+        sources=["opteryx/compiled/functions/vectors.pyx"],
+        include_dirs=include_dirs,
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.joins.cross_join",
+        sources=[
+            "opteryx/compiled/joins/cross_join.pyx"
+            ],
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.joins.filter_join",
+        sources=[
+            "opteryx/compiled/joins/filter_join.pyx",
+            ],
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.joins.inner_join",
+        sources=[
+            "opteryx/compiled/joins/inner_join.pyx",
+            ],
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.joins.outer_join",
+        sources=[
+            "opteryx/compiled/joins/outer_join.pyx",
+            ],
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.list_ops.list_ops",
+        sources=[
+            "opteryx/compiled/list_ops/list_ops.pyx",
+        ],
         include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
@@ -100,16 +152,9 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
-        name="opteryx.compiled.functions.vectors",
-        sources=["opteryx/compiled/functions/vectors.pyx"],
-        include_dirs=include_dirs,
+        name="opteryx.compiled.structures.memory_pool",
+        sources=["opteryx/compiled/structures/memory_pool.pyx"],
         language="c++",
-        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
-    ),
-    Extension(
-        name="opteryx.compiled.functions.functions",
-        sources=["opteryx/compiled/functions/functions.pyx"],
-        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
@@ -118,12 +163,19 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="opteryx.compiled.structures.memory_pool",
-        sources=["opteryx/compiled/structures/memory_pool.pyx"],
+        name="opteryx.compiled.table_ops.distinct",
+        sources=["opteryx/compiled/table_ops/distinct.pyx"],
+        include_dirs=include_dirs + ["third_party/abseil"],
         language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.third_party.fuzzy",
+        sources=["opteryx/compiled/third_party/fuzzy_soundex.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
 ]
+
 
 setup_config = {
     "name": LIBRARY,

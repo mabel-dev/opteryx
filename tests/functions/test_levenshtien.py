@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 
-from opteryx.compiled.levenshtein import levenshtein
+from opteryx.compiled.functions.levenstein import levenshtein as lev
 
 # fmt:off
 TESTS = [
@@ -90,7 +90,7 @@ TESTS = [
 
 @pytest.mark.parametrize("a, b, distance", TESTS)
 def test_levenshtien_battery(a, b, distance):
-    calculated_distance = levenshtein(a, b)
+    calculated_distance = lev(a, b)
     assert (
         calculated_distance == distance
     ), f"for {a}/{b} - expected: '{distance}', got: '{calculated_distance}'"

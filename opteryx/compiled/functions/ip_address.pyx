@@ -1,19 +1,17 @@
 # cython: language_level=3
-# cython: boundscheck=False
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
 # cython: wraparound=False
-# cython: nonecheck=False
-# cython: overflowcheck=False
+# cython: boundscheck=False
 
 from libc.stdint cimport uint32_t, int8_t
 from libc.stdlib cimport strtol
-from libc.string cimport strchr
 from libc.string cimport strlen
-from libc.string cimport memset
 import numpy as np
 cimport numpy as cnp
-from cpython cimport PyUnicode_AsUTF8String, PyBytes_GET_SIZE
-
-import cython
+from cpython cimport PyUnicode_AsUTF8String
 
 
 cdef inline uint32_t ip_to_int(const char* ip):
@@ -43,6 +41,7 @@ cdef inline uint32_t ip_to_int(const char* ip):
 
     return result
 
+
 def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
 
     # CIDR validation...
@@ -53,7 +52,6 @@ def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
     cdef int mask_size
     cdef str base_ip_str
     cdef list cidr_parts = cidr.split('/')
-    cdef bytes ip_byte_string
     cdef uint32_t arr_len = ip_addresses.shape[0]
 
     base_ip_str, mask_size = cidr_parts[0], int(cidr_parts[1])

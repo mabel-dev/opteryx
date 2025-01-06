@@ -178,8 +178,8 @@ def cosine_similarity(arr, val):
     ad hoc cosine similarity function, slow.
     """
 
-    from opteryx.compiled.functions import tokenize_and_remove_punctuation
-    from opteryx.compiled.functions import vectorize
+    from opteryx.compiled.functions.vectors import tokenize_and_remove_punctuation
+    from opteryx.compiled.functions.vectors import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
     def cosine_similarity(

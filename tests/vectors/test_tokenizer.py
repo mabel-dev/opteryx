@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.compiled.functions import tokenize_and_remove_punctuation
+from opteryx.compiled.functions.vectors import tokenize_and_remove_punctuation
 
 
 def test_tokenizer():

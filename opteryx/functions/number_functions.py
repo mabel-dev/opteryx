@@ -41,9 +41,9 @@ def random_string(items):
 
     import pyarrow
 
-    from opteryx.compiled.functions import generate_random_strings
+    from opteryx.compiled.functions.functions import generate_random_strings
 
-    return pyarrow.array(generate_random_strings(row_count, width))
+    return pyarrow.array(generate_random_strings(row_count, width), type=pyarrow.binary())
 
 
 def safe_power(base_array, exponent_array):

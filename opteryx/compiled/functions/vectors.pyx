@@ -1,12 +1,13 @@
 # cython: language_level=3
-# cython: boundscheck=False
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
 # cython: wraparound=False
-# cython: nonecheck=False
-# cython: overflowcheck=False
+# cython: boundscheck=False
 
 import numpy as np
 cimport numpy as cnp
-cimport cython
 
 from libc.stdint cimport uint32_t, uint16_t, uint64_t
 from cpython cimport PyUnicode_AsUTF8String, PyBytes_GET_SIZE
@@ -67,7 +68,6 @@ cdef dict irregular_lemmas = {
     b'froze': b'freeze',
     b'got': b'get',
     b'gave': b'give',
-    b'went': b'go',
     b'grew': b'grow',
     b'had': b'have',
     b'heard': b'hear',
@@ -77,7 +77,6 @@ cdef dict irregular_lemmas = {
     b'kept': b'keep',
     b'knew': b'know',
     b'knelt': b'kneel',
-    b'knew': b'know',
     b'led': b'lead',
     b'leapt': b'leap',
     b'learnt': b'learn',
@@ -158,15 +157,13 @@ cdef inline uint16_t djb2_hash(char* byte_array, uint64_t length) nogil:
     return <uint16_t>(hash_value & 0xFFFF)
 
 
-
-
 def vectorize(list tokens):
     cdef cnp.ndarray[cnp.uint16_t, ndim=1] vector = np.zeros(VECTOR_SIZE, dtype=np.uint16)
     cdef uint32_t hash_1
     cdef uint32_t hash_2
     cdef bytes token_bytes
     cdef uint32_t token_size
-    
+
     for token_bytes in tokens:
         token_size = PyBytes_GET_SIZE(token_bytes)
         if token_size > 1:
@@ -176,7 +173,7 @@ def vectorize(list tokens):
             hash_1 = hash_1 & (VECTOR_SIZE - 1)
             if vector[hash_1] < 65535:
                 vector[hash_1] += 1
-            
+
             if vector[hash_2] < 65535:
                 vector[hash_2] += 1
 
@@ -188,7 +185,7 @@ def possible_match(list query_tokens, cnp.ndarray[cnp.uint16_t, ndim=1] vector):
     cdef uint16_t hash_2
     cdef bytes token_bytes
     cdef uint32_t token_size
-    
+
     for token_bytes in query_tokens:
         token_size = PyBytes_GET_SIZE(token_bytes)
         if token_size > 1:
@@ -219,7 +216,7 @@ def possible_match_indices(cnp.ndarray[cnp.uint16_t, ndim=1] indices, cnp.ndarra
     return True
 
 
-from libc.string cimport strlen, strcpy, strtok, strchr
+from libc.string cimport strlen, strcpy, strtok
 from libc.stdlib cimport malloc, free
 
 cdef char* strdup(const char* s) nogil:
@@ -279,7 +276,7 @@ cpdef list tokenize_and_remove_punctuation(str text, set stop_words):
     return tokens
 
 
-from libc.string cimport strlen, strncmp, strcpy, strcat
+from libc.string cimport strlen, strncmp, strcpy
 
 
 from libc.string cimport strlen, strncmp
@@ -317,4 +314,3 @@ cpdef inline bytes lemmatize(char* word, int word_len):
         return word[:word_len - 1]
 
     return word  # Return the original if no suffix matches
-
