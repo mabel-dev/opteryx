@@ -6,8 +6,9 @@ Usage: <path_to_absl>/copts/generate_copts.py
 The configs are generated from copts.py.
 """
 
-from os import path
 import sys
+from os import path
+
 from copts import COPT_VARS
 
 

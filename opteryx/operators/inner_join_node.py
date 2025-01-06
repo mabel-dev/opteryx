@@ -25,7 +25,6 @@ pyarrow_ops implementation which was a variation of a sort-merge join.
 """
 
 import time
-from collections import deque
 from threading import Lock
 
 import pyarrow
@@ -52,8 +51,8 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     Returns:
         A tuple containing lists of matching row indices from the left and right relations.
     """
-    left_indexes = deque()
-    right_indexes = deque()
+    left_indexes = []
+    right_indexes = []
 
     right_hash = hash_join_map(right_relation, join_columns)
 
