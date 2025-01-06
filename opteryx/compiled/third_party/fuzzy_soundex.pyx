@@ -1,4 +1,4 @@
-# cython: language_level=3
+# cython: language_level=3, c_string_type=unicode, c_string_encoding=ascii
 # cython: nonecheck=False
 # cython: cdivision=True
 # cython: initializedcheck=False
@@ -6,7 +6,6 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-# c_string_type=unicode, c_string_encoding=ascii
 # This implementation has evolved from this version:
 # https://github.com/yougov/fuzzy/blob/master/src/fuzzy.pyx
 # Various bug fixes and restructure of the code has been made from the

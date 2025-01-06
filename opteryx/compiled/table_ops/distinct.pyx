@@ -25,13 +25,16 @@ cdef inline object recast_column(column):
     # Otherwise, return the column as-is
     return column
 
-cpdef tuple distinct(relation, FlatHashSet seen_hashes=None, list columns=None):
-
+cpdef tuple _distinct(relation, FlatHashSet seen_hashes=None, list columns=None):
+    """
+    This is faster but I haven't workout out how to deal with nulls...
+    NULL is a valid value for DISTINCT
+    """
     if columns is None:
         columns = relation.column_names
 
     # Memory view for the values array (for the join columns)
-    cdef object[:, ::1] values_array = np.array(list(relation.select(columns).drop_null().itercolumns()), dtype=object)
+    cdef object[:, ::1] values_array = np.array(list(relation.select(columns).itercolumns()), dtype=object)
 
     cdef int64_t hash_value, i
     cdef list keep = []
@@ -55,7 +58,7 @@ cpdef tuple distinct(relation, FlatHashSet seen_hashes=None, list columns=None):
     return keep, seen_hashes
 
 
-cpdef tuple _distinct(table, FlatHashSet seen_hashes=None, list columns=None):
+cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
     """
     Perform a distinct operation on the given table using an external FlatHashSet.
     """
