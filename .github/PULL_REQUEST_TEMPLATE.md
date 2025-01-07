@@ -11,7 +11,7 @@ We appreciate your contribution to Opteryx. Your time and effort make a differen
 
 ---
 
-### **Fixes: `<issue_number_goes_here>`** 
+### **Fixes: #`<issue_number_goes_here>`** 
 Please replace `<issue_number_goes_here>` with the corresponding issue number.
 
 ---

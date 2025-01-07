@@ -1,4 +1,3 @@
-""" """
 
 import os
 import sys
@@ -8,15 +7,18 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import datetime
 
 import pytest
+from freezegun import freeze_time
 
 from opteryx.planner.sql_rewriter import extract_temporal_filters
 from opteryx.utils.sql import clean_statement, remove_comments
 
+APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0) # UTC
+
 # fmt:off
-THIS_MORNING = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-TONIGHT = datetime.datetime.utcnow().replace(hour=23, minute=59, second=0, microsecond=0)
-NOWISH = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-YESTERDAY = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
+THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
+TONIGHT = APOLLO_17_LAUNCH_DATE.replace(hour=23, minute=59, second=0, microsecond=0)
+NOWISH = APOLLO_17_LAUNCH_DATE.replace(minute=0, second=0, microsecond=0)
+YESTERDAY = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
 # fmt:on
 
 # fmt:off
@@ -130,8 +132,9 @@ def test_temporal_extraction(statement, filters):
 
     """
 
-    clean = clean_statement(remove_comments(statement))
-    _, extracted_filters = extract_temporal_filters(clean)
+    with freeze_time(APOLLO_17_LAUNCH_DATE):
+        clean = clean_statement(remove_comments(statement))
+        _, extracted_filters = extract_temporal_filters(clean)
 
     assert filters == extracted_filters, f"{filters} != {extracted_filters}"
 

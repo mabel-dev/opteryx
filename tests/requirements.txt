@@ -41,3 +41,4 @@ setuptools_rust
 
 aiohttp
 psutil
+freezegun
