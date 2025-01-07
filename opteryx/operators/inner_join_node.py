@@ -31,6 +31,7 @@ import pyarrow
 from pyarrow import Table
 
 from opteryx import EOS
+from opteryx.compiled.joins.inner_join import abs_hash_join_map
 from opteryx.compiled.structures import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
@@ -104,7 +105,7 @@ class InnerJoinNode(JoinNode):
                     self.left_buffer.clear()
 
                     start = time.monotonic_ns()
-                    self.left_hash = hash_join_map(self.left_relation, self.left_columns)
+                    self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
                 else:
                     self.left_buffer.append(morsel)

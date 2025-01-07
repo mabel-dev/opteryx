@@ -21,7 +21,7 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
         join_columns: A list of column names to join on.
 
     Returns:
-        A HashTable where keys are hashes of the join column entries and
+        A FlatHashMap where keys are hashes of the join column entries and
         values are lists of row indices corresponding to each hash key.
     """
     cdef FlatHashMap ht = FlatHashMap()

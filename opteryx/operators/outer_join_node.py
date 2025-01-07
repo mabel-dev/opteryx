@@ -24,6 +24,7 @@ import pyarrow
 from opteryx import EOS
 from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
+from opteryx.third_party.abseil.containers import FlatHashMap
 from opteryx.utils.arrow import align_tables
 
 from . import JoinNode
@@ -46,6 +47,7 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     Returns:
         A pyarrow.Table containing the result of the LEFT JOIN operation.
     """
+    from opteryx.compiled.joins.inner_join import abs_hash_join_map
     from opteryx.compiled.structures.hash_table import hash_join_map
 
     left_indexes: deque = deque()
@@ -54,7 +56,7 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     if len(set(left_columns) & set(right_relation.column_names)) > 0:
         left_columns, right_columns = right_columns, left_columns
 
-    right_hash = hash_join_map(right_relation, right_columns)
+    right_hash = abs_hash_join_map(right_relation, right_columns)
     left_hash = hash_join_map(left_relation, left_columns)
 
     for hash_value, left_rows in left_hash.hash_table.items():
@@ -137,7 +139,7 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
     """
     chunk_size = 1000
 
-    hash_table = HashTable()
+    hash_table = FlatHashMap()
     non_null_left_values = left_relation.select(left_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_left_values)):
         hash_table.insert(hash(value_tuple), i)
