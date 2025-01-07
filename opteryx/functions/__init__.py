@@ -397,7 +397,7 @@ FUNCTIONS = {
     "LEVENSHTEIN": (string_functions.levenshtein, OrsoTypes.INTEGER, 1.0),
     "SPLIT": (string_functions.split, OrsoTypes.ARRAY, 1.0),
     "MATCH_AGAINST": (string_functions.match_against, OrsoTypes.BOOLEAN, 1.0),
-    "REGEXP_REPLACE": (string_functions.regex_replace, OrsoTypes.VARCHAR, 1.0),
+    "REGEXP_REPLACE": (string_functions.regex_replace, OrsoTypes.BLOB, 1.0),
 
     # HASHING & ENCODING
     "HASH": (_iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]), OrsoTypes.BLOB, 1.0),

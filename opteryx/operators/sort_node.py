@@ -24,6 +24,8 @@ from opteryx.models import QueryProperties
 
 from . import BasePlanNode
 
+CHUNK_SIZE = 65536
+
 
 class SortNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
@@ -93,5 +95,10 @@ class SortNode(BasePlanNode):
                         f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                     )
 
-        yield table.sort_by(mapped_order)
+        table = table.sort_by(mapped_order)
+
+        num_rows = table.num_rows
+        for start in range(0, num_rows, CHUNK_SIZE):
+            yield table.slice(start, min(CHUNK_SIZE, num_rows - start))
+
         yield EOS

@@ -42,22 +42,19 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             node = operators.HeapSortNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
             if node_config.get("type") == "inner":
-                # We use our own implementation of INNER JOIN
-                # We have optimized VARCHAR version
-                if len(node_config["left_columns"]) == 1 and node_config["columns"][0].schema_column.type == OrsoTypes.VARCHAR:
-                    node = operators.InnerJoinSingleNode(query_properties, **node_config)
-                else:
-                    node = operators.InnerJoinNode(query_properties, **node_config)
+                # INNER JOIN, NATURAL JOIN
+                node = operators.InnerJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left outer", "full outer", "right outer"):
-                # We use out own implementation of OUTER JOINS
+                # LEFT JOIN, RIGHT JOIN, FULL JOIN
                 node = operators.OuterJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":
-                # Pyarrow doesn't have a CROSS JOIN
+                # CROSS JOIN, CROSS JOIN UNNEST
                 node = operators.CrossJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left anti", "left semi"):
-                # We use our own implementation of LEFT SEMI and LEFT ANTI JOIN
+                # LEFT SEMI, LEFT ANTI JOIN
                 node = operators.FilterJoinNode(query_properties, **node_config)
             else:
+                # We don't support other JOIN types, e.g. RIGHT SEMI, RIGHT ANTI
                 raise InvalidInternalStateError(f"Unsupported JOIN type '{node_config['type']}'")
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, **{k:v for k,v in node_config.items() if k in ("limit", "offset", "all_relations")})
