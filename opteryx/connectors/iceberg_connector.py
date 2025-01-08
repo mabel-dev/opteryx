@@ -13,25 +13,23 @@ import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
-from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
+from opteryx.connectors import DiskConnector
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.shared import MaterializedDatasets
-from opteryx.utils import arrow
 
 
 class IcebergConnector(BaseConnector):
-    __mode__ = "Internal"
+    __mode__ = "Blob"
     __type__ = "ARROW"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):
         BaseConnector.__init__(self, **kwargs)
 
         self.dataset = self.dataset.lower()
-        self._datasets = MaterializedDatasets()
+        self.table = catalog.load_table(self.dataset)
+        self.io_connector = io(**kwargs)
 
     def get_dataset_schema(self) -> RelationSchema:
-        dataset = self._datasets[self.dataset]
-        arrow_schema = dataset.schema
+        arrow_schema = self.table.schema().as_arrow()
 
         self.schema = RelationSchema(
             name=self.dataset,
@@ -41,12 +39,14 @@ class IcebergConnector(BaseConnector):
         return self.schema
 
     def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
-        dataset = self._datasets[self.dataset]
+        if columns is None:
+            column_names = self.schema.column_names
+        else:
+            column_names = [col.source_column for col in columns]
 
-        batch_size = DEFAULT_MORSEL_SIZE // (dataset.nbytes / dataset.num_rows)
+        reader = self.table.scan(
+            selected_fields=column_names,
+        ).to_arrow_batch_reader()
 
-        for batch in dataset.to_batches(max_chunksize=batch_size):
-            morsel = pyarrow.Table.from_batches([batch], schema=dataset.schema)
-            if columns:
-                morsel = arrow.post_read_projector(morsel, columns)
-            yield morsel
+        for batch in reader:
+            yield pyarrow.Table.from_batches([batch])
