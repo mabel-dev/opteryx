@@ -1,35 +1,54 @@
+"""
+The COUNT(*) optimization is brittle, it was being missed if 'COUNT' was in
+lowercase, which is why this additional testcase was written.
+
+This optimization relies quite heavily on the AST being exactly the same as it is
+when the optimization was written.
+"""
+
 import os
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import opteryx
 
-def test_count_star():
-    """
-    The COUNT(*) optimization is brittle, it was being missed if 'COUNT' was in
-    lowercase, which is why this additional testcase was written.
-
-    This optimization relies quite heavily on the AST being exactly the same as it is
-    when the optimization was written.
-    """
-    import opteryx
-
+def test_count_star_parquet():
+    """ if is just SELECT COUNT(*) for parquet files, we don't read the rows"""
     cur = opteryx.query("SELECT count(*) FROM testdata.flat.formats.parquet")
     stats = cur.stats
     assert stats["columns_read"] <= 1, stats["columns_read"]
-    assert stats["rows_read"] == 100000, stats["rows_read"]
+    assert stats["rows_read"] == 1, stats["rows_read"]
+    assert stats["rows_seen"] == 100000, stats["rows_seen"]
+    assert cur.fetchone()[0] == 100000
 
-    cur = opteryx.query("SELECT COUNT(*) FROM testdata.flat.formats.parquet;")
+def test_count_star_non_parquet():
+    """ if is just SELECT COUNT(*) for non-parquet files, we read the rows"""
+    cur = opteryx.query("SELECT COUNT(*) FROM testdata.flat.ten_files;")
+    stats = cur.stats
+    assert stats["columns_read"] <= 1, stats["columns_read"]
+    assert stats["rows_read"] == 250, stats["rows_read"]
+    assert stats["rows_seen"] == 250, stats["rows_seen"]
+    assert cur.fetchone()[0] == 250
+
+def test_count_star_parquest_read_the_rows():
+    """ we're counting non-null values, so we need to read the rows """
+    cur = opteryx.query("SELECT COUNT(user_name) FROM testdata.flat.formats.parquet;")
     stats = cur.stats
     assert stats["columns_read"] <= 1, stats["columns_read"]
     assert stats["rows_read"] == 100000, stats["rows_read"]
+    assert stats["rows_seen"] == 100000, stats["rows_seen"]
+    assert cur.fetchone()[0] == 100000
 
+def test_count_star_group_by():
+    """ we're reading data from the file, even though it starts SELECT COUNT(*) FROM """
     cur = opteryx.query(
-        "SELECT COUNT(*), tweet_id FROM testdata.flat.formats.parquet GROUP BY tweet_id;"
+        "SELECT COUNT(*) FROM testdata.flat.formats.parquet GROUP BY tweet_id;"
     )
     stats = cur.stats
     assert stats["columns_read"] <= 1, stats["columns_read"]
     assert stats["rows_read"] == 100000, stats["rows_read"]
+    assert stats["rows_seen"] == 100000, stats["rows_seen"]
 
 
 if __name__ == "__main__":  # pragma: no cover
