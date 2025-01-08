@@ -90,6 +90,10 @@ STATEMENTS = [
         ("SELECT * FROM testdata.satellites", 177, 8, None),
         ("SELECT * FROM testdata.planets", 9, 20, None),
 
+        ("SELECT COUNT(*) FROM testdata.missions", 1, 1, None),
+        ("SELECT COUNT(*) FROM testdata.satellites", 1, 1, None),
+        ("SELECT COUNT(*) FROM testdata.planets", 1, 1, None),
+
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
 

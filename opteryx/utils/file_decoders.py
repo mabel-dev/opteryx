@@ -254,6 +254,12 @@ def parquet_decoder(
     if not selected_columns and not force_read:
         selected_columns = []
 
+    # If it's COUNT(*), we don't need to create a full dataset
+    # We have a handler later to sum up the $COUNT(*) column
+    if projection == [] and selection == []:
+        table = pyarrow.Table.from_arrays([[parquet_file.metadata.num_rows]], names=["$COUNT(*)"])
+        return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
+
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
         stream,
