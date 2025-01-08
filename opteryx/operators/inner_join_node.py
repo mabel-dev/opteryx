@@ -33,6 +33,7 @@ from pyarrow import Table
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import abs_hash_join_map
 from opteryx.compiled.structures import hash_join_map
+from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
@@ -52,8 +53,8 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     Returns:
         A tuple containing lists of matching row indices from the left and right relations.
     """
-    left_indexes = []
-    right_indexes = []
+    left_indexes = IntBuffer()
+    right_indexes = IntBuffer()
 
     right_hash = hash_join_map(right_relation, join_columns)
 
@@ -62,11 +63,12 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
         if left_rows is None:
             continue
         for l in left_rows:
-            for r in right_rows:
-                left_indexes.append(l)
-                right_indexes.append(r)
+            left_indexes.extend([l] * len(right_rows))
+            right_indexes.extend(right_rows)
 
-    return align_tables(right_relation, left_relation, right_indexes, left_indexes)
+    return align_tables(
+        right_relation, left_relation, right_indexes.to_numpy(), left_indexes.to_numpy()
+    )
 
 
 class InnerJoinNode(JoinNode):
