@@ -534,6 +534,48 @@ def ipc_decoder(
     return *full_shape, table
 
 
+def excel_decoder(
+    buffer: Union[memoryview, bytes],
+    *,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
+    just_schema: bool = False,
+    **kwargs,
+) -> Tuple[int, int, pyarrow.Table]:
+    """
+    Reads an Excel file and converts it to a PyArrow table.
+
+    Parameters:
+        file_path: str
+            Path to the Excel file.
+        sheet_name: str, optional
+            Name of the sheet to read. If None, reads the first sheet.
+
+    Returns:
+        pyarrow.Table
+            A PyArrow table containing the Excel data.
+    """
+    import pandas
+
+    # Read Excel file using pandas
+    df = pandas.read_excel(buffer.read())
+
+    # Convert the pandas DataFrame to a PyArrow Table
+    table = pyarrow.Table.from_pandas(df)
+
+    if just_schema:
+        return convert_arrow_schema_to_orso_schema(table.schema)
+
+    shape = table.shape
+
+    if selection:
+        table = filter_records(selection, table)
+    if projection:
+        table = post_read_projector(table, projection)
+
+    return *shape, table
+
+
 # for types we know about, set up how we handle them
 KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "avro": (avro_decoder, ExtentionType.DATA),
@@ -550,6 +592,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "psv": (psv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
     "lzma": (lzma_decoder, ExtentionType.DATA),  # jsonl/lzma
+    "xlsx": (excel_decoder, ExtentionType.DATA),  # jsonl/lzma
 }
 
 VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS)
