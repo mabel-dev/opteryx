@@ -225,13 +225,13 @@ cdef char* strdup(const char* s) nogil:
         strcpy(d, s)
     return d
 
-cpdef list tokenize_and_remove_punctuation(str text, set stop_words):
+cpdef set tokenize_and_remove_punctuation(str text, set stop_words):
     cdef:
         char* token
         char* word
         char* c_text
         bytes py_text = PyUnicode_AsUTF8String(text)
-        list tokens = []
+        set tokens = set()
         int i
         int j
 
@@ -266,7 +266,7 @@ cpdef list tokenize_and_remove_punctuation(str text, set stop_words):
 
                 # Append the lemma if it's not a stop word
                 if lemma not in stop_words:
-                    tokens.append(lemma)
+                    tokens.add(lemma)
 
             free(word)
             token = strtok(NULL, " ")
@@ -311,6 +311,10 @@ cpdef inline bytes lemmatize(char* word, int word_len):
 
     # Check 's' suffix
     if word_len > 2 and strncmp(word + word_len - 1, b"s", 1) == 0:
+        return word[:word_len - 1]
+
+    # Check 'e' ending
+    if word_len > 2 and strncmp(word + word_len - 1, b"e", 1) == 0:
         return word[:word_len - 1]
 
     return word  # Return the original if no suffix matches

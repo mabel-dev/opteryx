@@ -209,7 +209,7 @@ def cosine_similarity(arr, val):
     ]
     # print("time tokenizing ", time.monotonic_ns() - t)
     # t = time.monotonic_ns()
-    vectors = [vectorize(tokens) for tokens in tokenized_strings]
+    vectors = [vectorize(list(tokens)) for tokens in tokenized_strings]
     # print("time vectorizing", time.monotonic_ns() - t)
     comparison_vector = vectors[-1].astype(numpy.float32)
     comparison_vector_norm = numpy.linalg.norm(comparison_vector)
