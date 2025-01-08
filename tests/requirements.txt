@@ -36,6 +36,7 @@ sqlalchemy-bigquery
 pyodbc
 cassandra-driver
 pyiceberg[sql-sqlite, pyarrow]
+openpyxl
 
 setuptools_rust
 
