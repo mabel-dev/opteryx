@@ -313,8 +313,4 @@ cpdef inline bytes lemmatize(char* word, int word_len):
     if word_len > 2 and strncmp(word + word_len - 1, b"s", 1) == 0:
         return word[:word_len - 1]
 
-    # Check 'e' ending
-    if word_len > 2 and strncmp(word + word_len - 1, b"e", 1) == 0:
-        return word[:word_len - 1]
-
     return word  # Return the original if no suffix matches
