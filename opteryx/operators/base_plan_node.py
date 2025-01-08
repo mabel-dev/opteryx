@@ -100,10 +100,11 @@ class BasePlanNode:
 
                     # if we get empty sets, don't yield them unless they're the only one
                     if result.num_rows > 0:
-                        self.statistics.avoided_empty_morsels += 1
                         at_least_one = True
                         yield result
                         continue
+                    else:
+                        self.statistics.avoided_empty_morsels += 1
 
                 yield result
 

@@ -64,18 +64,25 @@ def _is_count_star(aggregates):
 
 
 def _count_star(morsel_promise, column_name):
-    count = sum(morsel.num_rows for morsel in morsel_promise)
+    count = 0
+    for morsel in morsel_promise:
+        if "$COUNT(*)" in morsel.column_names:
+            count += morsel["$COUNT(*)"].to_numpy()[0]
+        else:
+            count += morsel.num_rows
     table = pyarrow.Table.from_pylist([{column_name: count}])
     return table
 
 
 def project(table: pyarrow.Table, column_names: list) -> pyarrow.Table:
-    row_count = table.num_rows
+    if "$COUNT(*)" in table.column_names:
+        column_names.append("$COUNT(*)")
     if len(column_names) > 0:
         return table.select(dict.fromkeys(column_names))
     else:
         # if we can't find the column, add a placeholder column
-        return pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
+        row_count = table.num_rows
+        return pyarrow.Table.from_pydict({"*": numpy.ones(row_count, dtype=numpy.int8)})
 
 
 def build_aggregations(aggregators):
