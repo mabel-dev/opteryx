@@ -11,6 +11,11 @@ from opteryx.connectors import IcebergConnector
 
 BASE_PATH: str = "tmp/iceberg"
 
+# this is how we get the raw list of files for the scan
+# print([task.file.file_path for task in self.table.scan().plan_files()])
+
+
+
 def set_up_iceberg():
     """
     Set up a local Iceberg catalog for testing with NVD data.
@@ -70,10 +75,31 @@ def test_iceberg_basic():
             },
     )
 
-    opteryx.register_store("iceberg", IcebergConnector, io=DiskConnector)
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
 
     table = catalog.load_table("iceberg.tweets")
-    print(table.scan().to_arrow())
+    table.scan().to_arrow()
+
+
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_iceberg_get_schema():
+
+    from pyiceberg.catalog import load_catalog
+
+    set_up_iceberg()
+
+    catalog = load_catalog(
+            "default",
+            **{
+                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
+                "warehouse": f"file://{BASE_PATH}",
+            },
+    )
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
+
+    table = catalog.load_table("iceberg.tweets")
+    table.schema().as_arrow()
 
 
 if __name__ == "__main__":  # pragma: no cover
