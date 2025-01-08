@@ -16,13 +16,13 @@ We also have our own INNER JOIN implementations, it's really just the less
 popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
-from collections import deque
 from typing import List
 
 import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.structures import HashTable
+from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.models import QueryProperties
 from opteryx.third_party.abseil.containers import FlatHashMap
 from opteryx.utils.arrow import align_tables
@@ -50,8 +50,8 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     from opteryx.compiled.joins.inner_join import abs_hash_join_map
     from opteryx.compiled.structures.hash_table import hash_join_map
 
-    left_indexes: deque = deque()
-    right_indexes: deque = deque()
+    left_indexes = IntBuffer()
+    right_indexes = []
 
     if len(set(left_columns) & set(right_relation.column_names)) > 0:
         left_columns, right_columns = right_columns, left_columns
@@ -63,27 +63,24 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
         right_rows = right_hash.get(hash_value)
         if right_rows:
             for l in left_rows:
-                for r in right_rows:
-                    left_indexes.append(l)
-                    right_indexes.append(r)
+                left_indexes.extend([l] * len(right_rows))
+                right_indexes.extend(right_rows)
         else:
             for l in left_rows:
                 left_indexes.append(l)
                 right_indexes.append(None)
 
-        if len(left_indexes) > 50_000:
+        if left_indexes.size > 50_000:
             table = align_tables(
-                right_relation, left_relation, list(right_indexes), list(left_indexes)
+                right_relation, left_relation, right_indexes, left_indexes.to_numpy()
             )
             yield table
-            left_indexes.clear()
+            left_indexes.size = 0
             right_indexes.clear()
 
     # this may return an empty table each time - fix later
-    table = align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
+    table = align_tables(right_relation, left_relation, right_indexes, left_indexes.to_numpy())
     yield table
-    left_indexes.clear()
-    right_indexes.clear()
 
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):

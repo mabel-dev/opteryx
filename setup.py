@@ -152,6 +152,13 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
+        name="opteryx.compiled.structures.buffers",
+        sources=["opteryx/compiled/structures/buffers.pyx"],
+        include_dirs=include_dirs,
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
         name="opteryx.compiled.structures.memory_pool",
         sources=["opteryx/compiled/structures/memory_pool.pyx"],
         language="c++",
