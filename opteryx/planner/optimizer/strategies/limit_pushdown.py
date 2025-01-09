@@ -31,7 +31,10 @@ class LimitPushdownStrategy(OptimizationStrategy):
             context.collected_limits.append(node)
             return context
 
-        if node.node_type.Scan and LimitPushable in node.connector.__class__.mro():
+        if (
+            node.node_type == LogicalPlanStepType.Scan
+            and LimitPushable in node.connector.__class__.mro()
+        ):
             for limit_node in context.collected_limits:
                 if node.relation in limit_node.all_relations:
                     self.statistics.optimization_limit_pushdown += 1

@@ -84,6 +84,7 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
                     record["time_ms"] = operator.execution_time / 1e6
                     record["records_in"] = operator.records_in
                     record["records_out"] = operator.records_out
+                    record["calls"] = operator.calls
                 yield record
                 yield from _inner_explain(operator_name[0], depth + 1)
 
