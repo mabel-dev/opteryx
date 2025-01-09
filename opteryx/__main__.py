@@ -127,7 +127,7 @@ def main():
                 )
                 if args.stats:
                     print(
-                        f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )"
+                        f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration / 1e9} seconds )"
                     )
             except MissingSqlStatement:
                 print(
@@ -171,7 +171,7 @@ def main():
         )
         if args.stats:
             print(
-                f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )"
+                f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration / 1e9} seconds )"
             )
     else:
         table = result.arrow()
@@ -197,7 +197,7 @@ def main():
         else:
             raise ValueError(f"Unknown output format '{ext}'")
         print(
-            f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )"
+            f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration / 1e9} seconds )"
         )
         print(f"Written result to '{args.output}'")
 

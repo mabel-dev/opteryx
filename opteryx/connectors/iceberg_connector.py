@@ -15,14 +15,16 @@ from orso.schema import RelationSchema
 
 from opteryx.connectors import DiskConnector
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import LimitPushable
 
 
-class IcebergConnector(BaseConnector):
+class IcebergConnector(BaseConnector, LimitPushable):
     __mode__ = "Blob"
-    __type__ = "ARROW"
+    __type__ = "ICEBERG"
 
     def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):
         BaseConnector.__init__(self, **kwargs)
+        LimitPushable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.lower()
         self.table = catalog.load_table(self.dataset)
@@ -39,6 +41,9 @@ class IcebergConnector(BaseConnector):
         return self.schema
 
     def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
+        rows_read = 0
+        limit = kwargs.get("limit")
+
         if columns is None:
             column_names = self.schema.column_names
         else:
@@ -49,4 +54,9 @@ class IcebergConnector(BaseConnector):
         ).to_arrow_batch_reader()
 
         for batch in reader:
+            if limit and rows_read + batch.num_rows > limit:
+                batch = batch.slice(0, limit - rows_read)
             yield pyarrow.Table.from_batches([batch])
+            rows_read += batch.num_rows
+            if limit and rows_read >= limit:
+                break

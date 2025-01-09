@@ -100,9 +100,9 @@ def test_predicate_compaction():
 
     # After compaction, the upper limit should be '< 7'
     expected_upper_limit = Limit(7, False)  # Assuming exclusive bounds for '<'
-    assert (
-        vr.upper == expected_upper_limit
-    ), f"Expected upper limit to be {expected_upper_limit}, got {vr.upper}"
+    assert vr.upper == expected_upper_limit, (
+        f"Expected upper limit to be {expected_upper_limit}, got {vr.upper}"
+    )
 
 
 test_initialization()
