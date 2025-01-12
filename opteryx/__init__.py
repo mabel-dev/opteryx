@@ -32,7 +32,7 @@ import pyarrow
 getcontext().prec = 28
 
 # end-of-stream marker
-EOS = object()
+EOS: int = 0
 
 
 def is_mac() -> bool:  # pragma: no cover

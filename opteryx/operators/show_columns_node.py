@@ -77,18 +77,8 @@ class ShowColumnsNode(BasePlanNode):
         if self._full or self._extended:
             # we're going to read the full table, so we can count stuff
 
-            if morsel == EOS:
-                dicts = self.collector.to_dicts()
-                dicts = [self.rename_column(d, self._column_map) for d in dicts]
-                self.seen = True
-                yield pyarrow.Table.from_pylist(dicts)
-                return
+            self.statistics.add_message("SHOW FULL/SHOW EXTENDED not implemented")
 
-            df = DataFrame.from_arrow(morsel)
-
-            if self.collector is None:
-                self.collector = df.profile
-            else:
-                self.collector += df.profile
-
-            yield None
+            self.seen = True
+            yield _simple_collector(self._schema)
+            return
