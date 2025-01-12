@@ -1033,10 +1033,10 @@ id > /* 0 */ 1
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 100", 9, 2, None),
 
         ("SHOW COLUMNS FROM $satellites", 8, 4, None),
-        ("SHOW FULL COLUMNS FROM $satellites", 8, 12, None),
-        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 12, None),
-        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 12, None),
-        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 12, None),
+        ("SHOW FULL COLUMNS FROM $satellites", 8, 4, None),
+        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 4, None),
+        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 4, None),
+        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 4, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, UnsupportedSyntaxError),
         ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2024-02-03'", 8, 4, None),
 
@@ -2407,8 +2407,8 @@ if __name__ == "__main__":  # pragma: no cover
             print(">", err)
             failures.append((statement, err))
             
-#            print(opteryx.query(statement))
-#            raise err
+            print(opteryx.query(statement))
+            raise err
 
     print("--- ✅ \033[0;32mdone\033[0m")
 

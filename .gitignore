@@ -180,3 +180,4 @@ space_missions.parquet
 **.psv
 planets.parquet
 tmp/iceberg/**
+hits_split/*.parquet
