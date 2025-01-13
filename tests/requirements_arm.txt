@@ -19,7 +19,7 @@ sqlalchemy
 pymysql
 psycopg2-binary
 duckdb==1.1.3  # 1040
-duckdb-engine==0.14.0  # 1040
+duckdb-engine==0.14.2  # 1040
 openpyxl
 
 setuptools_rust
