@@ -12,8 +12,14 @@ This is used as the source relation for derived values.
 
 from orso.schema import RelationSchema
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("schema",)
 
 
 def schema():
     return RelationSchema(name="$derived", columns=[])
+
+
+def statistics() -> RelationStatistics:
+    return RelationStatistics()

@@ -31,6 +31,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("read", "schema")
 
 
@@ -111,3 +113,77 @@ def schema():
             ],
         )
     # fmt:on
+
+
+def statistics() -> RelationStatistics:
+    stats = RelationStatistics()
+
+    stats.record_count = 9
+    stats.lower_bounds = {
+        "id": 1,
+        "name": "Earth",
+        "mass": 0.0146,
+        "diameter": 2370,
+        "density": 687,
+        "gravity": decimal.Decimal("0.7"),
+        "escapeVelocity": 1.3,
+        "rotationPeriod": -5832.5,
+        "lengthOfDay": 9.9,
+        "distanceFromSun": 57.9,
+        "perihelion": 46.0,
+        "aphelion": 69.8,
+        "orbitalPeriod": 88.0,
+        "orbitalVelocity": 4.7,
+        "orbitalInclination": -0.0,
+        "orbitalEccentricity": 0.007,
+        "obliquityToOrbit": 0.03,
+        "meanTemperature": -225,
+        "surfacePressure": -0.0,
+        "numberOfMoons": 0,
+    }
+    stats.upper_bounds = {
+        "id": 9,
+        "name": "Venus",
+        "mass": 1898.0,
+        "diameter": 142984,
+        "density": 5514,
+        "gravity": decimal.Decimal("23.1"),
+        "escapeVelocity": 59.5,
+        "rotationPeriod": 1407.6,
+        "lengthOfDay": 4222.6,
+        "distanceFromSun": 5906.4,
+        "perihelion": 4444.5,
+        "aphelion": 7375.9,
+        "orbitalPeriod": 90560.0,
+        "orbitalVelocity": 47.4,
+        "orbitalInclination": 17.2,
+        "orbitalEccentricity": 0.244,
+        "obliquityToOrbit": 177.4,
+        "meanTemperature": 464,
+        "surfacePressure": 92.0,
+        "numberOfMoons": 82,
+    }
+    stats.null_count = {
+        "id": 0,
+        "name": 0,
+        "mass": 0,
+        "diameter": 0,
+        "density": 0,
+        "gravity": 0,
+        "escapeVelocity": 0,
+        "rotationPeriod": 0,
+        "lengthOfDay": 0,
+        "distanceFromSun": 0,
+        "perihelion": 0,
+        "aphelion": 0,
+        "orbitalPeriod": 0,
+        "orbitalVelocity": 0,
+        "orbitalInclination": 0,
+        "orbitalEccentricity": 0,
+        "obliquityToOrbit": 0,
+        "meanTemperature": 0,
+        "surfacePressure": 4,
+        "numberOfMoons": 0,
+    }
+
+    return stats

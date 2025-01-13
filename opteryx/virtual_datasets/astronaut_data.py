@@ -29,6 +29,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("read", "schema")
 
 _decoded: bytes = None
@@ -76,3 +78,61 @@ def schema():
             FlatColumn(name="death_mission", type=OrsoTypes.VARCHAR),
         ],
     )
+
+
+def statistics() -> RelationStatistics:
+    import datetime
+
+    stats = RelationStatistics()
+
+    stats.num_rows = 357
+
+    stats.lower_bounds["name"] = "Alan B. Shepard Jr."
+    stats.lower_bounds["year"] = 1959
+    stats.lower_bounds["group"] = 1
+    stats.lower_bounds["status"] = "Active"
+    stats.lower_bounds["birth_date"] = datetime.date(1921, 7, 18)
+    stats.lower_bounds["gender"] = "Female"
+    stats.lower_bounds["undergraduate_major"] = "Accounting"
+    stats.lower_bounds["graduate_major"] = "Aeronautical & Astronautical Engineering"
+    stats.lower_bounds["military_rank"] = "Brigadier General"
+    stats.lower_bounds["military_branch"] = "US Air Force"
+    stats.lower_bounds["space_flights"] = 0
+    stats.lower_bounds["space_flight_hours"] = 0
+    stats.lower_bounds["space_walks"] = 0
+    stats.lower_bounds["space_walks_hours"] = 0.0
+    stats.lower_bounds["missions"] = "Apollo 1"
+    stats.lower_bounds["death_date"] = datetime.date(1, 4, 23)
+    stats.lower_bounds["death_mission"] = "Apollo 1"
+
+    stats.upper_bounds["name"] = "Yvonne D. Cagle"
+    stats.upper_bounds["year"] = 2009
+    stats.upper_bounds["group"] = 20
+    stats.upper_bounds["status"] = "Retired"
+    stats.upper_bounds["birth_date"] = datetime.date(1978, 10, 14)
+    stats.upper_bounds["gender"] = "Male"
+    stats.upper_bounds["alma_mater"] = "Youngstown State University"
+    stats.upper_bounds["undergraduate_major"] = "Zoology"
+    stats.upper_bounds["graduate_major"] = "Veterinary Medicine; Public Administration"
+    stats.upper_bounds["military_rank"] = "Vice Admiral"
+    stats.upper_bounds["military_branch"] = "US Navy (Retired)"
+    stats.upper_bounds["space_flights"] = 7
+    stats.upper_bounds["space_flight_hours"] = 12818
+    stats.upper_bounds["space_walks"] = 10
+    stats.upper_bounds["space_walks_hours"] = 67.0
+    stats.upper_bounds["missions"] = "Skylab 4"
+    stats.upper_bounds["death_date"] = datetime.date(2012, 8, 26)
+    stats.upper_bounds["death_mission"] = "STS-107 (Columbia)"
+
+    stats.null_count["year"] = 27
+    stats.null_count["group"] = 27
+    stats.null_count["undergraduate_major"] = 22
+    stats.null_count["graduate_major"] = 59
+    stats.null_count["military_rank"] = 150
+    stats.null_count["military_branch"] = 146
+    stats.null_count["space_walks_hours"] = 3
+    stats.null_count["missions"] = 23
+    stats.null_count["death_date"] = 305
+    stats.null_count["death_mission"] = 341
+
+    return stats

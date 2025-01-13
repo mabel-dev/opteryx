@@ -44,6 +44,7 @@ from typing import Optional
 from typing import Union
 
 import numpy
+from orso.schema import ConstantColumn
 from orso.types import OrsoTypes
 
 from opteryx import config
@@ -65,7 +66,7 @@ def build_literal_node(
         value = value.as_py()
 
     if root is None:
-        root = Node(NodeType.LITERAL)
+        root = Node(NodeType.LITERAL, schema_column=ConstantColumn(name=str(value)))
 
     if value is None:
         # Matching None has complications
