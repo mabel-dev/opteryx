@@ -76,6 +76,7 @@ class CostBasedOptimizerVisitor:
             ConstantFoldingStrategy(statistics),
             BooleanSimplificationStrategy(statistics),
             SplitConjunctivePredicatesStrategy(statistics),
+            CorrelatedFiltersStrategy(statistics),
             PredicateRewriteStrategy(statistics),
             PredicatePushdownStrategy(statistics),
             ProjectionPushdownStrategy(statistics),

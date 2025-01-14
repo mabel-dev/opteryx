@@ -25,6 +25,7 @@ from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models import RelationStatistics
 from opteryx.utils.arrow import post_read_projector
 
 
@@ -69,12 +70,13 @@ def convert_avro_schema_to_orso_schema(avro_schema):
     return RelationSchema(name=avro_schema.get("name"), columns=columns)
 
 
-def convert_arrow_schema_to_orso_schema(arrow_schema):
+def convert_arrow_schema_to_orso_schema(arrow_schema, row_count_metric: Optional[int] = None):
     from orso.schema import FlatColumn
     from orso.schema import RelationSchema
 
     return RelationSchema(
         name="arrow",
+        row_count_metric=row_count_metric,
         columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
     )
 
@@ -155,11 +157,15 @@ def zstd_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read zstandard compressed JSONL files
     """
+    if just_statistics:
+        return None
+
     import zstandard
 
     if isinstance(buffer, (memoryview, bytes)):
@@ -179,11 +185,15 @@ def lzma_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read lzma compressed JSONL files
     """
+    if just_statistics:
+        return None
+
     import lzma
 
     if isinstance(buffer, (memoryview, bytes)):
@@ -203,8 +213,10 @@ def parquet_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     force_read: bool = False,
     use_threads: bool = False,
+    statistics: Optional[RelationStatistics] = None,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read parquet formatted files.
@@ -233,7 +245,32 @@ def parquet_decoder(
 
     # Return just the schema if that's all that's needed
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
+        return convert_arrow_schema_to_orso_schema(
+            parquet_file.schema_arrow, parquet_file.metadata.num_rows
+        )
+
+    if just_statistics:
+        if statistics is None:
+            statistics = RelationStatistics()
+        statistics.record_count += parquet_file.metadata.num_rows
+        # Initialize statistics for each column
+        for column in parquet_file.schema_arrow.names:
+            # Iterate over each row group to gather statistics
+            for row_group_index in range(parquet_file.metadata.num_row_groups):
+                column_index = parquet_file.schema_arrow.get_field_index(column)
+                column_chunk = parquet_file.metadata.row_group(row_group_index).column(column_index)
+
+                if column_chunk.statistics is not None:
+                    min_value = column_chunk.statistics.min
+                    if min_value is not None:
+                        statistics.set_lower(column, min_value)
+                    max_value = column_chunk.statistics.max
+                    if max_value is not None:
+                        statistics.set_upper(column, max_value)
+                    null_count = column_chunk.statistics.null_count
+                    if null_count is not None:
+                        statistics.add_null(column, null_count)
+        return statistics
 
     # we need to work out if we have a selection which may force us
     # fetching columns just for filtering
@@ -284,11 +321,15 @@ def orc_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read orc formatted files
     """
+    if just_statistics:
+        return None
+
     import pyarrow.orc as orc
 
     if isinstance(buffer, (memoryview, bytes)):
@@ -317,8 +358,12 @@ def jsonl_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    if just_statistics:
+        return None
+
     import orjson
     import pyarrow.json
     import simdjson
@@ -357,9 +402,13 @@ def csv_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     delimiter: str = ",",
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    if just_statistics:
+        return None
+
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
@@ -389,6 +438,7 @@ def tsv_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     return csv_decoder(
@@ -396,6 +446,7 @@ def tsv_decoder(
         projection=projection,
         selection=selection,
         delimiter="\t",
+        just_statistics=just_statistics,
         just_schema=just_schema,
     )
 
@@ -406,6 +457,7 @@ def psv_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     return csv_decoder(
@@ -414,6 +466,7 @@ def psv_decoder(
         selection=selection,
         delimiter="|",
         just_schema=just_schema,
+        just_statistics=just_statistics,
     )
 
 
@@ -423,8 +476,12 @@ def arrow_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    if just_statistics:
+        return None
+
     import pyarrow.feather as pf
 
     if isinstance(buffer, (memoryview, bytes)):
@@ -452,6 +509,7 @@ def avro_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -462,6 +520,9 @@ def avro_decoder(
     AVRO is still many many times slower than Parquet - it's not recommended as a
     bulk data format.
     """
+    if just_statistics:
+        return None
+
     try:
         import fastavro
     except ImportError:  # pragma: no cover
@@ -508,8 +569,12 @@ def ipc_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    if just_statistics:
+        return None
+
     from itertools import chain
 
     from pyarrow import ipc
@@ -546,6 +611,7 @@ def excel_decoder(
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -561,6 +627,9 @@ def excel_decoder(
         pyarrow.Table
             A PyArrow table containing the Excel data.
     """
+    if just_statistics:
+        return None
+
     import pandas
 
     # Read Excel file using pandas

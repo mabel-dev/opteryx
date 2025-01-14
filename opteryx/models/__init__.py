@@ -10,6 +10,7 @@ from opteryx.models.non_tabular_result import NonTabularResult
 from opteryx.models.physical_plan import PhysicalPlan
 from opteryx.models.query_properties import QueryProperties
 from opteryx.models.query_statistics import QueryStatistics
+from opteryx.models.relation_statistics import RelationStatistics
 
 __all__ = (
     "ConnectionContext",
@@ -19,4 +20,5 @@ __all__ = (
     "PhysicalPlan",
     "QueryProperties",
     "QueryStatistics",
+    "RelationStatistics",
 )

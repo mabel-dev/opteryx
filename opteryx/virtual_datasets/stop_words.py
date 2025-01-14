@@ -13,6 +13,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("read", "schema")
 
 STOP_WORDS: Set[bytes] = {
@@ -348,3 +350,7 @@ def schema():
             ],
         )
     # fmt:on
+
+
+def statistics() -> RelationStatistics:
+    return RelationStatistics()

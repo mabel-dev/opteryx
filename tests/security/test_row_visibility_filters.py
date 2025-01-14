@@ -6,6 +6,7 @@ Test the permissions model is correctly allowing and blocking queries being exec
 import os
 import sys
 import pytest
+import decimal
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -14,9 +15,14 @@ import opteryx
 test_cases = [
     ("SELECT * FROM $planets", {"testdata.planets": [("id", "Eq", 4)]}, (9, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4)]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4.0)]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("id", "Eq", decimal.Decimal("4"))]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "NotEq", 4)]}, (8, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Gt", 4)]}, (5, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Lt", 4)]}, (3, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("id", "InList", [1,2,3,4])]}, (4, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("name", "NotInList", ["Earth", "Mars"])]}, (7, 20)),
+    ("SELECT * FROM $planets", {"$planets": [("gravity", "Lt", 10)]}, (7, 20)),
     ("SELECT * FROM $planets", {"$planets": [("name", "Eq", "Earth")]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [("name", "Like", "%a%")]}, (4, 20)),
     ("SELECT * FROM $satellites", {"$planets": [("id", "Eq", 4)]}, (177, 8)),

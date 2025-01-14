@@ -16,6 +16,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("read", "schema")
 
 
@@ -31,3 +33,7 @@ def schema():
     # fmt:off
     return RelationSchema(name="$no_table", columns=[FlatColumn(name="$column", type=OrsoTypes.INTEGER)])
     # fmt:on
+
+
+def statistics() -> RelationStatistics:
+    return RelationStatistics()

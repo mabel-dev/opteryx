@@ -600,6 +600,7 @@ class BinderVisitor:
             node.schema = schema
         else:
             raise UnsupportedSyntaxError(f"{node.function} cannot be used in place of a table.")
+        node.connector = None
         return node, context
 
     def visit_join(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
@@ -832,8 +833,8 @@ class BinderVisitor:
         from opteryx.connectors.capabilities import Asynchronous
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
+        from opteryx.connectors.capabilities import Statistics
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
-        from opteryx.managers.catalog import catalog_factory
         from opteryx.managers.permissions import can_read_table
 
         if node.alias in context.relations:
@@ -868,9 +869,16 @@ class BinderVisitor:
 
         node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)
+
+        if Statistics in connector_capabilities:
+            node.schema = node.connector.map_statistics(
+                node.connector.relation_statistics, node.schema
+            )
+
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
             column.origin = [node.alias]
+
         context.relations[node.alias] = node.connector.__mode__
 
         return node, context
