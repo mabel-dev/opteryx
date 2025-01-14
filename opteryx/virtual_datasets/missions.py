@@ -15,6 +15,8 @@ This is a sample dataset build into the engine, this simplifies a few things:
 Space Mission dataset acquired from [Kaggle](https://www.kaggle.com/datasets/agirlcoding/all-space-missions-from-1957).
 """
 
+import datetime
+
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
@@ -62,4 +64,12 @@ def schema():
 
 
 def statistics() -> RelationStatistics:
-    return RelationStatistics()
+    stats = RelationStatistics()
+
+    # fmt:off
+    stats.record_count = 4630
+    stats.lower_bounds = {'Company': 'AEB', 'Location': 'Blue Origin Launch Site, West Texas, Texas, USA', 'Price': 2.5, 'Lauched_at': datetime.datetime(1957, 10, 4, 19, 28), 'Rocket': 'ASLV', 'Rocket_Status': 'Active', 'Mission': '-TJS_6.00', 'Mission_Status': 'Failure'}
+    stats.upper_bounds = {'Company': 'i-Space', 'Location': 'Xichang Satellite Launch Center, China', 'Price': 450.0, 'Lauched_at': datetime.datetime(2022, 7, 29, 13, 28), 'Rocket': 'Zoljanah', 'Rocket_Status': 'Retired', 'Mission': 'iPStar-1', 'Mission_Status': 'Success'}
+    stats.null_count = {'Company': 0, 'Location': 0, 'Price': 3380, 'Lauched_at': 127, 'Rocket': 0, 'Rocket_Status': 0, 'Mission': 0, 'Mission_Status': 0}
+    # fmt:on
+    return stats
