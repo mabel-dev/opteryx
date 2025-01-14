@@ -1,5 +1,6 @@
 from .boolean_simplication import BooleanSimplificationStrategy
 from .constant_folding import ConstantFoldingStrategy
+from .correlated_filters import CorrelatedFiltersStrategy
 from .distinct_pushdown import DistinctPushdownStrategy
 from .limit_pushdown import LimitPushdownStrategy
 from .operator_fusion import OperatorFusionStrategy
@@ -12,6 +13,7 @@ from .split_conjunctive_predicates import SplitConjunctivePredicatesStrategy
 __all__ = [
     "BooleanSimplificationStrategy",
     "ConstantFoldingStrategy",
+    "CorrelatedFiltersStrategy",
     "DistinctPushdownStrategy",
     "LimitPushdownStrategy",
     "OperatorFusionStrategy",

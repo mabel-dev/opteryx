@@ -190,19 +190,23 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
                         blob_name=blob_name,
                         statistics=self.statistics,
                         decoder=decoder,
-                        just_schema=just_schema,
+                        just_schema=False,
                         projection=columns,
                         selection=predicates,
                     )
                     self.statistics.rows_seen += num_rows
                     yield decoded
                 else:
-                    yield read_blob(
+                    schema = read_blob(
                         blob_name=blob_name,
                         statistics=self.statistics,
                         decoder=decoder,
-                        just_schema=just_schema,
+                        just_schema=True,
                     )
+                    if schema.row_count_metric:
+                        schema.row_count_metric *= len(blob_names)
+                        self.statistics.estimated_row_count += schema.row_count_metric
+                    yield schema
 
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types

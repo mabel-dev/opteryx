@@ -69,6 +69,7 @@ class LogicalColumn:
         return LogicalColumn(
             node_type=self.node_type,
             source_column=self.source_column,
+            source_connector=self.source_connector,
             source=self.source,
             alias=self.alias,
             schema_column=None

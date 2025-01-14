@@ -600,6 +600,7 @@ class BinderVisitor:
             node.schema = schema
         else:
             raise UnsupportedSyntaxError(f"{node.function} cannot be used in place of a table.")
+        node.connector = None
         return node, context
 
     def visit_join(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:

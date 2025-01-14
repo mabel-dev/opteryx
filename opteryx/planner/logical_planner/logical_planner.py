@@ -1140,6 +1140,8 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
             and_node = None
             for predicate in dnf_list:
                 identifier, operator, value = predicate
+                if operator.startswith("AnyOp"):
+                    identifier, value = value, identifier
                 comparison_node = Node(
                     node_type=NodeType.COMPARISON_OPERATOR,
                     value=operator,

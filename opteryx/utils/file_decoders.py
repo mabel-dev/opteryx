@@ -70,12 +70,13 @@ def convert_avro_schema_to_orso_schema(avro_schema):
     return RelationSchema(name=avro_schema.get("name"), columns=columns)
 
 
-def convert_arrow_schema_to_orso_schema(arrow_schema):
+def convert_arrow_schema_to_orso_schema(arrow_schema, row_count_metric: Optional[int] = None):
     from orso.schema import FlatColumn
     from orso.schema import RelationSchema
 
     return RelationSchema(
         name="arrow",
+        row_count_metric=row_count_metric,
         columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
     )
 
@@ -244,7 +245,9 @@ def parquet_decoder(
 
     # Return just the schema if that's all that's needed
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
+        return convert_arrow_schema_to_orso_schema(
+            parquet_file.schema_arrow, parquet_file.metadata.num_rows
+        )
 
     if just_statistics:
         if statistics is None:

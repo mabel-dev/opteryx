@@ -18,6 +18,7 @@ from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
@@ -51,7 +52,7 @@ def get_storage_credentials():
 
 
 class GcpCloudStorageConnector(
-    BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous
+    BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous, Statistics
 ):
     __mode__ = "Blob"
     __type__ = "GCS"
@@ -87,6 +88,7 @@ class GcpCloudStorageConnector(
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
         Asynchronous.__init__(self, **kwargs)
+        Statistics.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
@@ -253,6 +255,8 @@ class GcpCloudStorageConnector(
                         selection=predicates,
                         just_schema=just_schema,
                     )
+                    if len(blob_names) == 1:
+                        self.relation_statistics = decoder(blob_bytes, just_statistics=True)
                 except Exception as err:
                     raise DatasetReadError(f"Unable to read file {blob_name} ({err})") from err
 
@@ -268,10 +272,16 @@ class GcpCloudStorageConnector(
         if self.schema:
             return self.schema
 
+        number_of_blobs = sum(len(b) for b in self.blob_list.values())
+
         # Read first blob for schema inference and cache it
         self.schema = next(self.read_dataset(just_schema=True), None)
 
         if self.schema is None:
             raise DatasetNotFoundError(dataset=self.dataset)
+
+        if self.schema.row_count_metric:
+            self.schema.row_count_metric *= number_of_blobs
+            self.statistics.estimated_row_count += self.schema.row_count_metric
 
         return self.schema

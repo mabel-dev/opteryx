@@ -19,6 +19,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+from opteryx.models import RelationStatistics
+
 __all__ = ("read", "schema")
 
 _decoded: bytes = None
@@ -57,3 +59,7 @@ def schema():
                 FlatColumn(name="Mission_Status", type=OrsoTypes.VARCHAR),
             ],
         )
+
+
+def statistics() -> RelationStatistics:
+    return RelationStatistics()

@@ -35,6 +35,7 @@
 """
 
 import datetime
+import decimal
 import time
 from typing import Any
 from typing import Dict
@@ -93,6 +94,8 @@ def build_literal_node(
         datetime.datetime: OrsoTypes.TIMESTAMP,
         datetime.time: OrsoTypes.TIME,
         datetime.date: OrsoTypes.DATE,
+        decimal.Decimal: OrsoTypes.DECIMAL,
+        list: OrsoTypes.ARRAY,
     }
 
     value_type = type(value)
@@ -107,6 +110,7 @@ def build_literal_node(
         )
         root.left = None
         root.right = None
+        root.schema_column.type = root.type
 
     # DEBUG:log (f"Unable to create literal node for {value}, of type {value_type}")
     return root
