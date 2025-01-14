@@ -275,7 +275,9 @@ class GcpCloudStorageConnector(
         number_of_blobs = sum(len(b) for b in self.blob_list.values())
 
         # Read first blob for schema inference and cache it
-        self.schema = next(self.read_dataset(just_schema=True), None)
+        for schema in self.read_dataset(just_schema=True):
+            self.schema = schema
+            break
 
         if self.schema is None:
             raise DatasetNotFoundError(dataset=self.dataset)

@@ -225,7 +225,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
         if self.schema:
             return self.schema
 
-        self.schema = next(self.read_dataset(just_schema=True), None)
+        for schema in self.read_dataset(just_schema=True):
+            self.schema = schema
+            break
 
         if self.schema is None:
             if os.path.isdir(self.dataset):
