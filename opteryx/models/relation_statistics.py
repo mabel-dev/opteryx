@@ -15,9 +15,9 @@ class RelationStatistics:
         upper_bounds (Dict[str, int]): A dictionary containing the upper bounds for data values.
     """
 
-    record_count: int = -1
+    record_count: int = 0
     """The number of records in the dataset"""
-    record_count_estimate: int = -1
+    record_count_estimate: int = 0
     """The estimated number of records in the dataset"""
 
     null_count: Optional[Dict[str, int]] = None

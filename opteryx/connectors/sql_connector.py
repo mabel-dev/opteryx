@@ -72,6 +72,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "IsNotFalse": True,
         "IsNull": True,
         "IsNotNull": True,
+        "InStr": True,
+        "NotInStr": True,
     }
 
     OPS_XLAT: Dict[str, str] = {
@@ -89,6 +91,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "IsNotFalse": "IS NOT FALSE",
         "IsNull": "IS NULL",
         "IsNotNull": "IS NOT NULL",
+        "InStr": "LIKE",
+        "NotInStr": "NOT LIKE",
     }
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
@@ -162,6 +166,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 left_operand = predicate.left
                 right_operand = predicate.right
                 operator = self.OPS_XLAT[predicate.value]
+                if predicate.value in {"InStr", "NotInStr"}:
+                    right_operand.value = f"%{right_operand.value}%"
 
                 left_value, parameters = _handle_operand(left_operand, parameters)
                 right_value, parameters = _handle_operand(right_operand, parameters)
