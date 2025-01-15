@@ -10,7 +10,6 @@ from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
-from opteryx.utils.sql import sql_like_to_regex
 
 
 def filter_operations(arr, left_type, operator, value, right_type):
@@ -136,6 +135,13 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         values = set(value[0])
         return numpy.array([a not in values for a in arr], dtype=numpy.bool_)  # [#325]?
+    if operator == "InStr":
+        needle = str(value[0])
+        return list_ops.list_ops.list_substring(arr, needle)  # [#325]
+    if operator == "NotInStr":
+        needle = str(value[0])
+        matches = list_ops.list_ops.list_substring(arr, needle)  # [#325]
+        return numpy.invert(matches.astype(dtype=bool))
     if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0

@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Dict
+from typing import Optional
 
 
 class RelationStatistics:
@@ -8,14 +9,18 @@ class RelationStatistics:
 
     Attributes:
         record_count (Optional[int]): The number of records in the file. Defaults to -1.
-        file_size (Optional[int]): The size of the file in bytes. Defaults to -1.
+        record_count_estimate (Optional[int]): The estimated number of records in the file. Defaults to -1.
         null_count (Dict[str, int]): A dictionary containing the number of null values for each column.
         lower_bounds (Dict[str, int]): A dictionary containing the lower bounds for data values.
         upper_bounds (Dict[str, int]): A dictionary containing the upper bounds for data values.
     """
 
-    record_count: int = 0
-    null_count: Dict[str, int] = None
+    record_count: int = -1
+    """The number of records in the dataset"""
+    record_count_estimate: int = -1
+    """The estimated number of records in the dataset"""
+
+    null_count: Optional[Dict[str, int]] = None
     lower_bounds: Dict[str, Any] = None
     upper_bounds: Dict[str, Any] = None
 

@@ -32,6 +32,7 @@ from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.expression import Node
@@ -225,6 +226,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
+        from sqlalchemy.exc import NoSuchTableError
 
         if self.schema:
             return self.schema
@@ -256,6 +258,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     for column in table.columns
                 ],
             )
+        except NoSuchTableError as err:
+            raise DatasetNotFoundError(dataset=self.dataset)
         except Exception as err:
             if not err:
                 pass

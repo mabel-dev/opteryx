@@ -20,6 +20,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import SqlConnector
 from opteryx.utils.formatter import format_sql
+from opteryx.exceptions import DatasetNotFoundError
 
 # fmt: off
 STATEMENTS = [
@@ -171,6 +172,7 @@ STATEMENTS = [
     ("SELECT * FROM sqlite.planets WHERE id NOT BETWEEN 4 AND 8;", 4, 20, None),
     ("SELECT * FROM sqlite.planets WHERE id BETWEEN 3 AND 9;", 7, 20, None),
     ("SELECT user_name, name FROM sqlite_tweets.tweets JOIN sqlite.planets ON sqlite_tweets.tweets.followers = sqlite.planets.id;", 3962, 2, None),
+    ("SELECT * FROM sqlite.invalid_table;", 0, 0, DatasetNotFoundError),
 ]
 
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)

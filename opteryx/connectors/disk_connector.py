@@ -203,9 +203,12 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
                         decoder=decoder,
                         just_schema=True,
                     )
-                    if schema.row_count_metric:
-                        schema.row_count_metric *= len(blob_names)
-                        self.statistics.estimated_row_count += schema.row_count_metric
+                    # if we have more than one blob we need to estimate the row count
+                    blob_count = len(blob_names)
+                    if schema.row_count_metric and blob_count > 1:
+                        schema.row_count_estimate = schema.row_count_metric * blob_count
+                        schema.row_count_metric = None
+                        self.statistics.estimated_row_count += schema.row_count_estimate
                     yield schema
 
             except UnsupportedFileTypeError:
