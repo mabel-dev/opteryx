@@ -21,7 +21,7 @@ class Statistics:
         if statistics is None:
             return schema
 
-        schema.record_count_metric = statistics.record_count
+        schema.row_count_metric = statistics.record_count
 
         for column in schema.columns:
             column.highest_value = statistics.upper_bounds.get(column.name, None)

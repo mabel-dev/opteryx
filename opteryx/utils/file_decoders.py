@@ -70,13 +70,16 @@ def convert_avro_schema_to_orso_schema(avro_schema):
     return RelationSchema(name=avro_schema.get("name"), columns=columns)
 
 
-def convert_arrow_schema_to_orso_schema(arrow_schema, row_count_metric: Optional[int] = None):
+def convert_arrow_schema_to_orso_schema(
+    arrow_schema, row_count_metric: Optional[int] = None, row_count_estimate: Optional[int] = None
+):
     from orso.schema import FlatColumn
     from orso.schema import RelationSchema
 
     return RelationSchema(
         name="arrow",
         row_count_metric=row_count_metric,
+        row_count_estimate=row_count_estimate,
         columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
     )
 

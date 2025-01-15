@@ -51,7 +51,7 @@ def test_connector_prefixes():
 
 
 def test_connector_prefixes_negative_tests():
-    with pytest.raises((NoSuchTableError, OperationalError)):
+    with pytest.raises((DatasetNotFoundError, OperationalError)):
         # this should be the SQLAlchemy error
         opteryx.query("SELECT * from planets.planets")
 

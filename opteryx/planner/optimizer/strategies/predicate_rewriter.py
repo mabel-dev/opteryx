@@ -38,6 +38,7 @@ from .optimization_strategy import OptimizerContext
 IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
 LIKE_REWRITES = {"Like": "Eq", "NotLike": "NotEq"}
 LITERALS_TO_THE_RIGHT = {"Plus": "Minus", "Minus": "Plus"}
+INSTR_REWRITES = {"Like": "InStr", "NotLike": "NotInStr"}
 
 
 def remove_adjacent_wildcards(predicate):
@@ -132,6 +133,16 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
         if "%" not in predicate.right.value and "_" not in predicate.right.value:
             statistics.optimization_predicate_rewriter_remove_redundant_like += 1
             predicate.value = LIKE_REWRITES[predicate.value]
+
+    if predicate.value in {"Like", "NotLike"}:
+        if (
+            "_" not in predicate.right.value
+            and predicate.right.value.endswith("%")
+            and predicate.right.value.startswith("%")
+        ):
+            statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
+            predicate.right.value = predicate.right.value[1:-1]
+            predicate.value = INSTR_REWRITES[predicate.value]
 
     if predicate.value == "AnyOpEq":
         if predicate.right.node_type == NodeType.LITERAL:

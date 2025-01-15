@@ -11,7 +11,7 @@ def test_read_statistics_tweets():
 
         stats = parquet_decoder(data, just_statistics=True)
 
-    assert stats.record_count == 100000
+    assert stats.record_count == 100000, stats.record_count
 
     assert stats.lower_bounds["tweet_id"] == 1346604539013705728
     assert stats.upper_bounds["tweet_id"] == 1346615999009755142
@@ -57,9 +57,5 @@ def test_read_statistics():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
-
-    test_read_statistics()
-
-    quit()
 
     run_tests()

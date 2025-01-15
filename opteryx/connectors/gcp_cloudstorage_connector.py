@@ -282,8 +282,10 @@ class GcpCloudStorageConnector(
         if self.schema is None:
             raise DatasetNotFoundError(dataset=self.dataset)
 
-        if self.schema.row_count_metric:
-            self.schema.row_count_metric *= number_of_blobs
-            self.statistics.estimated_row_count += self.schema.row_count_metric
+        # if we have more than one blob we need to estimate the row count
+        if self.schema.row_count_metric and number_of_blobs > 1:
+            self.schema.row_count_estimate = self.schema.row_count_metric * number_of_blobs
+            self.schema.row_count_metric = None
+            self.statistics.estimated_row_count += self.schema.row_count_estimate
 
         return self.schema

@@ -8,12 +8,12 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-import cython
 import numpy
 cimport numpy as cnp
 from cython import Py_ssize_t
 from numpy cimport ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
+from cpython.bytes cimport PyBytes_AsString
 
 cnp.import_array()
 
@@ -285,8 +285,6 @@ cpdef cnp.ndarray cython_get_element_op(cnp.ndarray[object, ndim=1] array, int k
     return result
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef cnp.ndarray array_encode_utf8(cnp.ndarray inp):
     """
     Parallel UTF-8 encode all elements of a 1D ndarray of "object" dtype.
@@ -320,3 +318,39 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_contains_any(cnp.ndarray array, cnp.
                     res[i] = 1
                     break
     return res
+
+
+cdef extern from "string.h":
+    void *memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen)
+
+cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring(cnp.ndarray[cnp.str, ndim=1] haystack, str needle):
+    """
+    Used as the InStr operator, which was written to replace using LIKE to execute list_substring
+    matching. We tried using PyArrow's substring but the performance was almost identical to LIKE.
+    """
+    cdef Py_ssize_t n = haystack.shape[0]
+    cdef bytes needle_bytes = needle.encode('utf-8')
+    cdef char *c_pattern = PyBytes_AsString(needle_bytes)
+    cdef size_t pattern_length = len(needle_bytes)
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.zeros(n, dtype=numpy.uint8)
+    cdef Py_ssize_t i = 0
+    cdef Py_ssize_t length
+    cdef char *data
+
+    # Check the type of the first item to decide the processing method
+    if isinstance(haystack[0], str):
+        for i in range(n):
+            item = PyUnicode_AsUTF8String(haystack[i])
+            data = <char*> item
+            length = len(item)
+            if memmem(data, length, c_pattern, pattern_length) != NULL:
+                result[i] = 1
+    else:
+        for i in range(n):
+            item = haystack[i]
+            data = <char*> item
+            length = len(item)
+            if memmem(data, length, c_pattern, pattern_length) != NULL:
+                result[i] = 1
+
+    return result

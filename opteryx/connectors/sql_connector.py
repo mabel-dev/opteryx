@@ -32,6 +32,7 @@ from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.expression import Node
@@ -71,6 +72,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "IsNotFalse": True,
         "IsNull": True,
         "IsNotNull": True,
+        "InStr": True,
+        "NotInStr": True,
     }
 
     OPS_XLAT: Dict[str, str] = {
@@ -88,6 +91,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "IsNotFalse": "IS NOT FALSE",
         "IsNull": "IS NULL",
         "IsNotNull": "IS NOT NULL",
+        "InStr": "LIKE",
+        "NotInStr": "NOT LIKE",
     }
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
@@ -161,6 +166,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 left_operand = predicate.left
                 right_operand = predicate.right
                 operator = self.OPS_XLAT[predicate.value]
+                if predicate.value in {"InStr", "NotInStr"}:
+                    right_operand.value = f"%{right_operand.value}%"
 
                 left_value, parameters = _handle_operand(left_operand, parameters)
                 right_value, parameters = _handle_operand(right_operand, parameters)
@@ -225,6 +232,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
+        from sqlalchemy.exc import NoSuchTableError
 
         if self.schema:
             return self.schema
@@ -256,6 +264,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     for column in table.columns
                 ],
             )
+        except NoSuchTableError as err:
+            raise DatasetNotFoundError(dataset=self.dataset)
         except Exception as err:
             if not err:
                 pass
