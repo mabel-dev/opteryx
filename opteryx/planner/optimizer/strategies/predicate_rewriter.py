@@ -38,7 +38,7 @@ from .optimization_strategy import OptimizerContext
 IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
 LIKE_REWRITES = {"Like": "Eq", "NotLike": "NotEq"}
 LITERALS_TO_THE_RIGHT = {"Plus": "Minus", "Minus": "Plus"}
-INSTR_REWRITES = {"Like": "InStr", "NotLike": "NotInStr"}
+INSTR_REWRITES = {"Like": "InStr", "NotLike": "NotInStr", "ILike": "IInStr", "NotILike": "NotIInStr"}
 
 
 def remove_adjacent_wildcards(predicate):
@@ -129,12 +129,12 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
             statistics.optimization_predicate_rewriter_remove_adjacent_wildcards += 1
             predicate = dispatcher["remove_adjacent_wildcards"](predicate)
 
-    if predicate.value in {"Like", "NotLike"}:
+    if predicate.value in LIKE_REWRITES:
         if "%" not in predicate.right.value and "_" not in predicate.right.value:
             statistics.optimization_predicate_rewriter_remove_redundant_like += 1
             predicate.value = LIKE_REWRITES[predicate.value]
 
-    if predicate.value in {"Like", "NotLike"}:
+    if predicate.value in INSTR_REWRITES:
         if (
             "_" not in predicate.right.value
             and predicate.right.value.endswith("%")
