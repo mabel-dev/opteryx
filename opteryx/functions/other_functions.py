@@ -65,8 +65,15 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         return numpy.array([False], dtype=numpy.bool_)
 
     if array_type in (str, bytes):
-        # return True if the value is in the string
-        results_mask = compute.match_substring(array, pattern=item, ignore_case=ignore_case[0])
+        # Return True if the value is in the string
+        # We're essentially doing a LIKE here
+        from opteryx.compiled import list_ops
+        if ignore_case[0]:
+            results_mask = list_ops.list_ops.list_substring_case_insensitive(array, str(item)).astype(
+                numpy.bool_
+            )
+        else:
+            results_mask = list_ops.list_ops.list_substring(array, str(item)).astype(numpy.bool_)
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower

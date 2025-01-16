@@ -142,6 +142,13 @@ def _inner_filter_operations(arr, operator, value):
         needle = str(value[0])
         matches = list_ops.list_ops.list_substring(arr, needle)  # [#325]
         return numpy.invert(matches.astype(dtype=bool))
+    if operator == "IInStr":
+        needle = str(value[0])
+        return list_ops.list_ops.list_substring_case_insensitive(arr, needle)  # [#325]
+    if operator == "NotIInStr":
+        needle = str(value[0])
+        matches = list_ops.list_ops.list_substring_case_insensitive(arr, needle)  # [#325]
+        return numpy.invert(matches.astype(dtype=bool))
     if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
