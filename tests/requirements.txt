@@ -35,7 +35,8 @@ sqlalchemy-cockroachdb
 sqlalchemy-bigquery
 pyodbc
 cassandra-driver
-pyiceberg[sql-sqlite, pyarrow]
+pyiceberg[sql-sqlite]
+psycopg2-binary
 openpyxl
 
 setuptools_rust

@@ -243,19 +243,6 @@ def _iterate_double_parameter(func):
     return _inner
 
 
-def _iterate_double_parameter_field_second(func):
-    """
-    for functions called FUNCTION(LITERAL, FIELD)
-    """
-
-    def _inner(literal, array):
-        if isinstance(array, str):
-            array = [array]
-        return [func(literal, item) for item in array]
-
-    return _inner
-
-
 def get_len(obj):
     """len, but nullsafe"""
     if hasattr(obj, "__len__"):
@@ -467,7 +454,7 @@ FUNCTIONS = {
     "LOG": (compute.logb, OrsoTypes.DOUBLE, 1.0),
 
     # DATES & TIMES
-    "DATE_TRUNC": (_iterate_double_parameter_field_second(dates.date_trunc), OrsoTypes.TIMESTAMP, 1.0),
+    "DATE_TRUNC": (dates.date_trunc, OrsoTypes.TIMESTAMP, 1.0),
     "TIME_BUCKET": (date_functions.date_floor, OrsoTypes.TIMESTAMP, 1.0),
     "DATEDIFF": (date_functions.date_diff, OrsoTypes.INTEGER, 1.0),
     "TIMEDIFF": (date_functions.time_diff, OrsoTypes.INTEGER, 1.0),
