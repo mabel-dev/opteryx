@@ -188,38 +188,46 @@ def parse_iso(value):
         return None
 
 
-def date_trunc(truncate_to, date_value):
+def date_trunc(truncate_to, date_values) -> numpy.ndarray:
     """
-    Truncate a datetime to a specified unit
+    Truncate an array of datetimes to a specified unit
     """
-    date_value = parse_iso(date_value)
+
+    #    numpy.datetime64(int(date_values), 's').astype(datetime.datetime)
+
+    date_values = numpy.array(date_values, dtype="datetime64")
 
     if not isinstance(truncate_to, str):
         truncate_to = truncate_to[0]  # [#325]
 
-    # [#711]
     truncate_to = str(truncate_to).lower()
 
-    # fmt:off
     if truncate_to == "year":
-        return datetime.datetime(date_value.year, 1, 1, tzinfo=date_value.tzinfo)
+        return date_values.astype("datetime64[Y]").astype("datetime64[s]")
     elif truncate_to == "quarter":
-        quarter = (date_value.month - 1) // 3 + 1
-        return datetime.datetime(date_value.year, 3 * (quarter - 1) + 1, 1, tzinfo=date_value.tzinfo)
+        months = date_values.astype("datetime64[M]").astype(int) // 3 * 3
+        return numpy.array(months,
+            dtype="datetime64[M]",
+        ).astype("datetime64[s]")
     elif truncate_to == "month":
-        return datetime.datetime(date_value.year, date_value.month, 1, tzinfo=date_value.tzinfo)
+        return date_values.astype("datetime64[M]").astype("datetime64[s]")
     elif truncate_to == "week":
-        days_since_monday = date_value.weekday()
-        monday = date_value - datetime.timedelta(days=days_since_monday)
-        return date_trunc("day", monday)
+        return (
+            date_values
+            - ((date_values.astype("datetime64[D]").astype(int) - 4) % 7).astype("timedelta64[D]")
+        ).astype("datetime64[D]").astype("datetime64[s]")
     elif truncate_to == "day":
-        return datetime.datetime(date_value.year, date_value.month, date_value.day, tzinfo=date_value.tzinfo)
+        return date_values.astype("datetime64[D]").astype("datetime64[s]")
     elif truncate_to == "hour":
-        return datetime.datetime(date_value.year, date_value.month, date_value.day, date_value.hour, tzinfo=date_value.tzinfo)
+        timestamps = date_values.astype("datetime64[s]").astype("int64")
+        truncated = (timestamps // 3600) * 3600
+        return truncated.astype("datetime64[s]")
     elif truncate_to == "minute":
-        return datetime.datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, tzinfo=date_value.tzinfo)
+        timestamps = date_values.astype("datetime64[s]").astype("int64")
+        truncated = (timestamps // 60) * 60
+        return truncated.astype("datetime64[s]")
     elif truncate_to == "second":
-        return datetime.datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, date_value.second, tzinfo=date_value.tzinfo)
-    else:  # pragma: no cover
+        return date_values.astype("datetime64[s]")
+
+    else:
         raise ValueError("Invalid unit: {}".format(truncate_to))
-    # fmt:on

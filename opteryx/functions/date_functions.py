@@ -105,8 +105,7 @@ def date_part(part, arr):
     if not hasattr(arr, "__iter__"):
         arr = numpy.array([arr])
 
-    if arr.dtype == numpy.int64():
-        arr = convert_int64_array_to_pyarrow_datetime(arr)
+    arr = numpy.array(arr, dtype="datetime64[us]")
 
     part = part[0].lower()  # [#325]
     if part in extractors:
