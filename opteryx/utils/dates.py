@@ -206,16 +206,23 @@ def date_trunc(truncate_to, date_values) -> numpy.ndarray:
         return date_values.astype("datetime64[Y]").astype("datetime64[s]")
     elif truncate_to == "quarter":
         months = date_values.astype("datetime64[M]").astype(int) // 3 * 3
-        return numpy.array(months,
+        return numpy.array(
+            months,
             dtype="datetime64[M]",
         ).astype("datetime64[s]")
     elif truncate_to == "month":
         return date_values.astype("datetime64[M]").astype("datetime64[s]")
     elif truncate_to == "week":
         return (
-            date_values
-            - ((date_values.astype("datetime64[D]").astype(int) - 4) % 7).astype("timedelta64[D]")
-        ).astype("datetime64[D]").astype("datetime64[s]")
+            (
+                date_values
+                - ((date_values.astype("datetime64[D]").astype(int) - 4) % 7).astype(
+                    "timedelta64[D]"
+                )
+            )
+            .astype("datetime64[D]")
+            .astype("datetime64[s]")
+        )
     elif truncate_to == "day":
         return date_values.astype("datetime64[D]").astype("datetime64[s]")
     elif truncate_to == "hour":

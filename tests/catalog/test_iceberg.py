@@ -14,8 +14,6 @@ BASE_PATH: str = "tmp/iceberg"
 # this is how we get the raw list of files for the scan
 # print([task.file.file_path for task in self.table.scan().plan_files()])
 
-
-
 def set_up_iceberg():
     """
     Set up a local Iceberg catalog for testing with NVD data.
@@ -100,6 +98,27 @@ def test_iceberg_get_schema():
 
     table = catalog.load_table("iceberg.tweets")
     table.schema().as_arrow()
+
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_iceberg_remote():
+
+    from pyiceberg.catalog import load_catalog
+
+    DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
+    DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
+
+    catalog = load_catalog(
+        "opteryx",
+        **{
+            "uri": DATA_CATALOG_CONNECTION,
+            "warehouse": DATA_CATALOG_STORAGE,
+        }
+    )
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+
+    table = opteryx.query("SELECT * FROM iceberg.tweets WHERE followers = 10")
+    assert table.shape[0] == 353
 
 
 if __name__ == "__main__":  # pragma: no cover
