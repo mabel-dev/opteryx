@@ -38,7 +38,12 @@ from .optimization_strategy import OptimizerContext
 IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
 LIKE_REWRITES = {"Like": "Eq", "NotLike": "NotEq"}
 LITERALS_TO_THE_RIGHT = {"Plus": "Minus", "Minus": "Plus"}
-INSTR_REWRITES = {"Like": "InStr", "NotLike": "NotInStr", "ILike": "IInStr", "NotILike": "NotIInStr"}
+INSTR_REWRITES = {
+    "Like": "InStr",
+    "NotLike": "NotInStr",
+    "ILike": "IInStr",
+    "NotILike": "NotIInStr",
+}
 
 
 def remove_adjacent_wildcards(predicate):

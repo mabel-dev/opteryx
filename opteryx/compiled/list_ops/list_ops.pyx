@@ -14,7 +14,6 @@ from cython import Py_ssize_t
 from numpy cimport ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString
-from libc.stdint cimport int32_t
 
 cnp.import_array()
 
@@ -338,8 +337,7 @@ cdef int boyer_moore_horspool(const char *haystack, size_t haystacklen, const ch
         int: 1 if the needle exists in the haystack, 0 otherwise.
     """
     cdef unsigned char skip[256]
-    cdef size_t i, k
-    cdef int j  # Use int to handle negative values safely
+    cdef size_t i
 
     if needlelen == 0:
         return -1  # No valid search possible
@@ -418,7 +416,6 @@ cdef int boyer_moore_horspool_case_insensitive(const char *haystack, size_t hays
         i += skip[<unsigned char>haystack[i + needlelen - 1]]
 
     return 0  # No match found
-
 
 
 cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring(cnp.ndarray[cnp.str, ndim=1] haystack, str needle):

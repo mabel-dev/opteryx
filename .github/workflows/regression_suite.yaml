@@ -79,7 +79,8 @@ jobs:
           MAX_LOCAL_BUFFER_CAPACITY: 100
           MAX_CACHE_EVICTIONS_PER_QUERY: 4
           DATA_CATALOG_PROVIDER: 'ICEBERG'
-          DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
+          DATA_CATALOG_CONNECTION: '${{ secrets.DATA_CATALOG_CONNECTION }}'
+          DATA_CATALOG_STORAGE: '${{ secrets.DATA_CATALOG_STORAGE }}'
           VALKEY_CONNECTION: '${{ secrets.VALKEY_CONFIG }}'
 
       - name: Check Coverage
