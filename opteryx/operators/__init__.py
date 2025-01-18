@@ -12,6 +12,7 @@ from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always f
 from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data
 from .async_read_node import AsyncReaderNode
+from .simple_aggregate_node import SimpleAggregateNode  # aggregate data
 
 # from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
