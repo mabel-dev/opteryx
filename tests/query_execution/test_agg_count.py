@@ -20,7 +20,8 @@ def test_count_star_parquet():
     assert stats["columns_read"] <= 1, stats["columns_read"]
     assert stats["rows_read"] == 1, stats["rows_read"]
     assert stats["rows_seen"] == 100000, stats["rows_seen"]
-    assert cur.fetchone()[0] == 100000
+    first = cur.fetchone()[0]
+    assert first == 100000, first
 
 def test_count_star_non_parquet():
     """ if is just SELECT COUNT(*) for non-parquet files, we read the rows"""
@@ -38,7 +39,8 @@ def test_count_star_parquest_read_the_rows():
     assert stats["columns_read"] <= 1, stats["columns_read"]
     assert stats["rows_read"] == 100000, stats["rows_read"]
     assert stats["rows_seen"] == 100000, stats["rows_seen"]
-    assert cur.fetchone()[0] == 100000
+    first = cur.fetchone()[0]
+    assert first == 100000, first
 
 def test_count_star_group_by():
     """ we're reading data from the file, even though it starts SELECT COUNT(*) FROM """
