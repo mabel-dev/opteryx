@@ -89,6 +89,11 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
+        name="opteryx.compiled.functions.murmurhash3_32",
+        sources=["opteryx/compiled/functions/murmurhash3_32.pyx"],
+        extra_compile_args=COMPILE_FLAGS,
+    ),
+    Extension(
         name="opteryx.compiled.functions.levenstein",
         sources=["opteryx/compiled/functions/levenshtein.pyx"],
         extra_compile_args=COMPILE_FLAGS,
@@ -150,6 +155,12 @@ extensions = [
         include_dirs=include_dirs,
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
+        name="opteryx.compiled.structures.bloom_filter",
+        sources=["opteryx/compiled/structures/bloom_filter.pyx"],
+        include_dirs=include_dirs,
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.structures.buffers",
