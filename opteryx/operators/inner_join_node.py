@@ -73,40 +73,6 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     )
 
 
-def inner_join_with_preprocessed_left_side_and_filter(
-    left_relation, right_relation, join_columns, hash_table, bloom_filter
-):
-    """
-    Perform an INNER JOIN using a preprocessed hash table from the left relation.
-
-    Parameters:
-        left_relation: The preprocessed left pyarrow.Table.
-        right_relation: The right pyarrow.Table to join.
-        join_columns: A list of column names to join on.
-        hash_table: The preprocessed hash table from the left table.
-        bloom_filter: The bloom filter to use for filtering the right relation.
-
-    Returns:
-        A tuple containing lists of matching row indices from the left and right relations.
-    """
-    left_indexes = IntBuffer()
-    right_indexes = IntBuffer()
-
-    right_hash = hash_join_map(right_relation, join_columns)
-
-    for h, right_rows in right_hash.hash_table.items():
-        left_rows = hash_table.get(h)
-        if left_rows is None:
-            continue
-        for l in left_rows:
-            left_indexes.extend([l] * len(right_rows))
-            right_indexes.extend(right_rows)
-
-    return align_tables(
-        right_relation, left_relation, right_indexes.to_numpy(), left_indexes.to_numpy()
-    )
-
-
 class InnerJoinNode(JoinNode):
     join_type = "inner"
 
@@ -175,7 +141,7 @@ class InnerJoinNode(JoinNode):
                     # Filter the morsel using the bloom filter, it's a quick way to
                     # reduce the number of rows that need to be joined.
                     start = time.monotonic_ns()
-                    
+
                     maybe_in_left = self.left_filter.possibly_contains_many(
                         morsel.column(self.right_columns[0]).cast(pyarrow.binary()).to_numpy(False)
                     )

@@ -99,7 +99,8 @@ cdef class BloomFilter:
         cdef cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(n, dtype=bool)
 
         for i in range(n):
-            if self._possibly_contains(keys[i]):
+            key = keys[i]
+            if key is not None and self._possibly_contains(key):
                 result[i] = 1
         return result
 
@@ -117,6 +118,7 @@ cpdef BloomFilter deserialize(const unsigned char* data):
 cpdef BloomFilter create_bloom_filter(keys):
     cdef BloomFilter bf = BloomFilter(len(keys))
 
+    keys = keys.drop_null()
     keys = keys.cast(pyarrow.binary()).to_numpy(False)
     for key in keys:
         bf.add(key)
