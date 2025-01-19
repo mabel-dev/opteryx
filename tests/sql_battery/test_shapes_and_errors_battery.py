@@ -1819,6 +1819,7 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 22, None),
         ("SELECT pids FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 1, None),
         ("SELECT pid FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites CROSS JOIN UNNEST(pids) AS pid", 177, 1, None),
+        ("SELECT * FROM (SELECT LENGTH(ARRAY_AGG(DISTINCT planetId)) AS L FROM $satellites GROUP BY planetId) AS I WHERE L == 1;", 7, 1, None),
 
         ("SHOW CREATE VIEW mission_reports", 1, 1, None),
         ("SHOW CREATE VIEW mission.reports", 1, 1, DatasetNotFoundError),

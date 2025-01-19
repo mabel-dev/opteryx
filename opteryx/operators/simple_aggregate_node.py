@@ -115,7 +115,7 @@ class SimpleAggregateNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "Aggregation (Simple)"
+        return "Aggregation Simple"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
         if morsel == EOS:
@@ -141,7 +141,7 @@ class SimpleAggregateNode(BasePlanNode):
                         column_node.value, morsel.num_rows
                     )
                 elif column_node.node_type == NodeType.WILDCARD:
-                    if "$COUNT(*)" in morsel.column_names:
+                    if "$COUNT(*)" in morsel.column_names and morsel.num_rows > 0:
                         self.accumulator[aggregate.schema_column.identity].collect_literal(
                             1, morsel["$COUNT(*)"][0].as_py()
                         )
