@@ -28,11 +28,13 @@ import time
 from threading import Lock
 
 import pyarrow
+from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import abs_hash_join_map
 from opteryx.compiled.structures import hash_join_map
+from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
@@ -85,6 +87,7 @@ class InnerJoinNode(JoinNode):
         self.left_buffer = []
         self.right_buffer = []
         self.left_hash = None
+        self.left_filter = None
 
         self.lock = Lock()
 
@@ -109,6 +112,21 @@ class InnerJoinNode(JoinNode):
                     start = time.monotonic_ns()
                     self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
+
+                    left_join_column = [c for c in self.columns if c.schema_column.identity in self.left_columns][0]
+
+                    if (
+                        self.left_relation.num_rows < 1e6
+                        and len(self.left_columns) == 1
+                        and left_join_column.schema_column.type
+                        in (OrsoTypes.BLOB, OrsoTypes.VARCHAR)
+                    ):
+                        start = time.monotonic_ns()
+                        self.left_filter = create_bloom_filter(
+                            self.left_relation.column(self.left_columns[0])
+                        )
+                        self.statistics.time_build_bloom_filter += time.monotonic_ns() - start
+                        self.statistics.feature_bloom_filter += 1
                 else:
                     self.left_buffer.append(morsel)
                 yield None
@@ -119,6 +137,27 @@ class InnerJoinNode(JoinNode):
                     yield EOS
                     return
 
+                if self.left_filter is not None:
+                    # Filter the morsel using the bloom filter, it's a quick way to
+                    # reduce the number of rows that need to be joined.
+                    start = time.monotonic_ns()
+
+                    maybe_in_left = self.left_filter.possibly_contains_many(
+                        morsel.column(self.right_columns[0]).cast(pyarrow.binary()).to_numpy(False)
+                    )
+
+                    self.statistics.time_bloom_filtering += time.monotonic_ns() - start
+                    morsel = morsel.filter(maybe_in_left)
+
+                    # If the bloom filter is not effective, disable it.
+                    # In basic benchmarks, the bloom filter is ~15x the speed of the join.
+                    # so the break-even point is about 7% of the rows being eliminated.
+                    eliminated_rows = len(maybe_in_left) - morsel.num_rows
+                    if eliminated_rows < 0.1 * morsel.num_rows:
+                        self.left_filter = None
+                        self.statistics.feature_dynamically_disabled_bloom_filter += 1
+
+                    self.statistics.rows_eliminated_by_bloom_filter += eliminated_rows
                 # do the join
                 new_morsel = inner_join_with_preprocessed_left_side(
                     left_relation=self.left_relation,
