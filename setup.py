@@ -77,6 +77,16 @@ extensions = [
         extra_link_args=["-Lthird_party/abseil"],  # Link Abseil library
     ),
     Extension(
+        name="opteryx.third_party.cyan4973.xxhash",
+        sources=[
+            "opteryx/compiled/third_party/xxhash.pyx",
+            "third_party/cyan4973/xxhash.c"
+            ],
+        include_dirs=include_dirs + ["third_party/cyan4973"],
+        extra_compile_args=COMPILE_FLAGS,
+        extra_link_args=["-Lthird_party/cyan4973"],  # Link Abseil library
+    ),
+    Extension(
         name="opteryx.compiled.functions.functions",
         sources=["opteryx/compiled/functions/functions.pyx"],
         include_dirs=include_dirs,
