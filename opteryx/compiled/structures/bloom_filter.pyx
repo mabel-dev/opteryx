@@ -127,7 +127,7 @@ cdef class BloomFilter:
         cdef uint8_t[::1] result_view = result
 
         for i in range(n):
-            result_view[i] = self._possibly_contains(keys_view[i])
+            result_view[i] = False if keys_view[i] is None else self._possibly_contains(keys_view[i])
 
         return result
 
@@ -154,7 +154,7 @@ cpdef BloomFilter create_bloom_filter(keys):
 
     cdef object[::1] keys_view = keys  # Memory view for fast access
 
-    for i in range(n):
-        bf.add(keys_view[i])
+    for i in range(len(keys)):
+        bf._add(keys_view[i])
 
     return bf
