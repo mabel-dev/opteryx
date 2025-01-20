@@ -20,7 +20,6 @@ determine the second position.
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset, memcpy
-from libc.stdint cimport uint64_t
 
 from opteryx.compiled.functions.murmurhash3_32 cimport cy_murmurhash3
 
@@ -88,7 +87,7 @@ cdef class BloomFilter:
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
         # Check bits using bitwise AND
         return ((self.bit_array[h1 >> 3] & (1 << (h1 & 7))) != 0) and \
-                ((self.bit_array[h2 >> 3] & (1 << (h2 & 7))) != 0)
+               ((self.bit_array[h2 >> 3] & (1 << (h2 & 7))) != 0)
 
     cpdef bint possibly_contains(self, bytes member):
         return self._possibly_contains(member)

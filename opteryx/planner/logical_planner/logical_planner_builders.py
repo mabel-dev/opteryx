@@ -289,6 +289,9 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
 
     order_by = None
     limit = None
+    duplicate_treatment = None
+    null_treatment = None
+    filters = None
     args = []
 
     if branch["args"] != "None":
@@ -301,8 +304,10 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
                 ]
             elif "Limit" in clause:
                 limit = build(clause["Limit"]).value
-            else:
-                print("***", clause)
+
+        duplicate_treatment = branch["args"]["List"].get("duplicate_treatment")
+        null_treatment = branch["args"].get("null_treatment")
+        filters = branch["args"].get("filters")
 
     if functions.is_function(func):
         node_type = NodeType.FUNCTION
@@ -318,12 +323,18 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
 
+    if func == "COUNT" and duplicate_treatment == "Distinct":
+        func = "COUNT_DISTINCT"
+        duplicate_treatment = None
+
     node = Node(
         node_type=node_type,
         value=func,
         parameters=args,
         alias=alias,
-        distinct=branch.get("distinct"),
+        duplicate_treatment=duplicate_treatment,
+        null_treatment=null_treatment,
+        filters=filters,
         order=order_by,
         limit=limit,
     )

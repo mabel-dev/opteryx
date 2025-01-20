@@ -113,7 +113,9 @@ class InnerJoinNode(JoinNode):
                     self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
 
-                    left_join_column = [c for c in self.columns if c.schema_column.identity in self.left_columns][0]
+                    left_join_column = [
+                        c for c in self.columns if c.schema_column.identity in self.left_columns
+                    ][0]
 
                     if (
                         self.left_relation.num_rows < 1e6

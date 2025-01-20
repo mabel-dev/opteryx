@@ -73,7 +73,7 @@ def format_expression(root, qualify: bool = False):
                 con = [format_expression(a, qualify) for a in root.parameters[0].parameters]
                 vals = [format_expression(a, qualify) for a in root.parameters[1].parameters]
                 return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
-            distinct = "DISTINCT " if root.distinct else ""
+            distinct = "DISTINCT " if root.duplicate_treatment else ""
             order = ""
             if root.order:
                 order = f" ORDER BY {', '.join(item[0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
