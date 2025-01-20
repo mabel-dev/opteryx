@@ -152,10 +152,10 @@ class InnerJoinNode(JoinNode):
                     morsel = morsel.filter(maybe_in_left)
 
                     # If the bloom filter is not effective, disable it.
-                    # In basic benchmarks, the bloom filter is ~15x the speed of the join.
-                    # so the break-even point is about 7% of the rows being eliminated.
+                    # In basic benchmarks, the bloom filter is ~20x the speed of the join.
+                    # so the break-even point is about 5% of the rows being eliminated.
                     eliminated_rows = len(maybe_in_left) - morsel.num_rows
-                    if eliminated_rows < 0.1 * morsel.num_rows:
+                    if eliminated_rows < 0.05 * len(maybe_in_left):
                         self.left_filter = None
                         self.statistics.feature_dynamically_disabled_bloom_filter += 1
 
