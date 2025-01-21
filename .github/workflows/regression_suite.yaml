@@ -9,6 +9,9 @@ name: Regression Suite
 
 on:
   push:
+    branches-ignore:
+      - main  # Exclude the main branch
+      - 'refs/tags/*'  # Exclude tags (releases)
   schedule:
     - cron: "0 4 * * *"
 

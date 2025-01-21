@@ -1,7 +1,10 @@
 name: Regression Suite (Mac ARM)
 
 on:
-  push
+  push:
+    branches-ignore:
+      - main  # Exclude the main branch
+      - 'refs/tags/*'  # Exclude tags (releases)
 
 jobs:
   regression_matrix:
