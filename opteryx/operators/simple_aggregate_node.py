@@ -49,7 +49,10 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT_DISTINCT":
-                self.current_value = count_distinct(values.to_numpy().astype(object), FlatHashSet())
+                values = values.to_numpy()
+                if values.dtype != object:
+                    values = values.astype(object)
+                self.current_value = count_distinct(values, FlatHashSet())
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
         else:
@@ -60,7 +63,10 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
             elif self.aggregate_type == "COUNT_DISTINCT":
-                self.current_value = count_distinct(values.to_numpy().astype(object), self.current_value)
+                values = values.to_numpy()
+                if values.dtype != object:
+                    values = values.astype(object)
+                self.current_value = count_distinct(values, self.current_value)
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
 
