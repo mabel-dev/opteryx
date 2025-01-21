@@ -17,10 +17,12 @@ We avoid doing some work by not creating entire columns of data where possible.
 import pyarrow
 
 from opteryx import EOS
+from opteryx.compiled.list_ops.list_ops import count_distinct
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
 from opteryx.operators.aggregate_node import extract_evaluations
+from opteryx.third_party.abseil.containers import FlatHashSet
 
 from . import BasePlanNode
 
@@ -46,6 +48,8 @@ class SimpleAggregateCollector:
                 self.current_value = pyarrow.compute.min(values).as_py()
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
+            elif self.aggregate_type == "COUNT_DISTINCT":
+                self.current_value = count_distinct(values.to_numpy(), FlatHashSet())
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
         else:
@@ -55,6 +59,8 @@ class SimpleAggregateCollector:
                 self.current_value = min(self.current_value, pyarrow.compute.min(values).as_py())
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
+            elif self.aggregate_type == "COUNT_DISTINCT":
+                self.current_value = count_distinct(values.to_numpy(), self.current_value)
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
 
@@ -85,11 +91,13 @@ class SimpleAggregateCollector:
             return self.current_value / self.counter
         if self.aggregate_type == "COUNT":
             return self.counter
+        if self.aggregate_type == "COUNT_DISTINCT":
+            return self.current_value.items()
         return self.current_value
 
 
 class SimpleAggregateNode(BasePlanNode):
-    SIMPLE_AGGREGATES = {"SUM", "MIN", "MAX", "AVG", "COUNT"}
+    SIMPLE_AGGREGATES = {"SUM", "MIN", "MAX", "AVG", "COUNT", "COUNT_DISTINCT"}
 
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)

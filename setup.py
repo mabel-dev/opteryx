@@ -156,8 +156,9 @@ extensions = [
         sources=[
             "opteryx/compiled/list_ops/list_ops.pyx",
         ],
-        include_dirs=include_dirs,
-        extra_compile_args=COMPILE_FLAGS,
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
         name="opteryx.compiled.structures.hash_table",
