@@ -17,6 +17,7 @@ import numpy
 import pyarrow
 
 from opteryx import EOS
+from opteryx.config import CONCURRENT_WORKERS
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
@@ -64,8 +65,6 @@ class FilterNode(BasePlanNode):
             select_nodes=(NodeType.FUNCTION,),
         )
 
-        self.worker_count = pyarrow.io_thread_count() // 2
-
     @property
     def config(self):  # pragma: no cover
         return format_expression(self.filter)
@@ -83,13 +82,13 @@ class FilterNode(BasePlanNode):
             yield morsel
             return
 
-        if morsel.num_rows <= 10000 or self.worker_count <= 2:
+        if morsel.num_rows <= 10000 or CONCURRENT_WORKERS <= 2:
             yield _parallel_filter(None, morsel, self.function_evaluations, self.filter)
         else:
             workers = []
             queue = multiprocessing.Queue()
 
-            for block in morsel.to_batches((morsel.num_rows // self.worker_count) + 1):
+            for block in morsel.to_batches(((morsel.num_rows + 1) // CONCURRENT_WORKERS)):
                 block = pyarrow.Table.from_batches([block])
                 p = multiprocessing.Process(
                     target=_parallel_filter,

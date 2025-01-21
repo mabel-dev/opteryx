@@ -159,8 +159,8 @@ MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_REA
 CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
 """Number of read workers per data source."""
 
-CONCURRENT_WORKERS: int = int(get("CONCURRENT_WORKERS", 2))
-"""Number of worker threads created to execute queries."""
+CONCURRENT_WORKERS: int = int(get("CONCURRENT_WORKERS", psutil.cpu_count(logical=False)))
+"""Number of worker processes created to execute queries."""
 
 DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
 """Data Catalog provider."""
