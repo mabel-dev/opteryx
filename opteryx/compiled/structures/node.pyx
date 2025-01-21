@@ -32,7 +32,7 @@ during execution for about 0.2 seconds, Cython runs this class approx 33% faster
 raw Python version.
 """
 
-
+from cpython.dict cimport PyDict_Copy
 from cpython cimport dict
 from uuid import uuid4
 
@@ -141,3 +141,29 @@ cdef class Node:
         new_node = Node(self.node_type, **{key: _inner_copy(value) for key, value in self._properties.items()})
         new_node.uuid = self.uuid
         return new_node
+
+    def __reduce__(self):
+        """
+        Implements support for pickling (serialization).
+        Returns a tuple with:
+        - The class (Node)
+        - The arguments needed to reconstruct the object
+        - The state dictionary (optional)
+        """
+        return (self.__class__, (self.node_type,), self.__getstate__())
+
+    def __getstate__(self):
+        """
+        Capture the state of the object as a dictionary.
+        """
+        return {
+            "uuid": self.uuid,
+            "_properties": PyDict_Copy(self._properties)  # Deep copy properties
+        }
+
+    def __setstate__(self, state):
+        """
+        Restore the object's state from a dictionary.
+        """
+        self.uuid = state["uuid"]
+        self._properties = state["_properties"]
