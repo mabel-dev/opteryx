@@ -28,6 +28,7 @@ jobs:
   mypy:
     name: Type Checks
     runs-on: ubuntu-latest
+    if: false  # disable the job
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -195,7 +195,7 @@ def _inner_evaluate(root: Node, table: Table):
 
     # if we have this column already, just return it
     if identity in table.column_names:
-        return table[identity].to_numpy()
+        return table[identity].to_numpy(False)
 
     # LITERAL TYPES
     if node_type == NodeType.LITERAL:
