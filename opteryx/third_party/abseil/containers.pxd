@@ -39,3 +39,4 @@ cdef class FlatHashSet:
     cdef inline bint insert(self, int64_t value)
     cdef inline size_t size(self)
     cdef inline bint contains(self, int64_t value)
+    cpdef size_t items(self)

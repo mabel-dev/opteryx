@@ -11,9 +11,12 @@
 import numpy
 cimport numpy as cnp
 from cython import Py_ssize_t
+from libc.stdint cimport int64_t
 from numpy cimport ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString
+
+from opteryx.third_party.abseil.containers cimport FlatHashSet
 
 cnp.import_array()
 
@@ -486,3 +489,16 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring_case_insensitive(cnp.ndarr
                     result[i] = 1
 
     return result
+
+cpdef FlatHashSet count_distinct(cnp.ndarray[object, ndim=1] values, FlatHashSet seen_hashes=None):
+    cdef:
+        int64_t i
+        int64_t n = values.shape[0]
+        int64_t hash_value
+        object[:] values_view = values
+
+    for i in range(n):
+        hash_value = hash(values_view[i])
+        seen_hashes.insert(hash_value)
+
+    return seen_hashes
