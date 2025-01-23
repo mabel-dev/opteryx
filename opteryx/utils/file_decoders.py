@@ -266,10 +266,10 @@ def parquet_decoder(
                 if column_chunk.statistics is not None:
                     min_value = column_chunk.statistics.min
                     if min_value is not None:
-                        statistics.set_lower(column, min_value)
+                        statistics.update_lower(column, min_value)
                     max_value = column_chunk.statistics.max
                     if max_value is not None:
-                        statistics.set_upper(column, max_value)
+                        statistics.update_upper(column, max_value)
                     null_count = column_chunk.statistics.null_count
                     if null_count is not None:
                         statistics.add_null(column, null_count)

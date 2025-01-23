@@ -11,6 +11,7 @@ cimport numpy as cnp
 from libc.stdint cimport int64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
+from cpython.object cimport PyObject_Hash
 
 
 cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
@@ -147,7 +148,7 @@ cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, FlatHash
 
     for i in range(n):
         v = values[i]
-        hash_value = <int64_t>hash(v)
+        hash_value = PyObject_Hash(v)
         if seen_hashes.insert(hash_value):
             new_values[j] = v
             new_indices[j] = indices[i]

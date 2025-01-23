@@ -35,7 +35,7 @@ from opteryx import EOS
 from opteryx.compiled.joins.inner_join import abs_hash_join_map
 from opteryx.compiled.structures import hash_join_map
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
-from opteryx.compiled.structures.buffers import IntBuffer
+from opteryx.compiled.structures.buffers import IntBuffer as IntBuffer
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 

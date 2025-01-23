@@ -26,6 +26,7 @@ class Statistics:
         for column in schema.columns:
             column.highest_value = statistics.upper_bounds.get(column.name, None)
             column.lowest_value = statistics.lower_bounds.get(column.name, None)
-            column.null_count = statistics.null_count.get(column.name, None)
+            if statistics.null_count:
+                column.null_count = statistics.null_count.get(column.name, None)
 
         return schema

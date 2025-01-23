@@ -28,10 +28,11 @@ from . import BasePlanNode
 
 
 class SimpleAggregateCollector:
-    def __init__(self, aggregate_type, column_id, count_nulls=False):
+    def __init__(self, aggregate_type, column_id, count_nulls=False, duplicate_treatment="IGNORE"):
         self.aggregate_type = aggregate_type
         self.current_value = None
         self.count_nulls = count_nulls if aggregate_type == "COUNT" else False
+        self.duplicate_treatment = duplicate_treatment
         self.counter = 0
         self.column_id = column_id
 
@@ -48,7 +49,7 @@ class SimpleAggregateCollector:
                 self.current_value = pyarrow.compute.min(values).as_py()
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
-            elif self.aggregate_type == "COUNT_DISTINCT":
+            elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 values = values.to_numpy()
                 if values.dtype != object:
                     values = values.astype(object)
@@ -62,7 +63,7 @@ class SimpleAggregateCollector:
                 self.current_value = min(self.current_value, pyarrow.compute.min(values).as_py())
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
-            elif self.aggregate_type == "COUNT_DISTINCT":
+            elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 values = values.to_numpy()
                 if values.dtype != object:
                     values = values.astype(object)
@@ -95,10 +96,10 @@ class SimpleAggregateCollector:
             if self.counter == 0 or self.current_value is None:
                 return None
             return self.current_value / self.counter
+        if self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
+            return self.current_value.items()
         if self.aggregate_type == "COUNT":
             return self.counter
-        if self.aggregate_type == "COUNT_DISTINCT":
-            return self.current_value.items()
         return self.current_value
 
 
@@ -120,7 +121,7 @@ class SimpleAggregateNode(BasePlanNode):
             final_column_id = aggregate.schema_column.identity
 
             self.accumulator[final_column_id] = SimpleAggregateCollector(
-                aggregate_type, final_column_id
+                aggregate_type, final_column_id, duplicate_treatment=aggregate.duplicate_treatment
             )
 
     @property

@@ -9,10 +9,10 @@
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
-from threading import Lock
+from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, Py_buffer
+from threading import RLock
 from orso.tools import random_int
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
 
 import os
 
@@ -52,7 +52,7 @@ cdef class MemoryPool:
         self.name = name
         self.free_segments = [MemorySegment(0, self.size)]
         self.used_segments = {}
-        self.lock = Lock()
+        self.lock = RLock()
 
         # Initialize statistics
         self.commits = 0
@@ -104,40 +104,49 @@ cdef class MemoryPool:
 
     def _level2_compaction(self):
         """
-        Aggressively compacts by pushing all free memory to the end (Level 2 compaction).
-
-        This is slower, but ensures we get the maximum free space.
+        Moves all used memory to the beginning and all free memory to the end.
         """
-        cdef MemorySegment segment
-        cdef long segment_id
-        cdef int64_t offset = 0
-
+        cdef long offset = 0
         self.l2_compaction += 1
 
-        total_free_space = sum(segment.length for segment in self.free_segments)
-        compacted_start = self.size - total_free_space
-        self.free_segments = [MemorySegment(compacted_start, total_free_space)]
+        # Sort used segments by start address
+        used_segments_sorted = sorted(self.used_segments.items(), key=lambda x: x[1]["start"])
 
-        for segment_id, segment in sorted(self.used_segments.items(), key=lambda x: x[1]["start"]):
-            memcpy(self.pool + offset, self.pool + segment.start, segment.length)
-            segment.start = offset
-            self.used_segments[segment_id] = segment
-            offset += segment.length
+        for segment_id, segment in used_segments_sorted:
+            if segment["start"] != offset:
+                memcpy(self.pool + offset, self.pool + <long>segment["start"], segment["length"])
+                segment["start"] = offset
+                self.used_segments[segment_id] = segment
+            offset += segment["length"]
 
-    def commit(self, bytes data) -> long:
-        cdef long len_data = len(data)
+        # Update free segment list
+        self.free_segments = [MemorySegment(offset, self.size - offset)]
+
+    def commit(self, object data) -> long:
+        cdef long len_data
         cdef long segment_index
         cdef MemorySegment segment
         cdef long ref_id = random_int()
+        cdef Py_buffer view
+        cdef char* raw_ptr
 
-        # collisions are rare but possible
+        # Resolve collisions
         while ref_id in self.used_segments:
             ref_id = random_int()
 
-        # special case for 0 byte segments
+        if isinstance(data, bytes):
+            len_data = len(data)
+            raw_ptr = PyBytes_AsString(data)
+        else:
+            # Use PyBuffer API to support memoryview, numpy, or PyArrow arrays
+            if PyObject_GetBuffer(data, &view, PyBUF_SIMPLE) == 0:
+                len_data = view.len
+                raw_ptr = <char*> view.buf
+            else:
+                raise TypeError("Unsupported data type for commit")
+
         if len_data == 0:
-            new_segment = MemorySegment(0, 0)
-            self.used_segments[ref_id] = new_segment
+            self.used_segments[ref_id] = MemorySegment(0, 0)
             self.commits += 1
             return ref_id
 
@@ -162,46 +171,31 @@ cdef class MemoryPool:
             if segment.length > len_data:
                 self.free_segments.push_back(MemorySegment(segment.start + len_data, segment.length - len_data))
 
-            memcpy(self.pool + segment.start, PyBytes_AsString(data), len_data)
+            memcpy(self.pool + segment.start, raw_ptr, len_data)
             self.used_segments[ref_id] = MemorySegment(segment.start, len_data)
             self.commits += 1
-            return ref_id
+
+        # Release PyBuffer if used
+        if not isinstance(data, bytes):
+            PyBuffer_Release(&view)
+
+        return ref_id
 
     def read(self, long ref_id, int zero_copy = 1):
         cdef MemorySegment segment
-        cdef MemorySegment post_read_segment
         cdef char* char_ptr = <char*> self.pool
-        cdef char[:] raw_data
 
         self.reads += 1
 
         if ref_id not in self.used_segments:
             raise ValueError("Invalid reference ID.")
+
         segment = self.used_segments[ref_id]
 
         if zero_copy != 0:
-            raw_data = <char[:segment.length]> (char_ptr + segment.start)
-            data = memoryview(raw_data)  # Create a memoryview from the raw data
-        else:
-            data = PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
+            return memoryview(<char[:segment.length]>(char_ptr + segment.start))
 
-        if ref_id not in self.used_segments:
-            raise ValueError("Invalid reference ID.")
-        post_read_segment = self.used_segments[ref_id]
-        if post_read_segment.start != segment.start or post_read_segment.length != segment.length:
-            with self.lock:
-                self.read_locks += 1
-
-                if ref_id not in self.used_segments:
-                    raise ValueError("Invalid reference ID.")
-                segment = self.used_segments[ref_id]
-
-                if zero_copy != 0:
-                    raw_data = <char[:segment.length]> (char_ptr + segment.start)
-                    data = memoryview(raw_data)  # Create a memoryview from the raw data
-                else:
-                    return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
-        return data
+        return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
     def read_and_release(self, long ref_id, int zero_copy = 1):
         cdef MemorySegment segment
