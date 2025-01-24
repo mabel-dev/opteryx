@@ -357,7 +357,7 @@ CREATE_DATABASE = """
 CREATE TABLE planets (
   id INTEGER PRIMARY KEY,
   name VARCHAR(20),
-  mass DECIMAL(5, 1),
+  mass DECIMAL(8, 4),
   diameter INTEGER,
   density DECIMAL(5, 1),
   gravity DECIMAL(5, 1),

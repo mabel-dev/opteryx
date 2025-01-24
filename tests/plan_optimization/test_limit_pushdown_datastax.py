@@ -7,26 +7,25 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import CqlConnector
 from opteryx.utils.formatter import format_sql
+from orso.tools import lru_cache_with_expiry
+from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import Cluster
+@lru_cache_with_expiry
+def set_up_connection():
 
-# We're connecting to DataStax
-cloud_config = {"secure_connect_bundle": "secure-connect.zip"}
+    from cassandra.auth import PlainTextAuthProvider
+    from cassandra.cluster import Cluster
 
-CLIENT_ID = os.environ["DATASTAX_CLIENT_ID"]
-CLIENT_SECRET = os.environ["DATASTAX_CLIENT_SECRET"]
+    DATASTAX_CLIENT_ID = os.environ["DATASTAX_CLIENT_ID"]
+    DATASTAX_CLIENT_SECRET = os.environ["DATASTAX_CLIENT_SECRET"]
 
-auth_provider = PlainTextAuthProvider(CLIENT_ID, CLIENT_SECRET)
-cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-
-opteryx.register_store(
-    "datastax",
-    CqlConnector,
-    remove_prefix=True,
-    cluster=cluster,
-)
-
+    # Datastax Astra Connection
+    cloud_config = {"secure_connect_bundle": "secure-connect.zip"}
+    auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
+    cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+ 
+    opteryx.register_store("datastax", CqlConnector, remove_prefix=True, cluster=cluster)
+ 
 STATEMENTS = [
     # baseline
     ("SELECT name FROM datastax.opteryx.planets;", 9),
@@ -44,8 +43,12 @@ STATEMENTS = [
     ("SELECT name FROM (SELECT * FROM datastax.opteryx.planets) AS S LIMIT 3", 3),
 ]
 
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_datastax_limit_pushdown(query, expected_rows):
+
+    set_up_connection()
+
     cur = opteryx.query(query)
     cur.materialize()
     assert cur.stats["rows_read"] == expected_rows, cur.stats
