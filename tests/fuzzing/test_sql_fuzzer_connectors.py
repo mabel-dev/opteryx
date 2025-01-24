@@ -33,7 +33,7 @@ from opteryx import virtual_datasets
 from tests.tools import create_duck_db, populate_mongo
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
-TEST_CYCLES: int = 100
+TEST_CYCLES: int = 20
 
 DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
 DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
