@@ -7,29 +7,14 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import orjson
-
 import opteryx
 from opteryx.connectors import MongoDbConnector
 from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests.tools import populate_mongo
 
 COLLECTION_NAME = "tweets"
 MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
 MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
-
-
-def populate_mongo():  # pragma: no cover
-    import pymongo  # type:ignore
-
-    myclient = pymongo.MongoClient(MONGO_CONNECTION)
-    mydb = myclient[MONGO_DATABASE]
-    collection = mydb[COLLECTION_NAME]
-
-    collection.drop()
-
-    with open("testdata/flat/tweets/tweets-0000.jsonl", mode="rb") as f:
-        data = f.read()
-    collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 
 # skip to reduce contention
@@ -37,7 +22,7 @@ def populate_mongo():  # pragma: no cover
 def test_mongo_storage_environment_variables():
     opteryx.register_store(COLLECTION_NAME, MongoDbConnector)
 
-    #    populate_mongo()
+    populate_mongo()
 
     conn = opteryx.connect()
 

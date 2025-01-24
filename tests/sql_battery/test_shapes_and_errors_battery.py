@@ -2110,8 +2110,8 @@ id > /* 0 */ 1
         ("SELECT * FROM 'testdata/flat/multi/00.01.jsonl'", 1, 4, None),
         # [1015] predicate pushdowns
         ("SELECT * FROM $planets WHERE rotationPeriod = lengthOfDay", 3, 20, None),
-        ("SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
-        ("SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        ("SELECT * FROM 'testdata.planets' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        ("SELECT * FROM 'testdata/planets/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
         # memoization flaws
         ("SELECT LEFT('APPLE', 1), LEFT('APPLE', 1) || 'B'", 1, 2, None),
         ("SELECT LEFT('APPLE', 1) || 'B', LEFT('APPLE', 1)", 1, 2, None),

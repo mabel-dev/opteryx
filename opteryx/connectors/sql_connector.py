@@ -66,10 +66,6 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "LtEq": True,
         "Like": True,
         "NotLike": True,
-        "IsTrue": True,
-        "IsNotTrue": True,
-        "IsFalse": True,
-        "IsNotFalse": True,
         "IsNull": True,
         "IsNotNull": True,
         "InStr": True,
@@ -85,10 +81,6 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         "LtEq": "<=",
         "Like": "LIKE",
         "NotLike": "NOT LIKE",
-        "IsTrue": "IS TRUE",
-        "IsNotTrue": "IS NOT TRUE",
-        "IsFalse": "IS FALSE",
-        "IsNotFalse": "IS NOT FALSE",
         "IsNull": "IS NULL",
         "IsNotNull": "IS NOT NULL",
         "InStr": "LIKE",
@@ -124,7 +116,9 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
     def can_push(self, operator: Node, types: set = None) -> bool:
         if super().can_push(operator, types):
             return True
-        return operator.condition.node_type == NodeType.UNARY_OPERATOR
+        if operator.condition.node_type == NodeType.UNARY_OPERATOR:
+            return operator.condition.value in self.PUSHABLE_OPS
+        return False
 
     def read_dataset(  # type:ignore
         self,

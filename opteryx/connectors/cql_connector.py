@@ -25,6 +25,7 @@ from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -45,7 +46,7 @@ def _handle_operand(operand: Node, parameters: list) -> Tuple[Any, list]:
     return "?", parameters
 
 
-class CqlConnector(BaseConnector, PredicatePushable):
+class CqlConnector(BaseConnector, PredicatePushable, LimitPushable):
     __mode__ = "Cql"
     __type__ = "CQL"
 
@@ -80,6 +81,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
     ):
         BaseConnector.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
+        LimitPushable.__init__(self, **kwargs)
 
         try:
             from cassandra.auth import PlainTextAuthProvider
@@ -141,6 +143,9 @@ class CqlConnector(BaseConnector, PredicatePushable):
             operator = operator.replace(":right", right_value)
 
             query_builder.WHERE(operator)
+
+        if limit is not None:
+            query_builder.LIMIT(str(limit))
 
         session = self.cluster.connect()
         # DEBUG: log ("READ DATASET\n", str(query_builder))
