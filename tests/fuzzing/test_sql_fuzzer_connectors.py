@@ -31,6 +31,7 @@ from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
 
 from tests.tools import create_duck_db, populate_mongo
+from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
 TEST_CYCLES: int = 100
 
@@ -54,7 +55,7 @@ TABLES = {
                 "testdata.planets",  # blob/file storage
                 "'testdata/planets/planets.parquet'",  # file-as-table data
                 "sqlite.planets",  # sqlite
-#                "iceberg.planets",  # iceberg (disabled, dataset not present)
+                "iceberg.planets",  # iceberg
 #                "cockroach.planets",  # cockroach (disabled, field names in lowercase)
 #                "datastax.planets",  # datastax (disabled, dataset not present)
                 "duckdb.planets",  # duckdb
@@ -174,6 +175,8 @@ def generate_random_sql_select(columns, table):
         select_clause = select_clause + " LIMIT " + str(int(random.random() * 10))
     return select_clause
 
+
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_connector_comparisons(i):
 

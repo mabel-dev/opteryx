@@ -213,6 +213,43 @@ def test_iceberg_get_stats():
     assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
     assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
     
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_iceberg_get_stats_remote():
+
+    from decimal import Decimal
+    from pyiceberg.catalog import load_catalog
+    from opteryx.connectors import IcebergConnector, connector_factory
+
+    DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
+    DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
+
+    catalog = load_catalog(
+        "opteryx",
+        **{
+            "uri": DATA_CATALOG_CONNECTION,
+            "warehouse": DATA_CATALOG_STORAGE,
+        }
+    )
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+    connector = connector_factory("iceberg.planets", None)
+    connector.get_dataset_schema()
+    stats = connector.relation_statistics
+
+    assert stats.record_count == 9
+    assert stats.lower_bounds["id"] == 1, stats.lower_bounds["id"]
+    assert stats.upper_bounds["id"] == 9, stats.upper_bounds["id"]
+    assert stats.lower_bounds["name"] == "Earth", stats.lower_bounds["name"]
+    assert stats.upper_bounds["name"] == "Venus", stats.upper_bounds["name"]
+    assert stats.lower_bounds["mass"] == 0.0146, stats.lower_bounds["mass"]
+    assert stats.upper_bounds["mass"] == 1898.0, stats.upper_bounds["mass"]
+    assert stats.lower_bounds["diameter"] == 2370, stats.lower_bounds["diameter"]
+    assert stats.upper_bounds["diameter"] == 142984, stats.upper_bounds["diameter"]
+    assert stats.lower_bounds["gravity"] == Decimal("0.7"), stats.lower_bounds["gravity"]
+    assert stats.upper_bounds["gravity"] == Decimal("23.1"), stats.upper_bounds["gravity"]
+    assert stats.lower_bounds["surfacePressure"] == 0.0, stats.lower_bounds["surfacePressure"]
+    assert stats.upper_bounds["surfacePressure"] == 92.0, stats.upper_bounds["surfacePressure"]
+
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_remote():
