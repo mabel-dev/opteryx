@@ -29,66 +29,73 @@ from opteryx.connectors import CqlConnector
 from opteryx.connectors import IcebergConnector
 from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
+from orso.tools import lru_cache_with_expiry
 
 from tests.tools import create_duck_db, populate_mongo
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
 TEST_CYCLES: int = 20
 
-DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
-DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-POSTGRES_USER = os.environ.get("POSTGRES_USER")
-DATASTAX_CLIENT_ID = os.environ["DATASTAX_CLIENT_ID"]
-DATASTAX_CLIENT_SECRET = os.environ["DATASTAX_CLIENT_SECRET"]
-COCKROACH_PASSWORD = os.environ.get("COCKROACH_PASSWORD")
-COCKROACH_USER = os.environ.get("COCKROACH_USER")
-COCKROACH_CONNECTION = f"cockroachdb://{COCKROACH_USER}:{COCKROACH_PASSWORD}@redleg-hunter-12763.5xj.cockroachlabs.cloud:26257/opteryx?sslmode=require"
-MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
-MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
 
 TABLES = {
-        "planets": {
-            "fields": virtual_datasets.planets.schema().columns,
-            "connectors": [
-                "$planets",  # virtual data
-                "testdata.planets",  # blob/file storage
-                "'testdata/planets/planets.parquet'",  # file-as-table data
-                "sqlite.planets",  # sqlite
-                "iceberg.planets",  # iceberg
-#                "cockroach.planets",  # cockroach (disabled, field names in lowercase)
-#                "datastax.planets",  # datastax (disabled, dataset not present)
-                "duckdb.planets",  # duckdb
-#                "mongo.planets"  # mongo (disabled, typing system not compatible)
-            ]
-        },
-        "satellites": {
-            "fields": virtual_datasets.satellites.schema().columns,
-            "connectors": [
-                "$satellites",
-                "testdata.satellites",
-                "'testdata/satellites/satellites.parquet'",
-                "sqlite.satellites"
-            ]
-        }
-}
+            "planets": {
+                "fields": virtual_datasets.planets.schema().columns,
+                "connectors": [
+                    "$planets",  # virtual data
+                    "testdata.planets",  # blob/file storage
+                    "'testdata/planets/planets.parquet'",  # file-as-table data
+                    "sqlite.planets",  # sqlite
+                    "iceberg.planets",  # iceberg
+    #                "cockroach.planets",  # cockroach (disabled, field names in lowercase)
+    #                "datastax.planets",  # datastax (disabled, dataset not present)
+                    "duckdb.planets",  # duckdb
+    #                "mongo.planets"  # mongo (disabled, typing system not compatible)
+                ]
+            },
+            "satellites": {
+                "fields": virtual_datasets.satellites.schema().columns,
+                "connectors": [
+                    "$satellites",
+                    "testdata.satellites",
+                    "'testdata/satellites/satellites.parquet'",
+                    "sqlite.satellites"
+                ]
+            }
+    }
 
-# Datastax Astra Connection
-cloud_config = {"secure_connect_bundle": "secure-connect.zip"}
-auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
-cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-# Iceberg
-iceberg_catalog = load_catalog("opteryx", **{"uri": DATA_CATALOG_CONNECTION, "warehouse": DATA_CATALOG_STORAGE})
-# DuckDB
-create_duck_db()
-# Mongo
-populate_mongo()
 
-opteryx.register_store("iceberg", IcebergConnector, catalog=iceberg_catalog)
-opteryx.register_store("cockroach", SqlConnector, remove_prefix=True, connection=COCKROACH_CONNECTION)
-opteryx.register_store("datastax", CqlConnector, remove_prefix=True, cluster=cluster)
-opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection="duckdb:///planets.duckdb")
-opteryx.register_store("mongo", MongoDbConnector, database=MONGO_DATABASE, connection=MONGO_CONNECTION, remove_prefix=True)
+@lru_cache_with_expiry
+def set_up_connections():
+
+    DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
+    DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
+    POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+    POSTGRES_USER = os.environ.get("POSTGRES_USER")
+    DATASTAX_CLIENT_ID = os.environ["DATASTAX_CLIENT_ID"]
+    DATASTAX_CLIENT_SECRET = os.environ["DATASTAX_CLIENT_SECRET"]
+    COCKROACH_PASSWORD = os.environ.get("COCKROACH_PASSWORD")
+    COCKROACH_USER = os.environ.get("COCKROACH_USER")
+    COCKROACH_CONNECTION = f"cockroachdb://{COCKROACH_USER}:{COCKROACH_PASSWORD}@redleg-hunter-12763.5xj.cockroachlabs.cloud:26257/opteryx?sslmode=require"
+    MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
+    MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
+
+    # Datastax Astra Connection
+    # cloud_config = {"secure_connect_bundle": "secure-connect.zip"}
+    # auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
+    # cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+    # Iceberg
+    iceberg_catalog = load_catalog("opteryx", **{"uri": DATA_CATALOG_CONNECTION, "warehouse": DATA_CATALOG_STORAGE})
+    # DuckDB
+    create_duck_db()
+    # Mongo
+    # populate_mongo()
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=iceberg_catalog)
+    #opteryx.register_store("cockroach", SqlConnector, remove_prefix=True, connection=COCKROACH_CONNECTION)
+    #opteryx.register_store("datastax", CqlConnector, remove_prefix=True, cluster=cluster)
+    opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection="duckdb:///planets.duckdb")
+    #opteryx.register_store("mongo", MongoDbConnector, database=MONGO_DATABASE, connection=MONGO_CONNECTION, remove_prefix=True)
+    opteryx.register_store("sqlite", SqlConnector, remove_prefix=True, connection="sqlite:///testdata/sqlite/database.db")
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -180,12 +187,7 @@ def generate_random_sql_select(columns, table):
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_connector_comparisons(i):
 
-    opteryx.register_store(
-        "sqlite",
-        SqlConnector,
-        remove_prefix=True,
-        connection="sqlite:///testdata/sqlite/database.db",
-    )
+    set_up_connections()
 
     seed = random_int()
     random.seed(seed)
