@@ -112,9 +112,11 @@ def align_tables(
     Returns:
         A pyarrow.Table with aligned columns and data.
     """
+    len_source_indices = len(source_indices)
+    len_append_indices = len(append_indices)
 
     # If either source_indices or append_indices is empty, return an empty table with a combined schema
-    if len(source_indices) == 0 or len(append_indices) == 0:
+    if len_source_indices == 0 or len_append_indices == 0:
         combined_schema = pyarrow.schema(
             [
                 *source_table.schema,
@@ -129,24 +131,26 @@ def align_tables(
         return pyarrow.Table.from_arrays(empty_arrays, schema=combined_schema)
 
     # Convert indices to PyArrow arrays for efficient null checking
-    source_indices_array = pyarrow.array(source_indices)
-    append_indices_array = pyarrow.array(append_indices)
+    if not isinstance(source_indices, pyarrow.Array):
+        source_indices = pyarrow.array(source_indices, type=pyarrow.int64())
+    if not isinstance(append_indices, pyarrow.Array):
+        append_indices = pyarrow.array(append_indices, type=pyarrow.int64())
 
     # Check if all source_indices are nulls
-    if source_indices_array.null_count == len(source_indices):
+    if source_indices.null_count == len_source_indices:
         null_columns = [
-            pyarrow.nulls(len(source_indices), type=field.type) for field in source_table.schema
+            pyarrow.nulls(len_source_indices, type=field.type) for field in source_table.schema
         ]
         aligned_table = pyarrow.Table.from_arrays(null_columns, schema=source_table.schema)
     else:
         # Take rows from source_table based on source_indices
-        aligned_table = source_table.take(source_indices_array)
+        aligned_table = source_table.take(source_indices)
 
     # Set of column names from source_table for quick lookup
     source_column_names = set(source_table.column_names)
 
     # Check if all append_indices are nulls
-    append_is_all_nulls = append_indices_array.null_count == len(append_indices)
+    append_is_all_nulls = append_indices.null_count == len_append_indices
 
     new_columns = []
     new_fields = []
@@ -160,7 +164,7 @@ def align_tables(
                 new_columns.append(null_column)
             else:
                 # Take the corresponding rows from append_table
-                column_data = append_table.column(column_name).take(append_indices_array)
+                column_data = append_table.column(column_name).take(append_indices)
                 new_columns.append(column_data)
             new_fields.append(column_field)
 

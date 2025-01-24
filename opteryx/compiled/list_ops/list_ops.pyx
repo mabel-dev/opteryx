@@ -11,10 +11,11 @@
 import numpy
 cimport numpy as cnp
 from cython import Py_ssize_t
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint8_t
 from numpy cimport ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString
+from cpython.object cimport PyObject_Hash
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 
@@ -326,7 +327,7 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_contains_any(cnp.ndarray array, cnp.
     return res
 
 
-cdef int boyer_moore_horspool(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
+cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
     """
     Case-sensitive Boyer-Moore-Horspool substring search.
 
@@ -369,7 +370,7 @@ cdef int boyer_moore_horspool(const char *haystack, size_t haystacklen, const ch
     return 0  # No match found
 
 
-cdef int boyer_moore_horspool_case_insensitive(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
+cdef inline int boyer_moore_horspool_case_insensitive(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
     """
     Case-insensitive Boyer-Moore-Horspool substring search.
 
@@ -430,10 +431,12 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring(cnp.ndarray[cnp.str, ndim=
     cdef bytes needle_bytes = needle.encode('utf-8')
     cdef char *c_pattern = PyBytes_AsString(needle_bytes)
     cdef size_t pattern_length = len(needle_bytes)
-    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.zeros(n, dtype=numpy.uint8)
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
     cdef Py_ssize_t i = 0
     cdef Py_ssize_t length
     cdef char *data
+
+    cdef uint8_t[::1] result_view = result
 
     # Check the type of the first item to decide the processing method
     if isinstance(haystack[0], str):
@@ -441,17 +444,19 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring(cnp.ndarray[cnp.str, ndim=
             item = PyUnicode_AsUTF8String(haystack[i])
             data = <char*> PyBytes_AsString(item)
             length = len(item)
+            result_view[i] = 0
             if length >= pattern_length:
                 if boyer_moore_horspool(data, length, c_pattern, pattern_length):
-                    result[i] = 1
+                    result_view[i] = 1
     else:
         for i in range(n):
             item = haystack[i]
             data = <char*> item
             length = len(item)
+            result_view[i] = 0
             if length >= pattern_length:
                 if boyer_moore_horspool(data, length, c_pattern, pattern_length):
-                    result[i] = 1
+                    result_view[i] = 1
 
     return result
 
@@ -465,10 +470,12 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring_case_insensitive(cnp.ndarr
     cdef bytes needle_bytes = needle.encode('utf-8')
     cdef char *c_pattern = PyBytes_AsString(needle_bytes)
     cdef size_t pattern_length = len(needle_bytes)
-    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.zeros(n, dtype=numpy.uint8)
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
     cdef Py_ssize_t i = 0
     cdef Py_ssize_t length
     cdef char *data
+
+    cdef uint8_t[::1] result_view = result
 
     # Check the type of the first item to decide the processing method
     if isinstance(haystack[0], str):
@@ -476,17 +483,19 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring_case_insensitive(cnp.ndarr
             item = PyUnicode_AsUTF8String(haystack[i])
             data = <char*> PyBytes_AsString(item)
             length = len(item)
+            result_view[i] = 0
             if length >= pattern_length:
                 if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                    result[i] = 1
+                    result_view[i] = 1
     else:
         for i in range(n):
             item = haystack[i]
             data = <char*> item
             length = len(item)
+            result_view[i] = 0
             if length >= pattern_length:
                 if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                    result[i] = 1
+                    result_view[i] = 1
 
     return result
 
@@ -498,7 +507,7 @@ cpdef FlatHashSet count_distinct(cnp.ndarray[object, ndim=1] values, FlatHashSet
         object[:] values_view = values
 
     for i in range(n):
-        hash_value = hash(values_view[i])
+        hash_value = PyObject_Hash(values_view[i])
         seen_hashes.insert(hash_value)
 
     return seen_hashes

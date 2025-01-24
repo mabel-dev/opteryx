@@ -323,9 +323,9 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
 
-    if func == "COUNT" and duplicate_treatment == "Distinct":
-        func = "COUNT_DISTINCT"
-        duplicate_treatment = None
+    if func == "COUNT_DISTINCT":
+        func = "COUNT"
+        duplicate_treatment = "Distinct"
 
     node = Node(
         node_type=node_type,

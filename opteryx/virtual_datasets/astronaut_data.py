@@ -124,6 +124,7 @@ def statistics() -> RelationStatistics:
     stats.upper_bounds["death_date"] = datetime.date(2012, 8, 26)
     stats.upper_bounds["death_mission"] = "STS-107 (Columbia)"
 
+    stats.null_count = {}
     stats.null_count["year"] = 27
     stats.null_count["group"] = 27
     stats.null_count["undergraduate_major"] = 22
