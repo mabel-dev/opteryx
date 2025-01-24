@@ -15,35 +15,70 @@ from decimal import Decimal
 from typing import Union
 
 import pyarrow
-import pyiceberg.typedef
-import pyiceberg.types
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
 from opteryx.connectors import DiskConnector
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
+from opteryx.connectors.capabilities import Statistics
+from opteryx.models import RelationStatistics
 
 
-class IcebergConnector(BaseConnector, LimitPushable):
+class IcebergConnector(BaseConnector, LimitPushable, Statistics):
     __mode__ = "Blob"
     __type__ = "ICEBERG"
 
     def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):
         BaseConnector.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
+        Statistics.__init__(self, **kwargs)
 
         self.dataset = self.dataset.lower()
         self.table = catalog.load_table(self.dataset)
         self.io_connector = io(**kwargs)
 
     def get_dataset_schema(self) -> RelationSchema:
-        arrow_schema = self.table.schema().as_arrow()
+        iceberg_schema = self.table.schema()
+        arrow_schema = iceberg_schema.as_arrow()
 
         self.schema = RelationSchema(
             name=self.dataset,
             columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
         )
+
+        # Get statistics
+        relation_statistics = RelationStatistics()
+
+        column_names = {col.field_id: col.name for col in iceberg_schema.columns}
+        column_types = {col.field_id: col.field_type for col in iceberg_schema.columns}
+
+        files = self.table.inspect.files()
+        relation_statistics.record_count = pyarrow.compute.sum(files.column("record_count")).as_py()
+
+        if "distinct_counts" in files.columns:
+            for file in files.column("distinct_counts"):
+                for k, v in file:
+                    relation_statistics.set_cardinality_estimate(column_names[k], v)
+
+        if "value_counts" in files.columns:
+            for file in files.column("value_counts"):
+                for k, v in file:
+                    relation_statistics.add_count(column_names[k], v)
+
+        for file in files.column("lower_bounds"):
+            for k, v in file:
+                relation_statistics.update_lower(
+                    column_names[k], IcebergConnector.decode_iceberg_value(v, column_types[k])
+                )
+
+        for file in files.column("upper_bounds"):
+            for k, v in file:
+                relation_statistics.update_upper(
+                    column_names[k], IcebergConnector.decode_iceberg_value(v, column_types[k])
+                )
+
+        self.relation_statistics = relation_statistics
 
         return self.schema
 
