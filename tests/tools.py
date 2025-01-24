@@ -661,6 +661,6 @@ def populate_mongo():  # pragma: no cover
 
     collection = mydb["planets"]
     collection.drop()
-    with open("testdata/planets/planets.jsonl", mode="rb") as f:
+    with open("testdata/flat/planets/planets.jsonl", mode="rb") as f:
         data = f.read()
     collection.insert_many(map(form_planets, data.split(b"\n")[:-1]))

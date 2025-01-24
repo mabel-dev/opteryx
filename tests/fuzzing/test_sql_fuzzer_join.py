@@ -20,6 +20,8 @@ from orso.types import OrsoTypes
 import opteryx
 from opteryx.utils.formatter import format_sql
 
+from opteryx.connectors.file_connector import FileConnector
+
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -56,6 +58,7 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
     last_value = -1
     this_value = random.random()
     conditions = []
+    # we add multiple conditions by cycling over ever increasing random values until we get a lower one
     while this_value > last_value:
         last_value = this_value
         this_value = random.random()
@@ -126,15 +129,15 @@ TABLES = [
     },
     {
         "name": "testdata.planets",
-        "fields": virtual_datasets.planets.schema().columns,
+        "fields": FileConnector(dataset="testdata/planets/planets.parquet", statistics=None).get_dataset_schema().columns,
     },
     {
         "name": "testdata.satellites",
-        "fields": virtual_datasets.satellites.schema().columns,
+        "fields": FileConnector(dataset="testdata/satellites/satellites.parquet", statistics=None).get_dataset_schema().columns,
     },
     {
         "name": "testdata.missions",
-        "fields": virtual_datasets.missions.schema().columns,
+        "fields": FileConnector(dataset="testdata/missions/space_missions.parquet", statistics=None).get_dataset_schema().columns,
     },
 ]
 
@@ -164,7 +167,7 @@ def test_sql_fuzzing_join(i):
     except Exception as e:
         import traceback
 
-        print(f"\033[0;31mError in Test Cycle {i+1}\033[0m: {e}")
+        print(f"\033[0;31mError in Test Cycle {i+1} Seed: {seed} \033[0m: {e}")
         print(traceback.print_exc())
         # Log failing statement and error for analysis
         raise e

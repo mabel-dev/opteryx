@@ -7,8 +7,6 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import orjson
-
 import opteryx
 from opteryx.connectors import MongoDbConnector
 from tests.tools import is_arm, is_mac, is_windows, skip_if

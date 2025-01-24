@@ -36,7 +36,7 @@ test_cases = [
         3014
     ),
     (
-        "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WHERE rotationPeriod = lengthOfDay;",
+        "SELECT * FROM 'testdata/planets/planets.parquet' WHERE rotationPeriod = lengthOfDay;",
         3,
         9
     ),

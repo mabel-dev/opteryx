@@ -25,7 +25,6 @@ from opteryx.planner.binder.binder import locate_identifier_in_loaded_schemas
 from opteryx.planner.binder.binder import merge_schemas
 from opteryx.planner.binder.binding_context import BindingContext
 from opteryx.planner.logical_planner import LogicalPlan
-from opteryx.planner.logical_planner import LogicalPlanStepType
 from opteryx.virtual_datasets import derived
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -654,7 +653,7 @@ class BinderVisitor:
             node.left_columns, node.right_columns = extract_join_fields(
                 node.on, node.left_relation_names, node.right_relation_names
             )
-            mismatches = get_mismatched_condition_column_types(node.on)
+            mismatches = get_mismatched_condition_column_types(node.on, relaxed=False)
             if mismatches:
                 from opteryx.exceptions import IncompatibleTypesError
 

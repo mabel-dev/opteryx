@@ -23,7 +23,7 @@ STATEMENTS = [
     ("SELECT LENGTH(name), gravity FROM testdata.planets;", 2),
 
     # WHERE clause filters with projections
-    ("SELECT name FROM testdata.planets WHERE gravity > 9.8;", 2),  # we can't push this filter
+    ("SELECT name FROM testdata.planets WHERE IFNULL(gravity, 1.0) > 9.8;", 2),  # we can't push this filter
     ("SELECT id, mass FROM testdata.planets WHERE density < 5;", 2),  # we can push this filter
     ("SELECT escapeVelocity FROM testdata.planets WHERE name LIKE 'M%';", 2),
 

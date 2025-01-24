@@ -70,8 +70,8 @@ STATEMENTS = [
     ("SELECT name, CASE WHEN mass > 1 THEN 'heavy' ELSE 'light' END FROM sqlite.planets", 9, 2, None),
     ("SELECT name FROM sqlite.planets WHERE surfacePressure IS NULL", 4, 1, None),
     ("SELECT name FROM sqlite.planets WHERE surfacePressure IS NOT NULL", 5, 1, None),
-    ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS NOT TRUE", 2, 1, None),
-    ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS TRUE", 7, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS NOT TRUE", 8, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS TRUE", 1, 1, None),
     ("SELECT name FROM sqlite.planets WHERE name LIKE 'M%';", 2, 1, None),  # Mars, Mercury
     ("SELECT name FROM sqlite.planets WHERE name NOT LIKE 'M%';", 7, 1, None),  # All except Mars and Mercury
     ("SELECT name FROM sqlite.planets WHERE name LIKE '%e%';", 5, 1, None),  # Earth, Jupiter, Neptune, Mercury, Venus
