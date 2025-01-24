@@ -9,12 +9,14 @@ Arrow Reader
 Used to read datasets registered using the register_arrow or register_df functions.
 """
 
+import struct
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
 from typing import Union
 
 import pyarrow
+import pyiceberg.types
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
@@ -127,9 +129,9 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics):
 
         if data_type_class in (pyiceberg.types.LongType,):
             return int.from_bytes(value, "little", signed=True)
-        elif data_type in {"float", "double"}:
+        elif data_type_class in (pyiceberg.types.DoubleType,):
             # IEEE 754 encoded floats are typically decoded directly
-            return float(value)
+            return struct.unpack("<d", value)[0]  # 8-byte IEEE 754 double
         elif data_type == "timestamp":
             # Iceberg stores timestamps as microseconds since epoch
             return datetime.fromtimestamp(value / 1_000_000)
@@ -139,12 +141,11 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics):
         elif data_type_class == pyiceberg.types.StringType:
             # Assuming UTF-8 encoded bytes (or already decoded string)
             return value.decode("utf-8") if isinstance(value, bytes) else str(value)
-        elif data_type == "decimal":
+        elif str(data_type).startswith("decimal"):
             # Iceberg stores decimals as unscaled integers
-            if scale is None:
-                raise ValueError("Scale must be provided for decimal decoding.")
-            return Decimal(value) / (10**scale)
+            int_value = int.from_bytes(value, byteorder="big", signed=True)
+            return Decimal(int_value) / (10**data_type.scale)
         elif data_type_class == pyiceberg.types.BooleanType:
             return bool(value)
         else:
-            raise ValueError(f"Unsupported data type: {data_type}")
+            raise ValueError(f"Unsupported data type: {data_type}, {str(data_type)}")

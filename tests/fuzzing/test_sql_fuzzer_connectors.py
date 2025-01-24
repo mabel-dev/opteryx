@@ -55,7 +55,7 @@ TABLES = {
                 "testdata.planets",  # blob/file storage
                 "'testdata/planets/planets.parquet'",  # file-as-table data
                 "sqlite.planets",  # sqlite
-#                "iceberg.planets",  # iceberg (disabled, dataset not present)
+                "iceberg.planets",  # iceberg
 #                "cockroach.planets",  # cockroach (disabled, field names in lowercase)
 #                "datastax.planets",  # datastax (disabled, dataset not present)
                 "duckdb.planets",  # duckdb
