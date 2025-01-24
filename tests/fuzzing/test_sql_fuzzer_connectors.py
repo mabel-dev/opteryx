@@ -18,10 +18,6 @@ import pytest
 from orso.tools import random_int, random_string
 from orso.types import OrsoTypes
 
-from pyiceberg.catalog import load_catalog
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import Cluster
-
 import opteryx
 from opteryx.utils.formatter import format_sql
 from opteryx.connectors import SqlConnector
@@ -66,6 +62,10 @@ TABLES = {
 
 @lru_cache_with_expiry
 def set_up_connections():
+
+    from cassandra.auth import PlainTextAuthProvider
+    from cassandra.cluster import Cluster
+    from pyiceberg.catalog import load_catalog
 
     DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
     DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
