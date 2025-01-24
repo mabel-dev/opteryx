@@ -18,6 +18,7 @@ sorting smaller chunks over and over again.
 """
 
 import numpy
+import decimal
 import pyarrow
 import pyarrow.compute
 from pyarrow import concat_tables
@@ -78,6 +79,8 @@ class HeapSortNode(BasePlanNode):
             for column_name, _ in self.mapped_order
         )
 
+        use_decimal_sort = any(pyarrow.types.is_decimal(morsel.column(column_name).type) for column_name, _ in self.mapped_order)
+
         # strings are sorted faster using pyarrow, single columns faster using compute
         if len(self.mapped_order) == 1 and use_pyarrow_sort:
             column_name, sort_direction = self.mapped_order[0]
@@ -95,6 +98,8 @@ class HeapSortNode(BasePlanNode):
             # Single-column sort using argsort to take advantage of partially sorted data
             column_name, sort_direction = self.mapped_order[0]
             column = morsel.column(column_name).to_numpy()
+            if use_decimal_sort:
+                column = [decimal.Decimal('-Infinity') if x is None else x for x in column]
             if sort_direction == "ascending":
                 sort_indices = numpy.argsort(column)
             else:

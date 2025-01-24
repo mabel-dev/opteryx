@@ -13,6 +13,11 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 
 test_cases = [
+    # empty filters give no results
+    ("SELECT * FROM $planets", {"$planets": []}, (0, 20)),
+    # none filters give all results
+    ("SELECT * FROM $planets", {"$planets": None}, (9, 20)),
+
     ("SELECT * FROM $planets", {"testdata.planets": [("id", "Eq", 4)]}, (9, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4)]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4.0)]}, (1, 20)),

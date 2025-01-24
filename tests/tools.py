@@ -45,6 +45,7 @@ Example:
         run_tests()
 """
 
+import os
 import platform
 from functools import wraps
 from typing import Optional
@@ -634,3 +635,32 @@ def create_duck_db():  # pragma: no cover
         if res is not None:
             res.commit()
         cur.close()
+
+def populate_mongo():  # pragma: no cover
+
+    MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
+    MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
+
+    import pymongo  # type:ignore
+    import orjson
+
+    myclient = pymongo.MongoClient(MONGO_CONNECTION)
+    mydb = myclient[MONGO_DATABASE]
+
+    collection = mydb["tweets"]
+    collection.drop()
+    with open("testdata/flat/tweets/tweets-0000.jsonl", mode="rb") as f:
+        data = f.read()
+    collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
+
+    def form_planets(js):
+        dic = orjson.loads(js)
+        dic["id"] = int(dic.pop("id"))
+
+        return dic
+
+    collection = mydb["planets"]
+    collection.drop()
+    with open("testdata/planets/planets.jsonl", mode="rb") as f:
+        data = f.read()
+    collection.insert_many(map(form_planets, data.split(b"\n")[:-1]))
