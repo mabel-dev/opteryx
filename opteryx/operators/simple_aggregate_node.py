@@ -14,10 +14,12 @@ which focuses on building aggregates which don't require seeing the entire datas
 We avoid doing some work by not creating entire columns of data where possible.
 """
 
+import numpy
 import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.list_ops.list_ops import count_distinct
+from opteryx.compiled.list_ops.list_ops import hash_column
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
@@ -35,11 +37,12 @@ class SimpleAggregateCollector:
         self.duplicate_treatment = duplicate_treatment
         self.counter = 0
         self.column_id = column_id
+        self.always_count = aggregate_type in ("COUNT", "AVG")
 
     def collect(self, values):
-        if self.count_nulls:
+        if self.always_count and self.count_nulls:
             self.counter += pyarrow.compute.count(values).as_py()
-        else:
+        elif self.always_count:
             self.counter += pyarrow.compute.count(values, mode="only_valid").as_py()
 
         if self.current_value is None:
@@ -51,8 +54,8 @@ class SimpleAggregateCollector:
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 values = values.to_numpy()
-                if values.dtype != object:
-                    values = values.astype(object)
+                if values.dtype not in (numpy.int64,):
+                    values = hash_column(values)
                 self.current_value = count_distinct(values, FlatHashSet())
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
@@ -65,8 +68,8 @@ class SimpleAggregateCollector:
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 values = values.to_numpy()
-                if values.dtype != object:
-                    values = values.astype(object)
+                if values.dtype not in (numpy.int64,):
+                    values = hash_column(values)
                 self.current_value = count_distinct(values, self.current_value)
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
