@@ -9,16 +9,29 @@ from libc.stdint cimport int64_t
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
 
+# Identity Hash Definition - not part of abseil but used by our implementation
+# We prehash the values before putting them into the Map & Set, so don't rehash
+cdef extern from *:
+    """
+    struct IdentityHash {
+        inline size_t operator()(int64_t value) const {
+            return value;  // Identity function
+        }
+    };
+    """
+    cdef cppclass IdentityHash:
+        size_t operator()(int64_t value) const
+
 
 cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
-    cdef cppclass flat_hash_map[K, V]:
+    cdef cppclass flat_hash_map[K, V, HashFunc]:
         flat_hash_map()
         V& operator[](K key)
         size_t size() const
         void clear()
 
 cdef class FlatHashMap:
-    cdef flat_hash_map[int64_t, vector[int64_t]] _map
+    cdef flat_hash_map[int64_t, vector[int64_t], IdentityHash] _map
 
     cpdef insert(self, int64_t key, int64_t value)
     cpdef size_t size(self)
@@ -26,7 +39,7 @@ cdef class FlatHashMap:
     cpdef vector[int64_t] get(self, int64_t key)
 
 cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
-    cdef cppclass flat_hash_set[T]:
+    cdef cppclass flat_hash_set[T, HashFunc]:
         flat_hash_set()
         pair[long, bint] insert(T value)
         size_t size() const
@@ -34,7 +47,7 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
         void reserve(int64_t value)
 
 cdef class FlatHashSet:
-    cdef flat_hash_set[int64_t] _set
+    cdef flat_hash_set[int64_t, IdentityHash] _set
 
     cdef inline bint insert(self, int64_t value)
     cdef inline size_t size(self)
