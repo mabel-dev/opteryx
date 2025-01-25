@@ -50,6 +50,7 @@ cdef class FlatHashSet:
     cdef flat_hash_set[int64_t, IdentityHash] _set
 
     cdef inline bint insert(self, int64_t value)
+    cdef inline void just_insert(self, int64_t value)
     cdef inline size_t size(self)
     cdef inline bint contains(self, int64_t value)
     cpdef size_t items(self)

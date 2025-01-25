@@ -50,10 +50,13 @@ cdef class FlatHashSet:
 
     def __cinit__(self):
         self._set = flat_hash_set[int64_t, IdentityHash]()
-        self._set.reserve(256)
+        self._set.reserve(1024)
 
     cdef inline bint insert(self, value: int64_t):
         return self._set.insert(value).second
+
+    cdef inline void just_insert(self, value: int64_t):
+        self._set.insert(value)
 
     cdef inline size_t size(self):
         return self._set.size()

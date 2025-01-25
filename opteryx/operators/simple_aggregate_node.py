@@ -16,9 +16,11 @@ We avoid doing some work by not creating entire columns of data where possible.
 
 import numpy
 import pyarrow
+from orso.types import OrsoTypes
 
 from opteryx import EOS
 from opteryx.compiled.list_ops.list_ops import count_distinct
+from opteryx.compiled.list_ops.list_ops import hash_bytes_column
 from opteryx.compiled.list_ops.list_ops import hash_column
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
@@ -30,13 +32,16 @@ from . import BasePlanNode
 
 
 class SimpleAggregateCollector:
-    def __init__(self, aggregate_type, column_id, count_nulls=False, duplicate_treatment="IGNORE"):
+    def __init__(
+        self, aggregate_type, schema_column, count_nulls=False, duplicate_treatment="IGNORE"
+    ):
         self.aggregate_type = aggregate_type
         self.current_value = None
         self.count_nulls = count_nulls if aggregate_type == "COUNT" else False
         self.duplicate_treatment = duplicate_treatment
         self.counter = 0
-        self.column_id = column_id
+        self.schema_column = schema_column
+        self.column_type = schema_column.type
         self.always_count = aggregate_type in ("COUNT", "AVG")
 
     def collect(self, values):
@@ -53,8 +58,10 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
-                values = values.to_numpy()
-                if values.dtype not in (numpy.int64,):
+                values = values.to_numpy(False)
+                if self.column_type in (OrsoTypes.BLOB, OrsoTypes.VARCHAR):
+                    values = hash_bytes_column(values)
+                elif self.column_type != OrsoTypes.INTEGER:
                     values = hash_column(values)
                 self.current_value = count_distinct(values, FlatHashSet())
             elif self.aggregate_type != "COUNT":
@@ -67,8 +74,10 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
-                values = values.to_numpy()
-                if values.dtype not in (numpy.int64,):
+                values = values.to_numpy(False)
+                if self.column_type in (OrsoTypes.BLOB, OrsoTypes.VARCHAR):
+                    values = hash_bytes_column(values)
+                elif self.column_type != OrsoTypes.INTEGER:
                     values = hash_column(values)
                 self.current_value = count_distinct(values, self.current_value)
             elif self.aggregate_type != "COUNT":
@@ -124,7 +133,9 @@ class SimpleAggregateNode(BasePlanNode):
             final_column_id = aggregate.schema_column.identity
 
             self.accumulator[final_column_id] = SimpleAggregateCollector(
-                aggregate_type, final_column_id, duplicate_treatment=aggregate.duplicate_treatment
+                aggregate_type,
+                aggregate.parameters[0].schema_column,
+                duplicate_treatment=aggregate.duplicate_treatment,
             )
 
     @property
