@@ -506,7 +506,7 @@ cpdef FlatHashSet count_distinct(cnp.ndarray[cnp.int64_t, ndim=1] values, FlatHa
         int64_t *values_ptr = &values[0]  # Direct pointer access
 
     for i in range(n):
-        seen_hashes.insert(values_ptr[i])
+        seen_hashes.just_insert(values_ptr[i])
 
     return seen_hashes
 
@@ -524,3 +524,25 @@ cpdef cnp.ndarray[cnp.int64_t, ndim=1] hash_column(cnp.ndarray values):
         result[i] = hash_value
 
     return result
+
+cpdef cnp.ndarray[cnp.int64_t, ndim=1] hash_bytes_column(cnp.ndarray[cnp.bytes] values):
+    """
+    Computes hash for each byte sequence in an array.
+
+    xxHash and Murmur had too many clashes to be useful.
+
+    Parameters:
+        values (ndarray): NumPy array of bytes objects
+
+    Returns:
+        ndarray: NumPy array of int64 hashes
+    """
+    cdef:
+        Py_ssize_t i, n = values.shape[0]
+        int64_t[::1] result_view = numpy.empty(n, dtype=numpy.int64)
+        bytes[::1] values_view = values
+
+    for i in range(n):
+        result_view[i] = PyObject_Hash(values_view[i])
+
+    return numpy.asarray(result_view, dtype=numpy.int64)
