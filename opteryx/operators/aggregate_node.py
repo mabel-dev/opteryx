@@ -107,7 +107,7 @@ def build_aggregations(aggregators):
                 aggregator.value = "COUNT_DISTINCT"
             function = AGGREGATORS[aggregator.value]
             # if the array agg is distinct, base off that function instead
-             if aggregator.value == "ARRAY_AGG" and aggregator.duplicate_treatment == "Distinct":
+            if aggregator.value == "ARRAY_AGG" and aggregator.duplicate_treatment == "Distinct":
                 function = "distinct"
             aggs.append((field_name, function, count_options))
             column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(
