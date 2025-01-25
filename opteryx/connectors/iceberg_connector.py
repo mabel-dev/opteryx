@@ -16,7 +16,6 @@ from decimal import Decimal
 from typing import Union
 
 import pyarrow
-import pyiceberg.types
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
