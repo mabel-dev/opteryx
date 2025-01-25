@@ -5,7 +5,6 @@ from typing import Any
 from typing import Dict
 
 import numpy
-import pyarrow
 from Cython.Build import cythonize
 from setuptools import Extension
 from setuptools import find_packages
@@ -177,7 +176,7 @@ extensions = [
     Extension(
         name="opteryx.compiled.structures.buffers",
         sources=["opteryx/compiled/structures/buffers.pyx"],
-        include_dirs=include_dirs + [pyarrow.get_include()],
+        include_dirs=include_dirs, # + [pyarrow.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
