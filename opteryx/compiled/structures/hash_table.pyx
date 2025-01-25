@@ -11,6 +11,7 @@ from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set
 from libcpp.vector cimport vector
 from libc.stdint cimport int64_t, uint8_t
+from cpython.object cimport PyObject_Hash
 
 cimport numpy as cnp
 
@@ -64,7 +65,7 @@ cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet 
 
     for i in range(n):
         v = values[i]
-        hash_value = <int64_t>hash(v)
+        hash_value = PyObject_Hash(v)
         if seen_hashes.insert(hash_value):
             new_values[j] = v
             new_indices[j] = indices[i]
@@ -127,14 +128,14 @@ cpdef HashTable hash_join_map(relation, list join_columns):
     if num_columns == 1:
         col = values_array[0, :]
         for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
+            hash_value = PyObject_Hash(col[i])
             ht.insert(hash_value, non_null_indices[i])
     else:
         for i in range(values_array.shape[1]):
             # Combine the hashes of each value in the row
             hash_value = 0
             for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
+                hash_value = <int64_t>(hash_value * 31 + PyObject_Hash(value))
             ht.insert(hash_value, non_null_indices[i])
 
     return ht

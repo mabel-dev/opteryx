@@ -11,6 +11,7 @@ import numpy
 from libc.stdint cimport uint8_t, int64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashMap
+from cpython.object cimport PyObject_Hash
 
 cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
     """
@@ -66,14 +67,14 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
     if num_columns == 1:
         col = values_array[0, :]
         for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
+            hash_value = PyObject_Hash(col[i])
             ht.insert(hash_value, non_null_indices[i])
     else:
         for i in range(values_array.shape[1]):
             # Combine the hashes of each value in the row
             hash_value = 0
             for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
+                hash_value = <int64_t>(hash_value * 31 + PyObject_Hash(value))
             ht.insert(hash_value, non_null_indices[i])
 
     return ht
