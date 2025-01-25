@@ -68,11 +68,11 @@ def generate_random_sql_select(columns, table):
         select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
     elif random.random() < 0.3:
         distinct = "DISTINCT " if random.random() < 0.1 else ""
-        agg_func = random.choice(["MIN", "MAX", "SUM", "AVG"])
+        agg_func = random.choice(["MIN", "MAX", "SUM", "AVG", "COUNT", "COUNT_DISTINCT"])
         agg_column = columns[random.choice(range(len(columns)))]
         while agg_func in ("SUM", "AVG") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR, OrsoTypes.TIMESTAMP, OrsoTypes.DATE):
             agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("MIN", "MAX") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
+        while agg_func in ("MIN", "MAX", "COUNT_DISTINCT") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
             agg_column = columns[random.choice(range(len(columns)))]
         select_clause = "SELECT " + distinct + agg_func + "(" + agg_column.name + ")"
 

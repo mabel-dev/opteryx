@@ -499,15 +499,28 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_substring_case_insensitive(cnp.ndarr
 
     return result
 
-cpdef FlatHashSet count_distinct(cnp.ndarray[object, ndim=1] values, FlatHashSet seen_hashes=None):
+cpdef FlatHashSet count_distinct(cnp.ndarray[cnp.int64_t, ndim=1] values, FlatHashSet seen_hashes=None):
+    cdef:
+        int64_t i
+        int64_t n = values.shape[0]
+        int64_t *values_ptr = &values[0]  # Direct pointer access
+
+    for i in range(n):
+        seen_hashes.insert(values_ptr[i])
+
+    return seen_hashes
+
+cpdef cnp.ndarray[cnp.int64_t, ndim=1] hash_column(cnp.ndarray values):
+
     cdef:
         int64_t i
         int64_t n = values.shape[0]
         int64_t hash_value
-        object[:] values_view = values
+        #object[:] values_view = values
+        cnp.ndarray[cnp.int64_t, ndim=1] result = numpy.empty(n, dtype=numpy.int64)
 
     for i in range(n):
-        hash_value = PyObject_Hash(values_view[i])
-        seen_hashes.insert(hash_value)
+        hash_value = PyObject_Hash(values[i])
+        result[i] = hash_value
 
-    return seen_hashes
+    return result

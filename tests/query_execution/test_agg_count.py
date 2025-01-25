@@ -32,8 +32,8 @@ def test_count_star_non_parquet():
     assert stats["rows_seen"] == 250, stats["rows_seen"]
     assert cur.fetchone()[0] == 250
 
-def test_count_star_parquest_read_the_rows():
-    """ we're counting non-null values, so we need to read the rows """
+def test_count_identifier_parquest_read_the_rows():
+    """ we're counting an identifier, so we need to read the rows """
     cur = opteryx.query("SELECT COUNT(user_name) FROM testdata.flat.formats.parquet;")
     stats = cur.stats
     assert stats["columns_read"] <= 1, stats["columns_read"]

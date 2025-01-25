@@ -164,7 +164,6 @@ def test_iceberg_get_statistics_manual():
 def test_iceberg_connector():
 
     from pyiceberg.catalog import load_catalog
-    from opteryx.models.relation_statistics import RelationStatistics
 
     set_up_iceberg()
 
