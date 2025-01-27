@@ -19,6 +19,7 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
+from .optimization_strategy import get_nodes_of_type_from_logical_plan
 
 # Operations safe to invert.
 HALF_INVERSIONS: dict = {
@@ -31,6 +32,8 @@ HALF_INVERSIONS: dict = {
     "AnyOpEq": "AnyOpNotEq",
     "AnyOpGtEq": "AnyOpLt",
     "AnyOpLtEq": "AnyOpGt",
+    "InStr": "NotInStr",
+    "IInStr": "NotIInStr",
 }
 
 INVERSIONS = {**HALF_INVERSIONS, **{v: k for k, v in HALF_INVERSIONS.items()}}
@@ -58,19 +61,26 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
     """
 
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
-        if not context.optimized_plan:
-            context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
-
-        if node.node_type == LogicalPlanStepType.Filter:
-            # do the work
-            node.condition = update_expression_tree(node.condition, self.statistics)
-            context.optimized_plan[context.node_id] = node
-
+        # do nothing here - all of our work is in the complete
         return context
 
     def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
-        # No finalization needed for this strategy
-        return plan
+        # we act on the filter nodes in isolation so do it all here
+        context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
+
+        for nid, node in get_nodes_of_type_from_logical_plan(
+            context.optimized_plan, (LogicalPlanStepType.Filter,)
+        ):
+            # do the work
+            node.condition = update_expression_tree(node.condition, self.statistics)
+            context.optimized_plan[nid] = node
+
+        return context.optimized_plan
+
+    def should_i_run(self, plan):
+        # only run if there are FILTER clauses in the plan
+        candidates = get_nodes_of_type_from_logical_plan(plan, (LogicalPlanStepType.Filter,))
+        return len(candidates) > 0
 
 
 def update_expression_tree(node: LogicalPlanNode, statistics: QueryStatistics):

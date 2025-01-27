@@ -10,7 +10,7 @@ This is only used for larger numbers of predicates - five or more.
 
 For 5 predicates, we do 4 generations of 3 variations (12 rather than 25 variations tested)
 For 10 predicates, we do 5 generations of 6 variations (30 rather than 100)
-Fro 100 predicates, we do 8 generations of 51 variations (408 rather 10,000)
+Fro 100 predicates, we do 8 (upper limit) generations of 50 (limit) variations (400 rather 10,000)
 
 This may not find the _best_ solution, but it should find a better than average solution
 """
@@ -29,13 +29,21 @@ def log2(x):
 
     return result
 
-
-generations = log2
-mutations = lambda x: (x // 2) + 1
+# The number of times we mutate the orderings - capped at 8
+generations = lambda x: min(log2(x) + 1, 8)
+# The number of swaps per generation - capped at 50
+mutations = lambda x: min((x // 2) + 1, 50)
 
 
 def generate_initial_population(predicates):
-    population = []
+    """
+    Generate initial random ordering. For every order we randomly
+    generate we also emit the same order in reverse. We were finding
+    that if we started with a very inefficient order, that we were
+    never getting to an efficient plan and by also reversing the order
+    that we almost eliminated not getting a better than average order.
+    """
+    population = [tuple(predicates)]
     population_size = (len(predicates) // 2) + 1
 
     for _ in range(population_size):
@@ -78,6 +86,7 @@ def genetic_algorithm(predicates, cost_model, population_size, num_generations, 
         # Sort the population by cost in ascending order
         population = [x for _, x in sorted(zip(costs, population))]
         fastest_so_far = population[0]
+        slowest_so_far = population[-1]
         print("Fastest So Far", fastest_so_far)
 
         if i == num_generations - 1:
@@ -98,6 +107,9 @@ def genetic_algorithm(predicates, cost_model, population_size, num_generations, 
     best_arrangement = population[0]
     best_cost = evaluate_cost(best_arrangement, cost_model)
 
+    print("naive cost", evaluate_cost(tuple(predicates), cost_model))
+    print("worst cost", evaluate_cost(slowest_so_far, cost_model))
+
     return best_arrangement, best_cost
 
 
@@ -111,8 +123,8 @@ predicates = [
     (25, 0.7),
     (44, 0.66),
 ]  # List of predicates (time, selectivity)
-population_size = mutations(len(predicates))
-num_generations = generations(len(predicates)) + 1
+population_size = mutations(len(predicates)) # capped at 50
+num_generations = generations(len(predicates)) # capped at 8
 num_mutations = population_size
 
 
