@@ -130,8 +130,8 @@ class OptimizerVisitor:
         for strategy in self.strategies:
             if strategy.should_i_run(current_plan):
                 current_plan = self.traverse(current_plan, strategy)
-                # DEBUG: log (f"AFTER {strategy.__class__.__name__}")
-                # DEBUG: log (current_plan.draw())
+                ## DEBUG: log (f"AFTER {strategy.__class__.__name__}")
+                ## DEBUG: log (current_plan.draw())
         # DEBUG: log ("AFTER OPTIMIZATION")
         # DEBUG: log (current_plan.draw())
         return current_plan

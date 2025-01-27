@@ -53,10 +53,15 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         if node.node_type == LogicalPlanStepType.Union:
             context.seen_unions += 1
         if node.node_type == LogicalPlanStepType.Project:
-            if context.seen_unions == 0 and context.seen_projections > 0:
+            if (
+                context.seen_distincts == 0
+                and context.seen_unions == 0
+                and context.seen_projections > 0
+            ):
                 node.columns = [
                     n for n in node.columns if n.schema_column.identity in node.pre_update_columns
                 ]
+                self.seen_distincts = 0
             if context.seen_unions == 0:
                 context.seen_projections += 1
 
