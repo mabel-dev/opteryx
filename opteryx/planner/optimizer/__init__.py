@@ -66,10 +66,10 @@ from .strategies.optimization_strategy import OptimizerContext
 __all__ = "do_optimizer"
 
 
-class CostBasedOptimizerVisitor:
+class OptimizerVisitor:
     def __init__(self, statistics: QueryStatistics):
         """
-        Initialize the CostBasedOptimizerVisitor with a list of optimization strategies.
+        Initialize the OptimizerVisitor with a list of optimization strategies.
         Each strategy encapsulates a specific optimization rule.
         """
         self.strategies = [
@@ -128,8 +128,10 @@ class CostBasedOptimizerVisitor:
         """
         current_plan = plan
         for strategy in self.strategies:
-            current_plan = self.traverse(current_plan, strategy)
-            pass
+            if strategy.should_i_run(current_plan):
+                current_plan = self.traverse(current_plan, strategy)
+                # DEBUG: log (f"AFTER {strategy.__class__.__name__}")
+                # DEBUG: log (current_plan.draw())
         # DEBUG: log ("AFTER OPTIMIZATION")
         # DEBUG: log (current_plan.draw())
         return current_plan
@@ -151,5 +153,5 @@ def do_optimizer(plan: LogicalPlan, statistics: QueryStatistics) -> LogicalPlan:
         print(message)
         statistics.add_message(message)
         return plan
-    optimizer = CostBasedOptimizerVisitor(statistics)
+    optimizer = OptimizerVisitor(statistics)
     return optimizer.optimize(plan)

@@ -14,7 +14,6 @@ which focuses on building aggregates which don't require seeing the entire datas
 We avoid doing some work by not creating entire columns of data where possible.
 """
 
-import numpy
 import pyarrow
 from orso.types import OrsoTypes
 

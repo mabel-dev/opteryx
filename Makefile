@@ -37,3 +37,6 @@ compile:
 	find . -name '*.so' -delete
 	python setup.py clean
 	python setup.py build_ext --inplace
+
+c:
+	python setup.py build_ext --inplace

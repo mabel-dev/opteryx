@@ -25,6 +25,7 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
+from .optimization_strategy import get_nodes_of_type_from_logical_plan
 
 
 def _write_filters(left_column, right_column):
@@ -93,3 +94,8 @@ class CorrelatedFiltersStrategy(OptimizationStrategy):
     def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan
+
+    def should_i_run(self, plan):
+        # only run if there are LIMIT clauses in the plan
+        candidates = get_nodes_of_type_from_logical_plan(plan, (LogicalPlanStepType.Join,))
+        return len(candidates) > 0

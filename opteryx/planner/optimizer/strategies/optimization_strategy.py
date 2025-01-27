@@ -3,8 +3,19 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+from typing import Tuple
+
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlanStepType
+
+
+def get_nodes_of_type_from_logical_plan(plan: LogicalPlan, types: Tuple[LogicalPlanStepType]):
+    matches = []
+    for node in plan.nodes(True):
+        if node[1].node_type in types:
+            matches.append(node)
+    return matches
 
 
 class OptimizerContext:
@@ -19,6 +30,7 @@ class OptimizerContext:
 
         self.seen_projections: int = 0
         self.seen_unions: int = 0
+        self.seen_distincts: int = 0
 
         self.collected_predicates: list = []
         """We collect predicates we should be able to push to reads and joins"""
@@ -46,3 +58,6 @@ class OptimizationStrategy:
         raise NotImplementedError(
             "Complete method must be implemented in OptimizationStrategy classes."
         )
+
+    def should_i_run(self, plan: LogicalPlan) -> bool:
+        return True

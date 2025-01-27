@@ -48,6 +48,8 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         # If we're at the something other than the top project (e.g. in a subquery) in a plan we
         # may be able to remove some columns (and potentially some evaluations) if the columns
         # aren't referenced in the outer query.
+        if node.node_type == LogicalPlanStepType.Distinct:
+            context.seen_distincts += 1
         if node.node_type == LogicalPlanStepType.Union:
             context.seen_unions += 1
         if node.node_type == LogicalPlanStepType.Project:
