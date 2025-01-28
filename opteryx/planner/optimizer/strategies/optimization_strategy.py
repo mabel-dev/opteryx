@@ -31,6 +31,7 @@ class OptimizerContext:
         self.seen_projections: int = 0
         self.seen_unions: int = 0
         self.seen_distincts: int = 0
+        self.seen_projects_since_distinct: int = 0
 
         self.collected_predicates: list = []
         """We collect predicates we should be able to push to reads and joins"""
@@ -43,6 +44,9 @@ class OptimizerContext:
 
         self.collected_limits: list = []
         """We collect limits to to to eliminate rows earlier"""
+
+        self.distincted_indentities: set = set()
+        """The columns that implicitly exist in the plan because of a distinct"""
 
 
 class OptimizationStrategy:

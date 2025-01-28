@@ -26,7 +26,7 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             else:
                 node = operators.AggregateNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "all_relations")})
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            if False and all(agg.value in operators.SimpleAggregateAndGroupNode.SIMPLE_AGGREGATES for agg in node_config["aggregates"]):
+            if all(agg.value in operators.SimpleAggregateAndGroupNode.SIMPLE_AGGREGATES and agg.duplicate_treatment != "Distinct"  for agg in node_config["aggregates"]):
                 node = operators.SimpleAggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
             else:
                 node = operators.AggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})

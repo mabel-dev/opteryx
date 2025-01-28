@@ -143,13 +143,22 @@ def sql_parts(string):
     )
     # Match ", ', b", b', `
     # We match b prefixes separately after the non-prefix versions
-    quoted_strings = re.compile(r'("[^"]*"|\'[^\']*\'|\b[bB]"[^"]*"|\b[bB]\'[^\']*\'|`[^`]*`)')
+    quoted_strings = re.compile(
+        r'("[^"]*"|\'[^\']*\'|\b[bB]"[^"]*"|\b[bB]\'[^\']*\'|\b[rR]"[^"]*"|\b[rR]\'[^\']*\'|`[^`]*`)'
+    )
 
     parts = []
     for part in quoted_strings.split(string):
         if part and part[-1] in ("'", '"', "`"):
             if part[0] in ("b", "B"):
                 parts.append(f"blob({part[1:]})")
+            elif part[0] in ("r", "R"):
+                # We take the raw string and encode it, pass it into the
+                # plan as the encoded string and let the engine decode it
+                from base64 import b85encode
+
+                encoded_part = b85encode(part[2:-1].encode()).decode()
+                parts.append(f"BASE85_DECODE('{encoded_part}')")
             else:
                 parts.append(part)
         else:

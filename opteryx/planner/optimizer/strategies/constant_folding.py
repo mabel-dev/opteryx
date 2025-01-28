@@ -259,6 +259,8 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
 
     # fold costants in function parameters - this is generally aggregations we're affecting here
     if root.parameters:
+        if isinstance(root.parameters, tuple):
+            root.parameters = list(root.parameters)
         for i, param in enumerate(root.parameters):
             root.parameters[i] = fold_constants(param, statistics)
 
@@ -322,6 +324,7 @@ class ConstantFoldingStrategy(OptimizationStrategy):
 
         if node.node_type == LogicalPlanStepType.AggregateAndGroup:
             node.groups = [g.centre if g.node_type == NodeType.NESTED else g for g in node.groups]
+            node.groups = [fold_constants(g, self.statistics) for g in node.groups]
             context.optimized_plan[context.node_id] = node
 
         return context

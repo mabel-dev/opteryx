@@ -12,6 +12,8 @@ This is the grouping node, this specialized version only performs aggregations t
 and are collected as, a single value.
 """
 
+import time
+
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
@@ -21,11 +23,37 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
+from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.operators.aggregate_node import build_aggregations
 from opteryx.operators.aggregate_node import extract_evaluations
 from opteryx.operators.aggregate_node import project
 
 from . import BasePlanNode
+
+
+def build_finalizer_aggregations(aggregators):
+    column_map = {}
+    aggs = []
+
+    if not isinstance(aggregators, list):
+        aggregators = [aggregators]
+
+    for root in aggregators:
+        for aggregator in get_all_nodes_of_type(root, select_nodes=(NodeType.AGGREGATOR,)):
+            count_options = None
+
+            field_name = aggregator.schema_column.identity
+            if aggregator.value == "COUNT":
+                function = AGGREGATORS["SUM"]
+            else:
+                function = AGGREGATORS[aggregator.value]
+            # if the array agg is distinct, base off that function instead
+            aggs.append((field_name, function, count_options))
+            column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(
+                "_hash_", "_"
+            )
+
+    return column_map, aggs
 
 
 class SimpleAggregateAndGroupNode(BasePlanNode):
@@ -63,7 +91,11 @@ class SimpleAggregateAndGroupNode(BasePlanNode):
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
-        self.accumulator = {}
+        self.finalizer_map, self.finalizer_aggregations = build_finalizer_aggregations(
+            self.aggregates
+        )
+
+        self.buffer = []
 
     @property
     def config(self):  # pragma: no cover
@@ -76,20 +108,23 @@ class SimpleAggregateAndGroupNode(BasePlanNode):
         return "Group By Simple"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
+        internal_names = list(self.column_map.values()) + self.group_by_columns
+        column_names = list(self.column_map.keys()) + self.group_by_columns
+
         if morsel == EOS:
-            py_dict = {}
-            for k, v in self.accumulator.items():
-                for i, group in enumerate(self.group_by_columns):
-                    if group not in py_dict:
-                        py_dict[group] = [k[i]]
-                    else:
-                        py_dict[group].append(k[i])
-                for column_id, value in v.items():
-                    if column_id not in py_dict:
-                        py_dict[column_id] = [value]
-                    else:
-                        py_dict[column_id].append(value)
-            yield pyarrow.Table.from_pydict(py_dict)
+            start = time.monotonic_ns()
+
+            internal_names = list(self.finalizer_map.values()) + self.group_by_columns
+            column_names = list(self.finalizer_map.keys()) + self.group_by_columns
+
+            groups = pyarrow.concat_tables(self.buffer, promote_options="permissive")
+            groups = groups.group_by(self.group_by_columns)
+            groups = groups.aggregate(self.finalizer_aggregations)
+            groups = groups.select(internal_names)
+            groups = groups.rename_columns(column_names)
+
+            self.statistics.time_groupby_finalize += time.monotonic_ns() - start
+            yield groups
             yield EOS
             return
 
@@ -108,37 +143,13 @@ class SimpleAggregateAndGroupNode(BasePlanNode):
             )
 
         # use pyarrow to do phase 1 of the group by
+        st = time.monotonic_ns()
         groups = morsel.group_by(self.group_by_columns)
         groups = groups.aggregate(self.aggregate_functions)
-        # project to the desired column names from the pyarrow names
-        groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
-        groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
+        groups = groups.select(internal_names)
+        groups = groups.rename_columns(column_names)
+        self.statistics.time_pregrouping += time.monotonic_ns() - st
 
-        # we now merge the results into the accumulator
-        for row in groups.to_pylist():
-            for aggregate in self.aggregates:
-                column_id = aggregate.schema_column.identity
-                value = row[column_id]
-                groups = tuple(row[group] for group in self.group_by_columns)
-
-                if groups not in self.accumulator:
-                    self.accumulator[groups] = {}
-
-                if self.accumulator[groups].get(column_id) is None:
-                    self.accumulator[groups][column_id] = value
-                elif aggregate.value == "COUNT" or aggregate.value == "SUM":
-                    self.accumulator[groups][column_id] += value
-                elif aggregate.value == "MIN":
-                    self.accumulator[groups][column_id] = min(
-                        self.accumulator[groups][column_id], value
-                    )
-                elif aggregate.value == "MAX":
-                    self.accumulator[groups][column_id] = max(
-                        self.accumulator[groups][column_id], value
-                    )
-                else:
-                    raise NotImplementedError(
-                        f"SimpleAggregateAndGroupNode does not support {aggregate.value}"
-                    )
+        self.buffer.append(groups)
 
         yield None
