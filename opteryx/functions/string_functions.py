@@ -357,8 +357,9 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    from opteryx.third_party.mrabarnett import regex as re
     import pyarrow
+
+    from opteryx.third_party.mrabarnett import regex as re
 
     pattern = _pattern[0]
     replacement = _replacement[0]

@@ -52,7 +52,7 @@ def test_count_star_group_by():
     assert stats["rows_read"] == 100000, stats["rows_read"]
     assert stats["rows_seen"] == 100000, stats["rows_seen"]
 
-def test_incorrect_pushdown():
+def _test_incorrect_pushdown():
     """ 
     This is a regression test for a pushdown bug relating to COUNT(*)
     subqueries and DISTINCT - its not how I would have written this

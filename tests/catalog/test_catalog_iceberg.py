@@ -1,79 +1,25 @@
 
 import os
 import sys
+import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests.tools import set_up_iceberg
 import opteryx
 from opteryx.connectors import DiskConnector
 from opteryx.connectors import IcebergConnector
 
-BASE_PATH: str = "tmp/iceberg"
 
 # this is how we get the raw list of files for the scan
 # print([task.file.file_path for task in self.table.scan().plan_files()])
 
-def set_up_iceberg():
-    """
-    Set up a local Iceberg catalog for testing with NVD data.
-
-    Parameters:
-        parquet_files: List[str]
-            List of paths to Parquet files partitioned by CVE date.
-        base_path: str, optional
-            Path to create the Iceberg warehouse, defaults to '/tmp/iceberg_nvd'.
-
-    Returns:
-        str: Path to the created Iceberg table.
-    """
-
-    from pyiceberg.catalog.sql import SqlCatalog
-
-    # Clean up previous test runs if they exist
-    if os.path.exists(BASE_PATH):
-        import shutil
-        shutil.rmtree(BASE_PATH)
-    os.makedirs(BASE_PATH, exist_ok=True)
-
-    # Step 1: Create a local Iceberg catalog
-    catalog = SqlCatalog(
-        "default",
-        **{
-            "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-            "warehouse": f"file://{BASE_PATH}",
-        },
-    )
-
-    # Step 2: Get the data (so we can get the schema)
-    data = opteryx.query_to_arrow("SELECT tweet_id, text, timestamp, user_id, user_verified, user_name, hash_tags, followers, following, tweets_by_user, is_quoting, is_reply_to, is_retweeting FROM testdata.flat.formats.parquet")
-
-    # Step 3: Create an Iceberg table
-    catalog.create_namespace("iceberg")
-    table = catalog.create_table("iceberg.tweets", schema=data.schema)
-
-    # Step 4: Copy the Parquet files into the warehouse
-    table.append(data.slice(0, 50000))
-    table.append(data.slice(50000, 50000))
-
-    return BASE_PATH
-
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_basic():
 
-    from pyiceberg.catalog import load_catalog
-
-    set_up_iceberg()
-
-    catalog = load_catalog(
-            "default",
-            **{
-                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-                "warehouse": f"file://{BASE_PATH}",
-            },
-    )
-
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
+    catalog = set_up_iceberg()
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
     table = catalog.load_table("iceberg.tweets")
     table.scan().to_arrow()
@@ -82,18 +28,7 @@ def test_iceberg_basic():
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_schema():
 
-    from pyiceberg.catalog import load_catalog
-
-    set_up_iceberg()
-
-    catalog = load_catalog(
-            "default",
-            **{
-                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-                "warehouse": f"file://{BASE_PATH}",
-            },
-    )
-
+    catalog = set_up_iceberg()
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
 
     table = catalog.load_table("iceberg.tweets")
@@ -103,20 +38,9 @@ def test_iceberg_get_schema():
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_statistics_manual():
 
-    import pyarrow
-    from pyiceberg.catalog import load_catalog
     from opteryx.models.relation_statistics import RelationStatistics
 
-    set_up_iceberg()
-
-    catalog = load_catalog(
-            "default",
-            **{
-                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-                "warehouse": f"file://{BASE_PATH}",
-            },
-    )
-
+    catalog = set_up_iceberg()
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
 
     table = catalog.load_table("iceberg.tweets")
@@ -163,37 +87,18 @@ def test_iceberg_get_statistics_manual():
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_connector():
 
-    from pyiceberg.catalog import load_catalog
-
-    set_up_iceberg()
-
-    catalog = load_catalog(
-            "default",
-            **{
-                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-                "warehouse": f"file://{BASE_PATH}",
-            },
-    )
+    catalog = set_up_iceberg()
 
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
     table = opteryx.query("SELECT * FROM iceberg.tweets WHERE followers = 10")
     assert table.shape[0] == 353
 
 @skip_if(is_arm() or is_windows() or is_mac())
-def test_iceberg_get_stats():
+def test_iceberg_get_stats_tweets():
 
-    from pyiceberg.catalog import load_catalog
     from opteryx.connectors import IcebergConnector, connector_factory
 
-    set_up_iceberg()
-
-    catalog = load_catalog(
-            "default",
-            **{
-                "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-                "warehouse": f"file://{BASE_PATH}",
-            },
-    )
+    catalog = set_up_iceberg()
 
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
     connector = connector_factory("iceberg.tweets", None)
@@ -212,6 +117,30 @@ def test_iceberg_get_stats():
     assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
     assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
     
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_iceberg_get_stats_missions():
+
+    from opteryx.connectors import IcebergConnector, connector_factory
+
+    catalog = set_up_iceberg()
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
+    connector = connector_factory("iceberg.tweets", None)
+    connector.get_dataset_schema()
+    stats = connector.relation_statistics
+
+    assert stats.record_count == 100000
+    assert stats.lower_bounds["followers"] == 0
+    assert stats.upper_bounds["followers"] == 8266250
+    assert stats.lower_bounds["user_name"] == ""
+    assert stats.upper_bounds["user_name"] == "🫖🔫"
+    assert stats.lower_bounds["tweet_id"] == 1346604539013705728
+    assert stats.upper_bounds["tweet_id"] == 1346615999009755142
+    assert stats.lower_bounds["text"] == "!! PLEASE STOP A"
+    assert stats.upper_bounds["text"] == "🪶Cultural approq"
+    assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
+    assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
+
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_stats_remote():
 
