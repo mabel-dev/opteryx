@@ -4,9 +4,7 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-Arrow Reader
-
-Used to read datasets registered using the register_arrow or register_df functions.
+Iceberg Connector
 """
 
 import datetime
@@ -15,6 +13,7 @@ from decimal import Decimal
 from typing import Dict
 from typing import Union
 
+import numpy
 import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
@@ -91,6 +90,8 @@ def to_iceberg_filter(root):
             root.right.value = str(root.right.value)
         if root.right.schema_column.type == OrsoTypes.TIMESTAMP:
             # iceberg doesn't like timestamps unless we convert to strings
+            if isinstance(root.right.value, numpy.datetime64):
+                root.right.value = root.right.value.astype(datetime.datetime)
             root.right.value = root.right.value.isoformat()
         if root.right.schema_column.type != root.left.schema_column.type:
             raise NotSupportedError(
@@ -261,9 +262,9 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
         data_type_class = data_type.__class__
 
-        if data_type_class in (pyiceberg.types.LongType,):
+        if data_type_class == pyiceberg.types.LongType:
             return int.from_bytes(value, "little", signed=True)
-        elif data_type_class in (pyiceberg.types.DoubleType,):
+        elif data_type_class == pyiceberg.types.DoubleType:
             # IEEE 754 encoded floats are typically decoded directly
             return struct.unpack("<d", value)[0]  # 8-byte IEEE 754 double
         elif data_type_class == pyiceberg.types.TimestampType:
@@ -277,6 +278,8 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         elif data_type_class == pyiceberg.types.StringType:
             # Assuming UTF-8 encoded bytes (or already decoded string)
             return value.decode("utf-8") if isinstance(value, bytes) else str(value)
+        elif data_type_class == pyiceberg.types.BinaryType:
+            return value
         elif str(data_type).startswith("decimal"):
             # Iceberg stores decimals as unscaled integers
             int_value = int.from_bytes(value, byteorder="big", signed=True)

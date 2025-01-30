@@ -2372,7 +2372,9 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     Test an battery of statements
     """
     from tests.tools import set_up_iceberg
+    from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
+    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
 
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)
@@ -2388,7 +2390,6 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
         remove_prefix=True,
         connection="sqlite:///testdata/sqlite/database.db",
     )
-    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
 
     try:
         # query to arrow is the fastest way to query

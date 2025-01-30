@@ -21,11 +21,13 @@ from orso.types import OrsoTypes
 
 import opteryx
 from opteryx.utils.formatter import format_sql
-
+from opteryx.connectors import IcebergConnector
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
         return f"'{random_string(4)}'"
+    if t == OrsoTypes.BLOB:
+        return f"b'{random_string(8)}'"
     if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
         if random.random() < 0.5:
             return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
@@ -42,12 +44,12 @@ def generate_condition(columns):
     if random.random() < 0.1:
         where_operator = random.choice(["IS", "IS NOT"])
         where_value = random.choice(["TRUE", "FALSE", "NULL"])
-    elif where_column.type == OrsoTypes.VARCHAR and random.random() < 0.5:
+    elif where_column.type in (OrsoTypes.VARCHAR, OrsoTypes.BLOB) and random.random() < 0.5:
         where_operator = random.choice(
             ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]
         )
         where_value = (
-            "'" + random_string(8).replace("1", "%").replace("A", "%").replace("6", "_") + "'"
+            random_value(where_column.type).replace("1", "%").replace("A", "%").replace("6", "_")
         )
     elif random.random() < 0.8:
         where_operator = random.choice(["==", "<>", "=", "!=", "<", "<=", ">", ">="])
@@ -55,6 +57,7 @@ def generate_condition(columns):
     else:
         return f"{where_column.name} BETWEEN {str(random_value(where_column.type))} AND {str(random_value(where_column.type))}" 
     return f"{where_column.name} {where_operator} {where_value}"
+
 
 
 def generate_random_sql_select(columns, table):
@@ -70,9 +73,9 @@ def generate_random_sql_select(columns, table):
         distinct = "DISTINCT " if random.random() < 0.1 else ""
         agg_func = random.choice(["MIN", "MAX", "SUM", "AVG", "COUNT", "COUNT_DISTINCT"])
         agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("SUM", "AVG") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR, OrsoTypes.TIMESTAMP, OrsoTypes.DATE):
+        while agg_func in ("SUM", "AVG") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR, OrsoTypes.BLOB, OrsoTypes.TIMESTAMP, OrsoTypes.DATE):
             agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("MIN", "MAX", "COUNT_DISTINCT") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
+        while agg_func in ("MIN", "MAX", "COUNT_DISTINCT", "COUNT") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
             agg_column = columns[random.choice(range(len(columns)))]
         select_clause = "SELECT " + distinct + agg_func + "(" + agg_column.name + ")"
 
@@ -112,8 +115,27 @@ def generate_random_sql_select(columns, table):
     return select_clause
 
 from opteryx import virtual_datasets
+from tests.tools import set_up_iceberg
+
+catalog = set_up_iceberg()
 
 TABLES = [
+    {
+        "name": "iceberg.planets",
+        "fields": IcebergConnector(dataset="iceberg.planets", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.satellites",
+        "fields": IcebergConnector(dataset="iceberg.satellites", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.astronauts",
+        "fields": IcebergConnector(dataset="iceberg.astronauts", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.missions",
+        "fields": IcebergConnector(dataset="iceberg.missions", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
     {
         "name": virtual_datasets.planets.schema().name,
         "fields": virtual_datasets.planets.schema().columns,
@@ -161,6 +183,12 @@ TEST_CYCLES: int = 500
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_single_table(i):
+
+    from tests.tools import set_up_iceberg
+    from opteryx.connectors import IcebergConnector
+    iceberg = set_up_iceberg()
+    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
+
     seed = random_int()
     random.seed(seed)
 

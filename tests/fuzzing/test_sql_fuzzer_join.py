@@ -20,14 +20,18 @@ from orso.types import OrsoTypes
 import opteryx
 from opteryx.utils.formatter import format_sql
 
-from opteryx.connectors.file_connector import FileConnector
-
+from opteryx.connectors import FileConnector, IcebergConnector
+from tests.tools import set_up_iceberg
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
         return f"'{random_string(4)}'"
+    if t == OrsoTypes.BLOB:
+        return f"b'{random_string(8)}'"
     if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
-        return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
+        if random.random() < 0.5:
+            return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
+        return f"'{(datetime.datetime.now() + datetime.timedelta(seconds=random_int())).date()}'"
     if random.random() < 0.5:
         return random_int()
     return random_int() / 1000
@@ -40,16 +44,18 @@ def generate_condition(table, columns):
     if random.random() < 0.1:
         where_operator = random.choice(["IS", "IS NOT"])
         where_value = random.choice(["TRUE", "FALSE", "NULL"])
-    elif where_column.type == OrsoTypes.VARCHAR and random.random() < 0.5:
+    elif where_column.type in (OrsoTypes.VARCHAR, OrsoTypes.BLOB) and random.random() < 0.5:
         where_operator = random.choice(
             ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]
         )
         where_value = (
-            "'" + random_string(8).replace("1", "%").replace("A", "%").replace("6", "_") + "'"
+            random_value(where_column.type).replace("1", "%").replace("A", "%").replace("6", "_")
         )
-    else:
-        where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
+    elif random.random() < 0.8:
+        where_operator = random.choice(["==", "<>", "=", "!=", "<", "<=", ">", ">="])
         where_value = f"{str(random_value(where_column.type))}"
+    else:
+        return f"{table}.{where_column.name} BETWEEN {str(random_value(where_column.type))} AND {str(random_value(where_column.type))}" 
     return f"{table}.{where_column.name} {where_operator} {where_value}"
 
 def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
@@ -65,7 +71,7 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
 
         left_column = columns1[random.choice(range(len(columns1)))]
         right_column = columns2[random.choice(range(len(columns2)))]
-        while left_column.type != right_column.type:
+        while left_column.type != right_column.type or left_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
             left_column = columns1[random.choice(range(len(columns1)))]
             right_column = columns2[random.choice(range(len(columns2)))]
 
@@ -109,8 +115,27 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
     return query
 
 from opteryx import virtual_datasets
+from tests.tools import set_up_iceberg
+
+catalog = set_up_iceberg()
 
 TABLES = [
+    {
+        "name": "iceberg.planets",
+        "fields": IcebergConnector(dataset="iceberg.planets", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.satellites",
+        "fields": IcebergConnector(dataset="iceberg.satellites", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.astronauts",
+        "fields": IcebergConnector(dataset="iceberg.astronauts", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
+    {
+        "name": "iceberg.missions",
+        "fields": IcebergConnector(dataset="iceberg.missions", statistics=None, catalog=catalog).get_dataset_schema().columns,
+    },
     {
         "name": virtual_datasets.planets.schema().name,
         "fields": virtual_datasets.planets.schema().columns,
@@ -149,6 +174,11 @@ def test_sql_fuzzing_join(i):
     seed = random_int()
     random.seed(seed)
 
+    from tests.tools import set_up_iceberg
+    from opteryx.connectors import IcebergConnector
+    iceberg = set_up_iceberg()
+    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
+
     table1 = TABLES[random.choice(range(len(TABLES)))]
     table2 = TABLES[random.choice(range(len(TABLES)))]
     while table1 == table2:
@@ -162,7 +192,7 @@ def test_sql_fuzzing_join(i):
     try:
         res = opteryx.query(statement)
         execution_time = time.time() - start_time  # Measure execution time
-        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds, Seed: {seed}")
+        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds, Seed: {seed} ({i})")
         # Additional success criteria checks can be added here
     except Exception as e:
         import traceback
