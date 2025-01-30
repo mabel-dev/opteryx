@@ -23,6 +23,10 @@ OPERATORS = [
     "InList",
     "RLike",
     "NotRLike",
+    "InStr",
+    "IInStr",
+    "NotInStr",
+    "NotIInStr",
 ]
 
 LITERALS = [
@@ -37,6 +41,7 @@ LITERALS = [
     (OrsoTypes.DATE, opteryx.utils.dates.parse_iso("2022-01-01").date()),
     (OrsoTypes.TIMESTAMP, opteryx.utils.dates.parse_iso("2022-01-01 13:31")),
     (OrsoTypes.VARCHAR, "1" * 50),
+    (OrsoTypes.BLOB, b"1" * 50),
 ]
 
 
@@ -52,43 +57,19 @@ def measure_performance(data_type, op):
             operand = evaluate(operand, table)
             break
 
+    if op == "InStr" and data_type == OrsoTypes.VARCHAR:
+        pass
     t = time.monotonic_ns()
     try:
-        filter_operations(operand, op, operand)
-    except:
-        return None
-    return ((time.monotonic_ns() - t) / 1e9, data_type, op)
-
-
-def hash_measure_performance(data_type, op):
-    import time
-
-    table = pyarrow.Table.from_arrays([[1] * int(1e6)], ["one"])
-
-    operand = None
-    for literal, value in LITERALS:
-        if literal == data_type:
-            operand = Node(node_type=NodeType.LITERAL, type=OrsoTypes.INTEGER, value=hash(value))
-            break
-
-    if not operand:
-        return None
-
-    operator = Node(node_type=NodeType.COMPARISON_OPERATOR, value=op)
-    operator.left = operand
-    operator.right = operand
-
-    t = time.monotonic_ns()
-    try:
-        evaluate(operator, table)
-    except:
+        filter_operations(operand, data_type, op, operand, data_type)
+    except Exception as E:
+        print(f"{op}, {E}")
         return None
     return ((time.monotonic_ns() - t) / 1e9, data_type, op)
 
 
 for t in OrsoTypes:
     for o in OPERATORS:
-        print(measure_performance(t, o))
-
-#        if t == OrsoTypes.VARCHAR:
-#            print(hash_measure_performance(t, o))
+        perf = measure_performance(t, o)
+        if perf:
+            print(measure_performance(t, o))

@@ -49,7 +49,7 @@ import os
 import platform
 from functools import wraps
 from typing import Optional
-
+from orso.tools import lru_cache_with_expiry
 
 def is_arm():  # pragma: no cover
     """
@@ -605,7 +605,7 @@ INSERT INTO struct_tests VALUES
 
 """
 
-
+@lru_cache_with_expiry
 def create_duck_db():  # pragma: no cover
     """
     The DuckDB file format isn't stable, so ust create it anew each time and
@@ -636,6 +636,7 @@ def create_duck_db():  # pragma: no cover
             res.commit()
         cur.close()
 
+@lru_cache_with_expiry
 def populate_mongo():  # pragma: no cover
 
     MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
@@ -664,3 +665,67 @@ def populate_mongo():  # pragma: no cover
     with open("testdata/flat/planets/planets.jsonl", mode="rb") as f:
         data = f.read()
     collection.insert_many(map(form_planets, data.split(b"\n")[:-1]))
+
+@lru_cache_with_expiry
+def set_up_iceberg():
+    """
+    Set up a local Iceberg catalog for testing with NVD data.
+
+    Parameters:
+        parquet_files: List[str]
+            List of paths to Parquet files partitioned by CVE date.
+        base_path: str, optional
+            Path to create the Iceberg warehouse, defaults to '/tmp/iceberg_nvd'.
+
+    Returns:
+        str: Path to the created Iceberg table.
+    """
+    import pyarrow
+    import opteryx
+
+    ICEBERG_BASE_PATH: str = "tmp/iceberg"
+
+    def cast_dataset(dataset):
+        for column in dataset.column_names:
+            if pyarrow.types.is_date64(dataset.schema.field(column).type):
+                dataset = dataset.set_column(
+                    dataset.schema.get_field_index(column),
+                    column,
+                    pyarrow.compute.cast(dataset[column], pyarrow.timestamp('ms'))
+                )
+        return dataset
+
+    from pyiceberg.catalog.sql import SqlCatalog
+
+    # Clean up previous test runs if they exist
+    if os.path.exists(ICEBERG_BASE_PATH):
+        import shutil
+        shutil.rmtree(ICEBERG_BASE_PATH)
+    os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
+
+    # Step 1: Create a local Iceberg catalog
+    catalog = SqlCatalog(
+        "default",
+        **{
+            "uri": f"sqlite:///{ICEBERG_BASE_PATH}/pyiceberg_catalog.db",
+            "warehouse": f"file://{ICEBERG_BASE_PATH}",
+        },
+    )
+
+    catalog.create_namespace("iceberg")
+
+    data = opteryx.query_to_arrow("SELECT tweet_id, text, timestamp, user_id, user_verified, user_name, hash_tags, followers, following, tweets_by_user, is_quoting, is_reply_to, is_retweeting FROM testdata.flat.formats.parquet")
+    table = catalog.create_table("iceberg.tweets", schema=data.schema)
+    table.append(data.slice(0, 50000))
+    table.append(data.slice(50000, 50000))
+
+    for dataset in ('planets', 'satellites', 'missions', 'astronauts'):
+        data = opteryx.query_to_arrow(f"SELECT * FROM ${dataset}")
+        data = cast_dataset(data)
+        try:
+            table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
+            table.append(data)
+        except Exception as e:
+            print(f"Error creating table {dataset}: {e}")
+
+    return catalog

@@ -87,6 +87,13 @@ extensions = [
         extra_link_args=["-Lthird_party/cyan4973"],  # Link Abseil library
     ),
     Extension(
+        name="opteryx.third_party.mrabarnett.regex._regex",
+        sources=[
+            "third_party/mrabarnett/_regex.c",
+            "third_party/mrabarnett/_regex_unicode.c"
+        ]
+    ),
+    Extension(
         name="opteryx.compiled.functions.functions",
         sources=["opteryx/compiled/functions/functions.pyx"],
         include_dirs=include_dirs,

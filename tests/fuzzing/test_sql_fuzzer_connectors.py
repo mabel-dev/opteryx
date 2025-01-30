@@ -27,7 +27,7 @@ from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
 from orso.tools import lru_cache_with_expiry
 
-from tests.tools import create_duck_db, populate_mongo
+from tests.tools import create_duck_db, populate_mongo, set_up_iceberg
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
 TEST_CYCLES: int = 20
@@ -65,7 +65,6 @@ def set_up_connections():
 
     from cassandra.auth import PlainTextAuthProvider
     from cassandra.cluster import Cluster
-    from pyiceberg.catalog import load_catalog
 
     DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
     DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
@@ -84,7 +83,7 @@ def set_up_connections():
     # auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
     # cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
     # Iceberg
-    iceberg_catalog = load_catalog("opteryx", **{"uri": DATA_CATALOG_CONNECTION, "warehouse": DATA_CATALOG_STORAGE})
+    iceberg_catalog = set_up_iceberg()
     # DuckDB
     create_duck_db()
     # Mongo

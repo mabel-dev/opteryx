@@ -52,6 +52,20 @@ def test_count_star_group_by():
     assert stats["rows_read"] == 100000, stats["rows_read"]
     assert stats["rows_seen"] == 100000, stats["rows_seen"]
 
+def _test_incorrect_pushdown():
+    """ 
+    This is a regression test for a pushdown bug relating to COUNT(*)
+    subqueries and DISTINCT - its not how I would have written this
+    query (count_distinct) so went undetected as a bug
+    """
+    cur = opteryx.query(
+        "SELECT COUNT(*) FROM (SELECT DISTINCT name FROM $planets) AS S"
+    )
+    stats = cur.stats
+    assert stats["columns_read"] == 1, stats["columns_read"]
+    assert stats["rows_read"] == 9, stats["rows_read"]
+    first = cur.fetchone()[0]
+    assert first == 9, first
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

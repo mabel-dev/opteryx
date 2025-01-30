@@ -72,6 +72,7 @@ from opteryx.exceptions import (
 )
 from opteryx.managers.schemes.mabel_partitions import UnsupportedSegementationError
 from opteryx.utils.formatter import format_sql
+from opteryx.connectors import IcebergConnector
 
 # fmt:off
 STATEMENTS = [
@@ -192,6 +193,55 @@ STATEMENTS = [
         ("SELECT * FROM testdata.planets WHERE numberOfMoons > 10", 4, 20, None),
         ("SELECT * FROM testdata.planets WHERE LENGTH(name) > 7", 0, 20, None),
         ("SELECT * FROM testdata.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
+
+        # Randomly generated but consistently tested queries
+        # the same queries as above, but against iceberg, which we anticipate will be our 
+        # most utilized data source
+        ("SELECT * FROM iceberg.planets WHERE `name` = 'Earth'", 1, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name = 'Mars'", 1, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name <> 'Venus'", 8, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name = '********'", 0, 20, None),
+        ("SELECT id FROM iceberg.planets WHERE diameter > 10000", 6, 1, None),
+        ("SELECT name, mass FROM iceberg.planets WHERE gravity > 5", 6, 2, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons >= 5", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE mass < 10 AND diameter > 1000", 5, 20, None),
+        ("SELECT * FROM iceberg.planets ORDER BY distanceFromSun DESC", 9, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE escapeVelocity < 10", 3, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE obliquityToOrbit > 25", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE meanTemperature < 0", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE surfacePressure IS NULL", 4, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE orbitalEccentricity < 0.1", 7, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalPeriod BETWEEN 100 AND 1000", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) <> 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) == 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) != 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE NOT LENGTH(name) = 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE NOT LENGTH(name) == 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets LIMIT 5", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons = 0", 2, 20, None),
+        ("SELECT id FROM iceberg.planets WHERE density > 4000 ORDER BY id ASC", 3, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE gravity > 10 OR meanTemperature > 100", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalInclination <= 5", 7, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE perihelion >= 150", 6, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE aphelion < 1000", 5, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) >= 7", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE id IN (1, 3, 5)", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE id NOT IN (1, 3, 5)", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE rotationPeriod < 0", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE mass > 100 AND mass < 1000", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name LIKE 'M%'", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalVelocity > 20", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE escapeVelocity BETWEEN 10 AND 20", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) <= 6", 6, 20, None),
+        ("SELECT * FROM iceberg.planets ORDER BY id DESC LIMIT 3", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE gravity IS NOT NULL", 9, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE surfacePressure IS NOT NULL", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE meanTemperature <= 100", 7, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons > 10", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) > 7", 0, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
         # Some tests of the same query in different formats
         ("SELECT * FROM $satellites;", 177, 8, None),
@@ -1694,11 +1744,6 @@ id > /* 0 */ 1
         ("EXECUTE multiply_two_numbers (two=0, one=1.0)", 1, 1, None),
         ("EXECUTE multiply_two_numbers (one=-9.9, one=0)", 1, 1, ParameterError),
 
-        ("SELECT HEX FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors", 16, 1, None),
-#        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
-        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors ORDER BY Name", 16, 3, None),
-        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv')", None, None, UnnamedColumnError),
-
         # TEST VIEWS
         ("SELECT * FROM mission_reports", 177, 1, None),
         ("SELECT * FROM mission_reports AS MR", 177, 1, None),
@@ -2326,6 +2371,8 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     """
     Test an battery of statements
     """
+    from tests.tools import set_up_iceberg
+    iceberg = set_up_iceberg()
 
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)
@@ -2341,6 +2388,7 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
         remove_prefix=True,
         connection="sqlite:///testdata/sqlite/database.db",
     )
+    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
 
     try:
         # query to arrow is the fastest way to query

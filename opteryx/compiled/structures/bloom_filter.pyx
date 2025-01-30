@@ -30,7 +30,7 @@ eliminations) we discard it which has meant some waste work.
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset, memcpy
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, int64_t
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
@@ -131,6 +131,33 @@ cdef class BloomFilter:
 
         return result
 
+    cpdef cnp.ndarray[cnp.npy_bool, ndim=1] possibly_contains_many_ints(self, cnp.ndarray[cnp.int64_t] keys):
+        """
+        Return a boolean array indicating whether each key might be in the Bloom filter.
+
+        Parameters:
+            keys: cnp.ndarray
+                Array of keys to test for membership.
+
+        Returns:
+            A boolean array of the same length as `keys` with True or False values.
+        """
+        cdef Py_ssize_t i
+        cdef Py_ssize_t n = keys.shape[0]
+        cdef Py_ssize_t bit_array_size = self.bit_array_size
+
+        # Create an uninitialized bool array rather than a zeroed one
+        cdef cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
+
+        # Wrap both `keys` and `result` in typed memory views for faster indexing
+        cdef uint8_t[::1] result_view = result
+
+        for i in range(n):
+            h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
+            result_view[i] = ((self.bit_array[h1 >> 3] & (1 << (h1 & 7))) != 0)
+
+        return result
+
     cpdef memoryview serialize(self):
         """Serialize the Bloom filter to a memory view"""
         return memoryview(self.bit_array[:self.byte_array_size])
@@ -156,5 +183,21 @@ cpdef BloomFilter create_bloom_filter(keys):
 
     for i in range(len(keys)):
         bf._add(keys_view[i])
+
+    return bf
+
+
+cpdef BloomFilter create_int_bloom_filter(cnp.ndarray[cnp.int64_t] keys):
+
+    cdef Py_ssize_t n = len(keys)
+    cdef Py_ssize_t i
+    cdef BloomFilter bf = BloomFilter(n)
+    cdef int64_t h1
+
+    cdef Py_ssize_t bit_array_size = bf.bit_array_size
+
+    for i in range(len(keys)):
+        h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
+        set_bit(bf.bit_array, h1)
 
     return bf

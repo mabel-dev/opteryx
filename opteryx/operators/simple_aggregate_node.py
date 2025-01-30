@@ -14,7 +14,6 @@ which focuses on building aggregates which don't require seeing the entire datas
 We avoid doing some work by not creating entire columns of data where possible.
 """
 
-import numpy
 import pyarrow
 from orso.types import OrsoTypes
 
@@ -61,7 +60,7 @@ class SimpleAggregateCollector:
                 values = values.to_numpy(False)
                 if self.column_type in (OrsoTypes.BLOB, OrsoTypes.VARCHAR):
                     values = hash_bytes_column(values)
-                elif self.column_type != OrsoTypes.INTEGER:
+                elif values.dtype != pyarrow.int64():
                     values = hash_column(values)
                 self.current_value = count_distinct(values, FlatHashSet())
             elif self.aggregate_type != "COUNT":

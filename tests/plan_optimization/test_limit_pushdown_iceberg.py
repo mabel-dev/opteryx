@@ -8,41 +8,8 @@ import opteryx
 from opteryx.connectors import IcebergConnector
 from opteryx.utils.formatter import format_sql
 from tests.tools import is_arm, is_mac, is_windows, skip_if
-from orso.tools import lru_cache_with_expiry
+from tests.tools import set_up_iceberg
 
-BASE_PATH: str = "tmp/iceberg"
-
-@lru_cache_with_expiry
-def set_up_remote_iceberg():
-
-    from pyiceberg.catalog.sql import SqlCatalog
-
-    # Clean up previous test runs if they exist
-    if os.path.exists(BASE_PATH):
-        import shutil
-        shutil.rmtree(BASE_PATH)
-    os.makedirs(BASE_PATH, exist_ok=True)
-
-    # Step 1: Create a local Iceberg catalog
-    catalog = SqlCatalog(
-        "default",
-        **{
-            "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-            "warehouse": f"file://{BASE_PATH}",
-        },
-    )
-
-    # Step 2: Get the data (so we can get the schema)
-    data = opteryx.query_to_arrow("SELECT * FROM $planets")
-
-    # Step 3: Create an Iceberg table
-    catalog.create_namespace("iceberg")
-    table = catalog.create_table("iceberg.planets", schema=data.schema)
-
-    # Step 4: Copy the Parquet files into the warehouse
-    table.append(data)
-
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
 STATEMENTS = [
     # baseline
@@ -59,13 +26,15 @@ STATEMENTS = [
     ("SELECT * FROM iceberg.planets ORDER BY name LIMIT 3", 9),
     # push past subqueries
     ("SELECT name FROM (SELECT * FROM iceberg.planets) AS S LIMIT 3", 3),
+    ("SELECT name FROM iceberg.planets;", 9),
 ]
 
 @skip_if(is_arm() or is_windows() or is_mac())
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_iceberg_limit_pushdown(query, expected_rows):
 
-    set_up_remote_iceberg()
+    catalog = set_up_iceberg()
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
     cur = opteryx.query(query)
     cur.materialize()

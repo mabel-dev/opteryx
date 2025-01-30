@@ -93,12 +93,12 @@ class PredicatePushable:
                 raise NotSupportedError()
             if root.left.node_type != NodeType.IDENTIFIER:
                 root.left, root.right = root.right, root.left
-            if root.right.type == OrsoTypes.DATE:
+            if root.right.schema_column.type == OrsoTypes.DATE:
                 date_val = root.right.value
                 if hasattr(date_val, "item"):
                     date_val = date_val.item()
                 root.right.value = datetime.datetime.combine(date_val, datetime.time.min)
-                root.right.type = OrsoTypes.TIMESTAMP
+                root.right.schema_column.type = OrsoTypes.TIMESTAMP
             if root.left.node_type != NodeType.IDENTIFIER:
                 raise NotSupportedError()
             if root.right.node_type != NodeType.LITERAL:
