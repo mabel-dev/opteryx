@@ -682,6 +682,8 @@ def set_up_iceberg():
     """
     import pyarrow
     import opteryx
+    from pyiceberg.catalog.sql import SqlCatalog
+    from opteryx.connectors.iceberg_connector import IcebergConnector
 
     ICEBERG_BASE_PATH: str = "tmp/iceberg"
 
@@ -694,8 +696,6 @@ def set_up_iceberg():
                     pyarrow.compute.cast(dataset[column], pyarrow.timestamp('ms'))
                 )
         return dataset
-
-    from pyiceberg.catalog.sql import SqlCatalog
 
     # Clean up previous test runs if they exist
     if os.path.exists(ICEBERG_BASE_PATH):
@@ -727,5 +727,7 @@ def set_up_iceberg():
             table.append(data)
         except Exception as e:
             print(f"Error creating table {dataset}: {e}")
+
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
     return catalog

@@ -11,6 +11,7 @@ from opteryx.connectors.arrow_connector import ArrowConnector
 from opteryx.connectors.aws_s3_connector import AwsS3Connector
 from opteryx.connectors.cql_connector import CqlConnector
 from opteryx.connectors.disk_connector import DiskConnector
+from opteryx.connectors.file_connector import FileConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.iceberg_connector import IcebergConnector
@@ -34,6 +35,7 @@ __all__ = (
     "AwsS3Connector",
     "CqlConnector",
     "DiskConnector",
+    "FileConnector",
     "GcpCloudStorageConnector",
     "GcpFireStoreConnector",
     "IcebergConnector",
