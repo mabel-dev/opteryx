@@ -698,9 +698,7 @@ def set_up_iceberg():
         return dataset
 
     existing = os.path.exists(ICEBERG_BASE_PATH)
-#        import shutil
-#        shutil.rmtree(ICEBERG_BASE_PATH)
-#    os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
+    os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
 
     # Step 1: Create a local Iceberg catalog
     catalog = SqlCatalog(
@@ -710,6 +708,7 @@ def set_up_iceberg():
             "warehouse": f"file://{ICEBERG_BASE_PATH}",
         },
     )
+
 
     if existing:
         return catalog
