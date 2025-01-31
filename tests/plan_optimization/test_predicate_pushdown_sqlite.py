@@ -29,9 +29,9 @@ test_cases = [
     ("SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');", 1, 9),
     ("SELECT * FROM (SELECT name FROM sqlite.planets) AS $temp WHERE name = 'Earth';", 1, 1),
     ("SELECT * FROM sqlite.planets WHERE gravity <= 3.7", 3, 3),
-    ("SELECT * FROM sqlite.planets WHERE name != 'Earth'", 8, 8),
+    ("SELECT * FROM sqlite.planets WHERE name != 'Earth'", 8, 9),  # != is not pushed
     ("SELECT * FROM sqlite.planets WHERE name != 'E\"arth'", 9, 9),
-    ("SELECT * FROM sqlite.planets WHERE gravity != 3.7", 7, 7),
+    ("SELECT * FROM sqlite.planets WHERE gravity != 3.7", 7, 9),  # != is not pushed
     ("SELECT * FROM sqlite.planets WHERE gravity < 3.7", 1, 1),
     ("SELECT * FROM sqlite.planets WHERE gravity > 3.7", 6, 6),
     ("SELECT * FROM sqlite.planets WHERE gravity >= 3.7", 8, 8),
