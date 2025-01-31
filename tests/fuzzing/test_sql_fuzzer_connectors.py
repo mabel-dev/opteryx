@@ -30,7 +30,7 @@ from orso.tools import lru_cache_with_expiry
 from tests.tools import create_duck_db, populate_mongo, set_up_iceberg
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
-TEST_CYCLES: int = 20
+TEST_CYCLES: int = 50
 
 
 TABLES = {

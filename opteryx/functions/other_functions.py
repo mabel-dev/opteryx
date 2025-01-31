@@ -278,3 +278,25 @@ def jsonb_object_keys(arr: numpy.ndarray):
 
     # Return the result as a PyArrow array
     return result
+
+
+def humanize(arr):
+    def format_number(num: float) -> str:
+        """Formats the number with or without decimal places based on whether it's an integer."""
+        return f"{num:,.0f}" if isinstance(num, int) else f"{num:,.1f}"
+
+    def humanize_number(value: float) -> str:
+        thresholds = [
+            (1_000_000_000_000, "trillion"),
+            (1_000_000_000, "billion"),
+            (1_000_000, "million"),
+            (1_000, "thousand"),
+        ]
+
+        for threshold, label in thresholds:
+            rounded = round(value / threshold, 1)
+            if rounded >= 0.9:  # Ensure we don't get "0.9 million" turning into "0 million"
+                return f"{format_number(rounded)} {label}"
+        return format_number(value)
+
+    return [humanize_number(value) for value in arr]

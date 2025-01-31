@@ -426,7 +426,7 @@ FUNCTIONS = {
     "NULLIF": (other_functions.null_if, 0, 1.0),
     "CASE": (select_values, 0, 1.0),
     "JSONB_OBJECT_KEYS": (other_functions.jsonb_object_keys, OrsoTypes.ARRAY, 1.0),
-
+    "HUMANIZE": (other_functions.humanize, OrsoTypes.VARCHAR, 1.0),
 
     # Vector
     "COSINE_SIMILARITY": (other_functions.cosine_similarity, OrsoTypes.DOUBLE, 1.0),

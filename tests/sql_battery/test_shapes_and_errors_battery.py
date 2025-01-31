@@ -2009,6 +2009,9 @@ id > /* 0 */ 1
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 10 ORDER BY followers DESC LIMIT 10", 1, 1, None),
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 15 ORDER BY followers DESC LIMIT 10", 0, 1, None),
         
+        ("SELECT HUMANIZE(1000)", 1, 1, None),
+        ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
+        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
 
         # ****************************************************************************************
 
@@ -2328,20 +2331,20 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT surface_pressure + 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure - 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure / 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT TRUE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT FALSE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT TRUE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT FALSE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT TRUE AND (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT FALSE AND (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT TRUE OR (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT FALSE OR (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT name LIKE '%' as opt, name FROM $planets) AS sub WHERE opt IS TRUE", 9 , 2, None),
         ("SELECT * FROM $planets WHERE (surface_pressure * 1 IS NULL) OR (surface_pressure + 0 IS NULL)", 4, 20, None),
         ("SELECT * FROM $planets WHERE (surface_pressure / 1 IS NULL) AND (TRUE OR surface_pressure IS NULL)", 4, 20, None),
         ("SELECT * FROM $planets WHERE ((FALSE AND (surface_pressure * 1) != 0) IS NULL) OR (surface_pressure IS NULL)", 4, 20, None),
-        ("SELECT * FROM $planets WHERE ((surface_pressure != 0) AND TRUE) IS NULL", 4, 20, None),
-        ("SELECT * FROM $planets WHERE ((surface_pressure != 0) OR FALSE) IS NULL", 4, 20, None),
+        ("SELECT * FROM $planets WHERE ((surface_pressure = 0) AND TRUE) IS NULL", 4, 20, None),
+        ("SELECT * FROM $planets WHERE ((surface_pressure = 0) OR FALSE) IS NULL", 4, 20, None),
         ("SELECT COUNT(surface_pressure - 0) AS count_opt FROM $planets WHERE surface_pressure IS NULL", 1, 1, None),
         ("SELECT name || '' AS opt FROM $planets", 9, 1, None),
         ("SELECT name LIKE '%' AS opt FROM $planets", 9, 1, None),
@@ -2362,6 +2365,13 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets ORDER BY (id), name", 9, 20, None),
         ("SELECT * FROM $planets ORDER BY (id) ASC, name", 9, 20, None),
         ("SELECT * FROM $planets ORDER BY (id) DESC, name", 9, 20, None),
+        # 2340
+        ("SELECT * FROM $satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
+        ("SELECT * FROM iceberg.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
+        ("SELECT * FROM sqlite.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
 ]
 # fmt:on
 
