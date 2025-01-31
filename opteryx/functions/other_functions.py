@@ -300,8 +300,3 @@ def humanize(arr):
         return format_number(value)
 
     return [humanize_number(value) for value in arr]
-
-
-print(
-    humanize([34359699410, 1000000000, 100000000, 1000000, 959, 100, 10, 1])
-)  # ['1 billion', '100 million', '1 million', '1 thousand', '100', '10', '1']
