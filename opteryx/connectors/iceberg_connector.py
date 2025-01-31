@@ -45,7 +45,6 @@ def to_iceberg_filter(root):
     ICEBERG_FILTERS = {
         "GtEq": pyiceberg.expressions.GreaterThanOrEqual,
         "Eq": pyiceberg.expressions.EqualTo,
-        "NotEq": pyiceberg.expressions.NotEqualTo,
         "Gt": pyiceberg.expressions.GreaterThan,
         "Lt": pyiceberg.expressions.LessThan,
         "LtEq": pyiceberg.expressions.LessThanOrEqual,
@@ -122,7 +121,7 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
-        "NotEq": True,
+        # "NotEq": True, # nulls not handled correctly
         "Gt": True,
         "GtEq": True,
         "Lt": True,

@@ -59,7 +59,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
-        "NotEq": True,
+        # "NotEq": True, # not all databases handle nulls consistently
         "Gt": True,
         "GtEq": True,
         "Lt": True,
@@ -74,7 +74,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
     OPS_XLAT: Dict[str, str] = {
         "Eq": "=",
-        "NotEq": "!=",
+        # "NotEq": "!=",
         "Gt": ">",
         "GtEq": ">=",
         "Lt": "<",
