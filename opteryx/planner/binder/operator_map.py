@@ -8,6 +8,7 @@ from orso.types import OrsoTypes
 
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.managers.expression import NodeType
+from opteryx.utils.sql import convert_camel_to_sql_case
 
 
 class OperatorMapType(NamedTuple):
@@ -291,6 +292,15 @@ def determine_type(node) -> OrsoTypes:
         NodeType.NOT,
         NodeType.XOR,
     ):
+        if node.value in (
+            "IsTrue",
+            "IsFalse",
+            "IsNotTrue",
+            "IsNotFalse",
+        ) and node.centre.schema_column.type not in (OrsoTypes.BOOLEAN, OrsoTypes._MISSING_TYPE, 0):
+            raise IncorrectTypeError(
+                f"Expected a BOOLEAN value for {convert_camel_to_sql_case(node.value)}, but received {node.centre.schema_column.type}."
+            )
         return OrsoTypes.BOOLEAN
     if node.node_type == NodeType.NESTED:
         return determine_type(node.centre)

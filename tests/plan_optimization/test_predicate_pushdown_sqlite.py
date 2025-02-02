@@ -26,7 +26,7 @@ test_cases = [
     ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7 AND escapeVelocity = 5.0;", 0, 0),
     ("SELECT * FROM sqlite.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');", 1, 2),
     ("SELECT * FROM sqlite.planets WHERE surfacePressure IS NULL;", 4, 4),
-    ("SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');", 1, 9),
+    ("SELECT * FROM sqlite.planets WHERE name IN ('Earth', 'Mars');", 2, 9),
     ("SELECT * FROM (SELECT name FROM sqlite.planets) AS $temp WHERE name = 'Earth';", 1, 1),
     ("SELECT * FROM sqlite.planets WHERE gravity <= 3.7", 3, 3),
     ("SELECT * FROM sqlite.planets WHERE name != 'Earth'", 8, 9),  # != is not pushed
@@ -41,7 +41,6 @@ test_cases = [
     ("SELECT * FROM sqlite.planets WHERE NOT surfacePressure IS NULL;", 5, 9),
     ("SELECT * FROM sqlite.planets WHERE name ILIKE '%a%'", 4, 9),
     ("SELECT * FROM sqlite.planets WHERE name NOT LIKE '%a%'", 5, 5),
-    ("SELECT * FROM sqlite.planets WHERE name IS TRUE", 0, 9),  # not all SQL engines support pushing IS TRUE
     ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' OR gravity = 3.7;", 2, 9),
     ("SELECT * FROM (SELECT name FROM sqlite.planets WHERE gravity = 3.7) AS $temp WHERE name = 'Mercury';", 1, 1),
     ("SELECT * FROM (SELECT name FROM sqlite.planets WHERE gravity != 9.8) AS $temp WHERE name = 'Mercury';", 1, 1),

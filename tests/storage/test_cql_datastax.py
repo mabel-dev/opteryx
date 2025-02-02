@@ -37,7 +37,6 @@ test_cases = [
     ("SELECT name, CASE WHEN mass > 1 THEN 'heavy' ELSE 'light' END FROM datastax.opteryx.planets", 9, 2, None),
     ("SELECT name FROM datastax.opteryx.planets WHERE surfacePressure IS NULL", 4, 1, None),
     ("SELECT name FROM datastax.opteryx.planets WHERE surfacePressure IS NOT NULL", 5, 1, None),
-    ("SELECT name FROM datastax.opteryx.planets WHERE numberOfMoons IS NOT TRUE", 8, 1, None),
 ]
 # fmt:on
 

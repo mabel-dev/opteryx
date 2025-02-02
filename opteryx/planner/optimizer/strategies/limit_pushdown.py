@@ -28,6 +28,9 @@ class LimitPushdownStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Limit:
+            if node.offset is not None:
+                # we can't push down limits with offset
+                return context
             node.nid = context.node_id
             context.collected_limits.append(node)
             return context

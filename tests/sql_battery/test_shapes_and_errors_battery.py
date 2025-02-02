@@ -315,12 +315,12 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE name is null", 0, 8, None),
         ("SELECT * FROM $satellites WHERE not name is null", 177, 8, None),
         ("SELECT * FROM $satellites WHERE name is not null", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is true", 0, 8, None),
-        ("SELECT * FROM $satellites WHERE not name is true", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is not true", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is false", 0, 8, None),
-        ("SELECT * FROM $satellites WHERE not name is false", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is not false", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE name is true", 0, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE not name is true", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is not true", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is false", 0, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE not name is false", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is not false", 177, 8, IncorrectTypeError),
         ("SELECT * FROM $satellites WHERE name != 'Calypso'", 176, 8, None),
         ("SELECT * FROM $satellites WHERE name = '********'", 0, 8, None),
         ("SELECT * FROM $satellites WHERE name LIKE '_a_y_s_'", 1, 8, None),
@@ -2232,7 +2232,7 @@ id > /* 0 */ 1
         # 1848
         ("SELECT name is null from (SELECT name from $planets where id = 90) as s", 0, 1, None),
         ("SELECT * from (SELECT name from $planets where id = 90) as s WHERE name is null", 0, 1, None),
-        ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, None),
+        ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, IncorrectTypeError),
         # 1849
         ("SELECT name FROM $planets FOR '1600-01-01' UNION SELECT name FROM $satellites", 183, 1, None),
         # 1850
