@@ -1,7 +1,7 @@
 """
-Generate random SQL statements
+Generate random SQL JOINs
 
-These are pretty basic statements but this has still found bugs.
+These are pretty basic joins but this approach still finds bugs.
 """
 
 import os
@@ -43,7 +43,10 @@ def generate_condition(table, columns):
         where_column = columns[random.choice(range(len(columns)))]
     if random.random() < 0.1:
         where_operator = random.choice(["IS", "IS NOT"])
-        where_value = random.choice(["TRUE", "FALSE", "NULL"])
+        if where_column.type == OrsoTypes.BOOLEAN:
+            where_value = random.choice(["TRUE", "FALSE", "NULL"])
+        else:
+            where_value = "NULL"
     elif where_column.type in (OrsoTypes.VARCHAR, OrsoTypes.BLOB) and random.random() < 0.5:
         where_operator = random.choice(
             ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]

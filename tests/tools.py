@@ -613,15 +613,10 @@ def create_duck_db():  # pragma: no cover
     """
     import os
 
-    import duckdb
+    if os.path.exists("planets.duckdb"):
+        return
 
-    try:
-        os.remove("planets.duckdb")
-    except Exception as err:
-        # we expect to fail when running in GitHub Actions, but not fail
-        # when running locally - just ignore failures here, it's not a
-        # meaningful part of the script
-        print(err)
+    import duckdb
 
     conn = duckdb.connect(database="planets.duckdb")
     cur = conn.cursor()

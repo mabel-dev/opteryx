@@ -25,6 +25,7 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.connectors.capabilities import Statistics
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -144,9 +145,14 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         Statistics.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
+        import pyiceberg
+
         self.dataset = self.dataset.lower()
-        self.table = catalog.load_table(self.dataset)
-        self.io_connector = io(**kwargs)
+        try:
+            self.table = catalog.load_table(self.dataset)
+            self.io_connector = io(**kwargs)
+        except pyiceberg.exceptions.NoSuchTableError:
+            raise DatasetNotFoundError(dataset=self.dataset)
 
     def get_dataset_schema(self) -> RelationSchema:
         iceberg_schema = self.table.schema()
