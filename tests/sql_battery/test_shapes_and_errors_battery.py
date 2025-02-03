@@ -2366,9 +2366,9 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets ORDER BY (id) ASC, name", 9, 20, None),
         ("SELECT * FROM $planets ORDER BY (id) DESC, name", 9, 20, None),
         # 2340
-        ("SELECT * FROM $satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
-        ("SELECT * FROM iceberg.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
-        ("SELECT * FROM sqlite.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM sqlite.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM $satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
