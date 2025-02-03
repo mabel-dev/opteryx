@@ -128,13 +128,18 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
-        # MODIFIED FOR OPTERYX
         values = set(value[0])
-        return numpy.array([a in values for a in arr], dtype=numpy.bool_)  # [#325]?
+        if arr.dtype == numpy.int64:
+            return list_ops.list_ops.in_list_int64(memoryview(arr), values, len(arr))
+        else:
+            return list_ops.list_ops.in_list(arr.astype(object), values)
     if operator == "NotInList":
-        # MODIFIED FOR OPTERYX - see comment above
         values = set(value[0])
-        return numpy.array([a not in values for a in arr], dtype=numpy.bool_)  # [#325]?
+        if arr.dtype == numpy.int64:
+            matches = list_ops.list_ops.in_list_int64(memoryview(arr), values, len(arr))
+        else:
+            matches = list_ops.list_ops.in_list(arr.astype(object), values)
+        return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value[0])
         return list_ops.list_ops.list_substring(arr, needle).astype(dtype=bool)
