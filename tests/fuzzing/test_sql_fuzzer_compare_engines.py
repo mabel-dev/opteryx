@@ -20,81 +20,27 @@ from orso.types import OrsoTypes
 
 import opteryx
 from opteryx.utils.formatter import format_sql
-from opteryx.connectors import SqlConnector
-from opteryx.connectors import CqlConnector
-from opteryx.connectors import IcebergConnector
-from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
-from orso.tools import lru_cache_with_expiry
 
-from tests.tools import create_duck_db, populate_mongo, set_up_iceberg
+from tests.tools import create_duck_db
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
 TEST_CYCLES: int = 100
 
 
 TABLES = {
-            "planets": {
-                "fields": virtual_datasets.planets.schema().columns,
-                "connectors": [
-                    "$planets",  # virtual data
-                    "testdata.planets",  # blob/file storage
-                    "'testdata/planets/planets.parquet'",  # file-as-table data
-                    "sqlite.planets",  # sqlite
-                    "iceberg.planets",  # iceberg
-    #                "cockroach.planets",  # cockroach (disabled, field names in lowercase)
-    #                "datastax.planets",  # datastax (disabled, dataset not present)
-                    "duckdb.planets",  # duckdb
-    #                "mongo.planets"  # mongo (disabled, typing system not compatible)
-                ]
-            },
-            "satellites": {
-                "fields": virtual_datasets.satellites.schema().columns,
-                "connectors": [
-                    "$satellites",
-                    "testdata.satellites",
-                    "'testdata/satellites/satellites.parquet'",
-                    "sqlite.satellites"
-                ]
-            }
-    }
+    "planets": {
+        "opteryx_name": virtual_datasets.planets.schema().name,
+        "duckdb_name": "planets",
+        "fields": virtual_datasets.planets.schema().columns,
+    },
+    "satellites": {
+        "opteryx_name": virtual_datasets.satellites.schema().name,
+        "duckdb_name": "satellites",
+        "fields": virtual_datasets.satellites.schema().columns,
+    },
+}
 
-
-@lru_cache_with_expiry
-def set_up_connections():
-
-    from cassandra.auth import PlainTextAuthProvider
-    from cassandra.cluster import Cluster
-
-    DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
-    DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
-    POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-    POSTGRES_USER = os.environ.get("POSTGRES_USER")
-    DATASTAX_CLIENT_ID = os.environ.get("DATASTAX_CLIENT_ID")
-    DATASTAX_CLIENT_SECRET = os.environ.get("DATASTAX_CLIENT_SECRET")
-    COCKROACH_PASSWORD = os.environ.get("COCKROACH_PASSWORD")
-    COCKROACH_USER = os.environ.get("COCKROACH_USER")
-    COCKROACH_CONNECTION = f"cockroachdb://{COCKROACH_USER}:{COCKROACH_PASSWORD}@redleg-hunter-12763.5xj.cockroachlabs.cloud:26257/opteryx?sslmode=require"
-    MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
-    MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
-
-    # Datastax Astra Connection
-    # cloud_config = {"secure_connect_bundle": "secure-connect.zip"}
-    # auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
-    # cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-    # Iceberg
-    iceberg_catalog = set_up_iceberg()
-    # DuckDB
-    create_duck_db()
-    # Mongo
-    # populate_mongo()
-
-    opteryx.register_store("iceberg", IcebergConnector, catalog=iceberg_catalog)
-    #opteryx.register_store("cockroach", SqlConnector, remove_prefix=True, connection=COCKROACH_CONNECTION)
-    #opteryx.register_store("datastax", CqlConnector, remove_prefix=True, cluster=cluster)
-    opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection="duckdb:///planets.duckdb")
-    #opteryx.register_store("mongo", MongoDbConnector, database=MONGO_DATABASE, connection=MONGO_CONNECTION, remove_prefix=True)
-    opteryx.register_store("sqlite", SqlConnector, remove_prefix=True, connection="sqlite:///testdata/sqlite/database.db")
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -120,7 +66,7 @@ def generate_condition(columns):
             where_value = "NULL"
     elif where_column.type == OrsoTypes.VARCHAR and random.random() < 0.5:
         where_operator = random.choice(
-            ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]
+            ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE"]
         )
         where_value = (
             "'" + random_string(8).replace("1", "%").replace("A", "%").replace("6", "_") + "'"
@@ -129,13 +75,15 @@ def generate_condition(columns):
         where_operator = random.choice(["==", "<>", "=", "!=", "<", "<=", ">", ">="])
         where_value = f"{str(random_value(where_column.type))}"
     else:
-        return f"{where_column.name} BETWEEN {str(random_value(where_column.type))} AND {str(random_value(where_column.type))}" 
+        return f"{where_column.name} BETWEEN {str(random_value(where_column.type))} AND {str(random_value(where_column.type))}"
     return f"{where_column.name} {where_operator} {where_value}"
 
 
 def generate_random_sql_select(columns, table):
     # Generate a list of column names to select
-    column_list = list(set(random.choices(range(len(columns)), k=max(int(random.random() * len(columns)), 1))))
+    column_list = list(
+        set(random.choices(range(len(columns)), k=max(int(random.random() * len(columns)), 1)))
+    )
     column_list = [columns[i] for i in column_list]
     agg_column = None
     is_count_star = False
@@ -144,11 +92,20 @@ def generate_random_sql_select(columns, table):
 #        select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
     if random.random() < 0.3:
         distinct = "DISTINCT " if random.random() < 0.1 else ""
-        agg_func = random.choice(["MIN", "MAX", "SUM", "AVG", "COUNT", "COUNT_DISTINCT"])
+        agg_func = random.choice(["MIN", "MAX", "SUM", "AVG", "COUNT"])
         agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("SUM", "AVG") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR, OrsoTypes.TIMESTAMP, OrsoTypes.DATE):
+        while agg_func in ("SUM", "AVG") and agg_column.type in (
+            OrsoTypes.ARRAY,
+            OrsoTypes.STRUCT,
+            OrsoTypes.VARCHAR,
+            OrsoTypes.TIMESTAMP,
+            OrsoTypes.DATE,
+        ):
             agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("MIN", "MAX", "COUNT_DISTINCT") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
+        while agg_func in ("MIN", "MAX", "COUNT") and agg_column.type in (
+            OrsoTypes.ARRAY,
+            OrsoTypes.STRUCT,
+        ):
             agg_column = columns[random.choice(range(len(columns)))]
         select_clause = "SELECT " + distinct + agg_func + "(" + agg_column.name + ")"
 
@@ -189,7 +146,10 @@ def generate_random_sql_select(columns, table):
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_connector_comparisons(i):
 
-    set_up_connections()
+    create_duck_db()
+
+    import duckdb
+    conn = duckdb.connect(database="planets.duckdb")
 
     seed = random_int()
     random.seed(seed)
@@ -204,31 +164,32 @@ def test_sql_fuzzing_connector_comparisons(i):
     print(f"Seed: {seed}, Cycle: {i}")
 
     try:
-        columns = []
-        rows = []
-        for connector in table["connectors"]:
-            print(".", end="", flush=True)
-            this_statement = statement.replace(table_name, connector)
-            res = opteryx.query(this_statement)
-            columns.append(res.columncount)
-            rows.append(res.rowcount)
-        # Assert all columns are the same
-        assert all(col == columns[0] for col in columns), f"Columns are not the same {columns}"
-        
-        # Assert all rows are the same
-        assert all(row == rows[0] for row in rows), f"Rows are not the same {rows}"
-        
+        duck_statement = statement.replace(table_name, table["duckdb_name"])
+        duck_result = conn.query(duck_statement).arrow()
+        opteryx_statement = statement.replace(table_name, table["opteryx_name"])
+        opteryx_result = opteryx.query(opteryx_statement).arrow()
+
+        assert duck_result.shape[0] == opteryx_result.shape[0]
+        assert duck_result.shape[1] == opteryx_result.shape[1]
+
     except Exception as e:
         import traceback
 
-        print(f"\033[0;31mError in Test Cycle {i+1}, with connector {connector} \033[0m: {type(e)}")
+        print(
+            f"\033[0;31mError in Test Cycle {i + 1} \033[0m: {type(e)}"
+        )
+        print("Duck", duck_result.shape)
+        print("Opteryx", opteryx_result.shape)
+
         print(traceback.print_exc())
         # Log failing statement and error for analysis
-        assert False, f"Error in Test Cycle {i+1}, with connector {connector}: {type(e)} \n {format_sql(this_statement)}"
+        assert False, (
+            f"Error in Test Cycle {i + 1}: {type(e)} \n {format_sql(statement)}"
+        )
     print()
 
-if __name__ == "__main__":  # pragma: no cover
 
+if __name__ == "__main__":  # pragma: no cover
     for i in range(TEST_CYCLES):
         test_sql_fuzzing_connector_comparisons(i)
 

@@ -43,7 +43,6 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "AllOpEq",
         "AllOpNotEq",
         "AtArrow",
-        "NotEq",  # need to handle nulls
     ):
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(arr)

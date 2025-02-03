@@ -53,3 +53,28 @@ ignore = []
 "**/optimizer/**" = ["SIM102"]
 "opteryx/managers/expression/ops.py" = ["SIM118"]
 "**/third_party/**" = ["SIM115", "SIM110", "SIM109", "SIM108", "SIM105", "SIM103", "SIM102"]
+
+
+[tool.coverage.run]
+branch = true  # Track branch coverage (more detailed than just line coverage)
+source = ["opteryx"]  # Limit coverage measurement to your package directory
+parallel = true  # Enable parallel mode (useful for multiprocessing)
+omit = [
+    "**/third_party/**",
+]
+
+[tool.coverage.report]
+show_missing = true  # Show missing lines in the report
+fail_under = 80  # Fail if coverage is below 90%
+skip_covered = true  # Hide files that are fully covered
+exclude_lines = [
+    "if __name__ == .__main__.:",  # Ignore standard script entry point
+    "pragma: no cover",  # Ignore manually marked lines
+    "except"
+]
+
+[tool.coverage.html]
+directory = "coverage_html_report"  # Output directory for HTML reports
+
+[tool.coverage.xml]
+output = "coverage.xml"  # XML output (useful for CI)

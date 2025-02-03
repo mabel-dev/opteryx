@@ -49,6 +49,7 @@ def to_iceberg_filter(root):
         "Gt": pyiceberg.expressions.GreaterThan,
         "Lt": pyiceberg.expressions.LessThan,
         "LtEq": pyiceberg.expressions.LessThanOrEqual,
+        "NotEq": pyiceberg.expressions.NotEqualTo,
     }
 
     def _predicate_to_iceberg_filter(root):
@@ -122,7 +123,7 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
-        # "NotEq": True, # nulls not handled correctly
+        "NotEq": True,  # nulls not handled correctly
         "Gt": True,
         "GtEq": True,
         "Lt": True,
@@ -137,6 +138,7 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         OrsoTypes.VARCHAR,
         OrsoTypes.TIMESTAMP,
         OrsoTypes.DATE,
+        OrsoTypes.DECIMAL,
     }
 
     def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):

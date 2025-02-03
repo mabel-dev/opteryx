@@ -29,9 +29,9 @@ opteryx.register_store(
 
 test_cases = [
     ("SELECT * FROM pg.planets WHERE gravity <= 3.7", 3, 3),
-    ("SELECT * FROM pg.planets WHERE name != 'Earth'", 8, 9),  # != is not pushed
+    ("SELECT * FROM pg.planets WHERE name != 'Earth'", 8, 8),
     ("SELECT * FROM pg.planets WHERE name != 'E\"arth'", 9, 9),
-    ("SELECT * FROM pg.planets WHERE gravity != 3.7", 7, 9),  # != is not pushed
+    ("SELECT * FROM pg.planets WHERE gravity != 3.7", 7, 7),
     ("SELECT * FROM pg.planets WHERE gravity < 3.7", 1, 1),
     ("SELECT * FROM pg.planets WHERE gravity > 3.7", 6, 6),
     ("SELECT * FROM pg.planets WHERE gravity >= 3.7", 8, 8),

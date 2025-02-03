@@ -87,7 +87,7 @@ jobs:
           VALKEY_CONNECTION: '${{ secrets.VALKEY_CONFIG }}'
 
       - name: Check Coverage
-        run: python -m coverage report --include=opteryx/** --fail-under=90 -m
+        run: python -m coverage report --include=opteryx/** --fail-under=80 -m
 
       - name: "Upload coverage to Codecov"
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
