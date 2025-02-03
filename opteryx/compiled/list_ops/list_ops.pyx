@@ -546,3 +546,46 @@ cpdef cnp.ndarray[cnp.int64_t, ndim=1] hash_bytes_column(cnp.ndarray[cnp.bytes] 
         result_view[i] = PyObject_Hash(values_view[i])
 
     return numpy.asarray(result_view, dtype=numpy.int64)
+
+
+cpdef cnp.ndarray[cnp.uint8_t, ndim=1] in_list(object[::1] arr, set values):
+    """
+    Fast membership check for "InList" using Cython.
+
+    Parameters:
+        arr: NumPy array of arbitrary type (should be homogeneous).
+        values: List of valid values (converted to a Cython set).
+
+    Returns:
+        NumPy boolean array indicating membership.
+    """
+    cdef Py_ssize_t i, size = arr.shape[0]
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.empty(size, dtype=numpy.uint8)
+    cdef uint8_t[::1] result_view = result
+
+    for i in range(size):
+        result_view[i] = arr[i] in values
+
+    return result
+
+cpdef cnp.ndarray[cnp.uint8_t, ndim=1] in_list_int64(const int64_t[::1] arr, set values, Py_ssize_t size):
+    """
+    Fast membership check for "InList" using Cython.
+
+    Parameters:
+        arr: NumPy array of arbitrary type (should be homogeneous).
+        values: List of valid values (converted to a Cython set).
+
+    Returns:
+        NumPy boolean array indicating membership.
+    """
+    cdef Py_ssize_t i
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] result = numpy.empty(size, dtype=numpy.uint8)
+    cdef uint8_t[::1] result_view = result
+    cdef int64_t value
+
+    for i in range(size):
+        value = arr[i]
+        result_view[i] = value in values
+
+    return result
