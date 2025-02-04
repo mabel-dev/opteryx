@@ -182,6 +182,24 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
     return predicate
 
 
+def _rewrite_function(function, statistics: QueryStatistics):
+    """
+    Rewrite CASE WHEN x IS NULL THEN y ELSE x END to IFNULL(x, y)
+    """
+    if function.node_type == NodeType.FUNCTION and function.value == "CASE":
+        if len(function.parameters) == 2 and function.parameters[0].parameters[0].value == "IsNull":
+            compare_column = function.parameters[0].parameters[0].centre
+            target_column = function.parameters[1].parameters[1]
+            value_if_null = function.parameters[1].parameters[0]
+
+            if compare_column.schema_column.identity == target_column.schema_column.identity:
+                statistics.optimization_predicate_rewriter_case_to_ifnull += 1
+                function.value = "IFNULL"
+                function.parameters = [compare_column, value_if_null]
+                return function
+    return function
+
+
 class PredicateRewriteStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
@@ -195,8 +213,10 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             new_columns = []
             for column in node.columns:
                 new_column = _rewrite_predicate(column, self.statistics)
+                new_column = _rewrite_function(new_column, self.statistics)
                 new_columns.append(new_column)
             node.columns = new_columns
+            context.optimized_plan[context.node_id] = node
 
         return context
 

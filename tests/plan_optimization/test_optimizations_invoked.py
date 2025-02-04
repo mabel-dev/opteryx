@@ -23,9 +23,10 @@ STATEMENTS = [
         ("SELECT name FROM $astronauts WHERE name = 'Neil A. Armstrong'", "optimization_predicate_pushdown"),
         ("SELECT name FROM $planets WHERE name LIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
         ("SELECT name FROM $planets WHERE name ILIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
-        ("SELECT name FROM $planets WHERE name ILIKE '%th%'", "optimization_predicate_rewriter_replace_like_with_in_string"), 
+        ("SELECT name FROM $planets WHERE name ILIKE '%th%'", "optimization_predicate_rewriter_replace_like_with_in_string"),
         ("SELECT name FROM $planets WHERE NOT name NOT ILIKE '%th%'", "optimization_boolean_rewrite_inversion"),
         ("SELECT * FROM $planets WHERE NOT name != 'Earth'", "optimization_boolean_rewrite_inversion"),
+        ("SELECT CASE WHEN surface_pressure IS NULL THEN -100.00 ELSE surface_pressure END FROM $planets", "optimization_predicate_rewriter_case_to_ifnull"),
     ]
 # fmt:on
 
