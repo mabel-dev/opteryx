@@ -178,4 +178,13 @@ ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
 # not GA
 PROFILE_LOCATION:str = get("PROFILE_LOCATION")
+
 # fmt:on
+
+
+# FEATURE FLAGS
+class Features:
+    enable_two_part_aggregator = bool(get("FEATURE_ENABLE_TWO_PART_AGGREGATOR", False))
+
+
+features = Features()
