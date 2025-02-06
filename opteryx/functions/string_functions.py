@@ -359,11 +359,11 @@ def match_against(arr, val):
 def regex_replace(array, _pattern, _replacement):
     import pyarrow
 
-    from opteryx.third_party.mrabarnett import regex as re
+    from opteryx.third_party.mrabarnett import regex
 
     pattern = _pattern[0]
     replacement = _replacement[0]
-    compiled_pattern = re.compile(pattern)
+    compiled_pattern = regex.compile(pattern)
 
     # Apply the regex replacement to each element in the array
     vectorized_replace = numpy.vectorize(lambda x: compiled_pattern.sub(replacement, x))

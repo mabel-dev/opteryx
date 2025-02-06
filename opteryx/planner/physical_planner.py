@@ -11,7 +11,7 @@ from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
-ENABLE_TWO_PART_AGGREGATOR: bool = features.enable_two_part_aggregator
+ENABLE_TWO_PART_AGGREGATOR: bool = features.enable_two_part_aggregator or True
 
 
 def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
@@ -49,6 +49,9 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             if node_config.get("type") == "inner":
                 # INNER JOIN, NATURAL JOIN
                 node = operators.InnerJoinNode(query_properties, **node_config)
+            elif node_config.get("type") == "nested_inner":
+                # INNER JOIN, NATURAL JOIN
+                node = operators.NestedLoopJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left outer", "full outer", "right outer"):
                 # LEFT JOIN, RIGHT JOIN, FULL JOIN
                 node = operators.OuterJoinNode(query_properties, **node_config)

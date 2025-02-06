@@ -32,6 +32,8 @@ OS_SEP = os.sep
 # Define os.O_BINARY for non-Windows platforms if it's not already defined
 if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
+if not hasattr(os, "O_DIRECT"):
+    os.O_DIRECT = 0  # Value has no effect on non-Windows platforms
 
 
 def read_blob(
@@ -70,7 +72,7 @@ def read_blob(
     import mmap
 
     try:
-        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY | os.O_DIRECT)
         if hasattr(os, "posix_fadvise"):
             os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
         size = os.fstat(file_descriptor).st_size

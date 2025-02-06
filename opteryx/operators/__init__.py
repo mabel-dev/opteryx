@@ -27,6 +27,7 @@ from .heap_sort_node import HeapSortNode  # Heap
 
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
+from .nested_loop_join_node import NestedLoopJoinNode
 from .limit_node import LimitNode  # select the first N records
 
 from .outer_join_node import OuterJoinNode
