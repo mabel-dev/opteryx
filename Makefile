@@ -29,8 +29,8 @@ mypy:
 coverage:
 	clear
 	export MANUAL_TEST=1
-	python -m coverage run -m pytest 
-	python -m coverage report --include=opteryx/** -m
+	python -m coverage run -m pytest --color=yes
+	python -m coverage report --include=opteryx/** --fail-under=80 -m
 
 compile:
 	clear
