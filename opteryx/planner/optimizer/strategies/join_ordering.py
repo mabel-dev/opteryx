@@ -30,7 +30,10 @@ class JoinOrderingStrategy(OptimizationStrategy):
 
         if node.node_type == LogicalPlanStepType.Join and node.type == "inner":
             # Tiny datasets benefit from nested loop joins (avoids building a hash table)
-            if min(node.left_size, node.right_size) < 1000:
+            if (
+                min(node.left_size, node.right_size) < 1000
+                and max(node.left_size, node.right_size) < 10000
+            ):
                 node.type = "nested_inner"
                 context.optimized_plan[context.node_id] = node
 

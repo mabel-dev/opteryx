@@ -20,8 +20,8 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from opteryx.compiled.list_ops import array_encode_utf8 as to_blob
-from opteryx.compiled.list_ops import list_contains_any
+from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
+from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -74,9 +74,9 @@ def _get(array, key):
         raise IncorrectTypeError("VARCHAR and ARRAY values must be subscripted with NUMERIC values")
     if isinstance(first_element, numpy.ndarray):
         # NumPy-specific optimization
-        from opteryx.compiled.list_ops import cython_get_element_op
+        from opteryx.compiled.list_ops.list_get_element import list_get_element
 
-        return cython_get_element_op(array, key)
+        return list_get_element(array, key)
 
     if isinstance(first_element, (list, str, pyarrow.ListScalar)):
         # Handle list type
@@ -483,18 +483,23 @@ FUNCTIONS = {
 def apply_function(function: str = None, *parameters):
     compressed = False
 
-    if not isinstance(parameters[0], int) and function not in (
-        "IFNULL",
-        "LIST_CONTAINS_ANY",
-        "LIST_CONTAINS_ALL",
-        "ARRAY_CONTAINS_ANY",
-        "ARRAY_CONTAINS_ALL",
-        "CONCAT",
-        "CONCAT_WS",
-        "IIF",
-        "COALESCE",
-        "SUBSTRING",
-        "CASE",
+    if (
+        not isinstance(parameters[0], int)
+        and function
+        not in (
+            "IFNULL",
+            "LIST_CONTAINS_ANY",
+            "LIST_CONTAINS_ALL",
+            "ARRAY_CONTAINS_ANY",
+            "ARRAY_CONTAINS_ALL",
+            "CONCAT",
+            "CONCAT_WS",
+            "IIF",
+            "COALESCE",
+            "SUBSTRING",
+            "CASE",
+        )
+        and all(isinstance(arr, numpy.ndarray) for arr in parameters)
     ):
         morsel_size = len(parameters[0])
         null_positions = numpy.zeros(morsel_size, dtype=numpy.bool_)
@@ -510,7 +515,7 @@ def apply_function(function: str = None, *parameters):
         if null_positions.all():
             return numpy.array([None] * morsel_size)
 
-        if null_positions.any() and all(isinstance(arr, numpy.ndarray) for arr in parameters):
+        if null_positions.any():
             # if we have nulls and the value array is a numpy arrays, we can speed things
             # up by removing the nulls from the calculations, we add the rows back in
             # later
