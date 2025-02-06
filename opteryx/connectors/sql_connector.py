@@ -259,7 +259,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 ],
             )
         except NoSuchTableError as err:
-            raise DatasetNotFoundError(dataset=self.dataset)
+            # DEBUG: log (f"SQL NoSuchTableError: {err}")
+            raise DatasetNotFoundError(dataset=self.dataset) from err
         except Exception as err:
             if not err:
                 pass
