@@ -13,6 +13,9 @@ when one of the relations is very small - in this situation it's many times fast
 join as we don't need to create the hash table.
 
 The Join Order Optimization Strategy will decide if this node should be used, based on the size.
+
+This is a toy implementation, whilst it is used in production payloads we're playing with
+milliseconds of performance difference between this and a hash join.
 """
 
 from threading import Lock
