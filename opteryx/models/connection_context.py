@@ -3,6 +3,7 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+import numpy
 import datetime
 from dataclasses import dataclass
 from dataclasses import field
@@ -58,7 +59,7 @@ class ConnectionContext:
         object.__setattr__(self, "variables", SystemVariables.snapshot(VariableOwner.USER))
         self.variables._variables["user_memberships"] = (
             OrsoTypes.ARRAY,
-            self.memberships or [],
+            numpy.array(self.memberships or [], dtype=numpy.str_),
             VariableOwner.SERVER,
             Visibility.UNRESTRICTED,
         )

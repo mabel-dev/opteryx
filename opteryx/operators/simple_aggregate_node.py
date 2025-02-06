@@ -18,9 +18,9 @@ import pyarrow
 from orso.types import OrsoTypes
 
 from opteryx import EOS
-from opteryx.compiled.list_ops.list_ops import count_distinct
-from opteryx.compiled.list_ops.list_ops import hash_bytes_column
-from opteryx.compiled.list_ops.list_ops import hash_column
+from opteryx.compiled.aggregations.count_distinct import count_distinct
+from opteryx.compiled.aggregations.count_distinct import hash_bytes_column
+from opteryx.compiled.aggregations.count_distinct import hash_column
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties

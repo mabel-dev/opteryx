@@ -1,3 +1,4 @@
+import glob
 import os
 import platform
 from distutils.sysconfig import get_config_var
@@ -123,6 +124,15 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
+        name="opteryx.compiled.aggregations.count_distinct",
+        sources=[
+            "opteryx/compiled/aggregations/count_distinct.pyx"
+            ],
+        language="c++",
+        include_dirs=include_dirs + ["third_party/abseil"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+    ),
+    Extension(
         name="opteryx.compiled.joins.cross_join",
         sources=[
             "opteryx/compiled/joins/cross_join.pyx"
@@ -154,15 +164,6 @@ extensions = [
         sources=[
             "opteryx/compiled/joins/outer_join.pyx",
             ],
-        language="c++",
-        include_dirs=include_dirs + ["third_party/abseil"],
-        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
-    ),
-    Extension(
-        name="opteryx.compiled.list_ops.list_ops",
-        sources=[
-            "opteryx/compiled/list_ops/list_ops.pyx",
-        ],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
@@ -211,6 +212,20 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
 ]
+
+
+for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
+    module_name = cython_file.replace("/", ".").replace(".pyx", "")
+    print(f"Processing file: {cython_file}, module name: {module_name}")
+    extensions.append(
+            Extension(
+                name=module_name,
+                sources=[cython_file],
+                language="c++",
+                include_dirs=include_dirs + ["third_party/abseil"],
+                extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
+            ),
+    )
 
 
 setup_config = {

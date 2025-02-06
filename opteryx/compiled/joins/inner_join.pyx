@@ -82,6 +82,11 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
 
 
 cpdef tuple nested_loop_join(left_relation, right_relation, numpy.ndarray left_columns, numpy.ndarray right_columns):
+    """
+    This performs a nested loop join, this is generally a bad idea but does
+    outperform our hash join when the relation sizes are small. This is
+    primarily due to avoiding building a hash table.
+    """
     cdef IntBuffer left_indexes = IntBuffer()
     cdef IntBuffer right_indexes = IntBuffer()
     cdef int64_t nl = left_relation.shape[0]
