@@ -20,21 +20,21 @@ MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
 # skip to reduce contention
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_mongo_storage_environment_variables():
-    opteryx.register_store(COLLECTION_NAME, MongoDbConnector)
+    opteryx.register_store("opteryx", MongoDbConnector, database="opteryx", remove_prefix=True)
 
-    #populate_mongo()
+#    populate_mongo()
 
     conn = opteryx.connect()
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM {COLLECTION_NAME};")
+    cur.execute(f"SELECT * FROM opteryx.tweets;")
     rows = cur.arrow()
     assert rows.num_rows == 25, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(f"SELECT COUNT(*) FROM {COLLECTION_NAME} GROUP BY userid;")
+    cur.execute(f"SELECT COUNT(*) FROM opteryx.tweets GROUP BY userid;")
     rows = list(cur.fetchall())
     assert len(rows) == 2
 

@@ -9,7 +9,9 @@
 import numpy
 cimport numpy
 
-cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_contains_any(numpy.ndarray array, numpy.ndarray items):
+from libc.stdint cimport uint8_t
+
+cpdef uint8_t[::1] list_contains_any(object[::1] array, set items):
     """
     Check if any of the elements in the subarrays of the input array are present in the items array.
 
@@ -23,17 +25,18 @@ cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_contains_any(numpy.ndarray array
         numpy.ndarray: A numpy array of uint8 (0 or 1) indicating the presence of any items in the subarrays.
     """
 
-    cdef set items_set = set(items[0])
     cdef Py_ssize_t size = array.shape[0]
-    cdef numpy.ndarray[numpy.uint8_t, ndim=1] res = numpy.zeros(size, dtype=numpy.uint8)
-    cdef Py_ssize_t i
+    cdef Py_ssize_t i, j
     cdef numpy.ndarray test_set
+
+    cdef numpy.ndarray[numpy.uint8_t, ndim=1] res = numpy.zeros(size, dtype=numpy.uint8)
+    cdef uint8_t[::1] res_view = res
 
     for i in range(size):
         test_set = array[i]
-        if not(test_set is None or test_set.shape[0] == 0):
-            for el in test_set:
-                if el in items_set:
-                    res[i] = 1
+        if test_set is not None and test_set.shape[0] > 0:
+            for j in range(test_set.shape[0]):
+                if test_set[j] in items:
+                    res_view[i] = 1
                     break
     return res
