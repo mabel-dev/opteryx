@@ -75,6 +75,15 @@ def test_postgres_non_existant():
         opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
         opteryx.query("SELECT * FROM pg.roman_gods")
 
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+def test_postgres_empty_table():
+
+    opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
+    results = opteryx.query("SELECT * FROM pg.empty")
+
+    assert results.rowcount == 0, results.rowcount
+    assert results.columncount == 20, results.columncount
+
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
