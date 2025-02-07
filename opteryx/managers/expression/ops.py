@@ -263,6 +263,11 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtArrow":
         from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 
-        return list_contains_any(arr, value)
+        if len(arr) == 0:
+            return numpy.array([], dtype=bool)
+        if len(arr) == 1:
+            return numpy.array([set(arr[0]).intersection(value[0])], dtype=bool)
+
+        return list_contains_any(arr, set(value[0]))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
