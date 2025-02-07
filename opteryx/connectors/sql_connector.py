@@ -32,7 +32,7 @@ from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
-from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.expression import Node
@@ -226,7 +226,6 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
-        from sqlalchemy.exc import NoSuchTableError
 
         if self.schema:
             return self.schema
@@ -258,9 +257,6 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     for column in table.columns
                 ],
             )
-        except NoSuchTableError as err:
-            # DEBUG: log (f"SQL NoSuchTableError: {err}")
-            raise DatasetNotFoundError(dataset=self.dataset) from err
         except Exception as err:
             if not err:
                 pass
@@ -269,23 +265,26 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
             # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
             from sqlalchemy.sql import text
 
-            with self._engine.connect() as conn:
-                query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                # DEBUG: log ("READ ROW\n", str(query))
-                row = conn.execute(text(str(query))).fetchone()._asdict()
-                # DEBUG: log ("ROW:", row)
-                self.schema = RelationSchema(
-                    name=self.dataset,
-                    columns=[
-                        FlatColumn(
-                            name=column,
-                            type=0 if value is None else PYTHON_TO_ORSO_MAP[type(value)],
-                            precision=38,
-                            scale=14,
-                        )
-                        for column, value in row.items()
-                    ],
-                )
-                # DEBUG: log ("SCHEMA:", self.schema)
+            try:
+                with self._engine.connect() as conn:
+                    query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
+                    # DEBUG: log ("READ ROW\n", str(query))
+                    row = conn.execute(text(str(query))).fetchone()._asdict()
+                    # DEBUG: log ("ROW:", row)
+                    self.schema = RelationSchema(
+                        name=self.dataset,
+                        columns=[
+                            FlatColumn(
+                                name=column,
+                                type=0 if value is None else PYTHON_TO_ORSO_MAP[type(value)],
+                                precision=38,
+                                scale=14,
+                            )
+                            for column, value in row.items()
+                        ],
+                    )
+                    # DEBUG: log ("SCHEMA:", self.schema)
+            except Exception as err:
+                raise DatasetReadError(f"Unable to read dataset '{self.dataset}'.") from err
 
         return self.schema

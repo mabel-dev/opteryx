@@ -21,7 +21,7 @@ def _valkey_server(**kwargs):
     Handling connecting to Valkey
     """
     # the server must be set in the environment
-    valkey_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
+    valkey_config = kwargs.get("server", os.environ.get("VALKEY_CONNECTION"))
 
     if valkey_config is None:
         return None

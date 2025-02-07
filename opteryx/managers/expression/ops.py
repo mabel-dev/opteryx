@@ -149,7 +149,9 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "IInStr":
         needle = str(value[0])
-        return list_ops.list_substring.list_substring_case_insensitive(arr, needle).astype(dtype=bool)
+        return list_ops.list_substring.list_substring_case_insensitive(arr, needle).astype(
+            dtype=bool
+        )
     if operator == "NotIInStr":
         needle = str(value[0])
         matches = list_ops.list_substring.list_substring_case_insensitive(arr, needle)  # [#325]

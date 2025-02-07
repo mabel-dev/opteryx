@@ -3,7 +3,6 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-import numpy
 import datetime
 from dataclasses import dataclass
 from dataclasses import field
@@ -11,6 +10,7 @@ from typing import Iterable
 from typing import List
 from typing import Tuple
 
+import numpy
 from orso.tools import random_int
 from orso.types import OrsoTypes
 

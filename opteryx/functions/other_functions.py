@@ -74,7 +74,9 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
                 array, str(item)
             ).astype(numpy.bool_)
         else:
-            results_mask = list_ops.list_substring.list_substring(array, str(item)).astype(numpy.bool_)
+            results_mask = list_ops.list_substring.list_substring(array, str(item)).astype(
+                numpy.bool_
+            )
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower

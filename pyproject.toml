@@ -54,14 +54,10 @@ ignore = []
 "opteryx/managers/expression/ops.py" = ["SIM118"]
 "**/third_party/**" = ["SIM115", "SIM110", "SIM109", "SIM108", "SIM105", "SIM103", "SIM102"]
 
-
 [tool.coverage.run]
-branch = true  # Track branch coverage (more detailed than just line coverage)
-source = ["opteryx"]  # Limit coverage measurement to your package directory
-parallel = true  # Enable parallel mode (useful for multiprocessing)
-omit = [
-    "**/third_party/**",
-]
+branch = true
+source = ["opteryx", "opteryx/**"]
+omit = ["**/third_party/**"]
 
 [tool.coverage.report]
 show_missing = true  # Show missing lines in the report
