@@ -56,7 +56,7 @@ ignore = []
 
 [tool.coverage.run]
 branch = true  # Track branch coverage (more detailed than just line coverage)
-source = ["opteryx", "**/opteryx/**"]  # Limit coverage measurement to your package directory
+source = ["opteryx", "opteryx/**"]  # Limit coverage measurement to your package directory
 parallel = true  # Enable parallel mode (useful for multiprocessing)
 omit = ["**/third_party/**"]
 
