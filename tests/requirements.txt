@@ -28,6 +28,7 @@ pymongo
 sqlalchemy>=2.0.0
 pymysql
 psycopg2-binary
+pg8000
 polars
 duckdb
 duckdb-engine

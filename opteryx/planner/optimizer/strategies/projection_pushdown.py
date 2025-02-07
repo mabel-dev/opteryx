@@ -55,7 +55,11 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         # in a plan we may be able to remove some columns (and potentially some
         # evaluations) if the columns aren't referenced in the outer query.
         if node.node_type == LogicalPlanStepType.Project:
-            if context.seen_unions == 0 and context.seen_projections > 0 and context.seen_distincts == 0:
+            if (
+                context.seen_unions == 0
+                and context.seen_projections > 0
+                and context.seen_distincts == 0
+            ):
                 node.columns = [
                     n for n in node.columns if n.schema_column.identity in node.pre_update_columns
                 ]

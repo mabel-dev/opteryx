@@ -70,6 +70,7 @@ jobs:
           MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
+          POSTGRES_HOST: '${{ secrets.POSTGRES_HOST }}'
           MONGODB_CONNECTION: '${{ secrets.MONGODB_CONNECTION }}'
           MONGODB_DATABASE: opteryx
           COCKROACH_USER: '${{ secrets.COCKROACH_USER }}'
@@ -84,7 +85,7 @@ jobs:
           DATA_CATALOG_PROVIDER: 'ICEBERG'
           DATA_CATALOG_CONNECTION: '${{ secrets.DATA_CATALOG_CONNECTION }}'
           DATA_CATALOG_STORAGE: '${{ secrets.DATA_CATALOG_STORAGE }}'
-          VALKEY_CONNECTION: '${{ secrets.VALKEY_CONFIG }}'
+          VALKEY_CONNECTION: '${{ secrets.VALKEY_CONNECTION }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=80 -m

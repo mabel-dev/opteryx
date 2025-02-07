@@ -20,8 +20,8 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
 from opteryx.compiled.list_ops.list_contains_any import list_contains_any
+from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions

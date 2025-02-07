@@ -10,14 +10,10 @@ from opteryx.utils.formatter import format_sql
 
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
 
+CONNECTION = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/defaultdb?sslmode=require"
 
-opteryx.register_store(
-    "pg",
-    SqlConnector,
-    remove_prefix=True,
-    connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@trumpet.db.elephantsql.com/{POSTGRES_USER}",
-)
 
 STATEMENTS = [
     # baseline
@@ -38,6 +34,7 @@ STATEMENTS = [
 
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_postgres_limit_pushdown(query, expected_rows):
+    opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     cur = opteryx.query(query)
     cur.materialize()
     assert cur.stats["rows_read"] == expected_rows, cur.stats

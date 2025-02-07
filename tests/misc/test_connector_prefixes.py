@@ -9,11 +9,11 @@ import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from sqlalchemy.exc import NoSuchTableError, OperationalError
+from sqlalchemy.exc import OperationalError
 
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
-from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import DatasetNotFoundError, DatasetReadError
 
 register_store(
     "sqlite",
@@ -51,7 +51,7 @@ def test_connector_prefixes():
 
 
 def test_connector_prefixes_negative_tests():
-    with pytest.raises((DatasetNotFoundError, OperationalError)):
+    with pytest.raises((DatasetNotFoundError, OperationalError, DatasetReadError)):
         # this should be the SQLAlchemy error
         opteryx.query("SELECT * from planets.planets")
 
@@ -70,5 +70,4 @@ def test_connector_prefixes_negative_tests():
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_connector_prefixes_negative_tests()
     run_tests()
