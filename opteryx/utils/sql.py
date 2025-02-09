@@ -202,3 +202,17 @@ def regex_match_any(
                 out[i] = (not is_match) if invert else is_match
 
     return out
+
+
+def convert_camel_to_sql_case(s: str) -> str:
+    """
+    Convert a PascalCase or camelCase string to an SQL-style uppercase string with spaces.
+
+    Parameters:
+        s: str
+            The input string in PascalCase or camelCase.
+
+    Returns:
+        str: The converted string in SQL format.
+    """
+    return re.sub(r"([A-Z])", r" \1", s).strip().upper()

@@ -20,21 +20,21 @@ MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
 # skip to reduce contention
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_mongo_storage_environment_variables():
-    opteryx.register_store(COLLECTION_NAME, MongoDbConnector)
+    opteryx.register_store("opteryx", MongoDbConnector, database="opteryx", remove_prefix=True)
 
-    populate_mongo()
+#    populate_mongo()
 
     conn = opteryx.connect()
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM {COLLECTION_NAME};")
+    cur.execute(f"SELECT * FROM opteryx.tweets;")
     rows = cur.arrow()
     assert rows.num_rows == 25, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(f"SELECT COUNT(*) FROM {COLLECTION_NAME} GROUP BY userid;")
+    cur.execute(f"SELECT COUNT(*) FROM opteryx.tweets GROUP BY userid;")
     rows = list(cur.fetchall())
     assert len(rows) == 2
 
@@ -47,7 +47,7 @@ def test_mongo_storage_explicit_parameters():
     opteryx.register_store(
         "atlas",
         MongoDbConnector,
-        database="sample_restaurants",
+        database="opteryx",
         connection=MONGO_CONNECTION,
         remove_prefix=True,
     )
@@ -56,16 +56,16 @@ def test_mongo_storage_explicit_parameters():
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute("SELECT * FROM atlas.restaurants;")
+    cur.execute("SELECT * FROM atlas.planets;")
     rows = cur.arrow()
-    assert rows.num_rows == 25359, rows.num_rows
+    assert rows.num_rows == 9, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute("SELECT cuisine, COUNT(*) FROM atlas.restaurants GROUP BY cuisine;")
+    cur.execute("SELECT gravity, COUNT(*) FROM atlas.planets GROUP BY gravity;")
 
     rows = list(cur.fetchall())
-    assert len(rows) == 85
+    assert len(rows) == 8, len(rows)
 
     conn.close()
 

@@ -70,11 +70,13 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         from opteryx.compiled import list_ops
 
         if ignore_case[0]:
-            results_mask = list_ops.list_ops.list_substring_case_insensitive(
+            results_mask = list_ops.list_substring.list_substring_case_insensitive(
                 array, str(item)
             ).astype(numpy.bool_)
         else:
-            results_mask = list_ops.list_ops.list_substring(array, str(item)).astype(numpy.bool_)
+            results_mask = list_ops.list_substring.list_substring(array, str(item)).astype(
+                numpy.bool_
+            )
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
@@ -278,3 +280,25 @@ def jsonb_object_keys(arr: numpy.ndarray):
 
     # Return the result as a PyArrow array
     return result
+
+
+def humanize(arr):
+    def format_number(num: float) -> str:
+        """Formats the number with or without decimal places based on whether it's an integer."""
+        return f"{num:,.0f}" if isinstance(num, int) else f"{num:,.1f}"
+
+    def humanize_number(value: float) -> str:
+        thresholds = [
+            (1_000_000_000_000, "trillion"),
+            (1_000_000_000, "billion"),
+            (1_000_000, "million"),
+            (1_000, "thousand"),
+        ]
+
+        for threshold, label in thresholds:
+            rounded = round(value / threshold, 1)
+            if rounded >= 0.9:  # Ensure we don't get "0.9 million" turning into "0 million"
+                return f"{format_number(rounded)} {label}"
+        return format_number(value)
+
+    return [humanize_number(value) for value in arr]

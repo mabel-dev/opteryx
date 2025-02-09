@@ -17,6 +17,7 @@ from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DataError
@@ -31,6 +32,8 @@ OS_SEP = os.sep
 # Define os.O_BINARY for non-Windows platforms if it's not already defined
 if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
+if not hasattr(os, "O_DIRECT"):
+    os.O_DIRECT = 0  # Value has no effect on non-Windows platforms
 
 
 def read_blob(
@@ -69,7 +72,7 @@ def read_blob(
     import mmap
 
     try:
-        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY | os.O_DIRECT)
         if hasattr(os, "posix_fadvise"):
             os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
         size = os.fstat(file_descriptor).st_size
@@ -92,7 +95,7 @@ def read_blob(
         os.close(file_descriptor)
 
 
-class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
+class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable):
     """
     Connector for reading datasets from files on local storage.
     """
@@ -130,6 +133,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
+        LimitPushable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
@@ -165,6 +169,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
         columns: list = None,
         predicates: list = None,
         just_schema: bool = False,
+        limit: int = None,
         **kwargs,
     ) -> pyarrow.Table:
         """
@@ -180,6 +185,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
             prefix=self.dataset,
         )
 
+        remaining_rows = limit if limit is not None else float("inf")
+
         for blob_name in blob_names:
             decoder = get_decoder(blob_name)
             try:
@@ -192,8 +199,18 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable):
                         projection=columns,
                         selection=predicates,
                     )
+
+                    # push limits to the reader
+                    if decoded.num_rows > remaining_rows:
+                        decoded = decoded.slice(0, remaining_rows)
+                    remaining_rows -= decoded.num_rows
+
                     self.statistics.rows_seen += num_rows
                     yield decoded
+
+                    # if we have read all the rows we need to stop
+                    if remaining_rows <= 0:
+                        break
                 else:
                     schema = read_blob(
                         blob_name=blob_name,

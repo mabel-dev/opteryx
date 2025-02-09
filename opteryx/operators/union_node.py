@@ -52,4 +52,7 @@ class UnionNode(BasePlanNode):
             morsel = morsel.rename_columns(self.schema.names)
             morsel = morsel.cast(self.schema)
 
+        if len(morsel.schema.names) != len(self.column_ids):
+            morsel = morsel.select(self.schema.names[: len(self.column_ids)])
+        morsel = morsel.rename_columns(self.column_ids)
         yield morsel.select(self.column_ids)

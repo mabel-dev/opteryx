@@ -715,6 +715,22 @@ class BinderVisitor:
                     f"CROSS JOIN UNNEST requires an ARRAY type column, not {node.unnest_column.schema_column.type}."
                 )
 
+        # this is very much not how we want to do this, but let's start somewhere
+        node.left_size = sum(
+            context.schemas[relation_name].row_count_metric
+            or context.schemas[relation_name].row_count_estimate
+            or float("inf")
+            for relation_name in node.left_relation_names
+            if relation_name in context.schemas
+        )
+        node.right_size = sum(
+            context.schemas[relation_name].row_count_metric
+            or context.schemas[relation_name].row_count_estimate
+            or float("inf")
+            for relation_name in node.right_relation_names
+            if relation_name in context.schemas
+        )
+
         if node.type == "inner" and node.on is None:
             from opteryx.exceptions import SqlError
 

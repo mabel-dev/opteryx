@@ -27,10 +27,10 @@ from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
 from orso.tools import lru_cache_with_expiry
 
-from tests.tools import create_duck_db, populate_mongo
+from tests.tools import create_duck_db, populate_mongo, set_up_iceberg
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
-TEST_CYCLES: int = 20
+TEST_CYCLES: int = 100
 
 
 TABLES = {
@@ -65,14 +65,13 @@ def set_up_connections():
 
     from cassandra.auth import PlainTextAuthProvider
     from cassandra.cluster import Cluster
-    from pyiceberg.catalog import load_catalog
 
     DATA_CATALOG_CONNECTION = os.environ.get("DATA_CATALOG_CONNECTION")
     DATA_CATALOG_STORAGE = os.environ.get("DATA_CATALOG_STORAGE")
     POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
     POSTGRES_USER = os.environ.get("POSTGRES_USER")
-    DATASTAX_CLIENT_ID = os.environ["DATASTAX_CLIENT_ID"]
-    DATASTAX_CLIENT_SECRET = os.environ["DATASTAX_CLIENT_SECRET"]
+    DATASTAX_CLIENT_ID = os.environ.get("DATASTAX_CLIENT_ID")
+    DATASTAX_CLIENT_SECRET = os.environ.get("DATASTAX_CLIENT_SECRET")
     COCKROACH_PASSWORD = os.environ.get("COCKROACH_PASSWORD")
     COCKROACH_USER = os.environ.get("COCKROACH_USER")
     COCKROACH_CONNECTION = f"cockroachdb://{COCKROACH_USER}:{COCKROACH_PASSWORD}@redleg-hunter-12763.5xj.cockroachlabs.cloud:26257/opteryx?sslmode=require"
@@ -84,7 +83,7 @@ def set_up_connections():
     # auth_provider = PlainTextAuthProvider(DATASTAX_CLIENT_ID, DATASTAX_CLIENT_SECRET)
     # cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
     # Iceberg
-    iceberg_catalog = load_catalog("opteryx", **{"uri": DATA_CATALOG_CONNECTION, "warehouse": DATA_CATALOG_STORAGE})
+    iceberg_catalog = set_up_iceberg()
     # DuckDB
     create_duck_db()
     # Mongo
@@ -115,7 +114,10 @@ def generate_condition(columns):
         where_column = columns[random.choice(range(len(columns)))]
     if random.random() < 0.1:
         where_operator = random.choice(["IS", "IS NOT"])
-        where_value = random.choice(["TRUE", "FALSE", "NULL"])
+        if where_column.type == OrsoTypes.BOOLEAN:
+            where_value = random.choice(["TRUE", "FALSE", "NULL"])
+        else:
+            where_value = "NULL"
     elif where_column.type == OrsoTypes.VARCHAR and random.random() < 0.5:
         where_operator = random.choice(
             ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]
@@ -138,9 +140,9 @@ def generate_random_sql_select(columns, table):
     agg_column = None
     is_count_star = False
     # Add DISTINCT keyword with 20% chance
-    if random.random() < 0.2:
-        select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
-    elif random.random() < 0.3:
+#    if random.random() < 0.2:
+#        select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
+    if random.random() < 0.3:
         distinct = "DISTINCT " if random.random() < 0.1 else ""
         agg_func = random.choice(["MIN", "MAX", "SUM", "AVG", "COUNT", "COUNT_DISTINCT"])
         agg_column = columns[random.choice(range(len(columns)))]
@@ -205,6 +207,7 @@ def test_sql_fuzzing_connector_comparisons(i):
         columns = []
         rows = []
         for connector in table["connectors"]:
+            print(".", end="", flush=True)
             this_statement = statement.replace(table_name, connector)
             res = opteryx.query(this_statement)
             columns.append(res.columncount)

@@ -41,8 +41,12 @@ def ArrowOp(documents, elements) -> pyarrow.Array:
             return value.mini
         return value
 
-    # Use a generator expression to lazily evaluate the extraction
-    extracted_values = (None if d is None else extract(d, element) for d in documents)
+    try:
+        extracted_values = [None if d is None else extract(d, element) for d in documents]
+    except ValueError as err:
+        from opteryx.exceptions import IncorrectTypeError
+
+        raise IncorrectTypeError("The `->` operator can only be used on JSON documents.") from err
 
     # Return the result as a PyArrow array
     return pyarrow.array(extracted_values)
@@ -58,17 +62,21 @@ def LongArrowOp(documents, elements) -> pyarrow.Array:
     if hasattr(documents, "to_numpy"):
         documents = documents.to_numpy(zero_copy_only=False)
 
-    import simdjson
-
     def extract(doc: bytes, elem: Union[bytes, str]) -> bytes:
         value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
         if hasattr(value, "mini"):
             return value.mini  # type:ignore
         return None if value is None else str(value).encode()
 
-    return pyarrow.array(
-        [None if d is None else extract(d, element) for d in documents], type=pyarrow.binary()
-    )
+    try:
+        extracted_values = [None if d is None else extract(d, element) for d in documents]
+    except ValueError as err:
+        from opteryx.exceptions import IncorrectTypeError
+
+        raise IncorrectTypeError("The `->>` operator can only be used on JSON documents.") from err
+
+    # Return the result as a PyArrow array
+    return pyarrow.array(extracted_values, type=pyarrow.binary())
 
 
 def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optional[bool]]:

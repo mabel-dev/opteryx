@@ -19,6 +19,7 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
+from .optimization_strategy import get_nodes_of_type_from_logical_plan
 
 
 class LimitPushdownStrategy(OptimizationStrategy):
@@ -27,6 +28,9 @@ class LimitPushdownStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Limit:
+            if node.offset is not None:
+                # we can't push down limits with offset
+                return context
             node.nid = context.node_id
             context.collected_limits.append(node)
             return context
@@ -66,3 +70,8 @@ class LimitPushdownStrategy(OptimizationStrategy):
     def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan
+
+    def should_i_run(self, plan):
+        # only run if there are LIMIT clauses in the plan
+        candidates = get_nodes_of_type_from_logical_plan(plan, (LogicalPlanStepType.Limit,))
+        return len(candidates) > 0

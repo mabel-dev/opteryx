@@ -128,26 +128,33 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
-        # MODIFIED FOR OPTERYX
         values = set(value[0])
-        return numpy.array([a in values for a in arr], dtype=numpy.bool_)  # [#325]?
+        if arr.dtype == numpy.int64:
+            return list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
+        else:
+            return list_ops.list_in_list.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
-        # MODIFIED FOR OPTERYX - see comment above
         values = set(value[0])
-        return numpy.array([a not in values for a in arr], dtype=numpy.bool_)  # [#325]?
+        if arr.dtype == numpy.int64:
+            matches = list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
+        else:
+            matches = list_ops.list_in_list.list_in_list(arr.astype(object), values)
+        return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value[0])
-        return list_ops.list_ops.list_substring(arr, needle)  # [#325]
+        return list_ops.list_substring.list_substring(arr, needle).astype(dtype=bool)
     if operator == "NotInStr":
         needle = str(value[0])
-        matches = list_ops.list_ops.list_substring(arr, needle)  # [#325]
+        matches = list_ops.list_substring.list_substring(arr, needle)  # [#325]
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "IInStr":
         needle = str(value[0])
-        return list_ops.list_ops.list_substring_case_insensitive(arr, needle)  # [#325]
+        return list_ops.list_substring.list_substring_case_insensitive(arr, needle).astype(
+            dtype=bool
+        )
     if operator == "NotIInStr":
         needle = str(value[0])
-        matches = list_ops.list_ops.list_substring_case_insensitive(arr, needle)  # [#325]
+        matches = list_ops.list_substring.list_substring_case_insensitive(arr, needle)  # [#325]
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "Like":
         # MODIFIED FOR OPTERYX
@@ -176,21 +183,21 @@ def _inner_filter_operations(arr, operator, value):
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)
     if operator == "AnyOpEq":
-        return list_ops.cython_anyop_eq(arr[0], value)
+        return list_ops.list_anyop_eq.list_anyop_eq(arr[0], value)
     if operator == "AnyOpNotEq":
-        return list_ops.cython_anyop_neq(arr[0], value)
+        return list_ops.list_anyop_neq.list_anyop_neq(arr[0], value)
     if operator == "AnyOpGt":
-        return list_ops.cython_anyop_gt(arr[0], value)
+        return list_ops.list_anyop_gt.list_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":
-        return list_ops.cython_anyop_lt(arr[0], value)
+        return list_ops.list_anyop_lt.list_anyop_lt(arr[0], value)
     if operator == "AnyOpGtEq":
-        return list_ops.cython_anyop_gte(arr[0], value)
+        return list_ops.list_anyop_gte.list_anyop_gte(arr[0], value)
     if operator == "AnyOpLtEq":
-        return list_ops.cython_anyop_lte(arr[0], value)
+        return list_ops.list_anyop_lte.list_anyop_lte(arr[0], value)
     if operator == "AllOpEq":
-        return list_ops.cython_allop_eq(arr[0], value)
+        return list_ops.list_allop_eq.list_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
-        return list_ops.cython_allop_neq(arr[0], value)
+        return list_ops.list_allop_neq.list_allop_neq(arr[0], value)
 
     if operator == "AnyOpILike":
         from opteryx.utils.sql import regex_match_any
@@ -254,8 +261,13 @@ def _inner_filter_operations(arr, operator, value):
         )
 
     if operator == "AtArrow":
-        from opteryx.compiled.list_ops import list_contains_any
+        from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 
-        return list_contains_any(arr, value)
+        if len(arr) == 0:
+            return numpy.array([], dtype=bool)
+        if len(arr) == 1:
+            return numpy.array([set(arr[0]).intersection(value[0])], dtype=bool)
+
+        return list_contains_any(arr, set(value[0]))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

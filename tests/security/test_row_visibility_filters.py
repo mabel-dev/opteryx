@@ -18,6 +18,9 @@ test_cases = [
     # none filters give all results
     ("SELECT * FROM $planets", {"$planets": None}, (9, 20)),
 
+    # WHERE 'Apollo 11' = ANY(missions) 
+    ("SELECT * FROM $astronauts", {"$astronauts": [("missions", "AnyOpEq", "Apollo 11")]}, (3, 19)),
+
     ("SELECT * FROM $planets", {"testdata.planets": [("id", "Eq", 4)]}, (9, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4)]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4.0)]}, (1, 20)),

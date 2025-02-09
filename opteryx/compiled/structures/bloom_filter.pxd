@@ -6,7 +6,7 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t, int64_t
 cimport numpy as cnp
 
 # Declaration of the BloomFilter class
@@ -22,5 +22,8 @@ cdef class BloomFilter:
     cpdef cnp.ndarray[cnp.npy_bool, ndim=1] possibly_contains_many(self, cnp.ndarray keys)
     cpdef memoryview serialize(self)
 
+    cpdef cnp.ndarray[cnp.npy_bool, ndim=1] possibly_contains_many_ints(self, cnp.ndarray[cnp.int64_t] keys)
+
 cpdef BloomFilter deserialize(const unsigned char* data)
 cpdef BloomFilter create_bloom_filter(keys)
+cpdef BloomFilter create_int_bloom_filter(cnp.ndarray[cnp.int64_t] keys)

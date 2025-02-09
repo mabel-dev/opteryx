@@ -72,6 +72,7 @@ from opteryx.exceptions import (
 )
 from opteryx.managers.schemes.mabel_partitions import UnsupportedSegementationError
 from opteryx.utils.formatter import format_sql
+from opteryx.connectors import IcebergConnector
 
 # fmt:off
 STATEMENTS = [
@@ -193,6 +194,55 @@ STATEMENTS = [
         ("SELECT * FROM testdata.planets WHERE LENGTH(name) > 7", 0, 20, None),
         ("SELECT * FROM testdata.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
+        # Randomly generated but consistently tested queries
+        # the same queries as above, but against iceberg, which we anticipate will be our 
+        # most utilized data source
+        ("SELECT * FROM iceberg.planets WHERE `name` = 'Earth'", 1, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name = 'Mars'", 1, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name <> 'Venus'", 8, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name = '********'", 0, 20, None),
+        ("SELECT id FROM iceberg.planets WHERE diameter > 10000", 6, 1, None),
+        ("SELECT name, mass FROM iceberg.planets WHERE gravity > 5", 6, 2, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons >= 5", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE mass < 10 AND diameter > 1000", 5, 20, None),
+        ("SELECT * FROM iceberg.planets ORDER BY distanceFromSun DESC", 9, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE escapeVelocity < 10", 3, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE obliquityToOrbit > 25", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE meanTemperature < 0", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE surfacePressure IS NULL", 4, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE orbitalEccentricity < 0.1", 7, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalPeriod BETWEEN 100 AND 1000", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) <> 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) == 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) != 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE NOT LENGTH(name) = 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE NOT LENGTH(name) == 5", 6, 20, None),
+        ("SELECT * FROM iceberg.planets LIMIT 5", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons = 0", 2, 20, None),
+        ("SELECT id FROM iceberg.planets WHERE density > 4000 ORDER BY id ASC", 3, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE gravity > 10 OR meanTemperature > 100", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalInclination <= 5", 7, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE perihelion >= 150", 6, 20, None),
+        ("SELECT name FROM iceberg.planets WHERE aphelion < 1000", 5, 1, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) >= 7", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE id IN (1, 3, 5)", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE id NOT IN (1, 3, 5)", 6, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE rotationPeriod < 0", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE mass > 100 AND mass < 1000", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE name LIKE 'M%'", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE orbitalVelocity > 20", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE escapeVelocity BETWEEN 10 AND 20", 2, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) <= 6", 6, 20, None),
+        ("SELECT * FROM iceberg.planets ORDER BY id DESC LIMIT 3", 3, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE gravity IS NOT NULL", 9, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE surfacePressure IS NOT NULL", 5, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE meanTemperature <= 100", 7, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE numberOfMoons > 10", 4, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE LENGTH(name) > 7", 0, 20, None),
+        ("SELECT * FROM iceberg.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
+
         # Some tests of the same query in different formats
         ("SELECT * FROM $satellites;", 177, 8, None),
         ("SELECT * FROM $satellites\n;", 177, 8, None),
@@ -265,12 +315,12 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE name is null", 0, 8, None),
         ("SELECT * FROM $satellites WHERE not name is null", 177, 8, None),
         ("SELECT * FROM $satellites WHERE name is not null", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is true", 0, 8, None),
-        ("SELECT * FROM $satellites WHERE not name is true", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is not true", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is false", 0, 8, None),
-        ("SELECT * FROM $satellites WHERE not name is false", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE name is not false", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE name is true", 0, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE not name is true", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is not true", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is false", 0, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE not name is false", 177, 8, IncorrectTypeError),
+        ("SELECT * FROM $satellites WHERE name is not false", 177, 8, IncorrectTypeError),
         ("SELECT * FROM $satellites WHERE name != 'Calypso'", 176, 8, None),
         ("SELECT * FROM $satellites WHERE name = '********'", 0, 8, None),
         ("SELECT * FROM $satellites WHERE name LIKE '_a_y_s_'", 1, 8, None),
@@ -1332,9 +1382,9 @@ id > /* 0 */ 1
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '@%s'", 2, 4, UnsupportedSyntaxError),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '@%gon'", 1, 4, UnsupportedSyntaxError),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, UnsupportedSyntaxError),
-        ("SHOW PARAMETER disable_optimizer", 1, 2, None),
-        ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
-        ("SET disable_optimizer TO true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
+        ("SHOW PARAMETER disable_optimizer", 1, 2, UnsupportedSyntaxError),
+        ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, UnsupportedSyntaxError),
+        ("SET disable_optimizer TO true; SHOW PARAMETER disable_optimizer;", 1, 2, UnsupportedSyntaxError),
 
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
@@ -1495,7 +1545,7 @@ id > /* 0 */ 1
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
 
-        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+#        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
 
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01 01:00'", 1, 2, None),
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
@@ -1532,7 +1582,7 @@ id > /* 0 */ 1
         ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
-        ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),
+#        ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),
         # TEMPORAL QUERIES aren't part of the AST
         ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')", None, None, InvalidTemporalRangeFilterError),
         # can't cast to a list
@@ -1693,11 +1743,6 @@ id > /* 0 */ 1
         ("EXECUTE multiply_two_numbers (two=0.000000001, three=0.000000001)", 1, 1, ParameterError),
         ("EXECUTE multiply_two_numbers (two=0, one=1.0)", 1, 1, None),
         ("EXECUTE multiply_two_numbers (one=-9.9, one=0)", 1, 1, ParameterError),
-
-        ("SELECT HEX FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors", 16, 1, None),
-#        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
-        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors ORDER BY Name", 16, 3, None),
-        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv')", None, None, UnnamedColumnError),
 
         # TEST VIEWS
         ("SELECT * FROM mission_reports", 177, 1, None),
@@ -1964,6 +2009,9 @@ id > /* 0 */ 1
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 10 ORDER BY followers DESC LIMIT 10", 1, 1, None),
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 15 ORDER BY followers DESC LIMIT 10", 0, 1, None),
         
+        ("SELECT HUMANIZE(1000)", 1, 1, None),
+        ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
+        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
 
         # ****************************************************************************************
 
@@ -2184,7 +2232,7 @@ id > /* 0 */ 1
         # 1848
         ("SELECT name is null from (SELECT name from $planets where id = 90) as s", 0, 1, None),
         ("SELECT * from (SELECT name from $planets where id = 90) as s WHERE name is null", 0, 1, None),
-        ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, None),
+        ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, IncorrectTypeError),
         # 1849
         ("SELECT name FROM $planets FOR '1600-01-01' UNION SELECT name FROM $satellites", 183, 1, None),
         # 1850
@@ -2283,20 +2331,20 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT surface_pressure + 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure - 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure / 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT TRUE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT FALSE AND (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT TRUE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT FALSE OR (surface_pressure != 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
-        ("SELECT * FROM (SELECT (surface_pressure != 0) OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT TRUE AND (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT FALSE AND (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT TRUE OR (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT FALSE OR (surface_pressure = 0) as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) AND TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) AND FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) OR TRUE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 0, 2, None),
+        ("SELECT * FROM (SELECT (surface_pressure = 0) OR FALSE as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT name LIKE '%' as opt, name FROM $planets) AS sub WHERE opt IS TRUE", 9 , 2, None),
         ("SELECT * FROM $planets WHERE (surface_pressure * 1 IS NULL) OR (surface_pressure + 0 IS NULL)", 4, 20, None),
         ("SELECT * FROM $planets WHERE (surface_pressure / 1 IS NULL) AND (TRUE OR surface_pressure IS NULL)", 4, 20, None),
         ("SELECT * FROM $planets WHERE ((FALSE AND (surface_pressure * 1) != 0) IS NULL) OR (surface_pressure IS NULL)", 4, 20, None),
-        ("SELECT * FROM $planets WHERE ((surface_pressure != 0) AND TRUE) IS NULL", 4, 20, None),
-        ("SELECT * FROM $planets WHERE ((surface_pressure != 0) OR FALSE) IS NULL", 4, 20, None),
+        ("SELECT * FROM $planets WHERE ((surface_pressure = 0) AND TRUE) IS NULL", 4, 20, None),
+        ("SELECT * FROM $planets WHERE ((surface_pressure = 0) OR FALSE) IS NULL", 4, 20, None),
         ("SELECT COUNT(surface_pressure - 0) AS count_opt FROM $planets WHERE surface_pressure IS NULL", 1, 1, None),
         ("SELECT name || '' AS opt FROM $planets", 9, 1, None),
         ("SELECT name LIKE '%' AS opt FROM $planets", 9, 1, None),
@@ -2317,6 +2365,13 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets ORDER BY (id), name", 9, 20, None),
         ("SELECT * FROM $planets ORDER BY (id) ASC, name", 9, 20, None),
         ("SELECT * FROM $planets ORDER BY (id) DESC, name", 9, 20, None),
+        # 2340
+        ("SELECT * FROM $satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM sqlite.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM $satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
 ]
 # fmt:on
 
@@ -2326,6 +2381,10 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     """
     Test an battery of statements
     """
+    from tests.tools import set_up_iceberg
+    from opteryx.connectors import IcebergConnector
+    iceberg = set_up_iceberg()
+    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
 
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)

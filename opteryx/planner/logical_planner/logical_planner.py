@@ -584,7 +584,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             )
         if join_condition == "Using":
             join_using = [
-                logical_planner_builders.build({"Identifier": identifier})
+                logical_planner_builders.build({"Identifier": identifier[0]})
                 for identifier in join["join_operator"][join_operator][join_condition]
             ]
 
@@ -846,7 +846,7 @@ def plan_execute_query(statement) -> LogicalPlan:
 
     clean_sql, temporal_filters = do_sql_rewrite(operation)
     try:
-        parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+        parsed_statements = sqloxide.parse_sql(clean_sql, _dialect="opteryx")
     except ValueError as parser_error:
         raise SqlError(parser_error) from parser_error
 
@@ -1020,20 +1020,6 @@ def plan_show_columns(statement):
     return plan
 
 
-def plan_show_variable(statement):
-    root_node = "ShowVariable"
-    plan = LogicalPlan()
-    show_step = LogicalPlanNode(node_type=LogicalPlanStepType.Show)
-    show_step.object_type = "VARIABLE"
-    show_step.items = extract_variable(statement[root_node]["variable"])
-
-    if show_step.items[0] not in ("PARAMETER",):
-        raise UnsupportedSyntaxError(f"SHOW {show_step.items[0]} is not supported.")
-
-    plan.add_node(random_string(), show_step)
-    return plan
-
-
 def plan_show_create_query(statement):
     root_node = "ShowCreate"
     plan = LogicalPlan()
@@ -1046,56 +1032,17 @@ def plan_show_create_query(statement):
     return plan
 
 
-def plan_show_variables(statement):
-    root_node = "ShowVariables"
-    plan = LogicalPlan()
-
-    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
-    read_step.relation = "$variables"
-    step_id = random_string()
-    plan.add_node(step_id, read_step)
-
-    predicate = statement[root_node]["filter"]
-    if predicate is not None:
-        operator = next(iter(predicate))
-        select_step = LogicalPlanNode(
-            node_type=LogicalPlanStepType.Filter,
-            condition=Node(
-                node_type=NodeType.COMPARISON_OPERATOR,
-                value=operator,
-                left=Node(node_type=NodeType.IDENTIFIER, value="name"),
-                right=Node(
-                    node_type=NodeType.LITERAL,
-                    type=OrsoTypes.VARCHAR,
-                    value=predicate[operator],
-                ),
-            ),
-        )
-        previous_step_id, step_id = step_id, random_string()
-        plan.add_node(step_id, select_step)
-        plan.add_edge(previous_step_id, step_id)
-        raise UnsupportedSyntaxError("Cannot filter by Variable Names")
-
-    exit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
-    exit_step.columns = [Node(node_type=NodeType.WILDCARD)]  # We are always SELECT *
-    previous_step_id, step_id = step_id, random_string()
-    plan.add_node(step_id, exit_step)
-    plan.add_edge(previous_step_id, step_id)
-
-    return plan
-
-
 QUERY_BUILDERS = {
-    #    "Analyze": analyze_query,
+    # "Analyze": analyze_query,
     "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,
     "SetVariable": plan_set_variable,
     "ShowColumns": plan_show_columns,
     "ShowCreate": plan_show_create_query,
-    #    "ShowFunctions": show_functions_query,
-    "ShowVariable": plan_show_variable,  # generic SHOW handler
-    "ShowVariables": plan_show_variables,
+    # "ShowFunctions": show_functions_query,
+    # "ShowVariable": plan_show_variable,  # generic SHOW handler
+    # "ShowVariables": plan_show_variables,
     # "Use": plan_use
 }
 
@@ -1122,6 +1069,11 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
                         ),
                         right=build_literal_node(value),
                     )
+                    if operator.startswith("AnyOp"):
+                        comparison_node.left, comparison_node.right = (
+                            comparison_node.right,
+                            comparison_node.left,
+                        )
                     if and_node is None:
                         and_node = comparison_node
                     else:
@@ -1140,8 +1092,6 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
             and_node = None
             for predicate in dnf_list:
                 identifier, operator, value = predicate
-                if operator.startswith("AnyOp"):
-                    identifier, value = value, identifier
                 comparison_node = Node(
                     node_type=NodeType.COMPARISON_OPERATOR,
                     value=operator,
@@ -1150,6 +1100,11 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
                     ),
                     right=build_literal_node(value),
                 )
+                if operator.startswith("AnyOp"):
+                    comparison_node.left, comparison_node.right = (
+                        comparison_node.right,
+                        comparison_node.left,
+                    )
                 if and_node is None:
                     and_node = comparison_node
                 else:
@@ -1198,8 +1153,11 @@ def do_logical_planning_phase(parsed_statement: dict) -> tuple:
     statement_type = next(iter(parsed_statement))
     if statement_type not in QUERY_BUILDERS:
         from opteryx.exceptions import UnsupportedSyntaxError
+        from opteryx.utils.sql import convert_camel_to_sql_case
 
-        raise UnsupportedSyntaxError(f"VPlanner does not support '{statement_type}' type queries.")
+        raise UnsupportedSyntaxError(
+            f"Opteryx does not support '{convert_camel_to_sql_case(statement_type)}' type queries."
+        )
     # CTEs are Common Table Expressions, they're variations of subqueries
     ctes = extract_ctes(parsed_statement, inner_query_planner)
     return QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes

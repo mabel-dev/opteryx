@@ -11,7 +11,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 import opteryx
-
+from opteryx.utils.formatter import format_sql
+from tests.tools import trunc_printable
 
 # fmt:off
 STATEMENTS = [
@@ -22,6 +23,10 @@ STATEMENTS = [
         ("SELECT name FROM $astronauts WHERE name = 'Neil A. Armstrong'", "optimization_predicate_pushdown"),
         ("SELECT name FROM $planets WHERE name LIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
         ("SELECT name FROM $planets WHERE name ILIKE '%'", "optimization_constant_fold_reduce"), # rewritten to `name is not null`
+        ("SELECT name FROM $planets WHERE name ILIKE '%th%'", "optimization_predicate_rewriter_replace_like_with_in_string"),
+        ("SELECT name FROM $planets WHERE NOT name NOT ILIKE '%th%'", "optimization_boolean_rewrite_inversion"),
+        ("SELECT * FROM $planets WHERE NOT name != 'Earth'", "optimization_boolean_rewrite_inversion"),
+        ("SELECT CASE WHEN surface_pressure IS NULL THEN -100.00 ELSE surface_pressure END FROM $planets", "optimization_predicate_rewriter_case_to_ifnull"),
     ]
 # fmt:on
 
@@ -39,9 +44,18 @@ def test_optimization_invoked(statement, flag):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import shutil
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} OPTIMIZER TESTS")
-    for statement, flag in STATEMENTS:
-        print(statement)
+
+    width = shutil.get_terminal_size((80, 20))[0] - 15
+    for index, (statement, flag) in enumerate(STATEMENTS):
+        print(
+            f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
+            f" {trunc_printable(format_sql(statement), width - 1)}",
+            end="",
+            flush=True,
+        )
         test_optimization_invoked(statement, flag)
+        print()
 
     print("✅ okay")

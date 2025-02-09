@@ -8,41 +8,8 @@ import opteryx
 from opteryx.connectors import IcebergConnector
 from opteryx.utils.formatter import format_sql
 from tests.tools import is_arm, is_mac, is_windows, skip_if
-from orso.tools import lru_cache_with_expiry
+from tests.tools import set_up_iceberg
 
-BASE_PATH: str = "tmp/iceberg"
-
-@lru_cache_with_expiry
-def set_up_remote_iceberg():
-
-    from pyiceberg.catalog.sql import SqlCatalog
-
-    # Clean up previous test runs if they exist
-    if os.path.exists(BASE_PATH):
-        import shutil
-        shutil.rmtree(BASE_PATH)
-    os.makedirs(BASE_PATH, exist_ok=True)
-
-    # Step 1: Create a local Iceberg catalog
-    catalog = SqlCatalog(
-        "default",
-        **{
-            "uri": f"sqlite:///{BASE_PATH}/pyiceberg_catalog.db",
-            "warehouse": f"file://{BASE_PATH}",
-        },
-    )
-
-    # Step 2: Get the data (so we can get the schema)
-    data = opteryx.query_to_arrow("SELECT * FROM $planets")
-
-    # Step 3: Create an Iceberg table
-    catalog.create_namespace("iceberg")
-    table = catalog.create_table("iceberg.planets", schema=data.schema)
-
-    # Step 4: Copy the Parquet files into the warehouse
-    table.append(data)
-
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
 STATEMENTS = [
     # baseline
@@ -50,22 +17,27 @@ STATEMENTS = [
     # push limit
     ("SELECT name FROM iceberg.planets LIMIT 1;", 1),
     # test with filter
-#    ("SELECT name FROM iceberg.planets WHERE gravity > 1;", 8),
+    ("SELECT name FROM iceberg.planets WHERE gravity > 1;", 8),
     # pushable filter and limit should push the limit
-#    ("SELECT name FROM iceberg.planets WHERE gravity > 1 LIMIT 1;", 1),
+    ("SELECT name FROM iceberg.planets WHERE gravity > 1 LIMIT 1;", 1),
     # if we can't push the filter, we can't push the limit
     ("SELECT name FROM iceberg.planets WHERE SIGNUM(gravity) > 1 LIMIT 1;", 9),
     # we don't push past ORDER BY
     ("SELECT * FROM iceberg.planets ORDER BY name LIMIT 3", 9),
     # push past subqueries
     ("SELECT name FROM (SELECT * FROM iceberg.planets) AS S LIMIT 3", 3),
+    # test with filter
+    ("SELECT name FROM iceberg.planets WHERE mass == 0;", 0),
+    # pushable filter and limit should push the limit
+    ("SELECT name FROM iceberg.planets WHERE mass == 0 LIMIT 1;", 0),
 ]
 
 @skip_if(is_arm() or is_windows() or is_mac())
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_iceberg_limit_pushdown(query, expected_rows):
 
-    set_up_remote_iceberg()
+    catalog = set_up_iceberg()
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
     cur = opteryx.query(query)
     cur.materialize()

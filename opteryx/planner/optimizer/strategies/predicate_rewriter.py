@@ -46,18 +46,6 @@ INSTR_REWRITES = {
 }
 
 
-def remove_adjacent_wildcards(predicate):
-    """
-    Remove adjacent wildcards from LIKE/ILIKE/NotLike/NotILike conditions.
-
-    This optimization removes redundant wildcards from LIKE patterns to help
-    improve matching with subsequent optimizations
-    """
-    if "%%" in predicate.right.value:
-        predicate.right.value = re.sub(r"%+", "%", predicate.right.value)
-    return predicate
-
-
 def rewrite_in_to_eq(predicate):
     """
     Rewrite IN conditions with a single value to equality conditions.
@@ -113,7 +101,6 @@ def reorder_interval_calc(predicate):
 
 # Define dispatcher conditions and actions
 dispatcher: Dict[str, Callable] = {
-    "remove_adjacent_wildcards": remove_adjacent_wildcards,
     "rewrite_in_to_eq": rewrite_in_to_eq,
     "reorder_interval_calc": reorder_interval_calc,
 }
@@ -129,25 +116,47 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
         predicate.left = _rewrite_predicate(predicate.left, statistics)
         predicate.right = _rewrite_predicate(predicate.right, statistics)
 
-    if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
-        if "%%" in predicate.right.value:
-            statistics.optimization_predicate_rewriter_remove_adjacent_wildcards += 1
-            predicate = dispatcher["remove_adjacent_wildcards"](predicate)
+    if predicate.right.type == OrsoTypes.VARCHAR:
+        if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
+            if "%%" in predicate.right.value:
+                statistics.optimization_predicate_rewriter_remove_adjacent_wildcards += 1
+                predicate.right.value = re.sub(r"%+", "%", predicate.right.value)
 
-    if predicate.value in LIKE_REWRITES:
-        if "%" not in predicate.right.value and "_" not in predicate.right.value:
-            statistics.optimization_predicate_rewriter_remove_redundant_like += 1
-            predicate.value = LIKE_REWRITES[predicate.value]
+        if predicate.value in LIKE_REWRITES:
+            if "%" not in predicate.right.value and "_" not in predicate.right.value:
+                statistics.optimization_predicate_rewriter_remove_redundant_like += 1
+                predicate.value = LIKE_REWRITES[predicate.value]
 
-    if predicate.value in INSTR_REWRITES:
-        if (
-            "_" not in predicate.right.value
-            and predicate.right.value.endswith("%")
-            and predicate.right.value.startswith("%")
-        ):
-            statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
-            predicate.right.value = predicate.right.value[1:-1]
-            predicate.value = INSTR_REWRITES[predicate.value]
+        if predicate.value in INSTR_REWRITES:
+            if (
+                "_" not in predicate.right.value
+                and predicate.right.value.endswith("%")
+                and predicate.right.value.startswith("%")
+            ):
+                statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
+                predicate.right.value = predicate.right.value[1:-1]
+                predicate.value = INSTR_REWRITES[predicate.value]
+
+    if predicate.right.type == OrsoTypes.BLOB:
+        if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
+            if b"%%" in predicate.right.value:
+                statistics.optimization_predicate_rewriter_remove_adjacent_wildcards += 1
+                predicate.right.value = re.sub(b"%+", b"%", predicate.right.value)
+
+        if predicate.value in LIKE_REWRITES:
+            if b"%" not in predicate.right.value and b"_" not in predicate.right.value:
+                statistics.optimization_predicate_rewriter_remove_redundant_like += 1
+                predicate.value = LIKE_REWRITES[predicate.value]
+
+        if predicate.value in INSTR_REWRITES:
+            if (
+                b"_" not in predicate.right.value
+                and predicate.right.value.endswith(b"%")
+                and predicate.right.value.startswith(b"%")
+            ):
+                statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
+                predicate.right.value = predicate.right.value[1:-1]
+                predicate.value = INSTR_REWRITES[predicate.value]
 
     if predicate.value == "AnyOpEq":
         if predicate.right.node_type == NodeType.LITERAL:
@@ -173,6 +182,24 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
     return predicate
 
 
+def _rewrite_function(function, statistics: QueryStatistics):
+    """
+    Rewrite CASE WHEN x IS NULL THEN y ELSE x END to IFNULL(x, y)
+    """
+    if function.node_type == NodeType.FUNCTION and function.value == "CASE":
+        if len(function.parameters) == 2 and function.parameters[0].parameters[0].value == "IsNull":
+            compare_column = function.parameters[0].parameters[0].centre
+            target_column = function.parameters[1].parameters[1]
+            value_if_null = function.parameters[1].parameters[0]
+
+            if compare_column.schema_column.identity == target_column.schema_column.identity:
+                statistics.optimization_predicate_rewriter_case_to_ifnull += 1
+                function.value = "IFNULL"
+                function.parameters = [compare_column, value_if_null]
+                return function
+    return function
+
+
 class PredicateRewriteStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
@@ -186,8 +213,10 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             new_columns = []
             for column in node.columns:
                 new_column = _rewrite_predicate(column, self.statistics)
+                new_column = _rewrite_function(new_column, self.statistics)
                 new_columns.append(new_column)
             node.columns = new_columns
+            context.optimized_plan[context.node_id] = node
 
         return context
 

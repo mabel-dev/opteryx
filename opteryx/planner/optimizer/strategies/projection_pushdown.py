@@ -41,22 +41,31 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             context: The context carrying the state and information for optimization.
 
         Returns:
-            A tuple containing the potentially modified node and the updated context.
+            The updated context, including updated node information.
         """
         node.pre_update_columns = set(context.collected_identities)
 
-        # If we're at the something other than the top project (e.g. in a subquery) in a plan we
-        # may be able to remove some columns (and potentially some evaluations) if the columns
-        # aren't referenced in the outer query.
+        # If we're at a union, it changes what we think we know about the columns.
         if node.node_type == LogicalPlanStepType.Union:
             context.seen_unions += 1
+        if node.node_type == LogicalPlanStepType.Distinct:
+            context.seen_distincts += 1
+
+        # If we're at the something other than the top project (e.g. in a subquery)
+        # in a plan we may be able to remove some columns (and potentially some
+        # evaluations) if the columns aren't referenced in the outer query.
         if node.node_type == LogicalPlanStepType.Project:
-            if context.seen_unions == 0 and context.seen_projections > 0:
+            if (
+                context.seen_unions == 0
+                and context.seen_projections > 0
+                and context.seen_distincts == 0
+            ):
                 node.columns = [
                     n for n in node.columns if n.schema_column.identity in node.pre_update_columns
                 ]
             if context.seen_unions == 0:
                 context.seen_projections += 1
+            context.seen_distincts = 0
 
         # Subqueries act like all columns are referenced
         if node.node_type != LogicalPlanStepType.Subquery:

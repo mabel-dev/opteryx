@@ -95,6 +95,10 @@ SELECT TRY_CAST('0' AS BOOLEAN);
 
 SELECT CEIL(1.5);
 SELECT FLOOR(2.5);
+SELECT CEIL(1.5, 1);
+SELECT FLOOR(2.5, 1);
+SELECT CEIL(1.5, -1);
+SELECT FLOOR(2.5, -1);
 
 # SHOW DATABASES;
 
@@ -182,3 +186,26 @@ SELECT USER();
 SELECT DATABASE();
 SELECT NOW() - birth_date, NOW(), birth_date FROM $astronauts;
 SELECT E() * PI() * PHI();
+
+SELECT ['a', 'b', 'c'] @> ['g', 'h', 'a']
+SELECT ['a', 'b', 'c'] @> ['a', 'a', 'a']
+SELECT ['a', 'b', 'c'] @> ('a', 'a', 'a')
+SELECT ('a', 'b', 'c') @> ('a', 'a', 'a')
+SELECT ['a', 'b', 'c'] @> ['a', 'x'];
+SELECT ['apple', 'banana', 'cherry'] @> ['dragonfruit'];
+SELECT ['alpha', 'beta', 'gamma'] @> ['gamma', 'beta'];
+SELECT ['a', 'b', 'c'] @> [];
+SELECT [] @> ['x'];
+SELECT ('a', 'b', 'c') @> ['b'];
+SELECT ('a', 'b', 'c') @> ('b', 'a');
+SELECT ['one'] @> ['one'];
+SELECT [1, 2, 3] @> [2];
+SELECT (1.1, 2.2, 3.3) @> [3.3];
+SELECT ['z', 'z', 'z'] @> ['z'];
+SELECT ['a'] @> ['a', 'b'];
+SELECT ['a', 'b', 'c'] @> ['a', 'a', 'b'];
+SELECT ['a', 'b', 'c'] @> ('a', 'a');
+SELECT missions @> ('STS-1 (Columbia)', 'STS-9 (Columbia)') FROM $astronauts;
+SELECT missions @> ['STS-77'] FROM $astronauts;
+SELECT missions @> ('Gemini 3', 'STS-1 (Columbia)') FROM $astronauts;
+SELECT missions @> [] FROM $astronauts;

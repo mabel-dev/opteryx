@@ -10,6 +10,7 @@ from typing import Iterable
 from typing import List
 from typing import Tuple
 
+import numpy
 from orso.tools import random_int
 from orso.types import OrsoTypes
 
@@ -58,7 +59,7 @@ class ConnectionContext:
         object.__setattr__(self, "variables", SystemVariables.snapshot(VariableOwner.USER))
         self.variables._variables["user_memberships"] = (
             OrsoTypes.ARRAY,
-            self.memberships or [],
+            numpy.array(self.memberships or [], dtype=numpy.str_),
             VariableOwner.SERVER,
             Visibility.UNRESTRICTED,
         )

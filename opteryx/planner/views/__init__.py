@@ -38,7 +38,7 @@ def view_as_plan(view_name: str) -> dict:
     operation = view_as_sql(view_name)
 
     clean_sql = clean_statement(remove_comments(operation))
-    parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+    parsed_statements = sqloxide.parse_sql(clean_sql, _dialect="opteryx")
     logical_plan, _, _ = do_logical_planning_phase(parsed_statements[0])
 
     return logical_plan

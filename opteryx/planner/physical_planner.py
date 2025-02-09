@@ -4,11 +4,14 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
-from opteryx import operators as operators
+from opteryx import operators
+from opteryx.config import features
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
+
+ENABLE_TWO_PART_AGGREGATOR: bool = features.enable_two_part_aggregator or True
 
 
 def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
@@ -26,7 +29,10 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             else:
                 node = operators.AggregateNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "all_relations")})
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
+            if ENABLE_TWO_PART_AGGREGATOR and all(agg.value in operators.SimpleAggregateAndGroupNode.SIMPLE_AGGREGATES and agg.duplicate_treatment != "Distinct"  for agg in node_config["aggregates"]):
+                node = operators.SimpleAggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
+            else:
+                node = operators.AggregateAndGroupNode(query_properties, **{k:v for k,v in node_config.items() if k in ("aggregates", "groups", "projection", "all_relations")})
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
@@ -43,6 +49,9 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             if node_config.get("type") == "inner":
                 # INNER JOIN, NATURAL JOIN
                 node = operators.InnerJoinNode(query_properties, **node_config)
+            elif node_config.get("type") == "nested_inner":
+                # INNER JOIN, NATURAL JOIN
+                node = operators.NestedLoopJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left outer", "full outer", "right outer"):
                 # LEFT JOIN, RIGHT JOIN, FULL JOIN
                 node = operators.OuterJoinNode(query_properties, **node_config)

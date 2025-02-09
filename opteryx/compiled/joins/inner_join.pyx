@@ -6,11 +6,12 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-cimport numpy as cnp
+cimport numpy
 import numpy
 from libc.stdint cimport uint8_t, int64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashMap
+from opteryx.compiled.structures.buffers cimport IntBuffer
 from cpython.object cimport PyObject_Hash
 
 cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
@@ -57,7 +58,7 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
                     combined_nulls[i] &= bit
 
     # Get non-null indices using memory views
-    cdef cnp.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
+    cdef numpy.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
 
     # Memory view for the values array (for the join columns)
     cdef object[:, ::1] values_array = numpy.array(list(relation.take(non_null_indices).select(join_columns).itercolumns()), dtype=object)
@@ -78,3 +79,41 @@ cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
             ht.insert(hash_value, non_null_indices[i])
 
     return ht
+
+
+cpdef tuple nested_loop_join(left_relation, right_relation, numpy.ndarray left_columns, numpy.ndarray right_columns):
+    """
+    This performs a nested loop join, this is generally a bad idea but does
+    outperform our hash join when the relation sizes are small. This is
+    primarily due to avoiding building a hash table.
+    """
+    cdef IntBuffer left_indexes = IntBuffer()
+    cdef IntBuffer right_indexes = IntBuffer()
+    cdef int64_t nl = left_relation.shape[0]
+    cdef int64_t nr = right_relation.shape[0]
+    cdef int64_t left_idx, right_idx
+    cdef int64_t left_hash_value, right_hash_value
+    cdef object value
+
+    cdef object[:, ::1] left_values_array = numpy.array(list(left_relation.select(left_columns).itercolumns()), dtype=object)
+    cdef object[:, ::1] right_values_array = numpy.array(list(right_relation.select(right_columns).itercolumns()), dtype=object)
+
+    cdef int64_t[::1] right_hashes = numpy.empty(nr, dtype=numpy.int64)
+    for right_idx in range(nr):
+        right_hash_value = 0
+        for value in right_values_array[:, right_idx]:
+            right_hash_value = <int64_t>(right_hash_value * 31 + PyObject_Hash(value))
+        right_hashes[right_idx] = right_hash_value
+
+    for left_idx in range(nl):
+
+        left_hash_value = 0
+        for value in left_values_array[:, left_idx]:
+            left_hash_value = <int64_t>(left_hash_value * 31 + PyObject_Hash(value))
+
+        for right_idx in range(nr):
+            if left_hash_value == right_hashes[right_idx]:
+                left_indexes.append(left_idx)
+                right_indexes.append(right_idx)
+
+    return (left_indexes.to_numpy(), right_indexes.to_numpy())

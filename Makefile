@@ -16,6 +16,10 @@ t:
 	clear
 	python tests/sql_battery/test_shapes_and_errors_battery.py
 
+r:
+	clear
+	python tests/sql_battery/test_run_only_battery.py
+
 test:
 	clear
 	export MANUAL_TEST=1
@@ -29,11 +33,14 @@ mypy:
 coverage:
 	clear
 	export MANUAL_TEST=1
-	python -m coverage run -m pytest 
-	python -m coverage report --include=opteryx/** -m
+	python -m coverage run -m pytest --color=yes
+	python -m coverage report --include=opteryx/** --fail-under=80 -m
 
 compile:
 	clear
 	find . -name '*.so' -delete
 	python setup.py clean
+	python setup.py build_ext --inplace
+
+c:
 	python setup.py build_ext --inplace

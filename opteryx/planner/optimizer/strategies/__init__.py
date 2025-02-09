@@ -2,6 +2,7 @@ from .boolean_simplication import BooleanSimplificationStrategy
 from .constant_folding import ConstantFoldingStrategy
 from .correlated_filters import CorrelatedFiltersStrategy
 from .distinct_pushdown import DistinctPushdownStrategy
+from .join_ordering import JoinOrderingStrategy
 from .limit_pushdown import LimitPushdownStrategy
 from .operator_fusion import OperatorFusionStrategy
 from .predicate_pushdown import PredicatePushdownStrategy
@@ -15,6 +16,7 @@ __all__ = [
     "ConstantFoldingStrategy",
     "CorrelatedFiltersStrategy",
     "DistinctPushdownStrategy",
+    "JoinOrderingStrategy",
     "LimitPushdownStrategy",
     "OperatorFusionStrategy",
     "PredicatePushdownStrategy",
