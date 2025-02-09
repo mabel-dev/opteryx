@@ -76,7 +76,11 @@ if __name__ == "__main__":  # pragma: no cover
             flush=True,
         )
 
-        test_run_only_tests(statement)
+        try:
+            test_run_only_tests(statement)
+        except Exception as e:
+            print(statement)
+            raise e
 
         print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅")
 
