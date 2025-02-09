@@ -112,7 +112,8 @@ class LogicalPlanNode(Node):
                 return f"ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}]"
             if node_type == LogicalPlanStepType.Project:
                 order_by_indicator = f" + ({', '.join(format_expression(col) for col in self.order_by_columns)})" if self.order_by_columns else ""
-                return f"PROJECT [{', '.join(format_expression(col) for col in self.columns)}]{order_by_indicator}"
+                except_columns = f" EXCEPT ({', '.join(format_expression(col) for col in self.except_columns)})" if self.except_columns else ""
+                return f"PROJECT [{', '.join(format_expression(col) for col in self.columns)}]{except_columns}{order_by_indicator}"
             if node_type == LogicalPlanStepType.Scan:
                 io_async = "ASYNC " if hasattr(self.connector, "async_read_blob") else ""
                 date_range = ""
@@ -418,6 +419,7 @@ def inner_query_planner(ast_branch):
     if not (
         len(_projection) == 1
         and _projection[0].node_type == NodeType.WILDCARD
+        and _projection[0].except_columns is None
         and _projection[0].value is None
     ):
         for column in _projection:
@@ -466,6 +468,7 @@ def inner_query_planner(ast_branch):
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
         project_step.order_by_columns = _order_by_columns_not_in_projection
+        project_step.except_columns = _projection[0].except_columns
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, project_step)
         if previous_step_id is not None:

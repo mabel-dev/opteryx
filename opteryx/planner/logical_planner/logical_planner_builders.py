@@ -727,7 +727,13 @@ def unary_op(branch, alias: Optional[List[str]] = None, key=None):
 
 def wildcard_filter(branch, alias: Optional[List[str]] = None, key=None):
     """a wildcard"""
-    return Node(NodeType.WILDCARD)
+    except_columns = None
+    if isinstance(branch, dict) and branch.get("opt_except") is not None:
+        except_columns = [build({"Identifier": branch["opt_except"]["first_element"]})]
+        except_columns.extend(
+            [build({"Identifier": e}) for e in branch["opt_except"]["additional_elements"]]
+        )
+    return Node(NodeType.WILDCARD, except_columns=except_columns)
 
 
 # ----------

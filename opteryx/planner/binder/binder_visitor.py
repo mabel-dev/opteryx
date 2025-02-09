@@ -763,6 +763,50 @@ class BinderVisitor:
         for column in node.columns + node.order_by_columns:
             if column.node_type != NodeType.WILDCARD:
                 columns.append(column)
+            elif column.value is None:
+                # we're just a wildcard (not qualified), we're probably here because of an EXCEPT modifier
+                except_columns = {c.source_column for c in node.except_columns}
+                all_columns = []
+
+                for name, schema in list(context.schemas.items()):
+                    for schema_column in schema.columns:
+
+                        if schema_column.name in except_columns:
+                            except_columns.remove(schema_column.name)
+                            continue
+
+                        all_columns.append(schema_column.name)
+
+                        column_reference = LogicalColumn(
+                            node_type=NodeType.IDENTIFIER,  # column type
+                            source_column=schema_column.name,  # the source column
+                            source=name,  # the source relation
+                            schema_column=schema_column,
+                        )
+                        columns.append(column_reference)
+                    if name.startswith("$shared") and f"^{name}#" in schema.name:
+                        context.schemas.pop(name)
+
+                    context.schemas[name] = RelationSchema(
+                        name=name, columns=[col.schema_column for col in columns]
+                    )
+
+                if len(except_columns) > 0:
+                    from opteryx.exceptions import ColumnNotFoundError
+
+                    message = f"EXCEPT references mulitple columns that cannot be found - " + ", ".join(f"'{c}'" for c in except_columns)
+
+                    if len(except_columns) == 1:
+                        from opteryx.utils import suggest_alternative
+
+                        column = except_columns.pop()
+                        suggestion = suggest_alternative(column, candidates=all_columns)
+                        message = f"EXCEPT references column that cannot be found - '{column}'."
+                        if suggestion is not None:
+                            message += f" Did you mean '{suggestion}'?."
+
+                    raise ColumnNotFoundError(message=message)
+                
             else:
                 # Handle qualified wildcards
                 for name, schema in list(context.schemas.items()):

@@ -1,10 +1,10 @@
 # support hyphens in identifier names
 SELECT * FROM testdata.hyphened-name
 
-
 # SELECT 10_000_000
 # SELECT 1_2_3_4
 
-# SELECT * EXCEPT(id) FROM $planets
+# Support EXCEPT
+SELECT * EXCEPT(id) FROM $planets
 
 # SELECT postgrad && undergrad FROM $astronauts

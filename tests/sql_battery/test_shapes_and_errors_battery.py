@@ -2013,6 +2013,14 @@ id > /* 0 */ 1
         ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
         ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
 
+        ("SELECT * EXCEPT(id) FROM $planets", 9, 19, None), 
+        ("SELECT * EXCEPT(id, name) FROM $planets", 9, 18, None), 
+        ("SELECT * EXCEPT(missing) FROM $planets", 9, 1, ColumnNotFoundError), 
+        ("SELECT * EXCEPT(id, missing) FROM $planets", 9, 1, ColumnNotFoundError), 
+        ("SELECT * EXCEPT(missing, id) FROM $planets", 9, 1, ColumnNotFoundError), 
+        ("SELECT * EXCEPT(name, missing, id) FROM $planets", 9, 1, ColumnNotFoundError), 
+        ("SELECT * EXCEPT(nmae, pid) FROM $planets", 9, 1, ColumnNotFoundError), 
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
