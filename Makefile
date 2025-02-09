@@ -16,6 +16,10 @@ t:
 	clear
 	python tests/sql_battery/test_shapes_and_errors_battery.py
 
+r:
+	clear
+	python tests/sql_battery/test_run_only_battery.py
+
 test:
 	clear
 	export MANUAL_TEST=1

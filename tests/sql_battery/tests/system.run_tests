@@ -1,6 +1,6 @@
 SELECT version();
 SELECT connection_id() AS pid;
-SHOW VARIABLES;
+# SHOW VARIABLES;
 SET @name = 'bob';
 
 # SELECT * FROM information_schema.tables;

@@ -78,7 +78,7 @@ def _get(array, key):
 
         return list_get_element(array, key)
 
-    if isinstance(first_element, (list, str, pyarrow.ListScalar)):
+    if isinstance(first_element, (list, str, pyarrow.ListScalar, bytes)):
         # Handle list type
         return [item[index] if item is not None and len(item) > index else None for item in array]
 

@@ -422,6 +422,32 @@ def is_compare(branch, alias: Optional[List[str]] = None, key=None):
     return Node(NodeType.UNARY_OPERATOR, value=key, centre=centre)
 
 
+def json_access(branch, alias: Optional[List[str]] = None, key=None):
+    identifier_node = build(branch["value"])
+    key_node = build(branch["path"]["path"][0]["Bracket"]["key"])
+
+    if key_node.node_type == NodeType.IDENTIFIER:
+        raise UnsupportedSyntaxError("Subscript values must be literals.")
+
+    key_value = key_node.value
+    if isinstance(key_value, str):
+        key_value = f"'{key_value}'"
+        return Node(
+            NodeType.BINARY_OPERATOR,
+            value="Arrow",
+            left=identifier_node,
+            right=key_node,
+            alias=alias or f"{identifier_node.current_name} -> {key_value}",
+        )
+
+    return Node(
+        NodeType.FUNCTION,
+        value="GET",
+        parameters=[identifier_node, key_node],
+        alias=alias or f"{identifier_node.current_name}[{key_value}]",
+    )
+
+
 def literal_boolean(branch, alias: Optional[List[str]] = None, key=None):
     """create node for a literal boolean branch"""
     return Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=branch, alias=alias)
@@ -767,6 +793,7 @@ BUILDERS = {
     "IsNotTrue": is_compare,
     "IsNull": is_compare,
     "IsTrue": is_compare,
+    "JsonAccess": json_access,
     "Like": pattern_match,
     "MapAccess": map_access,
     "MatchAgainst": match_against,
