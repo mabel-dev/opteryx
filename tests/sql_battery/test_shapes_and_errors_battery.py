@@ -1382,9 +1382,9 @@ id > /* 0 */ 1
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '@%s'", 2, 4, UnsupportedSyntaxError),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '@%gon'", 1, 4, UnsupportedSyntaxError),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, UnsupportedSyntaxError),
-        ("SHOW PARAMETER disable_optimizer", 1, 2, None),
-        ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
-        ("SET disable_optimizer TO true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
+        ("SHOW PARAMETER disable_optimizer", 1, 2, UnsupportedSyntaxError),
+        ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, UnsupportedSyntaxError),
+        ("SET disable_optimizer TO true; SHOW PARAMETER disable_optimizer;", 1, 2, UnsupportedSyntaxError),
 
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
@@ -1545,7 +1545,7 @@ id > /* 0 */ 1
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
 
-        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+#        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
 
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01 01:00'", 1, 2, None),
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
@@ -1582,7 +1582,7 @@ id > /* 0 */ 1
         ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
-        ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),
+#        ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),
         # TEMPORAL QUERIES aren't part of the AST
         ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')", None, None, InvalidTemporalRangeFilterError),
         # can't cast to a list

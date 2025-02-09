@@ -150,7 +150,7 @@ def query_planner(
 
     # Parser converts the SQL command into an AST
     try:
-        parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+        parsed_statements = sqloxide.parse_sql(clean_sql, _dialect="opteryx")
     except ValueError as parser_error:
         raise SqlError(parser_error) from parser_error
     # AST Rewriter adds temporal filters and parameters to the AST
