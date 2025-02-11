@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -45,7 +45,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -126,6 +126,13 @@ jobs:
           path: dist-linux-3.12
       - run: mv -v dist-linux-3.12/* dist/
 
+      - name: Stage linux 3.13
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-linux-3.13
+          path: dist-linux-3.13
+      - run: mv -v dist-linux-3.13/* dist/
+
       - name: Stage macos 3.9
         uses: actions/download-artifact@v4.1.7
         with:
@@ -153,6 +160,13 @@ jobs:
           name: dist-macos-3.12
           path: dist-macos-3.12
       - run: mv -v dist-macos-3.12/* dist/
+
+      - name: Stage macos 3.13
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-macos-3.13
+          path: dist-macos-3.13
+      - run: mv -v dist-macos-3.13/* dist/
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

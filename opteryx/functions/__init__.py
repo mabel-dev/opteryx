@@ -52,7 +52,7 @@ def _get(array, key):
 
         return cython_arrow_op(array, key)
     if isinstance(key, str):
-        import simdjson
+        from opteryx.third_party.tktech import csimdjson as simdjson
 
         def extract(doc, elem):
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore

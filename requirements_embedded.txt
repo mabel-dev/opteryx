@@ -6,3 +6,4 @@
 fuzzy==1.2.2
 travers==0.1.11
 sqloxide
+pysimdjson

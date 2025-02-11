@@ -8,7 +8,7 @@ from typing import Optional
 
 import numpy
 import pyarrow
-import simdjson
+from opteryx.third_party.tktech import csimdjson as simdjson
 from pyarrow import compute
 
 from opteryx.exceptions import IncompatibleTypesError
