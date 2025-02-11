@@ -4,6 +4,5 @@ orjson
 orso>=0.0.180
 psutil
 pyarrow>=12.0.1
-pysimdjson
 requests
 aiohttp

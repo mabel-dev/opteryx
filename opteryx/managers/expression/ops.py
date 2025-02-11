@@ -220,7 +220,7 @@ def _inner_filter_operations(arr, operator, value):
         return regex_match_any(arr, value[0], flags=re.IGNORECASE, invert=True)
 
     if operator == "AtQuestion":
-        import simdjson
+        from opteryx.third_party.tktech import csimdjson as simdjson
 
         element = value[0]
 

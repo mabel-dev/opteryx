@@ -95,6 +95,16 @@ extensions = [
         ]
     ),
     Extension(
+        name='opteryx.third_party.tktech.csimdjson',
+        sources=[
+            "third_party/tktech/simdjson/simdjson.cpp",
+            "third_party/tktech/simdjson/util.cpp",
+            "third_party/tktech/simdjson/csimdjson.pyx",
+            ],
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"]
+    ),
+    Extension(
         name="opteryx.compiled.functions.functions",
         sources=["opteryx/compiled/functions/functions.pyx"],
         include_dirs=include_dirs,

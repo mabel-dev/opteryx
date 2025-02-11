@@ -11,7 +11,7 @@ from typing import Union
 
 import numpy
 import pyarrow
-import simdjson
+from opteryx.third_party.tktech import csimdjson as simdjson
 from orso.types import OrsoTypes
 from pyarrow import compute
 
