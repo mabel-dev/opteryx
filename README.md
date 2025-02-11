@@ -15,7 +15,7 @@ Download      | https://pypi.org/project/opteryx/
 [![Downloads](https://static.pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
-[![PyPI Latest Release](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?logo=python)](https://pypi.org/project/opteryx/)
+[![PyPI Latest Release](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue?logo=python)](https://pypi.org/project/opteryx/)
 
 [**Install**](#install) •
 [**Examples**](#examples) •
