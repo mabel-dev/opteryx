@@ -770,7 +770,6 @@ class BinderVisitor:
 
                 for name, schema in list(context.schemas.items()):
                     for schema_column in schema.columns:
-
                         if schema_column.name in except_columns:
                             except_columns.remove(schema_column.name)
                             continue
@@ -794,7 +793,10 @@ class BinderVisitor:
                 if len(except_columns) > 0:
                     from opteryx.exceptions import ColumnNotFoundError
 
-                    message = f"EXCEPT references mulitple columns that cannot be found - " + ", ".join(f"'{c}'" for c in except_columns)
+                    message = (
+                        f"EXCEPT references mulitple columns that cannot be found - "
+                        + ", ".join(f"'{c}'" for c in except_columns)
+                    )
 
                     if len(except_columns) == 1:
                         from opteryx.utils import suggest_alternative
@@ -806,7 +808,7 @@ class BinderVisitor:
                             message += f" Did you mean '{suggestion}'?."
 
                     raise ColumnNotFoundError(message=message)
-                
+
             else:
                 # Handle qualified wildcards
                 for name, schema in list(context.schemas.items()):

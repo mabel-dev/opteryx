@@ -23,7 +23,7 @@ Download      | https://pypi.org/project/opteryx/
 
 ## What is Opteryx?
 
-Opteryx is a Python library enabling SQL queries across diverse data sources like Postgres, Parquet, and MongoDB. Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization. Opteryx combines the simplicity of SQLite and DuckDB with federated query capabilities found in Presto and Trino.
+Opteryx is a Python library enabling SQL queries across diverse data sources like Iceberg, Postgres, Parquet, and MongoDB. Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization. Opteryx combines the simplicity of SQLite and DuckDB with federated query capabilities found in Presto and Trino.
 
 Opteryx offers the following features:
 
@@ -35,7 +35,7 @@ Opteryx offers the following features:
 
 ## How Does it Work?
 
-Opteryx processes queries by first determining the appropriate query language to interact with different downstream data platforms. It translates your query into SQL, CQL, or another suitable format for document stores like MongoDB, based on the data source. This enables Opteryx to efficiently retrieve the necessary data from systems such as MySQL or MongoDB to respond to your query.
+Opteryx processes queries by first determining the appropriate query language to interact with different downstream data platforms. It translates your query into SQL, CQL, or another suitable query language based on the data source. This enables Opteryx to efficiently retrieve the necessary data from systems such as MySQL or MongoDB to respond to your query.
 
 ![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/sankeymatic_20240501_224124_1600x1200.png)
 
@@ -75,7 +75,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
 
-Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet and MySQL.
+Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet, Iceberg and MySQL.
 
 Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
 
