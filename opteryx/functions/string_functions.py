@@ -357,14 +357,18 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    import pyarrow
-
-    from opteryx.third_party.mrabarnett import regex
+    from opteryx.compiled.list_ops.list_regex_replace import list_regex_replace
 
     pattern = _pattern[0]
-    replacement = _replacement[0]
-    compiled_pattern = regex.compile(pattern)
+    if isinstance(pattern, numpy.generic):
+        pattern = pattern.item()  # convert NumPy scalar to Python object
+    #    if isinstance(pattern, str):
+    #        pattern = pattern.encode()
 
-    # Apply the regex replacement to each element in the array
-    vectorized_replace = numpy.vectorize(lambda x: compiled_pattern.sub(replacement, x))
-    return pyarrow.array(vectorized_replace(array), type=pyarrow.string())
+    replacement = _replacement[0]
+    if isinstance(replacement, numpy.generic):
+        replacement = replacement.item()
+    #    if isinstance(replacement, str):
+    #        replacement = replacement.encode()
+
+    return list_regex_replace(array, pattern, replacement)

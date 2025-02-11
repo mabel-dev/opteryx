@@ -91,9 +91,6 @@ class PredicatePushable:
                 return left
             if root.node_type != NodeType.COMPARISON_OPERATOR:
                 raise NotSupportedError()
-            if root.value == "NotEq":
-                # PyArrow doesn't handle NotEq correctly
-                raise NotSupportedError()
             if root.left.node_type != NodeType.IDENTIFIER:
                 root.left, root.right = root.right, root.left
             if root.right.schema_column.type == OrsoTypes.DATE:

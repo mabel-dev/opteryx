@@ -30,6 +30,8 @@ from opteryx.operators.aggregate_node import project
 
 from . import BasePlanNode
 
+CHUNK_SIZE = 65536
+
 
 def build_finalizer_aggregations(aggregators):
     column_map = {}
@@ -118,13 +120,18 @@ class SimpleAggregateAndGroupNode(BasePlanNode):
             column_names = list(self.finalizer_map.keys()) + self.group_by_columns
 
             groups = pyarrow.concat_tables(self.buffer, promote_options="permissive")
+            self.buffer.clear()
             groups = groups.group_by(self.group_by_columns)
             groups = groups.aggregate(self.finalizer_aggregations)
             groups = groups.select(internal_names)
             groups = groups.rename_columns(column_names)
 
             self.statistics.time_groupby_finalize += time.monotonic_ns() - start
-            yield groups
+
+            num_rows = groups.num_rows
+            for start in range(0, num_rows, CHUNK_SIZE):
+                yield groups.slice(start, min(CHUNK_SIZE, num_rows - start))
+
             yield EOS
             return
 

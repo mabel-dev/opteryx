@@ -323,6 +323,7 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
 
+    # rewrite COUNT_DISTINCT() to COUNT(DISTINCT)
     if func == "COUNT_DISTINCT":
         func = "COUNT"
         duplicate_treatment = "Distinct"

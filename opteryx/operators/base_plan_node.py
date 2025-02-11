@@ -60,7 +60,7 @@ class BasePlanNode:
         return f"{self.name} {self.sensors()}"
 
     def execute(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:  # pragma: no cover
-        pass
+        raise NotImplementedError()
 
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
         if hasattr(morsel, "num_rows"):
@@ -90,6 +90,9 @@ class BasePlanNode:
                     if not at_least_one:
                         yield empty_morsel
                     break
+
+                if self.is_scan:
+                    self.calls += 1
 
                 if hasattr(result, "num_rows"):
                     self.records_out += result.num_rows

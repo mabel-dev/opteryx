@@ -209,3 +209,12 @@ SELECT missions @> ('STS-1 (Columbia)', 'STS-9 (Columbia)') FROM $astronauts;
 SELECT missions @> ['STS-77'] FROM $astronauts;
 SELECT missions @> ('Gemini 3', 'STS-1 (Columbia)') FROM $astronauts;
 SELECT missions @> [] FROM $astronauts;
+
+SELECT HUMANIZE('{"a":100}'->'a')
+SELECT HUMANIZE(SUM('{"a":100}'->'a'))
+SELECT HUMANIZE(1000000)
+SELECT HUMANIZE(0)
+SELECT HUMANIZE(NULL)
+SELECT HUMANIZE(10000.00)
+SELECT HUMANIZE(SUM(gravity)) FROM $planets
+SELECT HUMANIZE(-1)
