@@ -2024,7 +2024,7 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT * EXCEPT (id) FROM $planets) AS A", 9, 19, None),
         ("SELECT * EXCEPT (id) FROM (SELECT * FROM $planets) AS A", 9, 19, None),
         ("SELECT * EXCEPT (id) FROM (SELECT id AS pid, name FROM $planets) AS A", None, None, ColumnNotFoundError),
-        ("SELECT * EXCEPT (pid) FROM (SELECT id AS pid, name FROM $planets) AS A", None, None, ColumnNotFoundError),
+        ("SELECT * EXCEPT (pid) FROM (SELECT id AS pid, name FROM $planets) AS A", 9, 1, None),
 
         # ****************************************************************************************
 
