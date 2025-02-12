@@ -1549,6 +1549,8 @@ id > /* 0 */ 1
 
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01 01:00'", 1, 2, None),
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
+        ("SELECT * EXCEPT (id, name, gravity) FROM $planets", 9, 17, None),
+
 
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
@@ -1580,9 +1582,6 @@ id > /* 0 */ 1
         ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
         ("SELECT DATEDIFF(MONTH, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
-        # SELECT EXCEPT isn't supported
-        # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
-#        ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),
         # TEMPORAL QUERIES aren't part of the AST
         ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')", None, None, InvalidTemporalRangeFilterError),
         # can't cast to a list
@@ -2013,13 +2012,19 @@ id > /* 0 */ 1
         ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
         ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
 
-        ("SELECT * EXCEPT(id) FROM $planets", 9, 19, None), 
-        ("SELECT * EXCEPT(id, name) FROM $planets", 9, 18, None), 
-        ("SELECT * EXCEPT(missing) FROM $planets", 9, 1, ColumnNotFoundError), 
-        ("SELECT * EXCEPT(id, missing) FROM $planets", 9, 1, ColumnNotFoundError), 
-        ("SELECT * EXCEPT(missing, id) FROM $planets", 9, 1, ColumnNotFoundError), 
-        ("SELECT * EXCEPT(name, missing, id) FROM $planets", 9, 1, ColumnNotFoundError), 
-        ("SELECT * EXCEPT(nmae, pid) FROM $planets", 9, 1, ColumnNotFoundError), 
+        ("SELECT * EXCEPT(id) FROM $planets", 9, 19, None),
+        ("SELECT * EXCEPT(id, name) FROM $planets", 9, 18, None),
+        ("SELECT * EXCEPT(missing) FROM $planets", 9, 1, ColumnNotFoundError),
+        ("SELECT * EXCEPT(id, missing) FROM $planets", 9, 1, ColumnNotFoundError),
+        ("SELECT * EXCEPT(missing, id) FROM $planets", 9, 1, ColumnNotFoundError),
+        ("SELECT * EXCEPT(name, missing, id) FROM $planets", 9, 1, ColumnNotFoundError),
+        ("SELECT * EXCEPT(nmae, pid) FROM $planets", 9, 1, ColumnNotFoundError),
+        ("SELECT * EXCEPT (id, name, gravity) FROM $planets WHERE id > 3", 6, 17, None),
+        ("SELECT DISTINCT * EXCEPT (id, name, gravity) FROM testdata.planets", 9, 17, None),
+        ("SELECT * FROM (SELECT * EXCEPT (id) FROM $planets) AS A", 9, 19, None),
+        ("SELECT * EXCEPT (id) FROM (SELECT * FROM $planets) AS A", 9, 19, None),
+        ("SELECT * EXCEPT (id) FROM (SELECT id AS pid, name FROM $planets) AS A", None, None, ColumnNotFoundError),
+        ("SELECT * EXCEPT (pid) FROM (SELECT id AS pid, name FROM $planets) AS A", None, None, ColumnNotFoundError),
 
         # ****************************************************************************************
 
