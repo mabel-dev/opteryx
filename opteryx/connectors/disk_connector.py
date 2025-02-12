@@ -8,6 +8,7 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
+import mmap
 import os
 from typing import Dict
 from typing import List
@@ -24,16 +25,25 @@ from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils import is_windows
 from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
+IS_WINDOWS = is_windows()
 
 # Define os.O_BINARY for non-Windows platforms if it's not already defined
 if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 if not hasattr(os, "O_DIRECT"):
     os.O_DIRECT = 0  # Value has no effect on non-Windows platforms
+
+mmap_config = {}
+if not IS_WINDOWS:
+    mmap_config["flags"] = mmap.MAP_PRIVATE
+    mmap_config["prot"] = mmap.PROT_READ
+else:
+    mmap_config["access"] = mmap.ACCESS_READ
 
 
 def read_blob(
@@ -69,19 +79,12 @@ def read_blob(
         OSError:
             If an I/O error occurs while reading the file.
     """
-    import mmap
-
     try:
-        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY | os.O_DIRECT)
+        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
         if hasattr(os, "posix_fadvise"):
             os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
         size = os.fstat(file_descriptor).st_size
-        _map = mmap.mmap(
-            file_descriptor,
-            length=size,
-            flags=mmap.MAP_PRIVATE,
-            prot=mmap.PROT_READ,
-        )
+        _map = mmap.mmap(file_descriptor, length=size, **mmap_config)
         result = decoder(
             _map,
             just_schema=just_schema,

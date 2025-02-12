@@ -423,6 +423,6 @@ def create_mask(column, num_rows):
 
 def format_column(column):
     """Format the column based on its size."""
-    if column.nbytes > MAX_COLUMN_BYTE_SIZE:
-        return [[i] for i in column]
+    #if column.nbytes > MAX_COLUMN_BYTE_SIZE:
+    #    return [[i] for i in column]
     return [column]

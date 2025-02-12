@@ -277,6 +277,9 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         elif data_type_class == pyiceberg.types.TimestampType:
             # Iceberg stores timestamps as microseconds since epoch
             interval = int.from_bytes(value, "little", signed=True)
+            if interval < 0:
+                # Windows specifically doesn't like negative timestamps
+                return datetime.datetime(1970, 1, 1) + datetime.timedelta(microseconds=interval)
             return datetime.datetime.fromtimestamp(interval / 1_000_000)
         elif data_type == "date":
             # Iceberg stores dates as days since epoch (1970-01-01)

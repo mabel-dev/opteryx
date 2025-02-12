@@ -11,11 +11,11 @@ from typing import Union
 
 import numpy
 import pyarrow
-from opteryx.third_party.tktech import csimdjson as simdjson
 from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
+from opteryx.third_party.tktech import csimdjson as simdjson
 
 # Initialize simdjson parser once
 parser = simdjson.Parser()

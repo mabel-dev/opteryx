@@ -21,8 +21,8 @@ from typing import List
 import pyarrow
 
 from opteryx import EOS
-from opteryx.compiled.structures import HashTable
 from opteryx.compiled.structures.buffers import IntBuffer
+from opteryx.compiled.structures.hash_table import HashTable
 from opteryx.models import QueryProperties
 from opteryx.third_party.abseil.containers import FlatHashMap
 from opteryx.utils.arrow import align_tables

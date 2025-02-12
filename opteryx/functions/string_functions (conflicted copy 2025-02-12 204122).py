@@ -357,24 +357,17 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    from opteryx.utils import is_windows
-
+    import re
+    
     pattern = _pattern[0]
     if isinstance(pattern, numpy.generic):
-        pattern = pattern.item()  # convert NumPy scalar to Python object
+        pattern = pattern.item()
 
     replacement = _replacement[0]
     if isinstance(replacement, numpy.generic):
         replacement = replacement.item()
 
-    if is_windows():
-        import re
-
-        compiled_pattern = re.compile(pattern).sub
-        return numpy.array(
-            [compiled_pattern(replacement, _value) for _value in array], dtype=numpy.bytes_
-        )
-
-    from opteryx.compiled.list_ops.list_regex_replace import list_regex_replace
-
-    return list_regex_replace(array, pattern, replacement)
+    compiled_pattern = re.compile(pattern).sub
+    return numpy.array(
+        [compiled_pattern(replacement, _value) for _value in array], dtype=numpy.bytes_
+    )

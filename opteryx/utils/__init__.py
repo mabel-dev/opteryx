@@ -4,11 +4,16 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
+import platform
 from itertools import permutations
 from typing import Iterable
 from typing import Optional
 
 from opteryx.third_party.mbleven import compare
+
+
+def is_windows() -> bool:
+    return platform.system().lower() == "windows"
 
 
 def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
