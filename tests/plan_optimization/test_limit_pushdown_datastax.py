@@ -43,7 +43,7 @@ STATEMENTS = [
     ("SELECT name FROM (SELECT * FROM datastax.opteryx.planets) AS S LIMIT 3", 3),
 ]
 
-@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.11"))
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_datastax_limit_pushdown(query, expected_rows):
 

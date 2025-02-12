@@ -91,7 +91,7 @@ jobs:
         run: python -m coverage report -m
 
       - name: "Upload coverage to Codecov"
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
