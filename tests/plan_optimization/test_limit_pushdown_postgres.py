@@ -33,7 +33,7 @@ STATEMENTS = [
     ("SELECT name FROM (SELECT * FROM pg.planets) AS S LIMIT 3", 3),
 ]
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 @pytest.mark.parametrize("query, expected_rows", STATEMENTS)
 def test_postgres_limit_pushdown(query, expected_rows):
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)

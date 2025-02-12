@@ -43,7 +43,7 @@ test_cases = [
 
 
 # skip to reduce contention
-@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.11"))
 @pytest.mark.parametrize("statement,expected_rowcount,expected_rows_read", test_cases)
 def test_predicate_pushdown_postgres_parameterized(
     statement, expected_rowcount, expected_rows_read

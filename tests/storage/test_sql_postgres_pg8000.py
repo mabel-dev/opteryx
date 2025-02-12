@@ -14,7 +14,7 @@ POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
 CONNECTION = f"postgresql+pg8000://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/defaultdb"
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_basic_query():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query("SELECT * FROM pg.planets")
@@ -22,7 +22,7 @@ def test_postgres_basic_query():
     assert results.columncount == 20
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_count_query():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query("SELECT COUNT(*) FROM pg.planets;")
@@ -30,7 +30,7 @@ def test_postgres_count_query():
     assert results.columncount == 1
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_projection():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query("SELECT name FROM pg.planets;")
@@ -38,7 +38,7 @@ def test_postgres_projection():
     assert results.columncount == 1
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_join_non_sql_table():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query(
@@ -48,7 +48,7 @@ def test_postgres_join_non_sql_table():
     assert results.columncount == 28, results.columncount
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_filtered_query():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query("SELECT name FROM pg.planets WHERE name LIKE 'Earth';")
@@ -58,14 +58,14 @@ def test_postgres_filtered_query():
     assert results.stats["columns_read"] == 1
 
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_comparison_query():
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
     results = opteryx.query("SELECT * FROM pg.planets WHERE id > gravity")
     assert results.rowcount == 2, results.rowcount
     assert results.stats.get("rows_read", 0) == 9, results.stats
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_non_existant():
 
     import pytest
@@ -75,7 +75,7 @@ def test_postgres_non_existant():
         opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)
         opteryx.query("SELECT * FROM pg.roman_gods")
 
-@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.10"))
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.11"))
 def test_postgres_empty_table():
 
     opteryx.register_store("pg", SqlConnector, remove_prefix=True, connection=CONNECTION)

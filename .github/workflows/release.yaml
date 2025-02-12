@@ -91,7 +91,7 @@ jobs:
     strategy:
       max-parallel: 8
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@master
@@ -230,13 +230,6 @@ jobs:
           name: dist-win-3.12
           path: dist-win-3.12
       - run: mv -v dist-win-3.12/* dist/
-
-      - name: Stage win 3.13
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: dist-win-3.13
-          path: dist-win-3.13
-      - run: mv -v dist-win-3.13/* dist/
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

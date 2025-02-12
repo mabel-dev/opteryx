@@ -185,7 +185,7 @@ def generate_random_sql_select(columns, table):
     return select_clause
 
 
-@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.11"))
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_connector_comparisons(i):
 

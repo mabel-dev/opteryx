@@ -44,4 +44,4 @@ jobs:
           pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
 
       - name: Execute Test
-        run: mypy --ignore-missing-imports --python-version 3.10 --no-strict-optional --check-untyped-defs opteryx
+        run: mypy --ignore-missing-imports --python-version 3.11 --no-strict-optional --check-untyped-defs opteryx
