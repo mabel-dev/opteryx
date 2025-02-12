@@ -6,6 +6,14 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
+# Define strncasecmp as _strnicmp on Windows
+cdef extern from *:
+    """
+    #ifdef _WIN32
+    #define strncasecmp _strnicmp
+    #endif
+    """
+
 import numpy
 cimport numpy
 

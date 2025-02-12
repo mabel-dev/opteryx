@@ -369,6 +369,7 @@ def jsonl_decoder(
 
     import orjson
     import pyarrow.json
+
     from opteryx.third_party.tktech import csimdjson as simdjson
 
     rows = []

@@ -8,11 +8,11 @@ from typing import Optional
 
 import numpy
 import pyarrow
-from opteryx.third_party.tktech import csimdjson as simdjson
 from pyarrow import compute
 
 from opteryx.exceptions import IncompatibleTypesError
 from opteryx.exceptions import SqlError
+from opteryx.third_party.tktech import csimdjson as simdjson
 
 
 def list_contains(array, item):

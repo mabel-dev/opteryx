@@ -10,7 +10,7 @@ async blob readers to move data to the synchronous code.
 
 import asyncio
 
-from opteryx.compiled.structures import MemoryPool
+from opteryx.compiled.structures.memory_pool import MemoryPool
 
 
 class AsyncMemoryPool:
