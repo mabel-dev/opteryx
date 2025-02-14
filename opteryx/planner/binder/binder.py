@@ -308,6 +308,10 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                 node.value = fixed_function_result
             else:
                 _, result_type, _ = FUNCTIONS.get(node.value, (None, 0, None))
+                if result_type == 0:
+                    result_type = {"COUNT": OrsoTypes.INTEGER, "AVG": OrsoTypes.DOUBLE}.get(
+                        node.value, 0
+                    )
                 schema_column = FunctionColumn(name=column_name, type=result_type, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []

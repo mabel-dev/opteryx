@@ -79,3 +79,15 @@ class LogicalColumn:
 
     def __repr__(self) -> str:
         return f"<LogicalColumn name: '{self.current_name}' fullname: '{self.qualified_name}'>"
+
+    def __hash__(self):
+        return hash(
+            (
+                self.node_type,
+                self.source_column,
+                self.source_connector,
+                self.source,
+                self.alias,
+                self.schema_column.identity if self.schema_column else None,
+            )
+        )

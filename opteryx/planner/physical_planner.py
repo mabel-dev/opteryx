@@ -11,7 +11,7 @@ from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
-ENABLE_TWO_PART_AGGREGATOR: bool = features.enable_two_part_aggregator or True
+ENABLE_TWO_PART_AGGREGATOR: bool = features.enable_two_part_aggregator
 
 
 def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:

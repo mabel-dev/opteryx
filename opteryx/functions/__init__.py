@@ -477,6 +477,7 @@ FUNCTIONS = {
     "FROM_UNIXTIME": (date_functions.from_unixtimestamp, OrsoTypes.TIMESTAMP, 1.0),
     "UNIXTIME": (date_functions.unixtime, OrsoTypes.INTEGER, 1.0),
 }
+
 # fmt:on
 
 

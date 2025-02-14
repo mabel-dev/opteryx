@@ -27,6 +27,7 @@ from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import logical_planner_builders
+from opteryx.planner.logical_planner.logical_planner_rewriter import _decompose_aggregates
 from opteryx.planner.views import is_view
 from opteryx.planner.views import view_as_plan
 from opteryx.third_party.travers import Graph
@@ -362,7 +363,9 @@ def inner_query_planner(ast_branch):
         from opteryx.exceptions import SqlError
 
         raise SqlError("SELECT * cannot coexist with additional columns.")
+
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
+    _aggregates, _projection = _decompose_aggregates(_aggregates, _projection)
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))[0]
     if _groups is not None and _groups != []:
         if any(p.node_type == NodeType.WILDCARD for p in _projection):
@@ -384,13 +387,19 @@ def inner_query_planner(ast_branch):
         aggregate_step.groups = _groups
         aggregate_step.aggregates = _aggregates
 
-        known_columns = set(get_all_nodes_of_type(_groups + _aggregates, (NodeType.IDENTIFIER,)))
-        project_columns = set(get_all_nodes_of_type(_projection, (NodeType.IDENTIFIER,)))
+        known_columns = {
+            hash(n) for n in get_all_nodes_of_type(_groups + _aggregates, (NodeType.IDENTIFIER,))
+        }
+        project_columns = [
+            n
+            for n in get_all_nodes_of_type(_projection, (NodeType.IDENTIFIER,))
+            if hash(n) not in known_columns
+        ]
 
-        if project_columns - known_columns:
+        if len(project_columns) > 0:
             from opteryx.exceptions import SqlError
 
-            column = (project_columns - known_columns).pop().source_column
+            column = project_columns.pop().source_column
             error = f"Column '{column}' must appear in the `GROUP BY` clause or must be part of an aggregate function. Either add it to the `GROUP BY` list, or add an aggregation such as `MIN({column})`."
             raise SqlError(error)
 

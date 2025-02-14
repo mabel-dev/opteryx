@@ -70,12 +70,12 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
                 left_indexes.append(l)
                 right_indexes.append(None)
 
-        if left_indexes.size > 50_000:
+        if left_indexes.size() > 50_000:
             table = align_tables(
                 right_relation, left_relation, right_indexes, left_indexes.to_numpy()
             )
             yield table
-            left_indexes.size = 0
+            left_indexes = IntBuffer()
             right_indexes.clear()
 
     # this may return an empty table each time - fix later
