@@ -2026,6 +2026,12 @@ id > /* 0 */ 1
         ("SELECT * EXCEPT (id) FROM (SELECT id AS pid, name FROM $planets) AS A", None, None, ColumnNotFoundError),
         ("SELECT * EXCEPT (pid) FROM (SELECT id AS pid, name FROM $planets) AS A", 9, 1, None),
 
+        ("SELECT MIN(id), MAX(id), MIN(id + 1), MAX(id + 1), MIN(id + 2), MAX(id + 2), MIN(id * 2) FROM $planets", 1, 7, None),
+        ("SELECT SUM(id), SUM(id + 1), SUM(id + 2) FROM $planets", 1, 3, None),
+        ("SELECT SUM(id), SUM(id + 1), SUM(id + 2), COUNT(id) FROM $planets", 1, 4, None),
+        ("SELECT MIN(id), MIN(id + 1), MIN(id + 2), COUNT(id) FROM $planets", 1, 4, None),
+        ("SELECT MIN(id), MAX(id + 1), SUM(id + 2), COUNT(id) FROM $planets", 1, 4, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly

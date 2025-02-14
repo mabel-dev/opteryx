@@ -48,6 +48,8 @@ class OptimizerContext:
         self.distincted_indentities: set = set()
         """The columns that implicitly exist in the plan because of a distinct"""
 
+        self.bag = {}
+
 
 class OptimizationStrategy:
     def __init__(self, statistics):

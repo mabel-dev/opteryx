@@ -200,10 +200,11 @@ extensions = [
     ),
     Extension(
         name="opteryx.compiled.structures.buffers",
-        sources=["opteryx/compiled/structures/buffers.pyx"],
+        sources=["opteryx/compiled/structures/buffers.pyx", "opteryx/compiled/structures/intbuffer.cpp"],
         include_dirs=include_dirs, # + [pyarrow.get_include()],
         language="c++",
-        extra_compile_args=CPP_COMPILE_FLAGS,
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        extra_compile_args=CPP_COMPILE_FLAGS + ["-Wall", "-shared"],
     ),
     Extension(
         name="opteryx.compiled.structures.memory_pool",
