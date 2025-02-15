@@ -8,6 +8,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 cpdef numpy.ndarray[numpy.npy_bool, ndim=1] list_anyop_lt(object literal, numpy.ndarray arr):
     cdef:

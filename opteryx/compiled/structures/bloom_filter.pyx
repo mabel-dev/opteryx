@@ -35,7 +35,7 @@ from libc.stdint cimport uint8_t, int64_t
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 import numpy
-cimport numpy as cnp
+cimport numpy
 import pyarrow
 
 # Define sizes for the two Bloom filters
@@ -105,12 +105,12 @@ cdef class BloomFilter:
     cpdef bint possibly_contains(self, bytes member):
         return self._possibly_contains(member)
 
-    cpdef cnp.ndarray[cnp.npy_bool, ndim=1] possibly_contains_many(self, cnp.ndarray keys):
+    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, numpy.ndarray keys):
         """
         Return a boolean array indicating whether each key might be in the Bloom filter.
 
         Parameters:
-            keys: cnp.ndarray
+            keys: numpy.ndarray
                 Array of keys to test for membership.
 
         Returns:
@@ -120,7 +120,7 @@ cdef class BloomFilter:
         cdef Py_ssize_t n = keys.shape[0]
 
         # Create an uninitialized bool array rather than a zeroed one
-        cdef cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
+        cdef numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
 
         # Wrap both `keys` and `result` in typed memory views for faster indexing
         cdef object[::1] keys_view = keys
@@ -131,12 +131,12 @@ cdef class BloomFilter:
 
         return result
 
-    cpdef cnp.ndarray[cnp.npy_bool, ndim=1] possibly_contains_many_ints(self, cnp.ndarray[cnp.int64_t] keys):
+    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many_ints(self, numpy.ndarray[numpy.int64_t] keys):
         """
         Return a boolean array indicating whether each key might be in the Bloom filter.
 
         Parameters:
-            keys: cnp.ndarray
+            keys: numpy.ndarray
                 Array of keys to test for membership.
 
         Returns:
@@ -147,7 +147,7 @@ cdef class BloomFilter:
         cdef Py_ssize_t bit_array_size = self.bit_array_size
 
         # Create an uninitialized bool array rather than a zeroed one
-        cdef cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
+        cdef numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
 
         # Wrap both `keys` and `result` in typed memory views for faster indexing
         cdef uint8_t[::1] result_view = result
@@ -187,7 +187,7 @@ cpdef BloomFilter create_bloom_filter(keys):
     return bf
 
 
-cpdef BloomFilter create_int_bloom_filter(cnp.ndarray[cnp.int64_t] keys):
+cpdef BloomFilter create_int_bloom_filter(numpy.ndarray[numpy.int64_t] keys):
 
     cdef Py_ssize_t n = len(keys)
     cdef Py_ssize_t i

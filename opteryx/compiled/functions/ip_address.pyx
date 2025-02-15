@@ -9,10 +9,11 @@
 from libc.stdint cimport uint32_t, int8_t
 from libc.stdlib cimport strtol
 from libc.string cimport strlen
-import numpy as np
-cimport numpy as cnp
 from cpython cimport PyUnicode_AsUTF8String
 
+import numpy
+cimport numpy
+numpy.import_array()
 
 cdef inline uint32_t ip_to_int(const char* ip):
 
@@ -42,7 +43,7 @@ cdef inline uint32_t ip_to_int(const char* ip):
     return result
 
 
-def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
+def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
 
     # CIDR validation...
     if '/' not in cidr or not 0 <= int(cidr.split('/')[1]) <= 32:
@@ -59,7 +60,7 @@ def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
 
     base_ip = ip_to_int(PyUnicode_AsUTF8String(base_ip_str))
 
-    cdef unsigned char[:] result = np.zeros(arr_len, dtype=np.bool_)
+    cdef unsigned char[:] result = numpy.zeros(arr_len, dtype=numpy.bool_)
 
     for i in range(arr_len):
         ip_address = ip_addresses[i]
@@ -67,4 +68,4 @@ def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
             ip_int = ip_to_int(PyUnicode_AsUTF8String(ip_address))
             result[i] = (ip_int & netmask) == base_ip
 
-    return np.asarray(result, dtype=bool)
+    return numpy.asarray(result, dtype=bool)

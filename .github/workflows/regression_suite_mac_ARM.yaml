@@ -37,7 +37,7 @@ jobs:
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip uv
-          python -m uv pip install --upgrade numpy==1.* cython
+          python -m uv pip install --upgrade numpy cython
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements_arm.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
 

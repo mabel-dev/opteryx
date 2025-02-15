@@ -8,6 +8,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 cpdef numpy.ndarray list_arrow_op(numpy.ndarray arr, object key):
     """

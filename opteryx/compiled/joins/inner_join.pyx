@@ -6,13 +6,15 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-cimport numpy
-import numpy
 from libc.stdint cimport uint8_t, int64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashMap
 from opteryx.compiled.structures.buffers cimport IntBuffer
 from cpython.object cimport PyObject_Hash
+
+import numpy
+cimport numpy
+numpy.import_array()
 
 cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
     """

@@ -6,13 +6,14 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-import numpy
-cimport numpy
 from libc.stdint cimport int64_t
 from cpython.object cimport PyObject_Hash
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 
+import numpy
+cimport numpy
+numpy.import_array()
 
 cpdef FlatHashSet count_distinct(numpy.ndarray[numpy.int64_t, ndim=1] values, FlatHashSet seen_hashes=None):
     cdef:

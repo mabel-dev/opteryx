@@ -8,6 +8,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 from cpython.unicode cimport PyUnicode_AsUTF8String
 
