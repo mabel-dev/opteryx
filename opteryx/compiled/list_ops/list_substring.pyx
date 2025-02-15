@@ -21,10 +21,33 @@ numpy.import_array()
 from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString
 from libc.stdint cimport uint8_t
+import platform
 
 cdef extern from "string.h":
     int strncasecmp(const char *s1, const char *s2, size_t n)
     int memcmp(const void *s1, const void *s2, size_t n)
+
+cdef extern from "simd_search.hpp":
+    int neon_search(const char *data, size_t length, char target)
+    int avx_search(const char *data, size_t length, char target)
+
+ctypedef int (*search_func_t)(const char*, size_t, char)
+cdef search_func_t searcher
+
+
+# This function sets the searcher based on the CPU architecture.
+def init_searcher():
+    global searcher
+    cdef str arch = platform.machine().lower()
+    if arch.startswith("arm") or arch.startswith("aarch64") or arch.startswith("arm64"):
+        searcher = neon_search
+    else:
+        searcher = avx_search
+
+
+# Initialize the searcher once when the module is imported.
+init_searcher()
+
 
 cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
     """
@@ -69,7 +92,7 @@ cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, c
     return 0  # No match found
 
 
-cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
+cpdef uint8_t[::1] list_substring(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
     """
     Used as the InStr operator, which was written to replace using LIKE to execute list_substring
     matching. We tried using PyArrow's substring but the performance was almost identical to LIKE.
@@ -82,6 +105,7 @@ cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring(numpy.ndarray[numpy.st
     cdef Py_ssize_t i = 0
     cdef Py_ssize_t length
     cdef char *data
+    cdef int index
 
     cdef uint8_t[::1] result_view = result
 
@@ -93,7 +117,11 @@ cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring(numpy.ndarray[numpy.st
             length = len(item)
             result_view[i] = 0
             if length >= pattern_length:
-                if boyer_moore_horspool(data, length, c_pattern, pattern_length):
+                index = searcher(data, length, needle[0])
+                if index == -1:
+                    continue
+
+                if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
                     result_view[i] = 1
     else:
         for i in range(n):
@@ -101,9 +129,15 @@ cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring(numpy.ndarray[numpy.st
             data = <char*> item
             length = len(item)
             result_view[i] = 0
-            if length >= pattern_length:
-                if boyer_moore_horspool(data, length, c_pattern, pattern_length):
-                    result_view[i] = 1
+            if length < pattern_length:
+                continue
+
+            index = searcher(data, length, needle[0])
+            if index == -1:
+                continue
+
+            if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
+                result_view[i] = 1
 
     return result
 

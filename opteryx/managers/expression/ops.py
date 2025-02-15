@@ -43,6 +43,10 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "AllOpEq",
         "AllOpNotEq",
         "AtArrow",
+        "InStr",
+        "NotInStr",
+        "IInStr",
+        "NotIInStr",
     ):
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(arr)
@@ -142,7 +146,7 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value[0])
-        return list_ops.list_substring.list_substring(arr, needle).astype(dtype=bool)
+        return numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value[0])
         matches = list_ops.list_substring.list_substring(arr, needle)  # [#325]
