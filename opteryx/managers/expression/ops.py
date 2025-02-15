@@ -149,17 +149,19 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value[0])
-        matches = list_ops.list_substring.list_substring(arr, needle)  # [#325]
-        return numpy.invert(matches.astype(dtype=bool))
+        matches = numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
+        return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value[0])
-        return list_ops.list_substring.list_substring_case_insensitive(arr, needle).astype(
-            dtype=bool
+        return numpy.asarray(
+            list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
         )
     if operator == "NotIInStr":
         needle = str(value[0])
-        matches = list_ops.list_substring.list_substring_case_insensitive(arr, needle)  # [#325]
-        return numpy.invert(matches.astype(dtype=bool))
+        matches = numpy.asarray(
+            list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
+        )
+        return numpy.invert(matches)
     if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0

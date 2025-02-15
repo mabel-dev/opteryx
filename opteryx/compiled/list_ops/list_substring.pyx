@@ -112,33 +112,40 @@ cpdef uint8_t[::1] list_substring(numpy.ndarray[numpy.str, ndim=1] haystack, str
     # Check the type of the first item to decide the processing method
     if isinstance(haystack[0], str):
         for i in range(n):
+            result_view[i] = 0
             item = PyUnicode_AsUTF8String(haystack[i])
-            data = <char*> PyBytes_AsString(item)
-            length = len(item)
-            result_view[i] = 0
-            if length >= pattern_length:
-                index = searcher(data, length, needle[0])
-                if index == -1:
-                    continue
-
-                if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
-                    result_view[i] = 1
-    else:
-        for i in range(n):
-            item = haystack[i]
-            data = <char*> item
-            length = len(item)
-            result_view[i] = 0
-            if length < pattern_length:
+            if item is None:
                 continue
 
+            data = <char*> PyBytes_AsString(item)
+            length = len(item)
+            # if the needle is bigger than the haystack, it's not there
+            if length < pattern_length:
+                continue
+            # find the first instance of the first character
+            index = searcher(data, length, needle[0])
+            # if we didn't find it, it's not there
+            if index == -1:
+                continue
+            # use BMH to search
+            if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
+                result_view[i] = 1
+    else:
+        for i in range(n):
+            result_view[i] = 0
+            item = haystack[i]
+            if item is None:
+                continue
+
+            data = <char*> item
+            length = len(item)
+            if length < pattern_length:
+                continue
             index = searcher(data, length, needle[0])
             if index == -1:
                 continue
-
             if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
                 result_view[i] = 1
-
     return result
 
 
@@ -194,7 +201,7 @@ cdef inline int boyer_moore_horspool_case_insensitive(const char *haystack, size
     return 0  # No match found
 
 
-cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring_case_insensitive(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
+cpdef uint8_t[::1] list_substring_case_insensitive(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
     """
     Used as the InStr operator, which was written to replace using LIKE to execute list_substring
     matching. We tried using PyArrow's substring but the performance was almost identical to LIKE.
@@ -213,21 +220,33 @@ cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_substring_case_insensitive(numpy
     # Check the type of the first item to decide the processing method
     if isinstance(haystack[0], str):
         for i in range(n):
+            result_view[i] = 0
             item = PyUnicode_AsUTF8String(haystack[i])
+            if item is None:
+                continue
+
             data = <char*> PyBytes_AsString(item)
             length = len(item)
-            result_view[i] = 0
-            if length >= pattern_length:
-                if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                    result_view[i] = 1
+
+            if length < pattern_length:
+                continue
+
+            if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
+                result_view[i] = 1
+
     else:
         for i in range(n):
+            result_view[i] = 0
             item = haystack[i]
+            if item is None:
+                continue
             data = <char*> item
             length = len(item)
-            result_view[i] = 0
-            if length >= pattern_length:
-                if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                    result_view[i] = 1
+
+            if length < pattern_length:
+                continue
+
+            if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
+                result_view[i] = 1
 
     return result
