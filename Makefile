@@ -38,6 +38,8 @@ coverage:
 
 compile:
 	clear
+	python -m pip install --upgrade pip uv
+	python -m uv pip install --upgrade numpy 'cython>=3.1.0a1' setuptools
 	find . -name '*.so' -delete
 	python setup.py clean
 	python setup.py build_ext --inplace

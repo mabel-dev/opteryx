@@ -205,7 +205,7 @@ def _inner_evaluate(root: Node, table: Table):
             # creating ARRAY columns is expensive, so we don't create one full length
             return numpy.array([root.value], dtype=numpy.ndarray)
         if literal_type == OrsoTypes.VARCHAR:
-            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.str_)
         if literal_type == OrsoTypes.BLOB:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.bytes_)
         if literal_type == OrsoTypes.INTERVAL:
@@ -277,7 +277,7 @@ def _inner_evaluate(root: Node, table: Table):
             )
             return result
         if node_type == NodeType.WILDCARD:
-            numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
+            numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
             sub = root.value.execute()

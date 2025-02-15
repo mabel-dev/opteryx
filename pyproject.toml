@@ -46,7 +46,7 @@ ignore = ['E265', 'E501']
 exclude = '**/containers.pxd'
 
 [tool.ruff.lint]
-select = ["SIM"]
+select = ["SIM", "NPY201"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
