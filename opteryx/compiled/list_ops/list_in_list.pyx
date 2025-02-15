@@ -6,11 +6,12 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-import numpy
-cimport numpy
 from cython import Py_ssize_t
 from libc.stdint cimport int64_t, uint8_t
-from numpy cimport ndarray
+
+import numpy
+cimport numpy
+numpy.import_array()
 
 cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_in_list(object[::1] arr, set values):
     """

@@ -16,6 +16,7 @@ cdef extern from *:
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString

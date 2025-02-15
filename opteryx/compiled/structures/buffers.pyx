@@ -9,6 +9,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 from libc.stdint cimport int64_t
 from libcpp.vector cimport vector

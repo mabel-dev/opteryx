@@ -6,8 +6,8 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-import numpy as np
-cimport numpy as cnp
+import numpy
+cimport numpy
 
 from libc.stdint cimport uint32_t, uint16_t, uint64_t
 from cpython cimport PyUnicode_AsUTF8String, PyBytes_GET_SIZE
@@ -15,6 +15,8 @@ from cpython.bytes cimport PyBytes_AsString
 
 cdef double GOLDEN_RATIO_APPROX = 1.618033988749895
 cdef uint32_t VECTOR_SIZE = 1024
+
+numpy.import_array()
 
 cdef dict irregular_lemmas = {
     b'are': b'is',
@@ -158,7 +160,7 @@ cdef inline uint16_t djb2_hash(char* byte_array, uint64_t length) nogil:
 
 
 def vectorize(list tokens):
-    cdef cnp.ndarray[cnp.uint16_t, ndim=1] vector = np.zeros(VECTOR_SIZE, dtype=np.uint16)
+    cdef numpy.ndarray[numpy.uint16_t, ndim=1] vector = numpy.zeros(VECTOR_SIZE, dtype=numpy.uint16)
     cdef uint32_t hash_1
     cdef uint32_t hash_2
     cdef bytes token_bytes
@@ -180,7 +182,7 @@ def vectorize(list tokens):
     return vector
 
 
-def possible_match(list query_tokens, cnp.ndarray[cnp.uint16_t, ndim=1] vector):
+def possible_match(list query_tokens, numpy.ndarray[numpy.uint16_t, ndim=1] vector):
     cdef uint16_t hash_1
     cdef uint16_t hash_2
     cdef bytes token_bytes
@@ -196,7 +198,7 @@ def possible_match(list query_tokens, cnp.ndarray[cnp.uint16_t, ndim=1] vector):
     return True
 
 
-def possible_match_indices(cnp.ndarray[cnp.uint16_t, ndim=1] indices, cnp.ndarray[cnp.uint16_t, ndim=1] vector):
+def possible_match_indices(numpy.ndarray[numpy.uint16_t, ndim=1] indices, numpy.ndarray[numpy.uint16_t, ndim=1] vector):
     """
     Check if all specified indices in 'indices' have non-zero values in 'vector'.
 

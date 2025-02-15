@@ -8,6 +8,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 cpdef numpy.ndarray list_get_element(numpy.ndarray[object, ndim=1] array, int key):
     """

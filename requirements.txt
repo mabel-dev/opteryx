@@ -1,5 +1,5 @@
 cython
-numpy==1.*
+numpy
 orjson
 orso>=0.0.180
 psutil

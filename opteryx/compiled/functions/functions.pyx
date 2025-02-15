@@ -6,8 +6,10 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-cimport numpy as cnp
-import numpy as np
+import numpy
+cimport numpy
+numpy.import_array()
+
 from libc.time cimport time
 
 cdef bytes alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_/"
@@ -16,7 +18,7 @@ cdef bytes alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123
 cdef unsigned int xorshift32_state = <unsigned int>time(NULL)
 
 
-def generate_random_strings(int row_count, int width) -> cnp.ndarray:
+def generate_random_strings(int row_count, int width) -> numpy.ndarray:
     """
     Generates a NumPy array of random fixed-width strings, repeated `row_count` times.
 
@@ -31,7 +33,7 @@ def generate_random_strings(int row_count, int width) -> cnp.ndarray:
     """
 
     # Allocate NumPy array with fixed-width strings, dtype='S{width}'
-    cdef cnp.ndarray result = np.empty((row_count,), dtype=f'S{width}')
+    cdef numpy.ndarray result = numpy.empty((row_count,), dtype=f'S{width}')
 
     cdef unsigned int total_chars = row_count * width
     cdef unsigned int i

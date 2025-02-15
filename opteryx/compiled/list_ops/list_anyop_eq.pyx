@@ -8,6 +8,7 @@
 
 import numpy
 cimport numpy
+numpy.import_array()
 
 from libc.stdint cimport uint8_t
 

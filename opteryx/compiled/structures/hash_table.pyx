@@ -13,9 +13,9 @@ from libcpp.vector cimport vector
 from libc.stdint cimport int64_t, uint8_t
 from cpython.object cimport PyObject_Hash
 
-cimport numpy as cnp
-
 import numpy
+cimport numpy
+numpy.import_array()
 
 
 cdef class HashTable:
@@ -51,14 +51,14 @@ cdef class HashSet:
         return self.c_set.find(value) != self.c_set.end()
 
 
-cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, HashSet seen_hashes=None):
+cpdef tuple list_distinct(numpy.ndarray values, numpy.int64_t[::1] indices, HashSet seen_hashes=None):
     cdef:
         Py_ssize_t i, j = 0
         Py_ssize_t n = values.shape[0]
         int64_t hash_value
         int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
-        cnp.dtype dtype = values.dtype
-        cnp.ndarray new_values = numpy.empty(n, dtype=dtype)
+        numpy.dtype dtype = values.dtype
+        numpy.ndarray new_values = numpy.empty(n, dtype=dtype)
 
     if seen_hashes is None:
         seen_hashes = HashSet()
@@ -118,7 +118,7 @@ cpdef HashTable hash_join_map(relation, list join_columns):
                     combined_nulls[i] &= bit
 
     # Get non-null indices using memory views
-    cdef cnp.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
+    cdef numpy.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
 
     # Memory view for the values array (for the join columns)
     cdef object[:, ::1] values_array = numpy.array(list(relation.take(non_null_indices).select(join_columns).itercolumns()), dtype=object)

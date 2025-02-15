@@ -6,11 +6,11 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-
-import numpy as np
 import pyarrow
+import numpy
+cimport numpy
+numpy.import_array()
 
-cimport numpy as cnp
 from libc.stdint cimport int64_t
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 from libc.math cimport isnan
@@ -20,7 +20,7 @@ cdef inline object recast_column(column):
     cdef column_type = column.type
 
     if pyarrow.types.is_struct(column_type) or pyarrow.types.is_list(column_type):
-        return np.array([str(a) for a in column], dtype=np.str_)
+        return numpy.array([str(a) for a in column], dtype=numpy.str_)
 
     # Otherwise, return the column as-is
     return column
@@ -34,7 +34,7 @@ cpdef tuple _distinct(relation, FlatHashSet seen_hashes=None, list columns=None)
         columns = relation.column_names
 
     # Memory view for the values array (for the join columns)
-    cdef object[:, ::1] values_array = np.array(list(relation.select(columns).itercolumns()), dtype=object)
+    cdef object[:, ::1] values_array = numpy.array(list(relation.select(columns).itercolumns()), dtype=object)
 
     cdef int64_t hash_value, i
     cdef list keep = []
@@ -69,11 +69,11 @@ cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
         list columns_of_interest
         list columns_data = []
         list columns_hashes = []
-        cnp.ndarray[int64_t] combined_hashes
+        numpy.ndarray[int64_t] combined_hashes
         list keep = []
         object column_data
-        cnp.ndarray data_array
-        cnp.ndarray[int64_t] hashes
+        numpy.ndarray data_array
+        numpy.ndarray[int64_t] hashes
 
     if seen_hashes is None:
         seen_hashes = FlatHashSet()
@@ -96,18 +96,18 @@ cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
             data_array = column_data  # Already a NumPy array
 
         columns_data.append(data_array)
-        hashes = np.empty(num_rows, dtype=np.int64)
+        hashes = numpy.empty(num_rows, dtype=numpy.int64)
 
         # Determine data type and compute hashes accordingly
-        if np.issubdtype(data_array.dtype, np.integer):
+        if numpy.issubdtype(data_array.dtype, numpy.integer):
             compute_int_hashes(data_array, null_hash, hashes)
-        elif np.issubdtype(data_array.dtype, np.floating):
+        elif numpy.issubdtype(data_array.dtype, numpy.floating):
             compute_float_hashes(data_array, null_hash, hashes)
-        elif data_array.dtype == np.object_:
+        elif data_array.dtype == numpy.object_:
             compute_object_hashes(data_array, null_hash, hashes)
         else:
             # For other types (e.g., strings), treat as object
-            compute_object_hashes(data_array.astype(np.object_), null_hash, hashes)
+            compute_object_hashes(data_array.astype(numpy.object_), null_hash, hashes)
 
         columns_hashes.append(hashes)
 
@@ -123,9 +123,9 @@ cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
 
     return keep, seen_hashes
 
-cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_hash, int64_t[:] hashes):
+cdef void compute_float_hashes(numpy.ndarray[numpy.float64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
-    cdef cnp.float64_t value
+    cdef numpy.float64_t value
     for i in range(n):
         value = data[i]
         if isnan(value):
@@ -134,19 +134,19 @@ cdef void compute_float_hashes(cnp.ndarray[cnp.float64_t] data, int64_t null_has
             hashes[i] = hash(value)
 
 
-cdef void compute_int_hashes(cnp.ndarray[cnp.int64_t] data, int64_t null_hash, int64_t[:] hashes):
+cdef void compute_int_hashes(numpy.ndarray[numpy.int64_t] data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
-    cdef cnp.int64_t value
+    cdef numpy.int64_t value
     for i in range(n):
         value = data[i]
         # Assuming a specific value represents missing data
         # Adjust this condition based on how missing integers are represented
-        if value == np.iinfo(np.int64).min:
+        if value == numpy.iinfo(numpy.int64).min:
             hashes[i] = null_hash
         else:
             hashes[i] = value  # Hash of int is the int itself in Python 3
 
-cdef void compute_object_hashes(cnp.ndarray data, int64_t null_hash, int64_t[:] hashes):
+cdef void compute_object_hashes(numpy.ndarray data, int64_t null_hash, int64_t[:] hashes):
     cdef Py_ssize_t i, n = data.shape[0]
     cdef object value
     for i in range(n):

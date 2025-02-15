@@ -6,23 +6,24 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-import numpy as np
-cimport numpy as cnp
 from libc.stdint cimport int64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 from cpython.object cimport PyObject_Hash
 
+import numpy
+cimport numpy
+numpy.import_array()
 
-cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
+cpdef tuple build_rows_indices_and_column(numpy.ndarray column_data):
     cdef int64_t row_count = column_data.shape[0]
-    cdef cnp.int64_t[::1] lengths = np.empty(row_count, dtype=np.int64)
-    cdef cnp.int64_t[::1] offsets = np.empty(row_count + 1, dtype=np.int64)
+    cdef numpy.int64_t[::1] lengths = numpy.empty(row_count, dtype=numpy.int64)
+    cdef numpy.int64_t[::1] offsets = numpy.empty(row_count + 1, dtype=numpy.int64)
     cdef int64_t i
     cdef int64_t total_size = 0
-    cdef cnp.dtype element_dtype = column_data[0].dtype
+    cdef numpy.dtype element_dtype = column_data[0].dtype
 
-    if not isinstance(column_data[0], np.ndarray):
+    if not isinstance(column_data[0], numpy.ndarray):
         raise TypeError("UNNEST requires an ARRAY column.")
 
     # Calculate lengths and total_size
@@ -32,14 +33,14 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
 
     # Early exit if total_size is zero
     if total_size == 0:
-        return (np.array([], dtype=np.int64), np.array([], dtype=object))
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
 
     # Compute offsets for efficient slicing
     offsets[0] = 0
     for i in range(row_count):
         offsets[i + 1] = offsets[i] + lengths[i]
-    cdef cnp.int64_t[::1] indices = np.empty(total_size, dtype=np.int64)
-    cdef cnp.ndarray flat_data = np.empty(total_size, dtype=element_dtype)
+    cdef numpy.int64_t[::1] indices = numpy.empty(total_size, dtype=numpy.int64)
+    cdef numpy.ndarray flat_data = numpy.empty(total_size, dtype=element_dtype)
 
     # Fill indices and flat_data
     for i in range(row_count):
@@ -52,7 +53,7 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     return (indices, flat_data)
 
 
-cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set valid_values):
+cpdef tuple build_filtered_rows_indices_and_column(numpy.ndarray column_data, set valid_values):
     """
     Build row indices and flattened column data for matching values from a column of array-like elements.
 
@@ -71,9 +72,9 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
     cdef int64_t index = 0
     cdef int64_t i, j, len_i
     cdef object array_i
-    cdef cnp.ndarray flat_data
-    cdef cnp.int64_t[::1] indices
-    cdef cnp.dtype element_dtype = None
+    cdef numpy.ndarray flat_data
+    cdef numpy.int64_t[::1] indices
+    cdef numpy.dtype element_dtype = None
     cdef object value
 
     # Typed sets for different data types
@@ -87,18 +88,18 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
             break
 
     if element_dtype is None:
-        element_dtype = np.object_
+        element_dtype = numpy.object_
 
     # Initialize indices and flat_data arrays
-    indices = np.empty(allocated_size, dtype=np.int64)
-    flat_data = np.empty(allocated_size, dtype=element_dtype)
+    indices = numpy.empty(allocated_size, dtype=numpy.int64)
+    flat_data = numpy.empty(allocated_size, dtype=element_dtype)
 
     # Handle set initialization based on element dtype
-    if np.issubdtype(element_dtype, np.integer):
+    if numpy.issubdtype(element_dtype, numpy.integer):
         valid_values_typed = set([int(v) for v in valid_values])
-    elif np.issubdtype(element_dtype, np.floating):
+    elif numpy.issubdtype(element_dtype, numpy.floating):
         valid_values_typed = set([float(v) for v in valid_values])
-    elif np.issubdtype(element_dtype, np.str_):
+    elif numpy.issubdtype(element_dtype, numpy.str_):
         valid_values_typed = set([unicode(v) for v in valid_values])
     else:
         valid_values_typed = valid_values  # Fallback to generic Python set
@@ -118,14 +119,14 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
                 if index >= allocated_size:
                     # Reallocate arrays
                     allocated_size *= 2
-                    indices = np.resize(indices, allocated_size)
-                    flat_data = np.resize(flat_data, allocated_size)
+                    indices = numpy.resize(indices, allocated_size)
+                    flat_data = numpy.resize(flat_data, allocated_size)
                 flat_data[index] = value
                 indices[index] = i
                 index += 1
 
     if index == 0:
-        return (np.array([], dtype=np.int64), np.array([], dtype=element_dtype))
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=element_dtype))
 
     # Slice arrays to the actual used size
     indices = indices[:index]
@@ -134,14 +135,14 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
     return (indices, flat_data)
 
 
-cpdef tuple list_distinct(cnp.ndarray values, cnp.int64_t[::1] indices, FlatHashSet seen_hashes=None):
+cpdef tuple list_distinct(numpy.ndarray values, numpy.int64_t[::1] indices, FlatHashSet seen_hashes=None):
     cdef:
         Py_ssize_t i, j = 0
         Py_ssize_t n = values.shape[0]
         int64_t hash_value
-        int64_t[::1] new_indices = np.empty(n, dtype=np.int64)
-        cnp.dtype dtype = values.dtype
-        cnp.ndarray new_values = np.empty(n, dtype=dtype)
+        int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
+        numpy.dtype dtype = values.dtype
+        numpy.ndarray new_values = numpy.empty(n, dtype=dtype)
 
     if seen_hashes is None:
         seen_hashes = FlatHashSet()
