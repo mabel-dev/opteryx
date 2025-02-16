@@ -72,15 +72,10 @@ def _get(array, key):
         index = int(key)
     except Exception:
         raise IncorrectTypeError("VARCHAR and ARRAY values must be subscripted with NUMERIC values")
-    if isinstance(first_element, numpy.ndarray):
-        # NumPy-specific optimization
+    if isinstance(first_element, (list, str, pyarrow.ListScalar, bytes, numpy.ndarray)):
         from opteryx.compiled.list_ops.list_get_element import list_get_element
 
         return list_get_element(array, key)
-
-    if isinstance(first_element, (list, str, pyarrow.ListScalar, bytes)):
-        # Handle list type
-        return [item[index] if item is not None and len(item) > index else None for item in array]
 
     raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
 

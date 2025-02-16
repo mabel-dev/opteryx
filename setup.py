@@ -1,3 +1,12 @@
+"""
+This setup script builds and installs Opteryx by compiling both Cython extensions and a
+Rust module.
+
+It detects the operating system to set the correct compiler flags, organizes
+include paths, processes dependencies, and reads in version and project metadata. Multiple
+extension modules are defined for optimized data operations.
+"""
+
 import glob
 import os
 import platform
@@ -12,8 +21,6 @@ from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
 
-LIBRARY = "opteryx"
-
 
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
@@ -21,6 +28,7 @@ def is_mac():  # pragma: no cover
 def is_win():  # pragma: no cover
     return platform.system().lower() == "windows"
 
+LIBRARY = "opteryx"
 CPP_COMPILE_FLAGS = ["-O2"]
 C_COMPILE_FLAGS = ["-O2"]
 if is_mac():
@@ -58,9 +66,18 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
 
 __author__ = "notset"
 __version__ = "notset"
+_status = None
+VersionStatus = None
 with open(f"{LIBRARY}/__version__.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
+
+RELEASE_CANDIDATE = _status == VersionStatus.RELEASE
+COMPILER_DIRECTIVES = {"language_level": "3"}
+COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
+
+print(f"Building Opteryx version: {__version__}")
+print(f"Status: {_status}", "(rc)" if RELEASE_CANDIDATE else "")
 
 with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
@@ -279,6 +296,7 @@ setup_config = {
     "package_data": {
         "": ["*.pyx", "*.pxd"],
     },
+    "compiler_directives": COMPILER_DIRECTIVES,
 }
 
 rust_build(setup_config)
