@@ -231,10 +231,10 @@ extensions = [
     ),
 ]
 
-
+# Add SIMD support flags
 machine = platform.machine().lower()
 system = platform.system().lower()
-if machine.startswith("arm") or machine.startswith("aarch"):
+if machine.startswith("arm") and not machine.startswith("aarch64"):
     if system != "darwin":
         CPP_COMPILE_FLAGS.append("-mfpu=neon")
 elif "x86" in machine or "amd64" in machine:
