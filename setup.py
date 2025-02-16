@@ -231,6 +231,14 @@ extensions = [
     ),
 ]
 
+# Add SIMD support flags
+machine = platform.machine().lower()
+system = platform.system().lower()
+if machine.startswith("arm") and not machine.startswith("aarch64"):
+    if system != "darwin":
+        CPP_COMPILE_FLAGS.append("-mfpu=neon")
+elif "x86" in machine or "amd64" in machine:
+    CPP_COMPILE_FLAGS.append("-mavx2")
 
 for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
     if is_win():
@@ -240,9 +248,12 @@ for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
     extensions.append(
             Extension(
                 name=module_name,
-                sources=[cython_file],
+                sources=[
+                    cython_file,
+                    "src/cpp/simd_search.cpp",
+                    ],
                 language="c++",
-                include_dirs=include_dirs + ["third_party/abseil"],
+                include_dirs=include_dirs + ["src/cpp", "third_party/abseil"],
                 extra_compile_args=CPP_COMPILE_FLAGS,
             ),
     )

@@ -70,12 +70,13 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         from opteryx.compiled import list_ops
 
         if ignore_case[0]:
-            results_mask = list_ops.list_substring.list_substring_case_insensitive(
-                array, str(item)
-            ).astype(numpy.bool_)
+            results_mask = numpy.asarray(
+                list_ops.list_substring.list_substring_case_insensitive(array, str(item)),
+                dtype=numpy.bool_,
+            )
         else:
-            results_mask = list_ops.list_substring.list_substring(array, str(item)).astype(
-                numpy.bool_
+            results_mask = numpy.asarray(
+                list_ops.list_substring.list_substring(array, str(item)), dtype=numpy.bool_
             )
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
