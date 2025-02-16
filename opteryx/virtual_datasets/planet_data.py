@@ -27,6 +27,7 @@ This has a companion dataset, $satellites, to help test joins.
 import datetime
 import decimal
 
+import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
@@ -36,9 +37,7 @@ from opteryx.models import RelationStatistics
 __all__ = ("read", "schema")
 
 
-def read(end_date=None, *args):
-    import pyarrow
-
+def read(end_date=None, *args) -> pyarrow.Table:
     # fmt:off
     # Define the data
     data = [

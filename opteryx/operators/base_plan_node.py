@@ -10,8 +10,6 @@ from typing import Optional
 import pyarrow
 from orso.tools import random_string
 
-from opteryx import EOS
-
 END = object()
 
 
@@ -63,6 +61,10 @@ class BasePlanNode:
         raise NotImplementedError()
 
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
+        from opteryx import EOS
+
+        print(f"Executing {self.name} with {'EOS' if morsel == EOS else id(morsel)}")
+
         if hasattr(morsel, "num_rows"):
             self.records_in += morsel.num_rows
             self.bytes_in += morsel.nbytes
@@ -86,7 +88,7 @@ class BasePlanNode:
 
                 # Update metrics for valid results
                 if result == END:
-                    # Break the loop when the generator is exhausted
+                    # End when the generator is exhausted
                     if not at_least_one:
                         yield empty_morsel
                     break
@@ -109,6 +111,7 @@ class BasePlanNode:
                     else:
                         self.statistics.avoided_empty_morsels += 1
 
+                at_least_one = True
                 yield result
 
             except Exception as err:

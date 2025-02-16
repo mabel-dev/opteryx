@@ -12,6 +12,7 @@ This is used to prepresent no table.
 It actually is a table, with one row and one column.
 """
 
+import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
@@ -21,12 +22,12 @@ from opteryx.models import RelationStatistics
 __all__ = ("read", "schema")
 
 
-def read(*args):
-    import pyarrow
-
+def read(*args) -> pyarrow.Table:
     # Create a PyArrow table with one column and one row
-
-    return pyarrow.Table.from_arrays([[0]], ["$column"])  # schema=_schema)
+    arrow_schema = pyarrow.schema([pyarrow.field("$column", pyarrow.int64())])
+    return pyarrow.Table.from_arrays(
+        [pyarrow.array([0], type=pyarrow.int64())], schema=arrow_schema
+    )
 
 
 def schema():
