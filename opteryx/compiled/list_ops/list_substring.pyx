@@ -109,14 +109,20 @@ cpdef uint8_t[::1] list_substring(numpy.ndarray[numpy.str, ndim=1] haystack, str
 
     cdef uint8_t[::1] result_view = result
 
-    # Check the type of the first item to decide the processing method
-    if isinstance(haystack[0], str):
+    cdef int str_processor = 0
+    for i in range(n):
+        if isinstance(haystack[i], str):
+            str_processor = 1
+            break
+
+    if str_processor:
         for i in range(n):
             result_view[i] = 0
-            item = PyUnicode_AsUTF8String(haystack[i])
+            item = haystack[i]
             if item is None:
                 continue
 
+            item = PyUnicode_AsUTF8String(item)
             data = <char*> PyBytes_AsString(item)
             length = len(item)
             # if the needle is bigger than the haystack, it's not there
@@ -217,14 +223,20 @@ cpdef uint8_t[::1] list_substring_case_insensitive(numpy.ndarray[numpy.str, ndim
 
     cdef uint8_t[::1] result_view = result
 
-    # Check the type of the first item to decide the processing method
-    if isinstance(haystack[0], str):
+    cdef int str_processor = 0
+    for i in range(n):
+        if isinstance(haystack[i], str):
+            str_processor = 1
+            break
+
+    if str_processor:
         for i in range(n):
             result_view[i] = 0
-            item = PyUnicode_AsUTF8String(haystack[i])
+            item = haystack[i]
             if item is None:
                 continue
 
+            item = PyUnicode_AsUTF8String(item)
             data = <char*> PyBytes_AsString(item)
             length = len(item)
 
