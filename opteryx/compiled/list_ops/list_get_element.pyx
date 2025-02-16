@@ -5,9 +5,6 @@
 # cython: infer_types=True
 # cython: wraparound=False
 # cython: boundscheck=False
-# cython: profile=True
-# cython: c_api_binop_methods=True
-# cython: cfunc=True
 
 import numpy
 cimport numpy
