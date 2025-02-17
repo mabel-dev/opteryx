@@ -11,7 +11,6 @@ It is defined as an expression tree of binary and unary operators, and functions
 Expressions are evaluated against an entire morsel at a time.
 """
 
-from collections import deque
 from enum import Enum
 from typing import Callable
 from typing import Dict
@@ -39,6 +38,8 @@ from .formatter import format_expression
 LOGICAL_TYPE: int = int("00010000", 2)
 INTERNAL_TYPE: int = int("00100000", 2)
 MAX_COLUMN_BYTE_SIZE: int = 50000000
+
+__all__ = ("NodeType", "evaluate", "evaluate_and_append", "get_all_nodes_of_type")
 
 
 class NodeType(int, Enum):
@@ -314,23 +315,37 @@ def get_all_nodes_of_type(root, select_nodes: tuple) -> list:
     if not isinstance(root, (set, tuple, list)):
         root = [root]
 
+    # Prepare to collect all nodes if select_nodes is ('*',), else convert to a set
+    collect_all = "*" in select_nodes
+    select_nodes_set = set(select_nodes) if not collect_all else set()
+
     identifiers = []
-    stack = deque(root)
+    stack = list(root)
+    appender = stack.append
 
     while stack:
         node = stack.pop()
-        if select_nodes == ("*",) or node.node_type in select_nodes:
+
+        # Check whether to collect the node
+        if collect_all or node.node_type in select_nodes_set:
             identifiers.append(node)
+
+        # Append parameters if they are valid nodes
         if node.parameters:
             stack.extend(
-                param for param in node.parameters if isinstance(param, (Node, LogicalColumn))
+                [param for param in node.parameters if isinstance(param, (Node, LogicalColumn))]
             )
-        if node.right:
-            stack.append(node.right)
-        if node.centre:
-            stack.append(node.centre)
-        if node.left:
-            stack.append(node.left)
+
+        # Append child nodes
+        child = node.right
+        if child:
+            appender(child)
+        child = node.centre
+        if child:
+            appender(child)
+        child = node.left
+        if child:
+            appender(child)
 
     return identifiers
 
@@ -406,7 +421,7 @@ def evaluate_statement(statement, table):
     new_column = evaluate(statement, table)
     if is_mask(new_column, statement, table):
         new_column = create_mask(new_column, table.num_rows)
-    return format_column(new_column)
+    return [new_column]
 
 
 def is_mask(new_column, statement, table):
@@ -419,10 +434,3 @@ def create_mask(column, num_rows):
     bool_list = numpy.full(num_rows, False)
     bool_list[column] = True
     return bool_list
-
-
-def format_column(column):
-    """Format the column based on its size."""
-    # if column.nbytes > MAX_COLUMN_BYTE_SIZE:
-    #    return [[i] for i in column]
-    return [column]

@@ -15,12 +15,14 @@ from typing import Any
 from typing import Dict
 
 import numpy
+import pyarrow
 from Cython.Build import cythonize
 from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
 
+pyarrow.create_library_symlinks()
 
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
@@ -40,12 +42,12 @@ else:
     C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
-include_dirs = [numpy.get_include()]
+include_dirs = [numpy.get_include(), pyarrow.get_include()]
 
 # Get the C++ include directory
 includedir = get_config_var('INCLUDEDIR')
 if includedir:
-    include_dirs.append(os.path.join(includedir, 'c++', 'v1'))  # C++ headers path
+    include_dirs.append(os.path.join(includedir, 'c++', 'v1'))
 
 # Get the Python include directory
 includepy = get_config_var('INCLUDEPY')
@@ -54,6 +56,8 @@ if includepy:
 
 # Check if paths exist
 include_dirs = [p for p in include_dirs if os.path.exists(p)]
+
+print("Include paths:", include_dirs)
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
@@ -106,7 +110,7 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
-        extra_link_args=["-Lthird_party/abseil"],  # Link Abseil library
+        extra_link_args=["-Lthird_party/abseil"],
     ),
     Extension(
         name="opteryx.third_party.cyan4973.xxhash",
@@ -116,7 +120,7 @@ extensions = [
             ],
         include_dirs=include_dirs + ["third_party/cyan4973"],
         extra_compile_args=C_COMPILE_FLAGS,
-        extra_link_args=["-Lthird_party/cyan4973"],  # Link Abseil library
+        extra_link_args=["-Lthird_party/cyan4973"],
     ),
     Extension(
         name='opteryx.third_party.tktech.csimdjson',
@@ -240,6 +244,15 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+    Extension(
+        name="opteryx.compiled.table_ops.align",
+        sources=["opteryx/compiled/table_ops/align.pyx"],
+        include_dirs=include_dirs,
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+        libraries=pyarrow.get_libraries(),
+        library_dirs=pyarrow.get_library_dirs(),
     ),
     Extension(
         name="opteryx.third_party.fuzzy",
