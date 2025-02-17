@@ -75,7 +75,13 @@ def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
         # this should happen when there's no relation in the query
         return table
 
-    schema_columns = set(table.column_names)
+    table_cols = table.column_names
+    target_names = [c.schema_column.name for c in columns]
+
+    if set(table_cols) == set(target_names):
+        return table  # nothing to do
+
+    schema_columns = set(table_cols)
 
     # Using a dictionary to map all_names to the projection_column's name for quick lookup
     name_mapping = {

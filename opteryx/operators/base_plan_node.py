@@ -61,10 +61,6 @@ class BasePlanNode:
         raise NotImplementedError()
 
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
-        from opteryx import EOS
-
-        print(f"Executing {self.name} with {'EOS' if morsel == EOS else id(morsel)}")
-
         if hasattr(morsel, "num_rows"):
             self.records_in += morsel.num_rows
             self.bytes_in += morsel.nbytes
