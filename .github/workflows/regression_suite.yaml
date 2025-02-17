@@ -42,6 +42,7 @@ jobs:
           python -m uv pip install --upgrade numpy cython
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
+          python -c "import pyarrow; pyarrow.create_library_symlinks();"
           python setup.py build_ext --inplace
 
       - name: "Start Memcached Instance"
