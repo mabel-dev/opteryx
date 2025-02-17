@@ -42,7 +42,7 @@ else:
     C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
-include_dirs = [numpy.get_include(), pyarrow.get_include()]
+include_dirs = [numpy.get_include(), pyarrow.get_include(), "src/cpp"]
 
 # Get the C++ include directory
 includedir = get_config_var('INCLUDEDIR')
@@ -163,45 +163,35 @@ extensions = [
     ),
     Extension(
         name="opteryx.compiled.aggregations.count_distinct",
-        sources=[
-            "opteryx/compiled/aggregations/count_distinct.pyx"
-            ],
+        sources=["opteryx/compiled/aggregations/count_distinct.pyx"],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.joins.cross_join",
-        sources=[
-            "opteryx/compiled/joins/cross_join.pyx"
-            ],
+        sources=["opteryx/compiled/joins/cross_join.pyx"],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.joins.filter_join",
-        sources=[
-            "opteryx/compiled/joins/filter_join.pyx",
-            ],
+        sources=["opteryx/compiled/joins/filter_join.pyx"],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.joins.inner_join",
-        sources=[
-            "opteryx/compiled/joins/inner_join.pyx",
-            ],
+        sources=["opteryx/compiled/joins/inner_join.pyx"],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.joins.outer_join",
-        sources=[
-            "opteryx/compiled/joins/outer_join.pyx",
-            ],
+        sources=["opteryx/compiled/joins/outer_join.pyx"],
         language="c++",
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
@@ -221,8 +211,11 @@ extensions = [
     ),
     Extension(
         name="opteryx.compiled.structures.buffers",
-        sources=["opteryx/compiled/structures/buffers.pyx", "opteryx/compiled/structures/intbuffer.cpp"],
-        include_dirs=include_dirs, # + [pyarrow.get_include()],
+        sources=[
+            "opteryx/compiled/structures/buffers.pyx",
+            "src/cpp/intbuffer.cpp"
+        ],
+        include_dirs=include_dirs,
         language="c++",
         define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         extra_compile_args=CPP_COMPILE_FLAGS + ["-Wall", "-shared"],
@@ -283,7 +276,7 @@ for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
                     "src/cpp/simd_search.cpp",
                     ],
                 language="c++",
-                include_dirs=include_dirs + ["src/cpp", "third_party/abseil"],
+                include_dirs=include_dirs + ["third_party/abseil"],
                 extra_compile_args=CPP_COMPILE_FLAGS,
             ),
     )
