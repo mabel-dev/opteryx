@@ -56,10 +56,7 @@ cpdef Table align_tables(
     for field in append_table.schema:
         if field.name not in source_names:
             missing_fields.append(field)
-            if append_is_all_nulls:
-                missing_cols.append(pyarrow.nulls(len(source_indices), type=field.type))
-            else:
-                missing_cols.append(append_table.column(field.name).take(numpy.asarray(append_indices, dtype=numpy.int64)))
+            missing_cols.append(append_table.column(field.name).take(numpy.asarray(append_indices, dtype=numpy.int64)))
 
     all_fields = list(source_table.schema) + missing_fields
     all_cols = source_cols + missing_cols
