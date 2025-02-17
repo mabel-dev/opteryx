@@ -61,6 +61,7 @@ from typing import List
 from typing import Tuple
 
 from opteryx.exceptions import InvalidTemporalRangeFilterError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.utils import dates
 
 COLLECT_RELATION = {
@@ -350,10 +351,8 @@ def _temporal_extration_state_machine(
     return temporal_range_collector, " ".join(query_collector)
 
 
-def extract_temporal_filters(sql: str):  # pragma: no cover
+def extract_temporal_filters(parts: str):  # pragma: no cover
     import shlex
-
-    parts = sql_parts(sql)
 
     # extract the raw temporal information
     initial_collector, sql = _temporal_extration_state_machine(parts)
@@ -428,5 +427,22 @@ def extract_temporal_filters(sql: str):  # pragma: no cover
     return sql, final_collector
 
 
+def rewrite_explain(parts: list) -> list:
+    """
+    The parser does not support MERMAID format.
+
+    We rewrite it to GRAPHVIZ, we don't support.
+    """
+    if parts[0] == "EXPLAIN ANALYZE FORMAT GRAPHVIZ":
+        raise UnsupportedSyntaxError("GRAPHVIZ format is not supported")
+    if parts[0] == "EXPLAIN ANALYZE FORMAT JSON":
+        raise UnsupportedSyntaxError("JSON format is not supported")
+    if parts[0].upper() == "EXPLAIN ANALYZE FORMAT MERMAID":
+        parts[0] = "EXPLAIN ANALYZE FORMAT GRAPHVIZ"
+    return parts
+
+
 def do_sql_rewrite(statement):
-    return extract_temporal_filters(statement)
+    parts = sql_parts(statement)
+    parts = rewrite_explain(parts)
+    return extract_temporal_filters(parts)
