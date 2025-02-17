@@ -10,6 +10,7 @@ import pytest
 from freezegun import freeze_time
 
 from opteryx.planner.sql_rewriter import extract_temporal_filters
+from opteryx.planner.sql_rewriter import sql_parts
 from opteryx.utils.sql import clean_statement, remove_comments
 
 APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0) # UTC
@@ -134,7 +135,8 @@ def test_temporal_extraction(statement, filters):
 
     with freeze_time(APOLLO_17_LAUNCH_DATE):
         clean = clean_statement(remove_comments(statement))
-        _, extracted_filters = extract_temporal_filters(clean)
+        parts = sql_parts(clean)
+        _, extracted_filters = extract_temporal_filters(parts)
 
     assert filters == extracted_filters, f"{filters} != {extracted_filters}"
 
