@@ -1104,12 +1104,17 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
             and_node = None
             for predicate in dnf_list:
                 identifier, operator, value = predicate
+                # we have special handling for True and False literals in the place of identifiers
+                if identifier is True or identifier is False:
+                    left_node = build_literal_node(identifier)
+                else:
+                    left_node = LogicalColumn(
+                        NodeType.IDENTIFIER, source_column=identifier, source=relation
+                    )
                 comparison_node = Node(
                     node_type=NodeType.COMPARISON_OPERATOR,
                     value=operator,
-                    left=LogicalColumn(
-                        NodeType.IDENTIFIER, source_column=identifier, source=relation
-                    ),
+                    left=left_node,
                     right=build_literal_node(value),
                 )
                 if operator.startswith("AnyOp"):

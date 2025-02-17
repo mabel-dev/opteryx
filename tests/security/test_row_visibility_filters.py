@@ -18,10 +18,10 @@ test_cases = [
     # none filters give all results
     ("SELECT * FROM $planets", {"$planets": None}, (9, 20)),
     # special cases - booleans
-    ("SELECT * FROM $planets", {"$planets": [True, "Eq", True]}, (9, 20)),
-    ("SELECT * FROM $planets", {"$planets": [False, "Eq", False]}, (9, 20)),
-    ("SELECT * FROM $planets", {"$planets": [True, "Eq", False]}, (0, 20)),
-    ("SELECT * FROM $planets", {"$planets": [True, "NotEq", True]}, (9, 20)),
+    ("SELECT * FROM $planets", {"$planets": [(True, "Eq", True)]}, (9, 20)),
+    ("SELECT * FROM $planets", {"$planets": [(False, "Eq", False)]}, (9, 20)),
+    ("SELECT * FROM $planets", {"$planets": [(True, "Eq", False)]}, (0, 20)),
+    ("SELECT * FROM $planets", {"$planets": [(True, "NotEq", True)]}, (0, 20)),
 
     # WHERE 'Apollo 11' = ANY(missions)
     ("SELECT * FROM $astronauts", {"$astronauts": [("missions", "AnyOpEq", "Apollo 11")]}, (3, 19)),
