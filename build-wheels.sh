@@ -6,7 +6,13 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 # Install Apache Arrow
 yum update -y
-yum install -y epel-release
+yum install -y yum-utils epel-release
+
+# Import Apache Arrow signing keys
+rpm --import https://archive.apache.org/dist/arrow/KEYS
+
+# Add the Arrow repository for CentOS 7
+yum-config-manager --add-repo https://apache.jfrog.io/artifactory/arrow/centos/apache-arrow.repo
 yum install -y arrow-devel
 
 cd $GITHUB_WORKSPACE/io
