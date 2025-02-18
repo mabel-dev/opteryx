@@ -150,6 +150,34 @@ class ReaderNode(BasePlanNode):
         self.statistics.rows_read += 0
         self.statistics.columns_read += 0
 
+    def to_mermaid(self, stats, nid):
+        """
+        Generic method to convert a node to a mermaid entry
+        """
+        BAR = "------------------------<br />"
+
+        mermaid = f'NODE_{nid}[("{self.node_type.upper()} ({self.connector.__type__})<br />'
+        mermaid += f"{self.connector.dataset}<br />"
+        mermaid += BAR
+        if self.columns:
+            mermaid += "columns<br />" + BAR
+        if self.predicates:
+            mermaid += "filters<br />" + BAR
+        if self.limit:
+            mermaid += f"limit: {self.limit:,}<br />" + BAR
+        if self.start_date:
+            mermaid += f"start date: {self.start_date}<br />"
+            mermaid += f"end date: {self.end_date}<br />"
+            mermaid += BAR
+        if hasattr(self.connector, "rows_seen") or hasattr(self.connector, "blobs_read"):
+            if hasattr(self.connector, "rows_seen"):
+                mermaid += f"rows seen: {self.connector.rows_seen:,}<br />"
+            if hasattr(self.connector, "blobs_read"):
+                mermaid += f"chunks read: {self.connector.blobs_read:,}<br />"
+            mermaid += BAR
+        mermaid += f"({stats.get('time_ms', 0):,.2f}ms)"
+        return mermaid + '")]'
+
     @property
     def name(self):  # pragma: no cover
         """friendly name for this step"""

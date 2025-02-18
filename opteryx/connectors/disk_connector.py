@@ -141,6 +141,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
         self.blob_list = {}
+        self.rows_seen = 0
+        self.blobs_seen = 0
 
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         """
@@ -209,6 +211,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                     remaining_rows -= decoded.num_rows
 
                     self.statistics.rows_seen += num_rows
+                    self.rows_seen += num_rows
+                    self.blobs_seen += 1
                     yield decoded
 
                     # if we have read all the rows we need to stop

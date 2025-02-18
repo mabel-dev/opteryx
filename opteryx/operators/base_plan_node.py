@@ -59,14 +59,18 @@ class BasePlanNode:
         """
         Generic method to convert a node to a mermaid entry
         """
-        mermaid = f'NODE_{nid}["{self.node_type.upper()}'
+        BAR = "------------------------<br />"
+
+        mermaid = f'NODE_{nid}["{self.node_type.upper()}<br />'
         if stats is None:
             reportable_stats = {}
         else:
             reportable_stats = {k: v for k, v in stats.items() if k in ["calls", "time_ms"]}
             if reportable_stats:
-                mermaid += "<hr />"
-                mermaid += "<br />".join(f"{k}: {v}" for k, v in reportable_stats.items())
+                mermaid += BAR
+                mermaid += f"calls: {reportable_stats.get('calls'):,}<br />"
+                mermaid += BAR
+                mermaid += f"({reportable_stats.get('time_ms', 0):,.2f}ms)"
         return mermaid + '"]'
 
     def __str__(self) -> str:
@@ -148,3 +152,21 @@ class JoinNode(BasePlanNode):
 
         self.left_readers = parameters.get("left_readers")
         self.right_readers = parameters.get("right_readers")
+
+    def to_mermaid(self, stats, nid):
+        """
+        Generic method to convert a node to a mermaid entry
+        """
+        BAR = "------------------------<br />"
+
+        mermaid = f'NODE_{nid}["JOIN ({self.join_type.upper()})<br />'
+        if stats is None:
+            reportable_stats = {}
+        else:
+            reportable_stats = {k: v for k, v in stats.items() if k in ["calls", "time_ms"]}
+            if reportable_stats:
+                mermaid += BAR
+                mermaid += f"calls: {reportable_stats.get('calls'):,}<br />"
+                mermaid += BAR
+                mermaid += f"({reportable_stats.get('time_ms', 0):,.2f}ms)"
+        return mermaid + '"]'

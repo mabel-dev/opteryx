@@ -10,10 +10,11 @@ def plan_to_mermaid(plan, stats):
             continue
         builder += f"  {node.to_mermaid(node_stats.get(node.identity), nid)}\n"
         node_stats[nid] = node_stats.pop(node.identity, None)
+    builder += "\n"
     for s, t, r in plan.edges():
         if t in excluded_nodes:
             continue
-        stats = node_stats.get(t)
-        builder += f'  NODE_{s} -- "rows: {stats.get("records_in")}<br />bytes: {stats.get("bytes_in")}" --> NODE_{t}\n'
+        stats = node_stats.get(s)
+        builder += f'  NODE_{s} -- "{" " + r.upper() + "<br />" if r else ""} {stats.get("records_out"):,} rows<br />{stats.get("bytes_out"):,} bytes" --> NODE_{t}\n'
 
-    return "flowchart BT\n" + builder
+    return "flowchart BT\n\n" + builder
