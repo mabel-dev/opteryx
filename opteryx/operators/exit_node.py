@@ -28,6 +28,8 @@ from . import BasePlanNode
 
 
 class ExitNode(BasePlanNode):
+    is_not_explained = True
+
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
         self.at_least_one = False
