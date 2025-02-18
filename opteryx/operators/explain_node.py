@@ -19,10 +19,13 @@ from . import BasePlanNode
 
 
 class ExplainNode(BasePlanNode):
+    is_not_explained = True
+
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
         self._query_plan = parameters.get("query_plan")
         self.analyze = parameters.get("analyze", False)
+        self.format = parameters.get("format", "TEXT")
 
     @property
     def name(self):  # pragma: no cover

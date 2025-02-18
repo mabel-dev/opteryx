@@ -16,6 +16,7 @@ END = object()
 class BasePlanNode:
     is_join: bool = False
     is_scan: bool = False
+    is_not_explained: bool = False
 
     def __init__(self, *, properties, **parameters):
         """
@@ -53,6 +54,20 @@ class BasePlanNode:
     @property
     def node_type(self) -> str:
         return self.name
+
+    def to_mermaid(self, stats, nid):
+        """
+        Generic method to convert a node to a mermaid entry
+        """
+        mermaid = f'NODE_{nid}["{self.node_type.upper()}'
+        if stats is None:
+            reportable_stats = {}
+        else:
+            reportable_stats = {k: v for k, v in stats.items() if k in ["calls", "time_ms"]}
+            if reportable_stats:
+                mermaid += "<hr />"
+                mermaid += "<br />".join(f"{k}: {v}" for k, v in reportable_stats.items())
+        return mermaid + '"]'
 
     def __str__(self) -> str:
         return f"{self.name} {self.sensors()}"

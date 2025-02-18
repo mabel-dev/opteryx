@@ -1623,7 +1623,7 @@ id > /* 0 */ 1
         ("EXPLAIN ANALYZE FORMAT TEXT SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 7, None),
         ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 7, UnsupportedSyntaxError),
         ("EXPLAIN ANALYZE FORMAT GRAPHVIZ SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 7, UnsupportedSyntaxError),
-        ("EXPLAIN ANALYZE FORMAT MERMAID SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 7, None),
+        ("EXPLAIN ANALYZE FORMAT MERMAID SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 1, 1, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
 

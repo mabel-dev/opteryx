@@ -42,7 +42,9 @@ def execute(
 
     # Special case handling for 'Explain' queries
     if isinstance(head_node, ExplainNode):
-        return explain(plan, analyze=head_node.analyze), ResultType.TABULAR
+        return explain(
+            plan, analyze=head_node.analyze, _format=head_node.format
+        ), ResultType.TABULAR
 
     # Special case handling
     if isinstance(head_node, SetVariableNode):
@@ -64,7 +66,9 @@ def execute(
     return inner_execute(plan), ResultType.TABULAR
 
 
-def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None, None]:
+def explain(
+    plan: PhysicalPlan, analyze: bool, _format: str
+) -> Generator[pyarrow.Table, None, None]:
     from opteryx import operators
 
     def _inner_explain(node, depth):
@@ -76,6 +80,7 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
                 continue
             elif isinstance(operator, operators.BasePlanNode):
                 record = {
+                    "identity": operator.identity,
                     "tree": depth,
                     "operator": operator.name,
                     "config": operator.config,
@@ -84,6 +89,8 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
                     record["time_ms"] = operator.execution_time / 1e6
                     record["records_in"] = operator.records_in
                     record["records_out"] = operator.records_out
+                    record["bytes_in"] = operator.bytes_in
+                    record["bytes_out"] = operator.bytes_out
                     record["calls"] = operator.calls
                 yield record
                 yield from _inner_explain(operator_name[0], depth + 1)
@@ -105,9 +112,17 @@ def explain(plan: PhysicalPlan, analyze: bool) -> Generator[pyarrow.Table, None,
                 pass
         del temp
 
-    plan = list(_inner_explain(head[0], 1))
+    explained = list(_inner_explain(head[0], 1))
 
-    table = pyarrow.Table.from_pylist(plan)
+    if _format == "TEXT":
+        table = pyarrow.Table.from_pylist(explained).select(
+            col for col in explained[0] if col not in ["identity", "bytes_in", "bytes_out"]
+        )
+    else:
+        from opteryx.utils import mermaid
+
+        mermaid_plan = mermaid.plan_to_mermaid(plan, explained)
+        table = pyarrow.Table.from_pylist([{"plan": mermaid_plan}])
 
     yield table
 

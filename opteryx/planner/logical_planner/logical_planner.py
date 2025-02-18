@@ -81,7 +81,7 @@ class LogicalPlanNode(Node):
                     distinct_on = f" ON [{','.join(format_expression(col) for col in self.on)}]"
                 return f"DISTINCT{distinct_on}"
             if node_type == LogicalPlanStepType.Explain:
-                return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
+                return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (FORMAT ' + self.format + ')') if self.format else ''}"
             if node_type == LogicalPlanStepType.FunctionDataset:
                 if self.function == "FAKE":
                     return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
@@ -875,7 +875,10 @@ def plan_explain(statement) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]
-    explain_node.format = statement["Explain"]["format"]
+    explain_node.format = statement["Explain"]["format"] or "TEXT"
+
+    if explain_node.format == "GRAPHVIZ":
+        explain_node.format = "MERMAID"
 
     explain_id = random_string()
     plan.add_node(explain_id, explain_node)
