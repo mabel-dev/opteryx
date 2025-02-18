@@ -5,8 +5,9 @@ curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Install Apache Arrow
-apt-get update
-apt-get install -y libarrow-dev
+yum update -y
+yum install -y epel-release
+yum install -y arrow-devel
 
 cd $GITHUB_WORKSPACE/io
 cd io
