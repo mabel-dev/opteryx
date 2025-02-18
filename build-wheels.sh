@@ -4,6 +4,10 @@ set -ex
 curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# Install Apache Arrow
+sudo apt-get update
+sudo apt-get install -y libarrow-dev
+
 cd $GITHUB_WORKSPACE/io
 cd io
 
