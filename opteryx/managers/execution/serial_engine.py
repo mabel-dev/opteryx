@@ -122,6 +122,7 @@ def explain(
         from opteryx.utils import mermaid
 
         mermaid_plan = mermaid.plan_to_mermaid(plan, explained)
+        # DEBUG: print(mermaid_plan)
         table = pyarrow.Table.from_pylist([{"plan": mermaid_plan}])
 
     yield table

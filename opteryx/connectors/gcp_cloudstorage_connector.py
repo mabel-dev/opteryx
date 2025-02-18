@@ -111,6 +111,9 @@ class GcpCloudStorageConnector(
         # cache so we only fetch this once
         self.blob_list = {}
 
+        self.rows_seen = 0
+        self.blobs_seen = 0
+
     def read_blob(self, *, blob_name, **kwargs):
         # For performance we use the GCS API directly, this is roughly 10%
         # faster than using the SDK. As one of the slowest parts of the system
@@ -262,6 +265,8 @@ class GcpCloudStorageConnector(
 
                 if not just_schema:
                     num_rows, num_columns, decoded = decoded
+                    self.blobs_seen += 1
+                    self.rows_seen += num_rows
                     self.statistics.rows_seen += num_rows
                 yield decoded
             except UnsupportedFileTypeError:  # pragma: no cover
