@@ -15,14 +15,11 @@ from typing import Any
 from typing import Dict
 
 import numpy
-import pyarrow
 from Cython.Build import cythonize
 from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
-
-pyarrow.create_library_symlinks()
 
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
@@ -42,7 +39,7 @@ else:
     C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
-include_dirs = [numpy.get_include(), pyarrow.get_include(), "src/cpp"]
+include_dirs = [numpy.get_include(), "src/cpp"]
 
 # Get the C++ include directory
 includedir = get_config_var('INCLUDEDIR')
@@ -237,15 +234,6 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
-    ),
-    Extension(
-        name="opteryx.compiled.table_ops.align",
-        sources=["opteryx/compiled/table_ops/align.pyx"],
-        include_dirs=include_dirs,
-        language="c++",
-        extra_compile_args=CPP_COMPILE_FLAGS,
-        libraries=pyarrow.get_libraries(),
-        library_dirs=pyarrow.get_library_dirs(),
     ),
     Extension(
         name="opteryx.third_party.fuzzy",
