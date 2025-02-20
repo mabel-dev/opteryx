@@ -27,6 +27,8 @@ from . import BasePlanNode
 
 
 class FilterNode(BasePlanNode):
+    is_stateless = False
+
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
         self.filter = parameters.get("filter")

@@ -66,6 +66,9 @@ class AsyncReaderNode(ReaderNode):
 
         self.predicates = parameters.get("predicates")
 
+        self.rows_seen = 0
+        self.blobs_seen = 0
+
     @property
     def name(self):  # pragma: no cover
         """friendly name for this step"""
@@ -177,6 +180,9 @@ class AsyncReaderNode(ReaderNode):
                 self.statistics.blobs_read += 1
                 self.statistics.rows_read += morsel.num_rows
                 self.statistics.bytes_processed += morsel.nbytes
+
+                self.rows_seen += morsel.num_rows
+                self.blobs_seen += 1
 
                 yield morsel
             except Exception as err:
