@@ -64,7 +64,8 @@ def test_skip_on_error():
     from opteryx.managers.cache import ValkeyCache
     cache = ValkeyCache()
     cache.set(b"key", b"value")
-    assert cache.get(b"key") == b"value"
+    read_back = cache.get(b"key")
+    assert read_back == b"value", read_back
     assert cache.hits > 0
     cache._consecutive_failures = 10
     assert cache.get(b"key") is None

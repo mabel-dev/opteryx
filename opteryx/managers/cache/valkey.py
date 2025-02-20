@@ -1,3 +1,7 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 """
 This implements an interface to Valkey
 
@@ -9,10 +13,9 @@ from typing import Union
 
 from orso.tools import single_item_cache
 
+from opteryx.config import MAX_CONSECUTIVE_CACHE_FAILURES
 from opteryx.exceptions import MissingDependencyError
 from opteryx.managers.kvstores import BaseKeyValueStore
-
-MAXIMUM_CONSECUTIVE_FAILURES: int = 10
 
 
 @single_item_cache
@@ -39,6 +42,12 @@ class ValkeyCache(BaseKeyValueStore):
     Cache object
     """
 
+    hits: int = 0
+    misses: int = 0
+    skips: int = 0
+    errors: int = 0
+    sets: int = 0
+
     def __init__(self, **kwargs):
         """
         Parameters:
@@ -51,17 +60,12 @@ class ValkeyCache(BaseKeyValueStore):
             import datetime
 
             print(f"{datetime.datetime.now()} [CACHE] Unable to set up valkey cache.")
-            self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
+            self._consecutive_failures: int = MAX_CONSECUTIVE_CACHE_FAILURES
         else:
             self._consecutive_failures = 0
-        self.hits: int = 0
-        self.misses: int = 0
-        self.skips: int = 0
-        self.errors: int = 0
-        self.sets: int = 0
 
     def get(self, key: bytes) -> Union[bytes, None]:
-        if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
             self.skips += 1
             return None
         try:
@@ -72,7 +76,7 @@ class ValkeyCache(BaseKeyValueStore):
                 return bytes(response)
         except Exception as err:  # pragma: no cover
             self._consecutive_failures += 1
-            if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+            if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
                 import datetime
 
                 print(
@@ -85,13 +89,13 @@ class ValkeyCache(BaseKeyValueStore):
         return None
 
     def set(self, key: bytes, value: bytes) -> None:
-        if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures < MAX_CONSECUTIVE_CACHE_FAILURES:
             try:
                 self._server.set(key, value)  # Adjust based on Valkey's API
                 self.sets += 1
             except Exception as err:  # pragma: no cover
                 # if we fail to set, stop trying
-                self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
+                self._consecutive_failures = MAX_CONSECUTIVE_CACHE_FAILURES
                 self.errors += 1
                 import datetime
 

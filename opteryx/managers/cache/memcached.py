@@ -14,10 +14,9 @@ from typing import Union
 
 from orso.tools import single_item_cache
 
+from opteryx.config import MAX_CONSECUTIVE_CACHE_FAILURES
 from opteryx.exceptions import MissingDependencyError
 from opteryx.managers.kvstores import BaseKeyValueStore
-
-MAXIMUM_CONSECUTIVE_FAILURES: int = 10
 
 
 @single_item_cache
@@ -67,6 +66,13 @@ class MemcachedCache(BaseKeyValueStore):
     Cache object
     """
 
+    hits: int = 0
+    misses: int = 0
+    skips: int = 0
+    errors: int = 0
+    sets: int = 0
+    touches: int = 0
+
     def __init__(self, **kwargs):
         """
         Parameters:
@@ -79,18 +85,12 @@ class MemcachedCache(BaseKeyValueStore):
             import datetime
 
             print(f"{datetime.datetime.now()} [CACHE] Unable to set up memcached cache.")
-            self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
+            self._consecutive_failures: int = MAX_CONSECUTIVE_CACHE_FAILURES
         else:
             self._consecutive_failures = 0
-        self.hits: int = 0
-        self.misses: int = 0
-        self.skips: int = 0
-        self.errors: int = 0
-        self.sets: int = 0
-        self.touches: int = 0
 
     def get(self, key: bytes) -> Union[bytes, None]:
-        if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
             self.skips += 1
             return None
         try:
@@ -102,7 +102,7 @@ class MemcachedCache(BaseKeyValueStore):
         except Exception as err:  # pragma: no cover
             # DEBUG: log(f"Unable to 'get' Memcache cache {type(err)}")
             self._consecutive_failures += 1
-            if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+            if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
                 import datetime
 
                 print(
@@ -115,14 +115,14 @@ class MemcachedCache(BaseKeyValueStore):
         return None
 
     def set(self, key: bytes, value: bytes) -> None:
-        if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures < MAX_CONSECUTIVE_CACHE_FAILURES:
             try:
                 self._server.set(bytes(key), value)
                 self.sets += 1
             except Exception as err:
                 # if we fail to set, stop trying
                 # DEBUG: log(f"Unable to 'set' Memcache cache {err}")
-                self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
+                self._consecutive_failures = MAX_CONSECUTIVE_CACHE_FAILURES
                 self.errors += 1
                 import datetime
 
@@ -133,7 +133,7 @@ class MemcachedCache(BaseKeyValueStore):
             self.skips += 1
 
     def touch(self, key: bytes):
-        if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures < MAX_CONSECUTIVE_CACHE_FAILURES:
             try:
                 self._server.touch(bytes(key))
                 self.touches += 1
