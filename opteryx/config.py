@@ -142,13 +142,16 @@ DISABLE_OPTIMIZER: bool = bool(get("DISABLE_OPTIMIZER", False))
 """**DANGEROUS** This will cause most queries to fail."""
 
 OPTERYX_DEBUG: bool = bool(get("OPTERYX_DEBUG", False))
-"""Diagnostic and debug mode."""
+"""**DANGEROUS** Diagnostic and debug mode - generates a lot of log entries."""
 
 MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 64))
 """Maximum number of buffer pool evictions by a single query."""
 
 MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 2 * 1024 * 1024))
 """Maximum size for items saved to the remote buffer."""
+
+MAX_CONSECUTIVE_CACHE_FAILURES: int = int(get("MAX_CONSECUTIVE_CACHE_FAILURES", 10))
+"""Maximum number of consecutive cache failures before disabling cache usage."""
 
 MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
 """Local buffer pool size in either bytes or fraction of system memory."""
@@ -167,6 +170,9 @@ DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
 
 DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG_CONFIGURATION")
 """Data Catalog configuration, different catalogs have different config formats."""
+
+
+
 
 # GCP project ID - for Google Cloud Data
 GCP_PROJECT_ID: str = get("GCP_PROJECT_ID") 

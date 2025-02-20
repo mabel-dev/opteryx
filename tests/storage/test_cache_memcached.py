@@ -7,8 +7,6 @@ the files are in the cache (they may or may not be) for the second time to defin
 import os
 import sys
 
-os.environ["OPTERYX_DEBUG"] = "1"
-
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from tests.tools import is_arm, is_mac, is_windows, skip_if
@@ -43,8 +41,6 @@ def test_memcached_cache():
         time.sleep(0.01)
         cur.execute("SELECT count(*) FROM opteryx.ten_files;")
 
-    print(f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}")
-
     for i in range(10):
         # read the data again time, this should hit the cache
         buffer = BufferPool()
@@ -54,9 +50,6 @@ def test_memcached_cache():
         cur.execute("SELECT count(*) FROM opteryx.ten_files;")
 
     stats = cur.stats
-
-    print(f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}")
-    print(stats)
 
     assert (
         cache.hits > 0

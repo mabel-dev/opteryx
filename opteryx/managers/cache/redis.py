@@ -13,10 +13,9 @@ from typing import Union
 
 from orso.tools import single_item_cache
 
+from opteryx.config import MAX_CONSECUTIVE_CACHE_FAILURES
 from opteryx.exceptions import MissingDependencyError
 from opteryx.managers.kvstores import BaseKeyValueStore
-
-MAXIMUM_CONSECUTIVE_FAILURES: int = 10
 
 
 @single_item_cache
@@ -42,6 +41,12 @@ class RedisCache(BaseKeyValueStore):
     Cache object
     """
 
+    hits: int = 0
+    misses: int = 0
+    skips: int = 0
+    errors: int = 0
+    sets: int = 0
+
     def __init__(self, **kwargs):
         """
         Parameters:
@@ -54,17 +59,12 @@ class RedisCache(BaseKeyValueStore):
             import datetime
 
             print(f"{datetime.datetime.now()} [CACHE] Unable to set up redis cache.")
-            self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
+            self._consecutive_failures: int = MAX_CONSECUTIVE_CACHE_FAILURES
         else:
             self._consecutive_failures = 0
-        self.hits: int = 0
-        self.misses: int = 0
-        self.skips: int = 0
-        self.errors: int = 0
-        self.sets: int = 0
 
     def get(self, key: bytes) -> Union[bytes, None]:
-        if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
             self.skips += 1
             return None
         try:
@@ -75,7 +75,7 @@ class RedisCache(BaseKeyValueStore):
                 return bytes(response)
         except Exception as err:  # pragma: no cover
             self._consecutive_failures += 1
-            if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+            if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
                 import datetime
 
                 print(
@@ -88,13 +88,13 @@ class RedisCache(BaseKeyValueStore):
         return None
 
     def set(self, key: bytes, value: bytes) -> None:
-        if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures < MAX_CONSECUTIVE_CACHE_FAILURES:
             try:
                 self._server.set(key, value)
                 self.sets += 1
             except Exception as err:  # pragma: no cover
                 # if we fail to set, stop trying
-                self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
+                self._consecutive_failures = MAX_CONSECUTIVE_CACHE_FAILURES
                 self.errors += 1
                 import datetime
 
