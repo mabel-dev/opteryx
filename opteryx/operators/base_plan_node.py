@@ -17,6 +17,7 @@ class BasePlanNode:
     is_join: bool = False
     is_scan: bool = False
     is_not_explained: bool = False
+    is_stateless: bool = False
 
     def __init__(self, *, properties, **parameters):
         """
@@ -68,6 +69,12 @@ class BasePlanNode:
             reportable_stats = {k: v for k, v in stats.items() if k in ["calls", "time_ms"]}
             if reportable_stats:
                 mermaid += BAR
+                if self.columns:
+                    mermaid += f"columns: {len(self.columns)}<br />" + BAR
+                if hasattr(self, "limit") and self.limit is not None:
+                    mermaid += f"limit: {self.limit:,}<br />" + BAR
+                if hasattr(self, "order") and self.limit is not None:
+                    mermaid += f"order<br />" + BAR
                 mermaid += f"calls: {reportable_stats.get('calls'):,}<br />"
                 mermaid += BAR
                 mermaid += f"({reportable_stats.get('time_ms', 0):,.2f}ms)"
@@ -166,6 +173,8 @@ class JoinNode(BasePlanNode):
             reportable_stats = {k: v for k, v in stats.items() if k in ["calls", "time_ms"]}
             if reportable_stats:
                 mermaid += BAR
+                if hasattr(self, "left_filter") and self.left_filter is not None:
+                    mermaid += f"bloom filter<br />" + BAR
                 mermaid += f"calls: {reportable_stats.get('calls'):,}<br />"
                 mermaid += BAR
                 mermaid += f"({reportable_stats.get('time_ms', 0):,.2f}ms)"

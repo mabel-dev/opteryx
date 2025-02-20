@@ -21,6 +21,7 @@ from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
 
+
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
