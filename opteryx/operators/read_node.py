@@ -160,7 +160,7 @@ class ReaderNode(BasePlanNode):
         mermaid += f"{self.connector.dataset}<br />"
         mermaid += BAR
         if self.columns:
-            mermaid += "columns<br />" + BAR
+            mermaid += f"columns: {len(self.columns)}<br />" + BAR
         if self.predicates:
             mermaid += "filters<br />" + BAR
         if self.limit:
@@ -169,12 +169,21 @@ class ReaderNode(BasePlanNode):
             mermaid += f"start date: {self.start_date}<br />"
             mermaid += f"end date: {self.end_date}<br />"
             mermaid += BAR
-        if hasattr(self.connector, "rows_seen") or hasattr(self.connector, "blobs_read"):
+
+        if hasattr(self, "rows_seen") or hasattr(self, "blobs_seen"):
+            if hasattr(self, "blobs_seen"):
+                mermaid += f"reads: {self.blobs_seen:,}<br />"
+            if hasattr(self, "rows_seen"):
+                mermaid += f"rows seen: {self.rows_seen:,}<br />"
+            mermaid += BAR
+
+        elif hasattr(self.connector, "rows_seen") or hasattr(self.connector, "blobs_seen"):
+            if hasattr(self.connector, "blobs_seen"):
+                mermaid += f"reads: {self.connector.blobs_seen:,}<br />"
             if hasattr(self.connector, "rows_seen"):
                 mermaid += f"rows seen: {self.connector.rows_seen:,}<br />"
-            if hasattr(self.connector, "blobs_read"):
-                mermaid += f"chunks read: {self.connector.blobs_read:,}<br />"
             mermaid += BAR
+
         mermaid += f"({stats.get('time_ms', 0):,.2f}ms)"
         return mermaid + '")]'
 
