@@ -29,8 +29,8 @@ def is_win():  # pragma: no cover
     return platform.system().lower() == "windows"
 
 LIBRARY = "opteryx"
-CPP_COMPILE_FLAGS = ["-O2"]
-C_COMPILE_FLAGS = ["-O2"]
+CPP_COMPILE_FLAGS = ["-O3"]
+C_COMPILE_FLAGS = ["-O3"]
 if is_mac():
     CPP_COMPILE_FLAGS += ["-std=c++17"]
 elif is_win():
@@ -262,7 +262,7 @@ for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
                 name=module_name,
                 sources=[
                     cython_file,
-                    "src/cpp/simd_search.cpp",
+                    "src/cpp/simd_search.cpp"
                     ],
                 language="c++",
                 include_dirs=include_dirs + ["third_party/abseil"],

@@ -156,8 +156,12 @@ class ReaderNode(BasePlanNode):
         """
         BAR = "------------------------<br />"
 
-        mermaid = f'NODE_{nid}[("{self.node_type.upper()} ({self.connector.__type__})<br />'
-        mermaid += f"{self.connector.dataset}<br />"
+        if self.connector is None:
+            mermaid = f'NODE_{nid}[(**"{self.node_type.upper()} (FUNCTION)**<br />'
+            mermaid += f"{self.function}<br />"
+        else:
+            mermaid = f'NODE_{nid}[(**"{self.node_type.upper()} ({self.connector.__type__})**<br />'
+            mermaid += f"{self.connector.dataset}<br />"
         mermaid += BAR
         if self.columns:
             mermaid += f"columns: {len(self.columns)}<br />" + BAR

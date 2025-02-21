@@ -1,4 +1,4 @@
-#include "simd_search.hpp"
+#include "simd_search.h"
 #include <cstdint>
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)

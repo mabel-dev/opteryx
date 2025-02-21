@@ -3,7 +3,6 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-
 import platform
 from itertools import permutations
 from typing import Iterable
@@ -71,3 +70,17 @@ def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
                 return result
 
     return best_match_column  # Return the best match found, or None if no suitable match is found.
+
+
+class Timer:
+    ticks: int = 0
+    label: str = None
+
+    def __init__(self, label: str = None):
+        self.label = label
+
+    def __del__(self):
+        if self.label:
+            print(f"Timer ({self.label}): {self.ticks / 1e9}")
+        else:
+            print(f"Timer: {self.ticks / 1e9}")

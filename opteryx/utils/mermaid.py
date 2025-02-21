@@ -15,6 +15,7 @@ def plan_to_mermaid(plan, stats):
         if t in excluded_nodes:
             continue
         stats = node_stats.get(s)
-        builder += f'  NODE_{s} -- "{" " + r.upper() + "<br />" if r else ""} {stats.get("records_out"):,} rows<br />{stats.get("bytes_out"):,} bytes" --> NODE_{t}\n'
+        join_leg = f"**{r.upper()}**<br />" if r else ""
+        builder += f'  NODE_{s} -- "{join_leg} {stats.get("records_out"):,} rows<br />{stats.get("bytes_out"):,} bytes" --> NODE_{t}\n'
 
     return "flowchart BT\n\n" + builder

@@ -98,7 +98,7 @@ class FunctionDatasetNode(ReaderNode):
         if self.function == "GENERATE_SERIES":
             return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
         if self.function == "VALUES":
-            return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+            return f"VALUES (({', '.join([str(c) for c in self.columns])}) x {self.parameters.get('values', 0)} AS {self.alias})"
         if self.function == "UNNEST":
             return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.parameters.get('unnest_target', '')})"
         if self.function == "HTTP":

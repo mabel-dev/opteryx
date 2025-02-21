@@ -116,6 +116,7 @@ class InnerJoinNode(JoinNode):
                         c for c in self.columns if c.schema_column.identity in self.left_columns
                     ][0]
 
+                    # if the left side is small enough to quickly build a bloom filter, do that.
                     if (
                         self.left_relation.num_rows < 1e6
                         and len(self.left_columns) == 1

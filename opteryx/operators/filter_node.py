@@ -57,6 +57,7 @@ class FilterNode(BasePlanNode):
 
         if self.function_evaluations:
             morsel = evaluate_and_append(self.function_evaluations, morsel)
+
         mask = evaluate(self.filter, morsel)
 
         if not isinstance(mask, pyarrow.lib.BooleanArray):
