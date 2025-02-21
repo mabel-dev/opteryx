@@ -27,7 +27,7 @@ cdef extern from "string.h":
     int strncasecmp(const char *s1, const char *s2, size_t n)
     int memcmp(const void *s1, const void *s2, size_t n)
 
-cdef extern from "simd_search.hpp":
+cdef extern from "simd_search.h":
     int neon_search(const char *data, size_t length, char target)
     int avx_search(const char *data, size_t length, char target)
 

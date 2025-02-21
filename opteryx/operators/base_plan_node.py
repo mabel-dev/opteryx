@@ -62,7 +62,7 @@ class BasePlanNode:
         """
         BAR = "------------------------<br />"
 
-        mermaid = f'NODE_{nid}["{self.node_type.upper()}<br />'
+        mermaid = f'NODE_{nid}["**{self.node_type.upper()}**<br />'
         if stats is None:
             reportable_stats = {}
         else:
@@ -166,7 +166,7 @@ class JoinNode(BasePlanNode):
         """
         BAR = "------------------------<br />"
 
-        mermaid = f'NODE_{nid}["JOIN ({self.join_type.upper()})<br />'
+        mermaid = f'NODE_{nid}["**JOIN ({self.join_type.upper()})**<br />'
         if stats is None:
             reportable_stats = {}
         else:

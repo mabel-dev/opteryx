@@ -12,8 +12,10 @@ perform entirely as expected as it is optimized for a specific configuration
 and constraints.
 
 We have two size options, both using 2 hashes:
-    - A 512k slot bit array for up to 50k items (about 3% FPR)
-    - a 8m slot bit array for up to 1m items (about 2% FPR)
+    - A 512k slot bit array for up to 60k items (about 4.2% FPR)
+    - a 8m slot bit array for up to 1m items (about 4.5% FPR)
+
+(we would need about 80m slots for 10m items at 4.5% FPR)
 
 We perform one hash and then use a calculation based on the golden ratio to
 determine the second position. This is cheaper than performing two hashes whilst
@@ -28,8 +30,7 @@ Building the filter is fast - for tables up to 1 million records we create the f
 eliminations) we discard it which has meant some waste work.
 """
 
-from libc.stdlib cimport malloc, free
-from libc.string cimport memset, memcpy
+from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint8_t, int64_t
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
@@ -39,27 +40,32 @@ cimport numpy
 import pyarrow
 
 # Define sizes for the two Bloom filters
-cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024    # 64 KB for ~50K records
-cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024  # 1 MB for ~1M records
+cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024    # 64 KB for <= 60K records
+cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024  # 1 MB for <= 1M records
 
 cdef uint32_t BIT_ARRAY_SIZE_SMALL = BYTE_ARRAY_SIZE_SMALL << 3  # 512 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_LARGE = BYTE_ARRAY_SIZE_LARGE << 3  # 8 Mbits
 
-
-cdef inline void set_bit(unsigned char* bit_array, uint32_t bit):
-    cdef uint32_t byte_idx = bit >> 3
-    cdef uint32_t bit_idx = bit & 7
-    bit_array[byte_idx] |= 1 << bit_idx
+cdef uint8_t bit_masks[8]
+bit_masks[0] = 1
+bit_masks[1] = 2
+bit_masks[2] = 4
+bit_masks[3] = 8
+bit_masks[4] = 16
+bit_masks[5] = 32
+bit_masks[6] = 64
+bit_masks[7] = 128
 
 cdef class BloomFilter:
     # defined in the .pxd file only - here so they aren't magic
+    # cdef uint8_t* bit_array_backing
     # cdef unsigned char* bit_array
     # cdef uint32_t bit_array_size
     # cdef uint32_t byte_array_size
 
     def __cinit__(self, uint32_t expected_records=50000):
         """Initialize Bloom Filter based on expected number of records."""
-        if expected_records <= 50000:
+        if expected_records <= 60000:
             self.byte_array_size = BYTE_ARRAY_SIZE_SMALL
             self.bit_array_size = BIT_ARRAY_SIZE_SMALL
         elif expected_records <= 1000000:
@@ -69,10 +75,9 @@ cdef class BloomFilter:
             raise ValueError("Too many records for this Bloom filter implementation")
 
         # Allocate memory
-        self.bit_array = <unsigned char*>malloc(self.byte_array_size)
+        self.bit_array = <unsigned char*>calloc(self.byte_array_size, sizeof(uint8_t))
         if not self.bit_array:
             raise MemoryError("Failed to allocate memory for the Bloom filter.")
-        memset(self.bit_array, 0, self.byte_array_size)
 
     def __dealloc__(self):
         if self.bit_array:
@@ -86,8 +91,8 @@ cdef class BloomFilter:
         # Apply the golden ratio to the item and use a mask to keep within the
         # size of the bit array.
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
-        set_bit(self.bit_array, h1)
-        set_bit(self.bit_array, h2)
+        self.bit_array[h1 >> 3] |= bit_masks[h1 & 7]
+        self.bit_array[h2 >> 3] |= bit_masks[h1 & 7]
 
     cpdef void add(self, bytes member):
         self._add(member)
@@ -99,8 +104,8 @@ cdef class BloomFilter:
         item = cy_xxhash3_64(<char*>member, len(member))
         h1 = item & (self.bit_array_size - 1)
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
-        return ((self.bit_array[h1 >> 3] & (1 << (h1 & 7))) != 0) and \
-               ((self.bit_array[h2 >> 3] & (1 << (h2 & 7))) != 0)
+        return ((self.bit_array[h1 >> 3] & bit_masks[h1 & 7]) != 0) and \
+               ((self.bit_array[h2 >> 3] & bit_masks[h1 & 7]) != 0)
 
     cpdef bint possibly_contains(self, bytes member):
         return self._possibly_contains(member)
@@ -154,20 +159,13 @@ cdef class BloomFilter:
 
         for i in range(n):
             h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
-            result_view[i] = ((self.bit_array[h1 >> 3] & (1 << (h1 & 7))) != 0)
+            result_view[i] = ((self.bit_array[h1 >> 3] & bit_masks[h1 & 7]) != 0)
 
         return result
 
     cpdef memoryview serialize(self):
         """Serialize the Bloom filter to a memory view"""
         return memoryview(self.bit_array[:self.byte_array_size])
-
-
-cpdef BloomFilter deserialize(const unsigned char* data):
-    """Deserialize a memory view to a Bloom filter"""
-    cdef BloomFilter bf = BloomFilter()
-    memcpy(bf.bit_array, data, bf.byte_array_size)
-    return bf
 
 
 cpdef BloomFilter create_bloom_filter(keys):
@@ -198,6 +196,6 @@ cpdef BloomFilter create_int_bloom_filter(numpy.ndarray[numpy.int64_t] keys):
 
     for i in range(len(keys)):
         h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
-        set_bit(bf.bit_array, h1)
+        bf.bit_array[h1 >> 3] |= bit_masks[h1 & 7]
 
     return bf
