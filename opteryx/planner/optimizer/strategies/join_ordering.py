@@ -14,6 +14,7 @@ Build a left-deep join tree, where the left relation of any pair is the smaller 
 We also decide if we should use a nested loop join or a hash join based on the size of the left relation.
 """
 
+from opteryx.config import features
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -21,6 +22,8 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 from .optimization_strategy import get_nodes_of_type_from_logical_plan
+
+DISABLE_NESTED_LOOP_JOIN: bool = features.disable_nested_loop_join and False
 
 
 class JoinOrderingStrategy(OptimizationStrategy):
@@ -31,7 +34,8 @@ class JoinOrderingStrategy(OptimizationStrategy):
         if node.node_type == LogicalPlanStepType.Join and node.type == "inner":
             # Tiny datasets benefit from nested loop joins (avoids building a hash table)
             if (
-                min(node.left_size, node.right_size) < 1000
+                not DISABLE_NESTED_LOOP_JOIN
+                and min(node.left_size, node.right_size) < 1000
                 and max(node.left_size, node.right_size) < 10000
             ):
                 node.type = "nested_inner"

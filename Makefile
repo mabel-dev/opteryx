@@ -21,9 +21,10 @@ r:
 	python tests/sql_battery/test_run_only_battery.py
 
 test:
+	python -m uv pip install --upgrade pytest pytest-xdist
 	clear
 	export MANUAL_TEST=1
-	python -m pytest
+	python -m pytest -n auto --color=yes
 
 mypy:
 	clear

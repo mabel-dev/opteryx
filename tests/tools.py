@@ -611,24 +611,24 @@ def create_duck_db():  # pragma: no cover
     The DuckDB file format isn't stable, so ust create it anew each time and
     bypass the need to track versions.
     """
+
     import os
 
-    if os.path.exists("planets.duckdb"):
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+
+    if os.path.exists(f"planets-{worker_id}.duckdb"):
         return
 
     import duckdb
 
-    conn = duckdb.connect(database="planets.duckdb")
+    conn = duckdb.connect(database=f"planets-{worker_id}.duckdb")
     cur = conn.cursor()
-    res = None
     try:
-        res = cur.execute(CREATE_DATABASE)
+        cur.execute(CREATE_DATABASE)
     except Exception as err:
         print(err)
         return -1
     finally:
-        if res is not None:
-            res.commit()
         cur.close()
 
 @lru_cache_with_expiry
@@ -680,7 +680,8 @@ def set_up_iceberg():
     from pyiceberg.catalog.sql import SqlCatalog
     from opteryx.connectors.iceberg_connector import IcebergConnector
 
-    ICEBERG_BASE_PATH: str = "tmp/iceberg"
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+    ICEBERG_BASE_PATH: str = f"tmp/iceberg/{worker_id}"
 
     def cast_dataset(dataset):
         for column in dataset.column_names:

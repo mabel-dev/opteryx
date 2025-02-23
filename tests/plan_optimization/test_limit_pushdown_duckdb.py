@@ -11,7 +11,8 @@ from tests.tools import create_duck_db
 
 create_duck_db()
 
-opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection="duckdb:///planets.duckdb",)
+worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection=f"duckdb:///planets-{worker_id}.duckdb",)
 
 
 STATEMENTS = [

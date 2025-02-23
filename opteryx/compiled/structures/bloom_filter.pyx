@@ -12,10 +12,9 @@ perform entirely as expected as it is optimized for a specific configuration
 and constraints.
 
 We have two size options, both using 2 hashes:
-    - A 512k slot bit array for up to 60k items (about 4.2% FPR)
+    - a 512k slot bit array for up to 60k items (about 4.2% FPR)
     - a 8m slot bit array for up to 1m items (about 4.5% FPR)
-
-(we would need about 80m slots for 10m items at 4.5% FPR)
+    - a 128m slot but array for up to 16m items (about 4.7% FPR)
 
 We perform one hash and then use a calculation based on the golden ratio to
 determine the second position. This is cheaper than performing two hashes whilst
@@ -26,12 +25,15 @@ The primary use for this structure is to prefilter JOINs, it is many times faste
 that to look up the item in the hash table.
 
 Building the filter is fast - for tables up to 1 million records we create the filter
-(1m records is roughly a 0.07s build). If the filter isn't effective (less that 5%
+(1m records is roughly a 0.01s build). If the filter isn't effective (less that 5%
 eliminations) we discard it which has meant some waste work.
+
+The 16m set is the limit at the moment, it takes about 0.23 seconds to build which
+is the limit of what we think we should speculatively build.
 """
 
 from libc.stdlib cimport calloc, free
-from libc.stdint cimport uint8_t, int64_t
+from libc.stdint cimport uint8_t, int32_t, int64_t
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
@@ -39,12 +41,17 @@ import numpy
 cimport numpy
 import pyarrow
 
+cdef extern from "<stdint.h>":
+    ctypedef unsigned long uintptr_t
+
 # Define sizes for the two Bloom filters
-cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024    # 64 KB for <= 60K records
-cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024  # 1 MB for <= 1M records
+cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024        # 64 KB for <= 60K records
+cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024      # 1 MB for <=  1M records
+cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 16 * 1024 * 1024  # 8 MB for <= 16M records
 
 cdef uint32_t BIT_ARRAY_SIZE_SMALL = BYTE_ARRAY_SIZE_SMALL << 3  # 512 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_LARGE = BYTE_ARRAY_SIZE_LARGE << 3  # 8 Mbits
+cdef uint32_t BIT_ARRAY_SIZE_HUGE = BYTE_ARRAY_SIZE_HUGE << 3    # 128 Mbits
 
 cdef uint8_t bit_masks[8]
 bit_masks[0] = 1
@@ -65,12 +72,15 @@ cdef class BloomFilter:
 
     def __cinit__(self, uint32_t expected_records=50000):
         """Initialize Bloom Filter based on expected number of records."""
-        if expected_records <= 60000:
+        if expected_records <= 62_000:
             self.byte_array_size = BYTE_ARRAY_SIZE_SMALL
             self.bit_array_size = BIT_ARRAY_SIZE_SMALL
-        elif expected_records <= 1000000:
+        elif expected_records <= 1_000_001:
             self.byte_array_size = BYTE_ARRAY_SIZE_LARGE
             self.bit_array_size = BIT_ARRAY_SIZE_LARGE
+        elif expected_records <= 16_000_001:
+            self.byte_array_size = BYTE_ARRAY_SIZE_HUGE
+            self.bit_array_size = BIT_ARRAY_SIZE_HUGE
         else:
             raise ValueError("Too many records for this Bloom filter implementation")
 
@@ -83,10 +93,10 @@ cdef class BloomFilter:
         if self.bit_array:
             free(self.bit_array)
 
-    cdef inline void _add(self, bytes member):
+    cdef inline void _add(self, const void *member, size_t length):
         cdef uint32_t item, h1, h2
 
-        item = cy_xxhash3_64(<char*>member, len(member))
+        item = cy_xxhash3_64(member, length)
         h1 = item & (self.bit_array_size - 1)
         # Apply the golden ratio to the item and use a mask to keep within the
         # size of the bit array.
@@ -95,7 +105,7 @@ cdef class BloomFilter:
         self.bit_array[h2 >> 3] |= bit_masks[h1 & 7]
 
     cpdef void add(self, bytes member):
-        self._add(member)
+        self._add(<char*>member, len(member))
 
     cdef inline bint _possibly_contains(self, bytes member):
         """Check if the item might be in the set"""
@@ -169,21 +179,78 @@ cdef class BloomFilter:
 
 
 cpdef BloomFilter create_bloom_filter(keys):
+    """
+    Create a BloomFilter from a PyArrow column.
 
-    cdef Py_ssize_t n = len(keys)
-    cdef Py_ssize_t i
+    Parameters:
+        keys: pyarrow.ChunkedArray or pyarrow.Array
+            Column of keys to add to the BloomFilter.
+
+    Returns:
+        BloomFilter
+            A BloomFilter initialized with the given keys.
+    """
+    cdef Py_ssize_t i, j, length
+    cdef const char* data
+    cdef const uint8_t* validity
+    cdef const int32_t* offsets  # Offsets buffer for strings
+    cdef Py_ssize_t start_offset, end_offset
+
+    # Create BloomFilter
+    cdef Py_ssize_t n = keys.length()
     cdef BloomFilter bf = BloomFilter(n)
 
-    keys = keys.drop_null()
-    keys = keys.cast(pyarrow.binary()).to_numpy(False)
+    # If it's a ChunkedArray, iterate over each chunk
+    if isinstance(keys, pyarrow.ChunkedArray):
+        for chunk in keys.chunks:
+            buffers = chunk.buffers()
+            offsets = <const int32_t*><uintptr_t>buffers[1].address  # Offsets buffer
+            data = <const char*><uintptr_t>buffers[2].address  # Data buffer (actual string bytes)
+            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] is not None else NULL  # Validity bitmap
+            length = len(chunk)
 
-    cdef object[::1] keys_view = keys  # Memory view for fast access
+            for j in range(length):
+                # Check if the element is valid (not null)
+                if validity == NULL or (validity[j // 8] & (1 << (j % 8))):
+                    # Get the start and end offsets for the string
+                    start_offset = offsets[j]
+                    end_offset = offsets[j + 1]
+                    # Ensure offsets are within bounds and non-negative
+                    if start_offset >= 0 and end_offset >= start_offset:
+                        # Check if the string is non-empty or explicitly handle empty strings
+                        if end_offset > start_offset:
+                            bf._add(data + start_offset, end_offset - start_offset)
+                        else:
+                            # Handle empty string case
+                            bf._add(b"", 0)
 
-    for i in range(len(keys)):
-        bf._add(keys_view[i])
+    # If it's a single Array, process it directly
+    elif isinstance(keys, pyarrow.Array):
+        buffers = keys.buffers()
+        offsets = <const int32_t*><uintptr_t>buffers[1].address  # Offsets buffer
+        data = <const char*><uintptr_t>buffers[2].address  # Data buffer (actual string bytes)
+        validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] is not None else NULL  # Validity bitmap
+        length = len(keys)
+
+        for i in range(length):
+            # Check if the element is valid (not null)
+            if validity == NULL or (validity[i // 8] & (1 << (i % 8))):
+                # Get the start and end offsets for the string
+                start_offset = offsets[i]
+                end_offset = offsets[i + 1]
+                # Ensure offsets are within bounds and non-negative
+                if start_offset >= 0 and end_offset >= start_offset:
+                    # Check if the string is non-empty or explicitly handle empty strings
+                    if end_offset > start_offset:
+                        bf._add(data + start_offset, end_offset - start_offset)
+                    else:
+                        # Handle empty string case
+                        bf._add(b"", 0)
+
+    else:
+        raise TypeError("keys must be a pyarrow.Array or pyarrow.ChunkedArray")
 
     return bf
-
 
 cpdef BloomFilter create_int_bloom_filter(numpy.ndarray[numpy.int64_t] keys):
 

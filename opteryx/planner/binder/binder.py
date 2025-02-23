@@ -308,10 +308,87 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                 node.value = fixed_function_result
             else:
                 _, result_type, _ = FUNCTIONS.get(node.value, (None, 0, None))
+                # If we don't know the return type from the function name, we can usually
+                # work it out from the parameters - all of the aggs are worked out this way
+                # even COUNT which is always an integer.
                 if result_type == 0:
-                    result_type = {"COUNT": OrsoTypes.INTEGER, "AVG": OrsoTypes.DOUBLE}.get(
-                        node.value, 0
-                    )
+                    # Some functions return a fixed type, so return that type
+                    if node.value == "COUNT":
+                        result_type = OrsoTypes.INTEGER
+                    elif node.value == "AVG":
+                        result_type = OrsoTypes.DOUBLE
+                    # Some functions return different types based on the input
+                    # we need to find the first non-null parameter
+                    elif node.value == "CASE":
+                        for param in node.parameters[1].parameters:
+                            if param.node_type in (
+                                NodeType.LITERAL,
+                                NodeType.IDENTIFIER,
+                                NodeType.FUNCTION,
+                            ) and param.schema_column.type not in (
+                                OrsoTypes.NULL,
+                                0,
+                                OrsoTypes._MISSING_TYPE,
+                            ):
+                                result_type = param.schema_column.type
+                                break
+                        # if we have a type, we should ensure all the parameters are the same type
+                        if result_type not in (OrsoTypes._MISSING_TYPE, 0):
+                            parameters = []
+                            for param in node.parameters[1].parameters:
+                                if param.node_type == NodeType.LITERAL and param.value is not None:
+                                    param.value = result_type.parse(param.value)
+                                    param.type = result_type
+                                    param.schema_column.type = result_type
+                                parameters.append(param)
+                            node.parameters[1].parameters = parameters
+                    elif node.value == "IIF":
+                        result_type = node.parameters[1].schema_column.type
+                    elif node.value in ("ABS", "MAX", "MIN", "NULLIF", "PASSTHRU", "SUM"):
+                        result_type = node.parameters[0].schema_column.type
+                    # Some functions support nulls different positions
+                    elif node.value in ("COALESCE", "IFNULL", "IFNOTNULL"):
+                        for param in node.parameters:
+                            if param.node_type in (
+                                NodeType.LITERAL,
+                                NodeType.IDENTIFIER,
+                                NodeType.FUNCTION,
+                            ) and param.schema_column.type not in (
+                                OrsoTypes.NULL,
+                                0,
+                                OrsoTypes._MISSING_TYPE,
+                            ):
+                                result_type = param.schema_column.type
+                                break
+                        # if we have a type, we should ensure all the parameters are the same type
+                        if result_type not in (OrsoTypes._MISSING_TYPE, 0):
+                            parameters = []
+                            for param in node.parameters:
+                                if (
+                                    param.node_type == NodeType.LITERAL
+                                    and param.value is not None
+                                    and param.value != set()
+                                ):
+                                    param.value = result_type.parse(param.value)
+                                    param.type = result_type
+                                    param.schema_column.type = result_type
+                                parameters.append(param)
+                            node.parameters = parameters
+                    # some functions return different types based on fixed input
+                    elif node.value == "DATEPART":
+                        datepart = node.parameters[0].value.lower()
+                        if datepart in ("epoch", "juian"):
+                            result_type = OrsoTypes.DOUBLE
+                        elif datepart == "day":
+                            result_type = OrsoTypes.VARCHAR
+                        elif datepart == "date":
+                            result_type = OrsoTypes.DATE
+                        else:
+                            result_type = OrsoTypes.INTEGER
+                    # Some function we don't know the return type until run time
+                    elif node.value in ("GET",):
+                        result_type = 0  # OrsoTypes._MISSING_TYPE
+
                 schema_column = FunctionColumn(name=column_name, type=result_type, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []

@@ -115,6 +115,9 @@ def if_null(values, replacements):
     # Create a mask for null values
     is_null_mask = _is_null(values)
 
+    if len(replacements) == 1:
+        replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
+
     # Use NumPy's where function to vectorize the operation
     return numpy.where(is_null_mask, replacements, values).astype(replacements.dtype)
 
