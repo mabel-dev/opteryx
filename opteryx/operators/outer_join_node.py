@@ -16,13 +16,16 @@ We also have our own INNER JOIN implementations, it's really just the less
 popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
+import time
 from typing import List
 
 import pyarrow
 
 from opteryx import EOS
+from opteryx.compiled.joins.inner_join import abs_hash_join_map
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable
+from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.third_party.abseil.containers import FlatHashMap
 from opteryx.utils.arrow import align_tables
@@ -30,57 +33,60 @@ from opteryx.utils.arrow import align_tables
 from . import JoinNode
 
 
-def left_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
+def left_outer_join_matching_rows_part(
+    left_relation, right_relation, join_columns, hash_table, seen_rows
+):
     """
-    Perform an LEFT JOIN.
-
-    This implementation ensures that all rows from the left table are included in the result set,
-    with rows from the right table matched where possible, and columns from the right table
-    filled with NULLs where no match is found.
+    Perform part of the LEFT OUTER JOIN operation where we work with the matching rows.
 
     Parameters:
-        left_relation (pyarrow.Table): The left pyarrow.Table to join.
-        right_relation (pyarrow.Table): The right pyarrow.Table to join.
-        left_columns (list of str): Column names from the left table to join on.
-        right_columns (list of str): Column names from the right table to join on.
+        left_relation: The preprocessed left pyarrow.Table.
+        right_relation: The right pyarrow.Table to join.
+        join_columns: A list of column names to join on.
+        hash_table: The preprocessed hash table from the left table.
 
     Returns:
-        A pyarrow.Table containing the result of the LEFT JOIN operation.
+        A tuple containing lists of matching row indices from the left and right relations.
     """
-    from opteryx.compiled.joins.inner_join import abs_hash_join_map
-    from opteryx.compiled.structures.hash_table import hash_join_map
-
     left_indexes = IntBuffer()
-    right_indexes = []
+    right_indexes = IntBuffer()
 
-    if len(set(left_columns) & set(right_relation.column_names)) > 0:
-        left_columns, right_columns = right_columns, left_columns
+    right_hash = hash_join_map(right_relation, join_columns)
 
-    right_hash = abs_hash_join_map(right_relation, right_columns)
-    left_hash = hash_join_map(left_relation, left_columns)
+    for h, right_rows in right_hash.hash_table.items():
+        left_rows = hash_table.get(h)
+        if left_rows is None:
+            continue
+        for l in left_rows:
+            left_indexes.extend([l] * len(right_rows))
+            right_indexes.extend(right_rows)
 
-    for hash_value, left_rows in left_hash.hash_table.items():
-        right_rows = right_hash.get(hash_value)
-        if right_rows:
-            for l in left_rows:
-                left_indexes.extend([l] * len(right_rows))
-                right_indexes.extend(right_rows)
-        else:
-            for l in left_rows:
-                left_indexes.append(l)
-                right_indexes.append(None)
+    numpy_left_indexes = left_indexes.to_numpy()
+    seen_rows.update(numpy_left_indexes)
 
-        if left_indexes.size() > 50_000:
-            table = align_tables(
-                right_relation, left_relation, right_indexes, left_indexes.to_numpy()
-            )
-            yield table
-            left_indexes = IntBuffer()
-            right_indexes.clear()
+    return seen_rows, align_tables(
+        right_relation, left_relation, right_indexes.to_numpy(), numpy_left_indexes
+    )
 
-    # this may return an empty table each time - fix later
-    table = align_tables(right_relation, left_relation, right_indexes, left_indexes.to_numpy())
-    yield table
+
+def left_outer_join_non_matching_rows_part(left_relation, right_relation, seen_rows):
+    """
+    Perform part of the LEFT OUTER JOIN operation where we work with the matching rows.
+    """
+    CHUNK_SIZE = 50_000
+
+    all_rows = set(range(left_relation.num_rows))
+    non_matching_rows = sorted(all_rows - seen_rows)
+    nones = [None] * CHUNK_SIZE
+
+    for i in range(0, len(non_matching_rows), CHUNK_SIZE):
+        chunk = non_matching_rows[i : i + CHUNK_SIZE]
+        yield align_tables(
+            source_table=left_relation,
+            append_table=right_relation,
+            source_indices=chunk,
+            append_indices=nones,
+        )
 
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
@@ -179,6 +185,9 @@ class OuterJoinNode(JoinNode):
         self.left_buffer = []
         self.right_buffer = []
         self.left_relation = None
+        self.empty_right_relation = None
+        self.left_hash = None
+        self.left_seen_rows = set()
 
     @property
     def name(self):  # pragma: no cover
@@ -199,12 +208,39 @@ class OuterJoinNode(JoinNode):
             if morsel == EOS:
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
+                if self.join_type == "left outer":
+                    start = time.monotonic_ns()
+                    self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
+                    self.statistics.time_build_hash_map += time.monotonic_ns() - start
             else:
                 self.left_buffer.append(morsel)
             yield None
             return
 
         if join_leg == "right":
+            if self.join_type == "left outer":
+                if morsel == EOS:
+                    yield from left_outer_join_non_matching_rows_part(
+                        left_relation=self.left_relation,
+                        right_relation=self.empty_right_relation,
+                        seen_rows=self.left_seen_rows,
+                    )
+                    yield EOS
+                    return
+
+                if self.empty_right_relation is None:
+                    self.empty_right_relation = morsel.slice(offset=0, length=0)
+
+                self.left_seen_rows, new_morsel = left_outer_join_matching_rows_part(
+                    left_relation=self.left_relation,
+                    right_relation=morsel,
+                    join_columns=self.right_columns,
+                    hash_table=self.left_hash,
+                    seen_rows=self.left_seen_rows,
+                )
+                yield new_morsel
+                return
+
             if morsel == EOS:
                 right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
                 self.right_buffer.clear()
@@ -224,4 +260,4 @@ class OuterJoinNode(JoinNode):
                 yield None
 
 
-providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}
+providers = {"left outer": None, "full outer": full_join, "right outer": right_join}

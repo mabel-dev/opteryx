@@ -13,7 +13,7 @@ We rewrite some conditions to a more optimal form; for example if doing a
 LIKE comparison and the pattern contains no wildcards, we rewrite to be an
 equals check.
 
-Rewrite to a form which is just faster, even if it can't be pushed
+Rewrite to a form which is just faster, even if it can't be pushed.
 """
 
 import re
@@ -108,13 +108,20 @@ dispatcher: Dict[str, Callable] = {
 
 # Dispatcher conditions
 def _rewrite_predicate(predicate, statistics: QueryStatistics):
-    if predicate.node_type not in {NodeType.BINARY_OPERATOR, NodeType.COMPARISON_OPERATOR}:
+    if predicate.node_type == NodeType.FUNCTION:
+        return _rewrite_function(predicate, statistics)
+
+    elif predicate.node_type not in {NodeType.BINARY_OPERATOR, NodeType.COMPARISON_OPERATOR}:
         # after rewrites, some filters aren't actually predicates
         return predicate
 
-    if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
+    # if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
+    if predicate.left:
         predicate.left = _rewrite_predicate(predicate.left, statistics)
+    if predicate.right:
         predicate.right = _rewrite_predicate(predicate.right, statistics)
+    if predicate.centre:
+        predicate.centre = _rewrite_predicate(predicate.centre, statistics)
 
     if predicate.right.type == OrsoTypes.VARCHAR:
         if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
@@ -183,10 +190,8 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
 
 
 def _rewrite_function(function, statistics: QueryStatistics):
-    """
-    Rewrite CASE WHEN x IS NULL THEN y ELSE x END to IFNULL(x, y)
-    """
-    if function.node_type == NodeType.FUNCTION and function.value == "CASE":
+    if function.value == "CASE":
+        # CASE WHEN x IS NULL THEN y ELSE x END → IFNULL(x, y)
         if len(function.parameters) == 2 and function.parameters[0].parameters[0].value == "IsNull":
             compare_column = function.parameters[0].parameters[0].centre
             target_column = function.parameters[1].parameters[1]
@@ -197,6 +202,35 @@ def _rewrite_function(function, statistics: QueryStatistics):
                 function.value = "IFNULL"
                 function.parameters = [compare_column, value_if_null]
                 return function
+        # CASE WHEN x THEN y ELSE z END → IIF(x, y, z)
+        if (
+            len(function.parameters) == 2
+            and len(function.parameters[0].parameters) == 2
+            and function.parameters[0].parameters[1].value is True
+            and len(function.parameters[1].parameters) == 2
+        ):
+            statistics.optimization_predicate_rewriter_case_to_iif += 1
+
+            compare_column = function.parameters[0].parameters[0]
+            value_if_true = function.parameters[1].parameters[0]
+            value_if_false = function.parameters[1].parameters[1]
+
+            function.value = "IIF"
+            function.parameters = [compare_column, value_if_true, value_if_false]
+            return function
+    # COALESCE(x, y) → IFNULL(x, y)
+    if function.value == "COALESCE":
+        if len(function.parameters) == 2:
+            statistics.optimization_predicate_rewriter_coalesce_to_ifnull += 1
+            function.value = "IFNULL"
+            return function
+    # SUBSTRING(x, 1, n) → LEFT(x, n)
+    if function.value == "SUBSTRING" and function.parameters[1].value == 1:
+        statistics.optimization_predicate_rewriter_substring_to_left += 1
+        function.value = "LEFT"
+        function.parameters = [function.parameters[0], function.parameters[2]]
+        return function
+
     return function
 
 
@@ -213,7 +247,8 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             new_columns = []
             for column in node.columns:
                 new_column = _rewrite_predicate(column, self.statistics)
-                new_column = _rewrite_function(new_column, self.statistics)
+                # if new_column.node_type == NodeType.FUNCTION:
+                #    new_column = _rewrite_function(new_column, self.statistics)
                 new_columns.append(new_column)
             node.columns = new_columns
             context.optimized_plan[context.node_id] = node

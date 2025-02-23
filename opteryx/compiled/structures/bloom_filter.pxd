@@ -16,7 +16,7 @@ cdef class BloomFilter:
     cdef uint32_t byte_array_size
 
     cpdef void add(self, bytes member)
-    cdef inline void _add(self, bytes member)
+    cdef inline void _add(self, const void *member, size_t length)
     cpdef bint possibly_contains(self, bytes member)
     cdef inline bint _possibly_contains(self, bytes member)
     cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, numpy.ndarray keys)

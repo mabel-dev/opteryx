@@ -102,7 +102,6 @@ class InnerJoinNode(JoinNode):
         with self.lock:
             if join_leg == "left":
                 if morsel == EOS:
-                    start = time.monotonic_ns()
                     self.left_relation = pyarrow.concat_tables(
                         self.left_buffer, promote_options="none"
                     )
@@ -117,8 +116,9 @@ class InnerJoinNode(JoinNode):
                     ][0]
 
                     # if the left side is small enough to quickly build a bloom filter, do that.
+                    # we use 1m + 1 to catch LIMIT on the round 1m rows
                     if (
-                        self.left_relation.num_rows < 1e6
+                        self.left_relation.num_rows < 1_000_001
                         and len(self.left_columns) == 1
                         and left_join_column.schema_column.type
                         in (OrsoTypes.BLOB, OrsoTypes.VARCHAR)
