@@ -680,7 +680,8 @@ def set_up_iceberg():
     from pyiceberg.catalog.sql import SqlCatalog
     from opteryx.connectors.iceberg_connector import IcebergConnector
 
-    ICEBERG_BASE_PATH: str = "tmp/iceberg"
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+    ICEBERG_BASE_PATH: str = f"tmp/iceberg/{worker_id}"
 
     def cast_dataset(dataset):
         for column in dataset.column_names:
