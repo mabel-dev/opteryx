@@ -5,6 +5,7 @@ types-requests
 coverage
 pymemcache
 pytest
+pytest-xdist
 mypy
 rich
 zstandard

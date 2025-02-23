@@ -60,11 +60,13 @@ def test_duckdb_storage():
         if create_duck_db() is None:
             break
 
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+
     opteryx.register_store(
         "duckdb",
         SqlConnector,
         remove_prefix=True,
-        connection="duckdb:///planets.duckdb",
+        connection=f"duckdb:///planets-{worker_id}.duckdb",
     )
     # PUSH - CHECK STATS THE PUSHES WORKED
     results = opteryx.query("SELECT name FROM duckdb.planets WHERE name LIKE 'Earth';")
@@ -87,11 +89,13 @@ def test_duckdb_battery():
         if create_duck_db() is None:
             break
 
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+
     opteryx.register_store(
         "duckdb",
         SqlConnector,
         remove_prefix=True,
-        connection="duckdb:///planets.duckdb",
+        connection=f"duckdb:///planets-{worker_id}.duckdb",
     )
 
     print(f"RUNNING FLOCK OF {len(STATEMENTS)} DUCK TESTS\n")

@@ -322,6 +322,7 @@ SELECT CAST(BLOB('apple pie') AS VARCHAR) LIKE '%pie';
 SELECT CAST(BLOB('apple') AS VARCHAR) NOT LIKE '%apple%';
 SELECT CAST(BLOB('hello world') AS VARCHAR) RLIKE 'hello.*world';
 
+-- EXTRACT returns different typed values depending on the input
 SELECT birth_date FROM $astronauts WHERE EXTRACT(CENTURY FROM birth_date) <= 15;
 SELECT birth_date FROM $astronauts WHERE EXTRACT(DECADE FROM birth_date) <= 15;
 SELECT birth_date FROM $astronauts WHERE EXTRACT(isoyear FROM birth_date) < 1900;
@@ -345,3 +346,30 @@ SELECT EXTRACT(DAY FROM NOW()) = 'Monday';
 SELECT EXTRACT(EPOCH FROM NOW()) > 0.0;
 SELECT EXTRACT(JULIAN FROM NOW()) > 2450000.0;
 SELECT EXTRACT(DATE FROM NOW()) > NOW();
+
+-- CASE statements with mixed types
+SELECT CASE WHEN id > 0 THEN 1 ELSE 1.5 END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 1.5 ELSE 2 END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN '1' ELSE 2 END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN '1.5' ELSE 2.5 END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 'TRUE' ELSE FALSE END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 'short' ELSE 'much longer string' END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 'valid' ELSE NULL END AS result FROM $planets;
+SELECT CASE WHEN mass > 10 THEN 100.5 ELSE 2 END AS result FROM $planets;
+SELECT CASE WHEN mass > 10 THEN 'Heavy' ELSE mass END AS result FROM $planets;
+SELECT CASE WHEN name = 'Earth' THEN 'Home' ELSE name END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 'Exist' ELSE NULL END AS result FROM $planets;
+SELECT CASE WHEN id > mass THEN 'IdGreater' ELSE 'MassGreater' END AS result FROM $planets;
+SELECT CASE WHEN id > 0 AND mass < 10 THEN 'SmallPositive' ELSE 'Other' END AS result FROM $planets;
+SELECT CASE WHEN LENGTH(name) > 4 THEN 'LongName' ELSE 'ShortName' END AS result FROM $planets;
+SELECT CASE WHEN mass / id > 1 THEN 'Dense' ELSE 'Sparse' END AS result FROM $planets;
+SELECT CASE id WHEN 1 THEN 'One' WHEN 2 THEN 'Two' ELSE 'Other' END AS result FROM $planets;
+SELECT CASE name WHEN 'Earth' THEN 'Third' WHEN 'Mars' THEN 'Fourth' ELSE 'Unknown' END AS result FROM $planets;
+SELECT CASE mass WHEN 0 THEN 'Massless' WHEN 1 THEN 'UnitMass' ELSE 'Massive' END AS result FROM $planets;
+SELECT CASE id WHEN 0 THEN 'Zero' WHEN 1 THEN 1.5 ELSE 'Other' END AS result FROM $planets;
+SELECT CASE name WHEN NULL THEN 'NoName' ELSE name END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN CASE WHEN mass < 10 THEN 'Light' ELSE 'Heavy' END ELSE 'Unknown' END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN CASE WHEN name = 'Earth' THEN 'BluePlanet' ELSE 'OtherPlanet' END ELSE 'NoId' END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN 1 WHEN id < 0 THEN 2.5 ELSE 3.0 END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN name || ' is positive' ELSE name || ' is not positive' END AS result FROM $planets;
+SELECT CASE WHEN id > 0 THEN UPPER(name) ELSE LOWER(name) END AS result FROM $planets;

@@ -115,10 +115,13 @@ class InnerJoinNode(JoinNode):
                         c for c in self.columns if c.schema_column.identity in self.left_columns
                     ][0]
 
-                    # if the left side is small enough to quickly build a bloom filter, do that.
-                    # we use 1m + 1 to catch LIMIT on the round 1m rows
+                    # If the left side is small enough to quickly build a bloom filter, do that.
+                    # - We we 9_999 as the lower-bound so we're not building a filter on tiny tables
+                    # - We use 1m + 1 as the upper limit to catch LIMIT on 1m rows
+                    # The bloom filter has a 16m variation coded, but so far it's not fast enough.
                     if (
-                        self.left_relation.num_rows < 1_000_001
+                        self.left_relation.num_rows > 9_999
+                        and self.left_relation.num_rows < 1_000_001
                         and len(self.left_columns) == 1
                         and left_join_column.schema_column.type
                         in (OrsoTypes.BLOB, OrsoTypes.VARCHAR)

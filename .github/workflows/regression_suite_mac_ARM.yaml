@@ -57,7 +57,7 @@ jobs:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
       - name: Run Regression Tests
-        run: python -m pytest --color=yes
+        run: python -m pytest -n auto --color=yes
         env:
           GCP_PROJECT_ID: mabeldev
           MYSQL_USER: '${{ secrets.MYSQL_USER }}'

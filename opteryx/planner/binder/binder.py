@@ -332,6 +332,16 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                             ):
                                 result_type = param.schema_column.type
                                 break
+                        # if we have a type, we should ensure all the parameters are the same type
+                        if result_type not in (OrsoTypes._MISSING_TYPE, 0):
+                            parameters = []
+                            for param in node.parameters[1].parameters:
+                                if param.node_type == NodeType.LITERAL and param.value is not None:
+                                    param.value = result_type.parse(param.value)
+                                    param.type = result_type
+                                    param.schema_column.type = result_type
+                                parameters.append(param)
+                            node.parameters[1].parameters = parameters
                     elif node.value == "IIF":
                         result_type = node.parameters[1].schema_column.type
                     elif node.value in ("ABS", "MAX", "MIN", "NULLIF", "PASSTHRU", "SUM"):
@@ -350,6 +360,20 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                             ):
                                 result_type = param.schema_column.type
                                 break
+                        # if we have a type, we should ensure all the parameters are the same type
+                        if result_type not in (OrsoTypes._MISSING_TYPE, 0):
+                            parameters = []
+                            for param in node.parameters:
+                                if (
+                                    param.node_type == NodeType.LITERAL
+                                    and param.value is not None
+                                    and param.value != set()
+                                ):
+                                    param.value = result_type.parse(param.value)
+                                    param.type = result_type
+                                    param.schema_column.type = result_type
+                                parameters.append(param)
+                            node.parameters = parameters
                     # some functions return different types based on fixed input
                     elif node.value == "DATEPART":
                         datepart = node.parameters[0].value.lower()

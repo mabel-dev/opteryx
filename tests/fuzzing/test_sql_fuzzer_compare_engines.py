@@ -147,10 +147,10 @@ def generate_random_sql_select(columns, table):
 def test_sql_fuzzing_connector_comparisons(i):
 
     create_duck_db()
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
 
     import duckdb
-    conn = duckdb.connect(database="planets.duckdb")
-
+    conn = duckdb.connect(database=f"planets-{worker_id}.duckdb")
     seed = random_int()
     random.seed(seed)
 

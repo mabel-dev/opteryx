@@ -12,9 +12,9 @@ perform entirely as expected as it is optimized for a specific configuration
 and constraints.
 
 We have two size options, both using 2 hashes:
-    - A 512k slot bit array for up to 60k items (about 4.2% FPR)
+    - a 512k slot bit array for up to 60k items (about 4.2% FPR)
     - a 8m slot bit array for up to 1m items (about 4.5% FPR)
-    - 512m slot but array for up to 62m items (not used)
+    - a 128m slot but array for up to 16m items (about 4.7% FPR)
 
 We perform one hash and then use a calculation based on the golden ratio to
 determine the second position. This is cheaper than performing two hashes whilst
@@ -25,11 +25,11 @@ The primary use for this structure is to prefilter JOINs, it is many times faste
 that to look up the item in the hash table.
 
 Building the filter is fast - for tables up to 1 million records we create the filter
-(1m records is roughly a 0.07s build). If the filter isn't effective (less that 5%
+(1m records is roughly a 0.01s build). If the filter isn't effective (less that 5%
 eliminations) we discard it which has meant some waste work.
 
-We don't currently use the 512m slot HUGE version because the performance isn't
-good enough yet.
+The 16m set is the limit at the moment, it takes about 0.23 seconds to build which
+is the limit of what we think we should speculatively build.
 """
 
 from libc.stdlib cimport calloc, free
@@ -47,11 +47,11 @@ cdef extern from "<stdint.h>":
 # Define sizes for the two Bloom filters
 cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024        # 64 KB for <= 60K records
 cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024      # 1 MB for <=  1M records
-cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 64 * 1024 * 1024  # 64 MB for <= 62M records
+cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 16 * 1024 * 1024  # 8 MB for <= 16M records
 
 cdef uint32_t BIT_ARRAY_SIZE_SMALL = BYTE_ARRAY_SIZE_SMALL << 3  # 512 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_LARGE = BYTE_ARRAY_SIZE_LARGE << 3  # 8 Mbits
-cdef uint32_t BIT_ARRAY_SIZE_HUGE = BYTE_ARRAY_SIZE_HUGE << 3    # 512 Mbits
+cdef uint32_t BIT_ARRAY_SIZE_HUGE = BYTE_ARRAY_SIZE_HUGE << 3    # 128 Mbits
 
 cdef uint8_t bit_masks[8]
 bit_masks[0] = 1
@@ -78,7 +78,7 @@ cdef class BloomFilter:
         elif expected_records <= 1_000_001:
             self.byte_array_size = BYTE_ARRAY_SIZE_LARGE
             self.bit_array_size = BIT_ARRAY_SIZE_LARGE
-        elif expected_records <= 62_000_000:
+        elif expected_records <= 16_000_001:
             self.byte_array_size = BYTE_ARRAY_SIZE_HUGE
             self.bit_array_size = BIT_ARRAY_SIZE_HUGE
         else:

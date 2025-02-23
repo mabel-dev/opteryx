@@ -168,7 +168,7 @@ database.db
 data/**
 duckdb
 version_2/**
-planets.duckdb
+planet*.duckdb
 charts.csv
 testdata/tpch/**/**.parquet
 opteryx/compiled/**/*.cpp

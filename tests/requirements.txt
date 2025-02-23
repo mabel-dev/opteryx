@@ -6,6 +6,7 @@ coverage
 hypothesis
 mypy
 pytest
+pytest-xdist
 black
 isort
 pycln
