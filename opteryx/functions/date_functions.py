@@ -71,7 +71,6 @@ def date_part(part, arr):
         "second": compute.second,
         "minute": compute.minute,
         "hour": compute.hour,
-        "time": lambda x: compute.cast(x, "time64[us]"),
         "day": compute.day,
         "dayofweek": compute.day_of_week,
         "dow": compute.day_of_week,

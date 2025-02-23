@@ -1225,7 +1225,7 @@ id > /* 0 */ 1
         ("SELECT EXTRACT(millisecond FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(nanoseconds FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(millisecond FROM NOW())", 1, 1, None),
-        ("SELECT EXTRACT(TIME FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(TIME FROM NOW())", 1, 1, InvalidFunctionParameterError),
         ("SELECT EXTRACT(DECADE FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(CENTURY FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(EPOCH FROM NOW())", 1, 1, None),

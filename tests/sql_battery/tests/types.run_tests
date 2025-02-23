@@ -321,3 +321,27 @@ SELECT LENGTH(BLOB('café')) = 4; -- Considering UTF-8 versus byte-length
 SELECT CAST(BLOB('apple pie') AS VARCHAR) LIKE '%pie';
 SELECT CAST(BLOB('apple') AS VARCHAR) NOT LIKE '%apple%';
 SELECT CAST(BLOB('hello world') AS VARCHAR) RLIKE 'hello.*world';
+
+SELECT birth_date FROM $astronauts WHERE EXTRACT(CENTURY FROM birth_date) <= 15;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(DECADE FROM birth_date) <= 15;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(isoyear FROM birth_date) < 1900;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(YEAR FROM birth_date) < 1900;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(DOY FROM birth_date) > 100;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(dayofyear FROM birth_date) > 100;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(QUARTER FROM birth_date) > 100;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(MONTH FROM birth_date) = 1;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(week FROM birth_date) = 1;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(isoweek FROM birth_date) = 1;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(DOW FROM birth_date) = 0;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(dayofweek FROM birth_date) < 5;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(HOUR FROM birth_date) <= 15;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(MINUTE FROM birth_date) <= 15;
+SELECT birth_date FROM $astronauts WHERE EXTRACT(SECOND FROM birth_date) <= 15;
+SELECT EXTRACT(MILLISECOND FROM NOW()) < 1000;
+SELECT EXTRACT(MILLISECONDS FROM NOW()) < 1000;
+SELECT EXTRACT(NANOSECOND FROM NOW()) < 1000000000;
+SELECT EXTRACT(NANOSECONDS FROM NOW()) < 1000000000;
+SELECT EXTRACT(DAY FROM NOW()) = 'Monday';
+SELECT EXTRACT(EPOCH FROM NOW()) > 0.0;
+SELECT EXTRACT(JULIAN FROM NOW()) > 2450000.0;
+SELECT EXTRACT(DATE FROM NOW()) > NOW();
