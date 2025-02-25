@@ -285,7 +285,7 @@ def run_tests():  # pragma: no cover
     manual_test = os.environ.get("MANUAL_TEST")
     os.environ["MANUAL_TEST"] = "1"
 
-    display_width = shutil.get_terminal_size((80, 20))[0]
+    display_width = shutil.get_terminal_size((100, 20))[0]
 
     # Get the calling module
     caller_module = inspect.getmodule(inspect.currentframe().f_back)

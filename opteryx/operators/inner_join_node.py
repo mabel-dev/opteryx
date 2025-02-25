@@ -116,12 +116,10 @@ class InnerJoinNode(JoinNode):
                     ][0]
 
                     # If the left side is small enough to quickly build a bloom filter, do that.
-                    # - We we 9_999 as the lower-bound so we're not building a filter on tiny tables
                     # - We use 1m + 1 as the upper limit to catch LIMIT on 1m rows
                     # The bloom filter has a 16m variation coded, but so far it's not fast enough.
                     if (
-                        self.left_relation.num_rows > 9_999
-                        and self.left_relation.num_rows < 1_000_001
+                        self.left_relation.num_rows < 1_000_001
                         and len(self.left_columns) == 1
                         and left_join_column.schema_column.type
                         in (OrsoTypes.BLOB, OrsoTypes.VARCHAR)
@@ -147,9 +145,11 @@ class InnerJoinNode(JoinNode):
                     # reduce the number of rows that need to be joined.
                     start = time.monotonic_ns()
 
-                    maybe_in_left = self.left_filter.possibly_contains_many(
-                        morsel.column(self.right_columns[0]).cast(pyarrow.binary()).to_numpy(False)
-                    )
+                    column = morsel.column(self.right_columns[0])
+                    if hasattr(column, "combine_chunks"):
+                        column = column.combine_chunks()
+
+                    maybe_in_left = self.left_filter.possibly_contains_many(column)
 
                     self.statistics.time_bloom_filtering += time.monotonic_ns() - start
                     morsel = morsel.filter(maybe_in_left)
@@ -163,6 +163,7 @@ class InnerJoinNode(JoinNode):
                         self.statistics.feature_dynamically_disabled_bloom_filter += 1
 
                     self.statistics.rows_eliminated_by_bloom_filter += eliminated_rows
+
                 # do the join
                 new_morsel = inner_join_with_preprocessed_left_side(
                     left_relation=self.left_relation,
