@@ -18,11 +18,7 @@ cdef class BloomFilter:
     cpdef void add(self, bytes member)
     cdef inline void _add(self, const void *member, size_t length)
     cpdef bint possibly_contains(self, bytes member)
-    cdef inline bint _possibly_contains(self, bytes member)
-    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, numpy.ndarray keys)
-    cpdef memoryview serialize(self)
-
-    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many_ints(self, numpy.ndarray[numpy.int64_t] keys)
+    cdef inline bint _possibly_contains(self, const void *member, size_t length)
+    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, keys)
 
 cpdef BloomFilter create_bloom_filter(keys)
-cpdef BloomFilter create_int_bloom_filter(numpy.ndarray[numpy.int64_t] keys)

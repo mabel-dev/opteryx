@@ -33,7 +33,7 @@ is the limit of what we think we should speculatively build.
 """
 
 from libc.stdlib cimport calloc, free
-from libc.stdint cimport uint8_t, int32_t, int64_t
+from libc.stdint cimport uint8_t, int32_t
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
@@ -102,25 +102,25 @@ cdef class BloomFilter:
         # size of the bit array.
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
         self.bit_array[h1 >> 3] |= bit_masks[h1 & 7]
-        self.bit_array[h2 >> 3] |= bit_masks[h1 & 7]
+        self.bit_array[h2 >> 3] |= bit_masks[h2 & 7]
 
     cpdef void add(self, bytes member):
         self._add(<char*>member, len(member))
 
-    cdef inline bint _possibly_contains(self, bytes member):
+    cdef inline bint _possibly_contains(self, const void *member, size_t length):
         """Check if the item might be in the set"""
         cdef uint32_t item, h1, h2
 
-        item = cy_xxhash3_64(<char*>member, len(member))
+        item = cy_xxhash3_64(member, length)
         h1 = item & (self.bit_array_size - 1)
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
         return ((self.bit_array[h1 >> 3] & bit_masks[h1 & 7]) != 0) and \
-               ((self.bit_array[h2 >> 3] & bit_masks[h1 & 7]) != 0)
+               ((self.bit_array[h2 >> 3] & bit_masks[h2 & 7]) != 0)
 
     cpdef bint possibly_contains(self, bytes member):
-        return self._possibly_contains(member)
+        return self._possibly_contains(<char*>member, len(member))
 
-    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, numpy.ndarray keys):
+    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, keys):
         """
         Return a boolean array indicating whether each key might be in the Bloom filter.
 
@@ -131,138 +131,119 @@ cdef class BloomFilter:
         Returns:
             A boolean array of the same length as `keys` with True or False values.
         """
-        cdef Py_ssize_t i
-        cdef Py_ssize_t n = keys.shape[0]
+        cdef Py_ssize_t i, j, length
+        cdef const char* data
+        cdef const uint8_t* validity
+        cdef const int32_t* offsets  # Offsets buffer for strings
+        cdef Py_ssize_t start_offset, end_offset
+        cdef const char* empty_str = b""
 
-        # Create an uninitialized bool array rather than a zeroed one
-        cdef numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
-
-        # Wrap both `keys` and `result` in typed memory views for faster indexing
-        cdef object[::1] keys_view = keys
+        # Create BloomFilter
+        cdef Py_ssize_t n = len(keys)
+        cdef result = numpy.empty(n, dtype=numpy.bool)
         cdef uint8_t[::1] result_view = result
 
-        for i in range(n):
-            result_view[i] = False if keys_view[i] is None else self._possibly_contains(keys_view[i])
+        # If it's a ChunkedArray, iterate over each chunk
+        if isinstance(keys, pyarrow.ChunkedArray):
+            i = 0
+            for chunk in keys.chunks:
+                buffers = chunk.buffers()
+                offsets = <const int32_t*><uintptr_t>buffers[1].address
+                data = <const char*><uintptr_t>buffers[2].address
+                validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
+                length = len(chunk)
 
-        return result
+                for j in range(length):
+                    result_view[i] = 0
+                    if validity == NULL or (validity[j >> 3] & bit_masks[j & 7]):
+                        start_offset = offsets[j]
+                        end_offset = offsets[j + 1]
+                        if start_offset >= 0 and end_offset >= start_offset:
+                            if end_offset > start_offset:
+                                result_view[i] = self._possibly_contains(
+                                    data + start_offset,
+                                    end_offset - start_offset
+                                )
+                            else:
+                                result_view[i] = self._possibly_contains(empty_str, 0)
+                    i += 1
 
-    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many_ints(self, numpy.ndarray[numpy.int64_t] keys):
-        """
-        Return a boolean array indicating whether each key might be in the Bloom filter.
-
-        Parameters:
-            keys: numpy.ndarray
-                Array of keys to test for membership.
-
-        Returns:
-            A boolean array of the same length as `keys` with True or False values.
-        """
-        cdef Py_ssize_t i
-        cdef Py_ssize_t n = keys.shape[0]
-        cdef Py_ssize_t bit_array_size = self.bit_array_size
-
-        # Create an uninitialized bool array rather than a zeroed one
-        cdef numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.empty(n, dtype=numpy.bool_)
-
-        # Wrap both `keys` and `result` in typed memory views for faster indexing
-        cdef uint8_t[::1] result_view = result
-
-        for i in range(n):
-            h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
-            result_view[i] = ((self.bit_array[h1 >> 3] & bit_masks[h1 & 7]) != 0)
-
-        return result
-
-    cpdef memoryview serialize(self):
-        """Serialize the Bloom filter to a memory view"""
-        return memoryview(self.bit_array[:self.byte_array_size])
-
-
-cpdef BloomFilter create_bloom_filter(keys):
-    """
-    Create a BloomFilter from a PyArrow column.
-
-    Parameters:
-        keys: pyarrow.ChunkedArray or pyarrow.Array
-            Column of keys to add to the BloomFilter.
-
-    Returns:
-        BloomFilter
-            A BloomFilter initialized with the given keys.
-    """
-    cdef Py_ssize_t i, j, length
-    cdef const char* data
-    cdef const uint8_t* validity
-    cdef const int32_t* offsets  # Offsets buffer for strings
-    cdef Py_ssize_t start_offset, end_offset
-
-    # Create BloomFilter
-    cdef Py_ssize_t n = keys.length()
-    cdef BloomFilter bf = BloomFilter(n)
-
-    # If it's a ChunkedArray, iterate over each chunk
-    if isinstance(keys, pyarrow.ChunkedArray):
-        for chunk in keys.chunks:
-            buffers = chunk.buffers()
+        # If it's a single Array, process it directly
+        elif isinstance(keys, pyarrow.Array):
+            buffers = keys.buffers()
             offsets = <const int32_t*><uintptr_t>buffers[1].address  # Offsets buffer
             data = <const char*><uintptr_t>buffers[2].address  # Data buffer (actual string bytes)
             validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] is not None else NULL  # Validity bitmap
+            length = len(keys)
+
+            for i in range(length):
+                result_view[i] = 0
+                # Check if the element is valid (not null)
+                if validity == NULL or (validity[i >> 3] & bit_masks[i & 7]):
+                    # Get the start and end offsets for the string
+                    start_offset = offsets[i]
+                    end_offset = offsets[i + 1]
+                    # Ensure offsets are within bounds and non-negative
+                    if start_offset >= 0 and end_offset >= start_offset:
+                        if end_offset > start_offset:
+                            result_view[i] = self._possibly_contains(
+                                data + start_offset,
+                                end_offset - start_offset
+                            )
+                        else:
+                            result_view[i] = self._possibly_contains(empty_str, 0)
+        else:
+            raise TypeError("keys must be a pyarrow.Array or pyarrow.ChunkedArray")
+
+        return result
+
+cpdef BloomFilter create_bloom_filter(keys):
+    cdef Py_ssize_t i, j, length
+    cdef const char* data
+    cdef const uint8_t* validity
+    cdef const int32_t* offsets
+    cdef Py_ssize_t start_offset, end_offset
+    cdef const char* empty_str = b""
+
+    cdef Py_ssize_t n = len(keys)
+    cdef BloomFilter bf = BloomFilter(n)
+
+    if isinstance(keys, pyarrow.ChunkedArray):
+        for chunk in keys.chunks:
+            buffers = chunk.buffers()
+            offsets = <const int32_t*><uintptr_t>buffers[1].address
+            data = <const char*><uintptr_t>buffers[2].address
+            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
             length = len(chunk)
 
             for j in range(length):
-                # Check if the element is valid (not null)
-                if validity == NULL or (validity[j // 8] & (1 << (j % 8))):
-                    # Get the start and end offsets for the string
+                if validity == NULL or (validity[j >> 3] & bit_masks[j & 7]):
+                    # Use chunk-local offsets (no global_offset!)
                     start_offset = offsets[j]
-                    end_offset = offsets[j + 1]
-                    # Ensure offsets are within bounds and non-negative
+                    end_offset = offsets[j + 1]  # Always valid for Arrow StringArray
                     if start_offset >= 0 and end_offset >= start_offset:
-                        # Check if the string is non-empty or explicitly handle empty strings
                         if end_offset > start_offset:
                             bf._add(data + start_offset, end_offset - start_offset)
                         else:
-                            # Handle empty string case
-                            bf._add(b"", 0)
-
-    # If it's a single Array, process it directly
+                            bf._add(empty_str, 0)  # Normalize empty strings
     elif isinstance(keys, pyarrow.Array):
         buffers = keys.buffers()
-        offsets = <const int32_t*><uintptr_t>buffers[1].address  # Offsets buffer
-        data = <const char*><uintptr_t>buffers[2].address  # Data buffer (actual string bytes)
-        validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] is not None else NULL  # Validity bitmap
+        offsets = <const int32_t*><uintptr_t>buffers[1].address
+        data = <const char*><uintptr_t>buffers[2].address
+        validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
         length = len(keys)
 
         for i in range(length):
-            # Check if the element is valid (not null)
-            if validity == NULL or (validity[i // 8] & (1 << (i % 8))):
-                # Get the start and end offsets for the string
+            if validity == NULL or (validity[i >> 3] & bit_masks[i & 7]):
                 start_offset = offsets[i]
                 end_offset = offsets[i + 1]
-                # Ensure offsets are within bounds and non-negative
+
                 if start_offset >= 0 and end_offset >= start_offset:
-                    # Check if the string is non-empty or explicitly handle empty strings
                     if end_offset > start_offset:
                         bf._add(data + start_offset, end_offset - start_offset)
                     else:
-                        # Handle empty string case
-                        bf._add(b"", 0)
-
+                        bf._add(empty_str, 0)  # Normalize empty strings
     else:
         raise TypeError("keys must be a pyarrow.Array or pyarrow.ChunkedArray")
-
-    return bf
-
-cpdef BloomFilter create_int_bloom_filter(numpy.ndarray[numpy.int64_t] keys):
-
-    cdef Py_ssize_t n = len(keys)
-    cdef Py_ssize_t i
-    cdef BloomFilter bf = BloomFilter(n)
-    cdef int64_t h1
-
-    cdef Py_ssize_t bit_array_size = bf.bit_array_size
-
-    for i in range(len(keys)):
-        h1 = (keys[i] * 2654435769U) & (bit_array_size - 1)
-        bf.bit_array[h1 >> 3] |= bit_masks[h1 & 7]
 
     return bf
