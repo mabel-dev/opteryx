@@ -66,7 +66,7 @@ cdef void process_column(object column, uint64_t[::1] row_hashes):
         dtype = chunk.type
         if pyarrow.types.is_string(dtype) or pyarrow.types.is_binary(dtype):
             process_string_chunk(chunk, row_hashes, row_offset)
-        elif pyarrow.types.is_integer(dtype) or pyarrow.types.is_floating(dtype):
+        elif pyarrow.types.is_integer(dtype) or pyarrow.types.is_floating(dtype) or pyarrow.types.is_temporal(dtype):
             process_primitive_chunk(chunk, row_hashes, row_offset)
         elif pyarrow.types.is_list(dtype):
             process_list_chunk(chunk, row_hashes, row_offset)
