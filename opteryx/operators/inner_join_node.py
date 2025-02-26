@@ -146,9 +146,6 @@ class InnerJoinNode(JoinNode):
                     start = time.monotonic_ns()
 
                     column = morsel.column(self.right_columns[0])
-                    if hasattr(column, "combine_chunks"):
-                        column = column.combine_chunks()
-
                     maybe_in_left = self.left_filter.possibly_contains_many(column)
 
                     self.statistics.time_bloom_filtering += time.monotonic_ns() - start
