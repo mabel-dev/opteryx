@@ -11,147 +11,287 @@ import numpy
 cimport numpy
 numpy.import_array()
 
-from libc.stdint cimport int64_t
+from libc.stdint cimport int32_t, int64_t, uint8_t, uint64_t, uintptr_t
+from cpython.object cimport PyObject_Hash
+from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
+
+from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 from opteryx.third_party.abseil.containers cimport FlatHashSet
-from libc.math cimport isnan
+from opteryx.compiled.structures.buffers cimport IntBuffer
 
 
-cdef inline object recast_column(column):
-    cdef column_type = column.type
-
-    if pyarrow.types.is_struct(column_type) or pyarrow.types.is_list(column_type):
-        return numpy.array([str(a) for a in column], dtype=numpy.str_)
-
-    # Otherwise, return the column as-is
-    return column
-
-cpdef tuple _distinct(relation, FlatHashSet seen_hashes=None, list columns=None):
-    """
-    This is faster but I haven't workout out how to deal with nulls...
-    NULL is a valid value for DISTINCT
-    """
-    if columns is None:
-        columns = relation.column_names
-
-    # Memory view for the values array (for the join columns)
-    cdef object[:, ::1] values_array = numpy.array(list(relation.select(columns).itercolumns()), dtype=object)
-
-    cdef int64_t hash_value, i
-    cdef list keep = []
-    cdef int64_t num_columns = len(columns)
-
-    if num_columns == 1:
-        col = values_array[0, :]
-        for i in range(len(col)):
-            hash_value = <int64_t>hash(col[i])
-            if seen_hashes.insert(hash_value):
-                keep.append(i)
-    else:
-        for i in range(values_array.shape[1]):
-            # Combine the hashes of each value in the row
-            hash_value = 0
-            for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + hash(value))
-            if seen_hashes.insert(hash_value):
-                keep.append(i)
-
-    return keep, seen_hashes
+cdef:
+    int64_t NULL_HASH = <int64_t>0xBADF00D
+    int64_t EMPTY_HASH = <int64_t>0xBADC0FFEE
+    uint64_t SEED = <uint64_t>0x9e3779b97f4a7c15
 
 
 cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
     """
-    Perform a distinct operation on the given table using an external FlatHashSet.
+    DISTINCT using xxhash and direct Arrow buffer access
     """
-
     cdef:
-        int64_t null_hash = hash(None)
-        Py_ssize_t num_rows, i
+        Py_ssize_t num_rows, row_idx
         list columns_of_interest
-        list columns_data = []
-        list columns_hashes = []
-        numpy.ndarray[int64_t] combined_hashes
-        list keep = []
-        object column_data
-        numpy.ndarray data_array
-        numpy.ndarray[int64_t] hashes
+        uint64_t[::1] row_hashes
 
+    columns_of_interest = columns if columns else table.column_names
+    num_rows = table.num_rows
+    row_hashes = numpy.zeros(num_rows, dtype=numpy.uint64)
+
+    # Process columns directly from Arrow buffers
+    for col_name in columns_of_interest:
+        column = table.column(col_name)
+        process_column(column, row_hashes)
+
+    # Deduplicate using hash set
+    cdef IntBuffer keep = IntBuffer()
     if seen_hashes is None:
         seen_hashes = FlatHashSet()
 
-    columns_of_interest = columns if columns is not None else table.column_names
-    num_rows = table.num_rows  # Use PyArrow's num_rows attribute
+    for row_idx in range(num_rows):
+        if seen_hashes.insert(row_hashes[row_idx]):
+            keep.append(row_idx)
 
-    # Prepare data and compute hashes for each column
-    for column_name in columns_of_interest:
-        # Get the column from the table
-        column = table.column(column_name)
-        # Recast column if necessary
-        column_data = recast_column(column)
-        # Convert PyArrow array to NumPy array without copying
-        if isinstance(column_data, pyarrow.ChunkedArray):
-            data_array = column_data.combine_chunks().to_numpy(zero_copy_only=False)
-        elif isinstance(column_data, pyarrow.Array):
-            data_array = column_data.to_numpy(zero_copy_only=False)
+    return keep.to_numpy(), seen_hashes
+
+
+cdef void process_column(object column, uint64_t[::1] row_hashes):
+    """Process column using type-specific handlers"""
+    cdef:
+        Py_ssize_t row_offset = 0
+        object chunk
+
+    for i, chunk in enumerate(column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]):
+        dtype = chunk.type
+        if pyarrow.types.is_string(dtype) or pyarrow.types.is_binary(dtype):
+            process_string_chunk(chunk, row_hashes, row_offset)
+        elif pyarrow.types.is_integer(dtype) or pyarrow.types.is_floating(dtype) or pyarrow.types.is_temporal(dtype):
+            process_primitive_chunk(chunk, row_hashes, row_offset)
+        elif pyarrow.types.is_list(dtype):
+            process_list_chunk(chunk, row_hashes, row_offset)
+        elif pyarrow.types.is_boolean(dtype):
+            process_boolean_chunk(chunk, row_hashes, row_offset)
         else:
-            data_array = column_data  # Already a NumPy array
+            process_generic_chunk(chunk, row_hashes, row_offset)
 
-        columns_data.append(data_array)
-        hashes = numpy.empty(num_rows, dtype=numpy.int64)
+        row_offset += len(chunk)
 
-        # Determine data type and compute hashes accordingly
-        if numpy.issubdtype(data_array.dtype, numpy.integer):
-            compute_int_hashes(data_array, null_hash, hashes)
-        elif numpy.issubdtype(data_array.dtype, numpy.floating):
-            compute_float_hashes(data_array, null_hash, hashes)
-        elif data_array.dtype == numpy.object_:
-            compute_object_hashes(data_array, null_hash, hashes)
+
+# String Chunk Handler
+cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
+    cdef:
+        const uint8_t* validity
+        const int32_t* offsets
+        const char* data
+        Py_ssize_t i, row_count, buffer_length
+        Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
+        uint64_t hash_val
+        list buffers = chunk.buffers()
+        size_t str_len
+        int start, end
+
+    # Handle potential missing buffers
+    validity = <uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
+    offsets = <int32_t*><uintptr_t>(buffers[1].address) if len(buffers) > 1 else NULL
+    data = <const char*><uintptr_t>buffers[2].address if len(buffers) > 2 else NULL
+    row_count = len(chunk)
+    buffer_length = len(data) if data else 0
+    arr_offset = chunk.offset  # Account for non-zero offset in chunk
+
+    # Calculate the byte and bit offset for validity
+    offset_in_bits = arr_offset & 7
+    offset_in_bytes = arr_offset >> 3
+
+    for i in range(row_count):
+
+        # locate validity bit for this row
+        byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
+        bit_index = (offset_in_bits + i) & 7
+
+        # Check validity bit
+        if validity and not (validity[byte_index] & (1 << bit_index)):
+            hash_val = NULL_HASH
         else:
-            # For other types (e.g., strings), treat as object
-            compute_object_hashes(data_array.astype(numpy.object_), null_hash, hashes)
+            # Calculate the position in offsets array
+            start = offsets[arr_offset + i]
+            end = offsets[arr_offset + i + 1]
+            str_len = end - start
 
-        columns_hashes.append(hashes)
+            # Validate string length and boundaries
+            if str_len < 0 or (start + str_len) > buffer_length or start < 0 or end < 0:
+                hash_val = EMPTY_HASH
+            else:
+                # Hash the string using xxhash3_64
+                hash_val = <int64_t>cy_xxhash3_64(data + start, str_len)
 
-    # Combine the hashes per row
-    combined_hashes = columns_hashes[0]
-    for hashes in columns_hashes[1:]:
-        combined_hashes = combined_hashes * 31 + hashes
+        update_row_hash(row_hashes, row_offset + i, hash_val)
 
-    # Check for duplicates using the HashSet
-    for i in range(num_rows):
-        if seen_hashes.insert(combined_hashes[i]):
-            keep.append(i)
 
-    return keep, seen_hashes
+# Primitive Numeric Handler (Int/Float)
+cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
+    cdef:
+        const uint8_t* validity
+        const uint8_t* data
+        Py_ssize_t i, length, item_size
+        Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
+        uint64_t hash_val
+        list buffers = chunk.buffers()
 
-cdef void compute_float_hashes(numpy.ndarray[numpy.float64_t] data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef numpy.float64_t value
-    for i in range(n):
-        value = data[i]
-        if isnan(value):
-            hashes[i] = null_hash
+    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+    data = <uint8_t*><uintptr_t>(buffers[1].address)
+    length = len(chunk)
+    item_size = chunk.type.bit_width // 8
+    arr_offset = chunk.offset  # Account for non-zero offset in chunk
+
+    # Calculate the byte and bit offset for validity
+    offset_in_bits = arr_offset & 7
+    offset_in_bytes = arr_offset >> 3
+
+    for i in range(length):
+        # Correctly locate validity bit for this row
+        byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
+        bit_index = (offset_in_bits + i) & 7
+
+        # Check validity bit, considering chunk offset
+        if validity and not (validity[byte_index] & (1 << bit_index)):
+            hash_val = NULL_HASH
         else:
-            hashes[i] = hash(value)
+            # Calculate the correct position in data buffer
+            hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+
+        update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
-cdef void compute_int_hashes(numpy.ndarray[numpy.int64_t] data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef numpy.int64_t value
-    for i in range(n):
-        value = data[i]
-        # Assuming a specific value represents missing data
-        # Adjust this condition based on how missing integers are represented
-        if value == numpy.iinfo(numpy.int64).min:
-            hashes[i] = null_hash
+# Composite Type Handler (List)
+cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
+    """
+    Processes a ListArray chunk by slicing the child array correctly,
+    combining each sub-element's hash, and mixing it into `row_hashes`.
+    """
+
+    cdef:
+        const uint8_t* validity
+        const int32_t* offsets
+        Py_ssize_t i, j, length, data_size
+        Py_ssize_t start, end, sub_length
+        Py_ssize_t arr_offset, child_offset
+        object child_array, sublist
+        uint64_t hash_val
+        list buffers = chunk.buffers()
+        uint64_t c1 = <uint64_t>0xbf58476d1ce4e5b9
+        uint64_t c2 = <uint64_t>0x94d049bb133111eb
+        cdef char* data_ptr
+
+    # Obtain addresses of validity bitmap and offsets buffer
+    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+    offsets = <int32_t*><uintptr_t>(buffers[1].address)
+
+    # The child array holds the sub-elements of the list
+    child_array = chunk.values
+
+    # Number of "top-level" list entries in this chunk
+    length = len(chunk)
+
+    # Arrow can slice a chunk, so account for chunk.offset
+    arr_offset = chunk.offset
+
+    # Child array can also be offset
+    child_offset = child_array.offset
+
+    for i in range(length):
+        # Check validity for the i-th list in this chunk
+        if validity and not (validity[i >> 3] & (1 << (i & 7))):
+            hash_val = NULL_HASH
         else:
-            hashes[i] = value  # Hash of int is the int itself in Python 3
+            # Properly compute start/end using arr_offset
+            start = offsets[arr_offset + i]
+            end = offsets[arr_offset + i + 1]
+            sub_length = end - start
 
-cdef void compute_object_hashes(numpy.ndarray data, int64_t null_hash, int64_t[:] hashes):
-    cdef Py_ssize_t i, n = data.shape[0]
-    cdef object value
-    for i in range(n):
-        value = data[i]
-        if value is None:
-            hashes[i] = null_hash
+            # Initialize hash with a seed
+            hash_val = SEED
+
+            # Handle empty list
+            if sub_length == 0:
+                hash_val = EMPTY_HASH
+            else:
+                # Correctly slice child array by adding child_offset
+                sublist = child_array.slice(start + child_offset, sub_length)
+
+                # Combine each element in the sublist
+                for j in range(sub_length):
+                    # Convert to Python string, then to UTF-8 bytes
+                    element = sublist[j].as_py().encode("utf-8")
+                    data_ptr = PyBytes_AsString(element)
+                    data_size = PyBytes_Size(element)
+
+                    # Combine each element's hash with a simple mix
+                    hash_val = cy_xxhash3_64(<const void*>data_ptr, data_size) ^ hash_val
+
+                    # Optionally apply SplitMix64 finalizer (commented out for now)
+                    hash_val = (hash_val ^ (hash_val >> 30)) * c1
+                    hash_val = (hash_val ^ (hash_val >> 27)) * c2
+                    hash_val = hash_val ^ (hash_val >> 31)
+
+        # Merge this row's final list-hash into row_hashes
+        update_row_hash(row_hashes, row_offset + i, hash_val)
+
+# Add boolean chunk handler
+cdef void process_boolean_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
+    cdef:
+        const uint8_t* validity
+        const uint8_t* data
+        Py_ssize_t i, length
+        uint64_t hash_val
+        list buffers = chunk.buffers()
+
+    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+    data = <uint8_t*><uintptr_t>(buffers[1].address) if buffers[1] else NULL
+    length = len(chunk)
+
+    for i in range(length):
+        if validity and not (validity[i >> 3] & (1 << (i & 7))):
+            hash_val = NULL_HASH
         else:
-            hashes[i] = hash(value)
+            # Booleans are bit-packed - use bitwise ops to extract values
+            hash_val = (data[i >> 3] & (1 << (i & 7))) != 0
+
+        update_row_hash(row_hashes, row_offset + i, hash_val)
+
+
+cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
+    """Fallback handler for types without a specific handler"""
+    cdef:
+        const uint8_t* validity
+        Py_ssize_t i, length
+        uint64_t hash_val
+        list buffers = chunk.buffers()
+
+    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+    length = len(chunk)
+
+    for i in range(length):
+        if validity and not (validity[i >> 3] & (1 << (i & 7))):
+            hash_val = NULL_HASH
+        else:
+            hash_val = PyObject_Hash(chunk[i])
+        update_row_hash(row_hashes, row_offset + i, hash_val)
+
+
+cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash):
+    """Combine column hashes using a stronger mixing function (MurmurHash3 finalizer)"""
+    cdef uint64_t h = row_hashes[row_idx] ^ col_hash
+
+    # Use uint64_t constants to ensure proper C-level handling
+    cdef uint64_t c1 = <uint64_t>0xff51afd7ed558ccd
+    cdef uint64_t c2 = <uint64_t>0xc4ceb9fe1a85ec53
+
+    # MurmurHash3 finalizer
+    h ^= h >> 33
+    h *= c1
+    h ^= h >> 33
+    h *= c2
+    h ^= h >> 33
+
+    row_hashes[row_idx] = h
