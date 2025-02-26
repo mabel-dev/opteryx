@@ -27,7 +27,7 @@ class DistinctNode(BasePlanNode):
         self._distinct_on = parameters.get("on")
         if self._distinct_on:
             self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
-        self.hash_set = HashSet()
+        self.hash_set = None
 
     @property
     def config(self):  # pragma: no cover

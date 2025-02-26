@@ -2035,6 +2035,17 @@ id > /* 0 */ 1
         ("SELECT MIN(id), MIN(id + 1), MIN(id + 2), COUNT(id) FROM $planets", 1, 4, None),
         ("SELECT MIN(id), MAX(id + 1), SUM(id + 2), COUNT(id) FROM $planets", 1, 4, None),
 
+        ("SELECT DISTINCT surfacePressure FROM $planets", 6, 1, None), # DOUBLE (with nulls)
+        ("SELECT DISTINCT mass FROM $planets", 9, 1, None), # DOUBLE
+        ("SELECT DISTINCT name FROM $planets", 9, 1, None), # VARCHAR
+        ("SELECT DISTINCT id FROM $planets", 9, 1, None), # INTEGER
+        ("SELECT DISTINCT gravity FROM $planets", 8, 1, None), # DECIMAL
+        ("SELECT DISTINCT alma_mater AS AM FROM $astronauts", 281, 1, None), # LIST<VARCHAR>
+        ("SELECT DISTINCT birth_place FROM $astronauts", 272, 1, None), # JSONB/STRUCT
+        ("SELECT DISTINCT death_date AS AM FROM $astronauts", 39, 1, None), # TIMESTAMP
+        ("SELECT DISTINCT id > 1 AS AM FROM $planets", 2, 1, None), # BOOLEAN
+        ("SELECT DISTINCT surfacePressure > 1 AS AM FROM $planets", 3, 1, None), # BOOLEAN (with nulls)
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
