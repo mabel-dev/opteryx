@@ -63,6 +63,8 @@ bit_masks[5] = 32
 bit_masks[6] = 64
 bit_masks[7] = 128
 
+cdef int64_t EMPTY_HASH = <int64_t>0xBADC0FFEE
+
 cdef class BloomFilter:
     # defined in the .pxd file only - here so they aren't magic
     # cdef uint8_t* bit_array_backing
@@ -134,7 +136,8 @@ cdef class BloomFilter:
         cdef Py_ssize_t i, j, length
         cdef const char* data
         cdef const uint8_t* validity
-        cdef const int32_t* offsets  # Offsets buffer for strings
+        cdef const int32_t* offsets
+        cdef Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes
         cdef Py_ssize_t start_offset, end_offset
         cdef const char* empty_str = b""
 
@@ -143,47 +146,26 @@ cdef class BloomFilter:
         cdef result = numpy.empty(n, dtype=numpy.bool)
         cdef uint8_t[::1] result_view = result
 
-        # If it's a ChunkedArray, iterate over each chunk
-        if isinstance(keys, pyarrow.ChunkedArray):
-            i = 0
-            for chunk in keys.chunks:
-                buffers = chunk.buffers()
-                offsets = <const int32_t*><uintptr_t>buffers[1].address
-                data = <const char*><uintptr_t>buffers[2].address
-                validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
-                length = len(chunk)
+        i = 0
+        for chunk in keys.chunks if isinstance(keys, pyarrow.ChunkedArray) else [keys]:
+            buffers = chunk.buffers()
+            offsets = <const int32_t*><uintptr_t>buffers[1].address
+            data = <const char*><uintptr_t>buffers[2].address
+            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
+            length = len(chunk)
+            arr_offset = chunk.offset
 
-                for j in range(length):
-                    result_view[i] = 0
-                    if validity == NULL or (validity[j >> 3] & bit_masks[j & 7]):
-                        start_offset = offsets[j]
-                        end_offset = offsets[j + 1]
-                        if start_offset >= 0 and end_offset >= start_offset:
-                            if end_offset > start_offset:
-                                result_view[i] = self._possibly_contains(
-                                    data + start_offset,
-                                    end_offset - start_offset
-                                )
-                            else:
-                                result_view[i] = self._possibly_contains(empty_str, 0)
-                    i += 1
+            # Calculate the byte and bit offset for validity
+            offset_in_bits = arr_offset & 7
+            offset_in_bytes = arr_offset >> 3
 
-        # If it's a single Array, process it directly
-        elif isinstance(keys, pyarrow.Array):
-            buffers = keys.buffers()
-            offsets = <const int32_t*><uintptr_t>buffers[1].address  # Offsets buffer
-            data = <const char*><uintptr_t>buffers[2].address  # Data buffer (actual string bytes)
-            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] is not None else NULL  # Validity bitmap
-            length = len(keys)
-
-            for i in range(length):
+            for j in range(length):
                 result_view[i] = 0
-                # Check if the element is valid (not null)
-                if validity == NULL or (validity[i >> 3] & bit_masks[i & 7]):
-                    # Get the start and end offsets for the string
-                    start_offset = offsets[i]
-                    end_offset = offsets[i + 1]
-                    # Ensure offsets are within bounds and non-negative
+                byte_index = offset_in_bytes + ((offset_in_bits + j) >> 3)
+                bit_index = (offset_in_bits + j) & 7
+                if validity == NULL or (validity[byte_index] & (1 << bit_index)):
+                    start_offset = offsets[arr_offset + j]
+                    end_offset = offsets[arr_offset + j + 1]
                     if start_offset >= 0 and end_offset >= start_offset:
                         if end_offset > start_offset:
                             result_view[i] = self._possibly_contains(
@@ -192,58 +174,46 @@ cdef class BloomFilter:
                             )
                         else:
                             result_view[i] = self._possibly_contains(empty_str, 0)
-        else:
-            raise TypeError("keys must be a pyarrow.Array or pyarrow.ChunkedArray")
+                i += 1
 
         return result
 
 cpdef BloomFilter create_bloom_filter(keys):
-    cdef Py_ssize_t i, j, length
+    cdef Py_ssize_t j, length
     cdef const char* data
     cdef const uint8_t* validity
     cdef const int32_t* offsets
-    cdef Py_ssize_t start_offset, end_offset
+    cdef Py_ssize_t start_offset, end_offset, arr_offset, offset_in_bits, offset_in_bytes
     cdef const char* empty_str = b""
 
     cdef Py_ssize_t n = len(keys)
     cdef BloomFilter bf = BloomFilter(n)
 
-    if isinstance(keys, pyarrow.ChunkedArray):
-        for chunk in keys.chunks:
-            buffers = chunk.buffers()
-            offsets = <const int32_t*><uintptr_t>buffers[1].address
-            data = <const char*><uintptr_t>buffers[2].address
-            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
-            length = len(chunk)
-
-            for j in range(length):
-                if validity == NULL or (validity[j >> 3] & bit_masks[j & 7]):
-                    # Use chunk-local offsets (no global_offset!)
-                    start_offset = offsets[j]
-                    end_offset = offsets[j + 1]  # Always valid for Arrow StringArray
-                    if start_offset >= 0 and end_offset >= start_offset:
-                        if end_offset > start_offset:
-                            bf._add(data + start_offset, end_offset - start_offset)
-                        else:
-                            bf._add(empty_str, 0)  # Normalize empty strings
-    elif isinstance(keys, pyarrow.Array):
-        buffers = keys.buffers()
+    for chunk in keys.chunks if isinstance(keys, pyarrow.ChunkedArray) else [keys]:
+        buffers = chunk.buffers()
         offsets = <const int32_t*><uintptr_t>buffers[1].address
         data = <const char*><uintptr_t>buffers[2].address
         validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
-        length = len(keys)
+        length = len(chunk)
+        arr_offset = chunk.offset
 
-        for i in range(length):
-            if validity == NULL or (validity[i >> 3] & bit_masks[i & 7]):
-                start_offset = offsets[i]
-                end_offset = offsets[i + 1]
+        offset_in_bits = arr_offset & 7
+        offset_in_bytes = arr_offset >> 3
 
+        for j in range(length):
+
+            # locate validity bit for this row
+            byte_index = offset_in_bytes + ((offset_in_bits + j) >> 3)
+            bit_index = (offset_in_bits + j) & 7
+
+            if validity == NULL or (validity[byte_index] & (1 << bit_index)):
+                # Use chunk-local offsets
+                start_offset = offsets[arr_offset + j]
+                end_offset = offsets[arr_offset + j + 1]
                 if start_offset >= 0 and end_offset >= start_offset:
                     if end_offset > start_offset:
                         bf._add(data + start_offset, end_offset - start_offset)
                     else:
                         bf._add(empty_str, 0)  # Normalize empty strings
-    else:
-        raise TypeError("keys must be a pyarrow.Array or pyarrow.ChunkedArray")
 
     return bf
