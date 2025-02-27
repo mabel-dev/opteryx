@@ -40,7 +40,7 @@ jobs:
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
           python -c "import pyarrow; pyarrow.create_library_symlinks();"
-          python setup.py build_ext --inplace
+          python setup.py build_ext --inplace -j 4
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1

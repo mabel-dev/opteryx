@@ -40,7 +40,7 @@ else:
     C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
 
 # Dynamically get the default include paths
-include_dirs = [numpy.get_include(), "src/cpp"]
+include_dirs = [numpy.get_include(), "src/cpp", "src/c"]
 
 # Get the C++ include directory
 includedir = get_config_var('INCLUDEDIR')

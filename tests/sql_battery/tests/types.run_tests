@@ -373,3 +373,14 @@ SELECT CASE WHEN id > 0 THEN CASE WHEN name = 'Earth' THEN 'BluePlanet' ELSE 'Ot
 SELECT CASE WHEN id > 0 THEN 1 WHEN id < 0 THEN 2.5 ELSE 3.0 END AS result FROM $planets;
 SELECT CASE WHEN id > 0 THEN name || ' is positive' ELSE name || ' is not positive' END AS result FROM $planets;
 SELECT CASE WHEN id > 0 THEN UPPER(name) ELSE LOWER(name) END AS result FROM $planets;
+
+SELECT COUNT(DISTINCT surfacePressure) FROM $planets; -- DOUBLE (with nulls)
+SELECT COUNT(DISTINCT mass) FROM $planets; -- DOUBLE
+SELECT COUNT(DISTINCT name) FROM $planets; -- VARCHAR
+SELECT COUNT(DISTINCT id) FROM $planets; -- INTEGER
+SELECT COUNT(DISTINCT gravity) FROM $planets; -- DECIMAL
+SELECT COUNT(DISTINCT alma_mater) AS AM FROM $astronauts; -- LIST<VARCHAR>
+SELECT COUNT(DISTINCT birth_place) FROM $astronauts; -- JSONB/STRUCT
+SELECT COUNT(DISTINCT death_date) AS AM FROM $astronauts; -- TIMESTAMP
+SELECT COUNT(DISTINCT id > 1) AS AM FROM $planets; -- BOOLEAN
+SELECT COUNT(DISTINCT surfacePressure > 1) AS AM FROM $planets; -- BOOLEAN (with nulls)
