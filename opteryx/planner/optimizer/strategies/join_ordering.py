@@ -32,6 +32,16 @@ class JoinOrderingStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Join and node.type == "inner":
+            # our very basic hueristic is to always put the smaller table on the left
+            if node.right_size < node.left_size:
+                # fmt:off
+                node.left_size, node.right_size = node.right_size, node.left_size
+                node.left_columns, node.right_columns = node.right_columns, node.left_columns
+                node.left_readers, node.right_readers = node.right_readers, node.left_readers
+                node.left_relation_names, node.right_relation_names = node.right_relation_names, node.left_relation_names
+                # fmt:on
+                self.statistics.optimization_inner_join_smallest_table_left += 1
+
             # Tiny datasets benefit from nested loop joins (avoids building a hash table)
             if (
                 not DISABLE_NESTED_LOOP_JOIN
