@@ -15,12 +15,9 @@ We avoid doing some work by not creating entire columns of data where possible.
 """
 
 import pyarrow
-from orso.types import OrsoTypes
 
 from opteryx import EOS
 from opteryx.compiled.aggregations.count_distinct import count_distinct
-from opteryx.compiled.aggregations.count_distinct import hash_bytes_column
-from opteryx.compiled.aggregations.count_distinct import hash_column
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
@@ -57,11 +54,6 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
-                values = values.to_numpy(False)
-                if self.column_type in (OrsoTypes.BLOB, OrsoTypes.VARCHAR):
-                    values = hash_bytes_column(values)
-                elif values.dtype != pyarrow.int64():
-                    values = hash_column(values)
                 self.current_value = count_distinct(values, FlatHashSet())
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
@@ -73,11 +65,6 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
-                values = values.to_numpy(False)
-                if self.column_type in (OrsoTypes.BLOB, OrsoTypes.VARCHAR):
-                    values = hash_bytes_column(values)
-                elif self.column_type != OrsoTypes.INTEGER:
-                    values = hash_column(values)
                 self.current_value = count_distinct(values, self.current_value)
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
