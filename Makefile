@@ -43,7 +43,7 @@ compile:
 	python -m uv pip install --upgrade numpy 'cython>=3.1.0a1' setuptools
 	find . -name '*.so' -delete
 	python setup.py clean
-	python setup.py build_ext --inplace
+	python setup.py build_ext --inplace -j 4
 
 c:
 	python setup.py build_ext --inplace

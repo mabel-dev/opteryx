@@ -62,7 +62,7 @@ cdef void process_column(object column, uint64_t[::1] row_hashes):
         Py_ssize_t row_offset = 0
         object chunk
 
-    for i, chunk in enumerate(column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]):
+    for chunk in column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]:
         dtype = chunk.type
         if pyarrow.types.is_string(dtype) or pyarrow.types.is_binary(dtype):
             process_string_chunk(chunk, row_hashes, row_offset)
@@ -119,7 +119,7 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
             str_len = end - start
 
             # Validate string length and boundaries
-            if str_len < 0 or (start + str_len) > buffer_length or start < 0 or end < 0:
+            if str_len < 0 or (start + str_len) > buffer_length:
                 hash_val = EMPTY_HASH
             else:
                 # Hash the string using xxhash3_64
@@ -156,6 +156,8 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
         # Check validity bit, considering chunk offset
         if validity and not (validity[byte_index] & (1 << bit_index)):
             hash_val = NULL_HASH
+        elif item_size == <uint64_t>8:
+            hash_val = (<uint64_t*>(data + ((arr_offset + i) * 8)))[0]
         else:
             # Calculate the correct position in data buffer
             hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
@@ -279,7 +281,7 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
         update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
-cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash):
+cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) nogil:
     """Combine column hashes using a stronger mixing function (MurmurHash3 finalizer)"""
     cdef uint64_t h = row_hashes[row_idx] ^ col_hash
 
