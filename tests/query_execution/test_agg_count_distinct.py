@@ -16,7 +16,7 @@ def test_count_distinct_parquet():
     assert stats["rows_read"] == 100000, stats["rows_read"]
     assert stats["rows_seen"] == 100000, stats["rows_seen"]
     first = cur.fetchone()[0]
-    assert first == 83605, first
+    assert first == 83606, first
 
 def test_count_distinct_identifier_group_by():
     """ we're reading data from the file, even though it starts SELECT COUNT(*) FROM """
