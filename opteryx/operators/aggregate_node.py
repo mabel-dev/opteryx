@@ -34,6 +34,7 @@ AGGREGATORS = {
     "COUNT": "count",  # counts only non nulls
     "COUNT_DISTINCT": "count_distinct",
     "DISTINCT": "distinct",  # fated
+    "HISTOGRAM": "histogram",  # not supported everywhere
     "LIST": "hash_list",  # fated
     "MAX": "max",
     "MAXIMUM": "max",  # alias
