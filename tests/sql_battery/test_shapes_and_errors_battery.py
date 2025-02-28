@@ -2010,6 +2010,7 @@ id > /* 0 */ 1
         ("SELECT surface_pressure FROM $planets WHERE IFNOTNULL(surface_pressure, 0.0) == 0.0", 5, 1, None),
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 10 ORDER BY followers DESC LIMIT 10", 1, 1, None),
         ("SELECT username FROM testdata.flat.ten_files WHERE SQRT(followers) = 15 ORDER BY followers DESC LIMIT 10", 0, 1, None),
+        ("SELECT Company, Rocket, MIN(Price), MAX(Price) FROM $missions GROUP BY ALL", 429, 4, None),
         
         ("SELECT HUMANIZE(1000)", 1, 1, None),
         ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),

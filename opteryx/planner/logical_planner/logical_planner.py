@@ -372,6 +372,14 @@ def inner_query_planner(ast_branch):
             raise UnsupportedSyntaxError(
                 "SELECT * cannot be used with GROUP BY, fields in the SELECT must be aggregates or in the GROUP BY clause."
             )
+        # WILDCARD is used to represent GROUP BY ALL, we group by all columns in the projection
+        # which aren't aggregates
+        if _groups == NodeType.WILDCARD:
+            _groups = [
+                p
+                for p in _projection
+                if len(get_all_nodes_of_type(p, select_nodes=(NodeType.AGGREGATOR,))) == 0
+            ]
 
         group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
         group_step.groups = _groups
