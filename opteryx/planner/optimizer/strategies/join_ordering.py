@@ -23,7 +23,7 @@ from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 from .optimization_strategy import get_nodes_of_type_from_logical_plan
 
-DISABLE_NESTED_LOOP_JOIN: bool = features.disable_nested_loop_join and False
+DISABLE_NESTED_LOOP_JOIN: bool = features.disable_nested_loop_join
 
 
 class JoinOrderingStrategy(OptimizationStrategy):

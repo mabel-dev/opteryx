@@ -1074,8 +1074,8 @@ id > /* 0 */ 1
         ("SET schmersion = '1.0';", None, None, VariableNotFoundError),
         ("SET disable_optimizer = 100;", None, None, ValueError),
         ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
-        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 3, 3, None),
-        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 3, 3, None),
+        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
+        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
         ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
         ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
         ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
@@ -2500,8 +2500,8 @@ if __name__ == "__main__":  # pragma: no cover
             print(">", err)
             failures.append((statement, err))
             
-            print(opteryx.query(statement))
-            raise err
+            #print(opteryx.query(statement))
+            #raise err
 
     print("--- ✅ \033[0;32mdone\033[0m")
 

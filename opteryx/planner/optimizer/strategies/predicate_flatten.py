@@ -4,7 +4,7 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-Optimization Rule - Filter Flattening
+Optimization Rule - Predicate Flattening
 
 Type: Heuristic
 Goal: Fewer Operations
@@ -19,7 +19,6 @@ A later cost-based strategy can then order these filters to be more efficient.
 
 from orso.tools import random_string
 
-from opteryx.config import features
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.planner.logical_planner import LogicalPlan
@@ -37,8 +36,7 @@ class PredicateFlatteningStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Filter:
-            node.condition.nid = context.node_id
-            context.collected_predicates.append(node.condition)
+            context.collected_predicates.append(node)
             return context
 
         if node.node_type != LogicalPlanStepType.Filter and context.collected_predicates:
@@ -47,15 +45,21 @@ class PredicateFlatteningStrategy(OptimizationStrategy):
                 return context
 
             new_node = LogicalPlanNode(LogicalPlanStepType.Filter)
-            new_node.condition = Node(
-                node_type=NodeType.DNF, parameters=context.collected_predicates
-            )
-
-            # context.optimized_plan.insert_node_after(random_string(), new_node, context.node_id)
+            new_node.condition = Node(node_type=NodeType.DNF)
+            new_node.condition.parameters=[c.condition for c in context.collected_predicates]
+            new_node.columns = []
+            new_node.relations = set()
+            new_node.all_relations = set()
 
             for predicate in context.collected_predicates:
+                new_node.columns.extend(predicate.columns)
+                new_node.relations.update(predicate.relations)
+                new_node.all_relations.update(predicate.all_relations)
                 self.statistics.optimization_flatten_filters += 1
-                # context.optimized_plan.remove_node(predicate.nid, heal=True)
+                context.optimized_plan.remove_node(predicate.nid, heal=True)
+
+            context.optimized_plan.insert_node_after(random_string(), new_node, context.node_id)
+            context.collected_predicates.clear()
 
         return context
 
