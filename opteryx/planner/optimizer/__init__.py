@@ -84,6 +84,7 @@ class OptimizerVisitor:
             DistinctPushdownStrategy(statistics),
             OperatorFusionStrategy(statistics),
             LimitPushdownStrategy(statistics),
+            PredicateFlatteningStrategy(statistics),
             RedundantOperationsStrategy(statistics),
             ConstantFoldingStrategy(statistics),
         ]
