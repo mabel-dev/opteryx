@@ -14,6 +14,7 @@ Expressions are evaluated against an entire morsel at a time.
 from enum import Enum
 from typing import Callable
 from typing import Dict
+from typing import List
 
 import numpy
 import pyarrow
@@ -104,6 +105,28 @@ LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
 }
 
 
+def evaluate_dnf(expressions: List[Node], table: Table):
+    num_rows = table.num_rows
+    true_indices = numpy.arange(num_rows)
+    working_table = table
+
+    for predicate in expressions:
+        result = evaluate(predicate, working_table)
+        result_bool = numpy.asarray(result, dtype=numpy.bool_)
+
+        if not result_bool.any():
+            return numpy.zeros(num_rows, dtype=bool)
+
+        # Filter the current true_indices based on the predicate result
+        true_indices = true_indices[result_bool]
+        working_table = table.take(true_indices)
+
+    # Create the final boolean array with original size
+    final_result = numpy.zeros(num_rows, dtype=bool)
+    final_result[true_indices] = True
+    return final_result
+
+
 def short_cut_and(root, table):
     # Convert to NumPy arrays
     true_indices = numpy.arange(table.num_rows)
@@ -189,6 +212,9 @@ def prioritize_evaluation(expressions):
 
 def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type  # type:ignore
+
+    if node_type == NodeType.DNF:
+        return evaluate_dnf(root.parameters, table)
 
     if node_type == NodeType.SUBQUERY:
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
