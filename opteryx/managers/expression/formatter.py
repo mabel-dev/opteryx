@@ -138,4 +138,6 @@ def format_expression(root, qualify: bool = False):
         if qualify and root.source:
             return root.qualified_name
         return root.current_name
+    if node_type == NodeType.DNF:
+        return " AND ".join([format_expression(e, qualify) for e in root.parameters])
     return str(root.value)

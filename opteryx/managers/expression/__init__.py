@@ -63,6 +63,7 @@ class NodeType(int, Enum):
     OR = 18  # 0001 0010 
     XOR = 19  # 0001 0011
     NOT = 20  # 0001 0100
+    DNF = 21  # 0001 0101
 
     # INTERAL IDENTIFIERS
     # 0010 nnnn

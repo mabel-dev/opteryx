@@ -247,8 +247,6 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             new_columns = []
             for column in node.columns:
                 new_column = _rewrite_predicate(column, self.statistics)
-                # if new_column.node_type == NodeType.FUNCTION:
-                #    new_column = _rewrite_function(new_column, self.statistics)
                 new_columns.append(new_column)
             node.columns = new_columns
             context.optimized_plan[context.node_id] = node
