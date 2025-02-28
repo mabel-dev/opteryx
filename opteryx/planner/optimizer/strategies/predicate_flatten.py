@@ -46,7 +46,7 @@ class PredicateFlatteningStrategy(OptimizationStrategy):
 
             new_node = LogicalPlanNode(LogicalPlanStepType.Filter)
             new_node.condition = Node(node_type=NodeType.DNF)
-            new_node.condition.parameters=[c.condition for c in context.collected_predicates]
+            new_node.condition.parameters = [c.condition for c in context.collected_predicates]
             new_node.columns = []
             new_node.relations = set()
             new_node.all_relations = set()

@@ -96,3 +96,15 @@ SELECT * FROM $planets AS p1 LEFT ANTI JOIN $planets AS p2 ON p1.id = p2.id LEFT
 
 # LEFT SEMI JOIN with LEFT SEMI JOIN
 SELECT * FROM $planets AS p1 LEFT SEMI JOIN $planets AS p2 ON p1.id = p2.id LEFT SEMI JOIN $planets AS p3 ON p1.id = p3.id;
+
+SELECT Company, Rocket, MIN(Price), MAX(Price) FROM $missions GROUP BY ALL; -- Basic GROUP BY ALL test  
+SELECT Company, Rocket, COUNT(*), AVG(Price) FROM $missions GROUP BY ALL; -- COUNT and AVG with GROUP BY ALL  
+SELECT Company, Rocket, MIN(Price) AS MinPrice, MAX(Price) AS MaxPrice, SUM(Price) AS TotalPrice FROM $missions WHERE Price IS NOT NULL GROUP BY ALL; -- Ensuring NULL filtering works  
+SELECT Company, Rocket, MIN(Price), MAX(Price) FROM $missions WHERE Rocket IS NOT NULL GROUP BY ALL; -- Ensuring NULL filtering on non-aggregated columns   
+SELECT Company, Rocket, COALESCE(MIN(Price), 0) FROM $missions GROUP BY ALL; -- COALESCE with GROUP BY ALL  
+SELECT Company, Rocket, MAX(LENGTH(Rocket)) FROM $missions GROUP BY ALL; -- Aggregation on function results  
+SELECT Company, Rocket, MAX(Price) - MIN(Price) FROM $missions GROUP BY ALL; -- Derived column based on aggregations  
+SELECT Company, Rocket, COUNT(DISTINCT Location) FROM $missions GROUP BY ALL; -- DISTINCT within aggregation  
+SELECT Company, Rocket, MAX(Price) FROM $missions GROUP BY ALL HAVING MAX(Price) > 500; -- HAVING clause with GROUP BY ALL  
+SELECT Company, Rocket, ARRAY_AGG(Location) FROM $missions GROUP BY ALL; -- ARRAY_AGG with GROUP BY ALL  
+SELECT Company, Rocket, MIN(Price) FROM $missions WHERE Company IN ('SpaceX', 'Blue Origin') GROUP BY ALL; -- Filtering specific values with GROUP BY ALL   

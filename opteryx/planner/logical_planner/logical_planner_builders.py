@@ -770,6 +770,7 @@ def build(value, alias: Optional[List[str]] = None, key=None):
 # parts to build the literal parts of a query
 BUILDERS = {
     "AnyOp": any_op,
+    "All": lambda x, y, z: [NodeType.WILDCARD],
     "AllOp": all_op,
     "Array": array,  # not actually implemented
     "Between": between,
