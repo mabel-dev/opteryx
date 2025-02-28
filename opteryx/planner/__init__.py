@@ -174,7 +174,7 @@ def query_planner(
         raise PermissionsError(f"User does not have permission to execute '{query_type}' queries.")
 
     if visibility_filters:
-        logical_plan = apply_visibility_filters(logical_plan, visibility_filters)
+        logical_plan = apply_visibility_filters(logical_plan, visibility_filters, statistics)
 
     # The Binder adds schema information to the logical plan
     start = time.monotonic_ns()

@@ -1062,7 +1062,9 @@ QUERY_BUILDERS = {
 }
 
 
-def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict) -> LogicalPlan:
+def apply_visibility_filters(
+    logical_plan: LogicalPlan, visibility_filters: dict, statistics
+) -> LogicalPlan:
     def build_expression_tree(relation, dnf_list):
         """
         Recursively build an expression tree from a DNF list structure.
@@ -1152,6 +1154,7 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
                     all_relations={node.relation, node.alias},
                 )
                 logical_plan.insert_node_after(random_string(), filter_node, nid)
+                statistics.visibility_filters_blank_condition_added += 1
             if filter_dnf:
                 # Apply the transformation from DNF to an expression tree
                 expression_tree = build_expression_tree(node.alias, filter_dnf)
@@ -1163,7 +1166,7 @@ def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict
                 )
 
                 logical_plan.insert_node_after(random_string(), filter_node, nid)
-
+                statistics.visibility_filters_condition_added += 1
     return logical_plan
 
 

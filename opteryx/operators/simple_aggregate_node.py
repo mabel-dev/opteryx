@@ -55,6 +55,11 @@ class SimpleAggregateCollector:
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 self.current_value = count_distinct(values, FlatHashSet())
+            elif self.aggregate_type == "HISTOGRAM":
+                from opteryx.third_party.maki_nage.distogram import Distogram
+
+                self.current_value = Distogram()
+                self.current_value.bulkload(values.to_numpy(False))
             elif self.aggregate_type != "COUNT":
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
         else:
@@ -64,6 +69,8 @@ class SimpleAggregateCollector:
                 self.current_value = min(self.current_value, pyarrow.compute.min(values).as_py())
             elif self.aggregate_type == "MAX":
                 self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
+            elif self.aggregate_type == "HISTOGRAM":
+                self.current_value.bulkload(values.to_numpy(False))
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
                 self.current_value = count_distinct(values, self.current_value)
             elif self.aggregate_type != "COUNT":
@@ -98,11 +105,15 @@ class SimpleAggregateCollector:
             return self.current_value.items()
         if self.aggregate_type == "COUNT":
             return self.counter
+        if self.aggregate_type == "HISTOGRAM":
+            from opteryx.third_party.maki_nage.distogram import histogram
+
+            return histogram(self.current_value)
         return self.current_value
 
 
 class SimpleAggregateNode(BasePlanNode):
-    SIMPLE_AGGREGATES = {"SUM", "MIN", "MAX", "AVG", "COUNT", "COUNT_DISTINCT"}
+    SIMPLE_AGGREGATES = {"AVG", "COUNT", "COUNT_DISTINCT", "HISTOGRAM", "MAX", "MIN", "SUM"}
 
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
