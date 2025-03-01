@@ -23,7 +23,7 @@ Download      | https://pypi.org/project/opteryx/
 
 ## What is Opteryx?
 
-Opteryx is a Python library enabling SQL queries across diverse data sources like Iceberg, Postgres, Parquet, and MongoDB. Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization. Opteryx combines the simplicity of SQLite and DuckDB with federated query capabilities found in Presto and Trino.
+Opteryx is a Python library enabling SQL queries across diverse data sources like Apache Iceberg, Postgres, Parquet, and MongoDB. Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization. Opteryx combines the simplicity of SQLite and DuckDB with federated query capabilities found in Presto and Trino.
 
 Opteryx offers the following features:
 
@@ -75,7 +75,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
 
-Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet, Iceberg and MySQL.
+Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet, Apache Iceberg and MySQL.
 
 Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
 
