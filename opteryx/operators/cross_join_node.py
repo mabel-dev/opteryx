@@ -83,7 +83,7 @@ def _cross_join_unnest_column(
 
         # Build indices and new column data
         if conditions is None:
-            if (
+            if hasattr(column_data.type, "value_type") and (
                 column_data.type.value_type == pyarrow.string()
                 or column_data.type.value_type == pyarrow.binary()
             ):
