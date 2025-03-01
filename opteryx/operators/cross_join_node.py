@@ -58,6 +58,7 @@ def _cross_join_unnest_column(
     from opteryx.compiled.joins.cross_join import build_filtered_rows_indices_and_column
     from opteryx.compiled.joins.cross_join import build_rows_indices_and_column
     from opteryx.compiled.joins.cross_join import list_distinct
+    from opteryx.compiled.joins.cross_join import numpy_build_rows_indices_and_column
 
     # Check if the source node type is an identifier, raise error otherwise
     if source.node_type != NodeType.IDENTIFIER:
@@ -82,7 +83,17 @@ def _cross_join_unnest_column(
 
         # Build indices and new column data
         if conditions is None:
-            indices, new_column_data = build_rows_indices_and_column(column_data.to_numpy(False))
+            if (
+                column_data.type.value_type == pyarrow.string()
+                or column_data.type.value_type == pyarrow.binary()
+            ):
+                # optimized version for string and binary columns
+                indices, new_column_data = build_rows_indices_and_column(column_data)
+            else:
+                # fallback to numpy version
+                indices, new_column_data = numpy_build_rows_indices_and_column(
+                    column_data.to_numpy(False)
+                )
         else:
             indices, new_column_data = build_filtered_rows_indices_and_column(
                 column_data.to_numpy(False), conditions

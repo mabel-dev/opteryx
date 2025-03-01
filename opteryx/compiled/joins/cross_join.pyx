@@ -15,7 +15,82 @@ import numpy
 cimport numpy
 numpy.import_array()
 
-cpdef tuple build_rows_indices_and_column(numpy.ndarray column_data):
+from libc.stdint cimport int32_t, int64_t, uint8_t, uintptr_t
+from cpython.unicode cimport PyUnicode_DecodeUTF8
+
+cpdef tuple build_rows_indices_and_column(object column):
+    cdef:
+        object child_elements = column.values
+        list buffers = column.buffers()
+        Py_ssize_t row_count = len(column), total_size, i, j, index_pos
+        int64_t[::1] indices
+        numpy.ndarray flat_data
+        # Offset handling
+        Py_ssize_t arr_offset = column.offset
+        const int32_t* offsets32 = NULL
+        # Child array variables
+        Py_ssize_t child_offset = child_elements.offset
+        const int32_t* child_offsets32 = NULL
+        const char* child_data = NULL
+        Py_ssize_t str_start, str_end
+        Py_ssize_t start, end
+
+    if row_count == 0:
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
+
+    # Parent offset buffer setup ----------------------------------------------
+    offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
+    total_size = offsets32[arr_offset + row_count] - offsets32[arr_offset]
+
+    if total_size == 0:
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
+
+    indices = numpy.empty(total_size, dtype=numpy.int64)
+    flat_data = numpy.empty(total_size, dtype=object)
+
+    # Child buffer setup ------------------------------------------------------
+    child_buffers = child_elements.buffers()
+    child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
+    child_data = <const char*><uintptr_t>(child_buffers[2].address)
+
+    index_pos = 0
+    for i in range(row_count):
+        # Parent validity check
+        if buffers[0] and not ((<const uint8_t*><uintptr_t>(buffers[0].address))[i >> 3] & (1 << (i & 7))):
+            continue
+
+        # Get list boundaries with offset
+        start = offsets32[arr_offset + i]
+        end = offsets32[arr_offset + i + 1]
+
+        if start >= end:
+            continue
+
+        # Bulk assign indices
+        indices[index_pos:index_pos + (end - start)] = i
+
+        # Process child elements
+        for j in range(start, end):
+            # Child validity check
+            if child_buffers[0] and not (<const uint8_t*><uintptr_t>(child_buffers[0].address))[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7)):
+                flat_data[index_pos] = None
+            else:
+                # Get string boundaries with child offset
+                str_start = child_offsets32[child_offset + j]
+                str_end = child_offsets32[child_offset + j + 1]
+
+                if str_end > str_start:
+                    flat_data[index_pos] = PyUnicode_DecodeUTF8(
+                        child_data + str_start, str_end - str_start, "replace"
+                    )
+                else:
+                    flat_data[index_pos] = ""
+            index_pos += 1
+
+    return (numpy.asarray(indices), numpy.asarray(flat_data))
+
+
+cpdef tuple numpy_build_rows_indices_and_column(numpy.ndarray column_data):
     cdef int64_t row_count = column_data.shape[0]
     cdef numpy.int64_t[::1] lengths = numpy.empty(row_count, dtype=numpy.int64)
     cdef numpy.int64_t[::1] offsets = numpy.empty(row_count + 1, dtype=numpy.int64)
