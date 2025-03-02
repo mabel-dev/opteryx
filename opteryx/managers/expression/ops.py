@@ -1,5 +1,6 @@
 """
-Code was originally taken from https://github.com/TomScheffers/pyarrow_ops
+Code was originally taken from
+https://github.com/TomScheffers/pyarrow_ops/blob/main/pyarrow_ops/ops.py
 and has been extensively modified for Opteryx.
 """
 
@@ -20,6 +21,9 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
     This returns an array with tri-state boolean (tue/false/none);
     if being used for display use as is, if being used for filtering, none is false.
     """
+    if len(left_arr) == 0 or len(right_arr) == 0:
+        return numpy.array([], dtype=bool)
+
     compressed = False
 
     if operator not in (
@@ -44,19 +48,23 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
         "NotInStr",
         "IInStr",
         "NotIInStr",
-    ):
+    ):  # and right_type != OrsoTypes.NULL:
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(left_arr)
 
         # compute null positions
-        null_positions = compute.is_null(left_arr, nan_is_null=True)
+        left_null_positions = compute.is_null(left_arr, nan_is_null=True)
+        right_null_positions = compute.is_null(right_arr, nan_is_null=True)
+
+        # if the right side is an array, combine the null positions
         if len(right_arr) > 1:
-            null_positions = numpy.logical_or(
-                null_positions,
-                compute.is_null(right_arr, nan_is_null=True),
-            )
+            null_positions = numpy.logical_or(left_null_positions, right_null_positions)
+        # if the right side is a scalar and is null, we can just return all nulls
+        elif right_null_positions[0].as_py():
+            null_positions = numpy.array([True] * morsel_size, dtype=bool)
+        # if the right side is a scalar and is not null, we can just use the left nulls
         else:
-            null_positions = null_positions.to_numpy(False)
+            null_positions = left_null_positions.to_numpy(False)
 
         # Early exit if all values are null
         if null_positions.all():
