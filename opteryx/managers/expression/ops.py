@@ -1,5 +1,7 @@
 """
-Original code modified for Opteryx.
+Code was originally taken from
+https://github.com/TomScheffers/pyarrow_ops/blob/main/pyarrow_ops/ops.py
+and has been extensively modified for Opteryx.
 """
 
 import re
@@ -12,16 +14,15 @@ from pyarrow import compute
 from opteryx.compiled import list_ops
 
 
-def filter_operations(arr, left_type, operator, value, right_type):
+def filter_operations(left_arr, left_type, operator, right_arr, right_type):
     """
     Wrapped for Opteryx added to correctly handle null semantics.
 
     This returns an array with tri-state boolean (tue/false/none);
     if being used for display use as is, if being used for filtering, none is false.
     """
-    # if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):  # pragma: no cover
-        value = value.column(0).to_numpy()
+    if len(left_arr) == 0 or len(right_arr) == 0:
+        return numpy.array([], dtype=bool)
 
     compressed = False
 
@@ -47,32 +48,37 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "NotInStr",
         "IInStr",
         "NotIInStr",
-    ):
+    ):  # and right_type != OrsoTypes.NULL:
         # compressing ARRAY columns is VERY SLOW
-        morsel_size = len(arr)
+        morsel_size = len(left_arr)
 
         # compute null positions
-        null_positions = numpy.logical_or(
-            compute.is_null(arr, nan_is_null=True),
-            compute.is_null(value, nan_is_null=True),
-        )
+        left_null_positions = compute.is_null(left_arr, nan_is_null=True)
+        right_null_positions = compute.is_null(right_arr, nan_is_null=True)
+
+        # if the right side is an array, combine the null positions
+        if len(right_arr) > 1:
+            null_positions = numpy.logical_or(left_null_positions, right_null_positions)
+        # if the right side is a scalar and is null, we can just return all nulls
+        elif right_null_positions[0].as_py():
+            null_positions = numpy.array([True] * morsel_size, dtype=bool)
+        # if the right side is a scalar and is not null, we can just use the left nulls
+        else:
+            null_positions = left_null_positions.to_numpy(False)
 
         # Early exit if all values are null
         if null_positions.all():
             return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
 
-        if (
-            null_positions.any()
-            and isinstance(arr, numpy.ndarray)
-            and isinstance(value, numpy.ndarray)
-        ):
+        if null_positions.any() and isinstance(left_arr, numpy.ndarray):
             # if we have nulls and both columns are numpy arrays, we can speed things
             # up by removing the nulls from the calculations, we add the rows back in
             # later
             valid_positions = ~null_positions
-            arr = arr.compress(valid_positions)
-            value = value.compress(valid_positions)
+            left_arr = left_arr.compress(valid_positions)
             compressed = True
+            if len(right_arr) > 1 and isinstance(right_arr, numpy.ndarray):
+                right_arr = right_arr.compress(valid_positions)
 
     if (
         OrsoTypes.TIMESTAMP in (left_type, right_type) or OrsoTypes.DATE in (left_type, right_type)
@@ -80,9 +86,9 @@ def filter_operations(arr, left_type, operator, value, right_type):
         from opteryx.functions.date_functions import convert_int64_array_to_pyarrow_datetime
 
         if left_type == OrsoTypes.INTEGER:
-            arr = convert_int64_array_to_pyarrow_datetime(arr)
+            left_arr = convert_int64_array_to_pyarrow_datetime(left_arr)
         if right_type == OrsoTypes.INTEGER:
-            value = convert_int64_array_to_pyarrow_datetime(value)
+            right_arr = convert_int64_array_to_pyarrow_datetime(right_arr)
 
     if OrsoTypes.INTERVAL in (left_type, right_type):
         from opteryx.custom_types.intervals import INTERVAL_KERNELS
@@ -95,10 +101,10 @@ def filter_operations(arr, left_type, operator, value, right_type):
                 f"Cannot perform {operator.upper()} on {left_type} and {right_type}."
             )
 
-        results_mask = function(arr, left_type, value, right_type, operator)
+        results_mask = function(left_arr, left_type, right_arr, right_type, operator)
     else:
         # do the evaluation
-        results_mask = _inner_filter_operations(arr, operator, value)
+        results_mask = _inner_filter_operations(left_arr, operator, right_arr)
 
     if compressed:
         # fill the result set
