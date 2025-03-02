@@ -283,8 +283,33 @@ def _inner_evaluate(root: Node, table: Table):
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
+            if (
+                root.value
+                in (
+                    "InStr",
+                    "NotInStr",
+                    "IInStr",
+                    "NotIInStr",
+                    "InList",
+                    "NotInList",
+                    "Like",
+                    "NotLike",
+                    "ILike",
+                    "NotILike",
+                    "Rlike",
+                    "AnyOpILike",
+                    "AnyOpLike",
+                    "AnyOpNotLike",
+                    "AnyOpNotILike",
+                    "AtQuestion",
+                )
+                and root.right.node_type == NodeType.LITERAL
+            ):
+                right = [root.right.value]
+            else:
+                right = _inner_evaluate(root.right, table)
+
             left = _inner_evaluate(root.left, table)
-            right = _inner_evaluate(root.right, table)
             result = filter_operations(
                 left,
                 root.left.schema_column.type,

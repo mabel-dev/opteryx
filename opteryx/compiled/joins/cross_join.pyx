@@ -6,17 +6,15 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-from libc.stdint cimport int64_t
-
-from opteryx.third_party.abseil.containers cimport FlatHashSet
-from cpython.object cimport PyObject_Hash
-
 import numpy
 cimport numpy
 numpy.import_array()
 
+from opteryx.third_party.abseil.containers cimport FlatHashSet
+
 from libc.stdint cimport int32_t, int64_t, uint8_t, uintptr_t
 from cpython.unicode cimport PyUnicode_DecodeUTF8
+from cpython.object cimport PyObject_Hash
 
 cpdef tuple build_rows_indices_and_column(object column):
     cdef:
