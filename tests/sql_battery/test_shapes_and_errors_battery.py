@@ -603,7 +603,7 @@ id > /* 0 */ 1
         ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4, None),
-        ("SELECT planetId, LIST(name) FROM $satellites GROUP BY planetId", 7, 2, None),
+        ("SELECT planetId, ARRAY_AGG(name) FROM $satellites GROUP BY planetId", 7, 2, None),
 
         ("SELECT planetId FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT BOOLEAN(planetId - 3) FROM $satellites GROUP BY BOOLEAN(planetId - 3)", 2, 1, None),
@@ -1246,9 +1246,7 @@ id > /* 0 */ 1
         ("SELECT SQRT(mass) FROM $planets", 9, 1, None),
         ("SELECT FLOOR(mass) FROM $planets", 9, 1, None),
         ("SELECT CEIL(mass) FROM $planets", 9, 1, None),
-        ("SELECT CEILING(mass) FROM $planets", 9, 1, None),
         ("SELECT ABS(mass) FROM $planets", 9, 1, None),
-        ("SELECT ABSOLUTE(mass) FROM $planets", 9, 1, None),
         ("SELECT SIGN(mass) FROM $planets", 9, 1, None),
         ("SELECT reverse(name) From $planets", 9, 1, None),
         ("SELECT title(reverse(name)) From $planets", 9, 1, None),
@@ -1258,14 +1256,11 @@ id > /* 0 */ 1
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1, None),
         ("SELECT COUNT(planetId) FROM $satellites", 1, 1, None),
         ("SELECT COUNT_DISTINCT(planetId) FROM $satellites", 1, 1, None),
-        ("SELECT LIST(name), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
+        ("SELECT ARRAY_AGG(name), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT ONE(name), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT ANY_VALUE(name), planetId FROM $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT MAX(planetId) FROM $satellites", 1, 1, None),
-        ("SELECT MAXIMUM(planetId) FROM $satellites", 1, 1, None),
-        ("SELECT MEAN(planetId) FROM $satellites", 1, 1, None),
         ("SELECT AVG(planetId) FROM $satellites", 1, 1, None),
-        ("SELECT AVERAGE(planetId) FROM $satellites", 1, 1, None),
         ("SELECT MIN(planetId) FROM $satellites", 1, 1, None),
         ("SELECT MIN_MAX(planetId) FROM $satellites", 1, 1, None),
         ("SELECT PRODUCT(planetId) FROM $satellites", 1, 1, None),
@@ -1288,7 +1283,6 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE 0 + planetId = round(density * 1)", 1, 8, None),
         ("SELECT * FROM $satellites WHERE planetId + 0 = round(density * 1)", 1, 8, None),
         ("SELECT * FROM $satellites WHERE planetId - 0 = round(density * 1)", 1, 8, None),
-        ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1, None),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers) AS SQ", 10016, 1, None),
@@ -1308,11 +1302,11 @@ id > /* 0 */ 1
         ("SELECT HEX_DECODE('68656C6C6F')", 1, 1, None),
         ("SELECT NORMAL()", 1, 1, None),
         ("SELECT NORMAL() FROM $astronauts", 357, 1, None),
-        ("SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity", 8, 1, None),
+        ("SELECT CONCAT(ARRAY_AGG(name)) FROM $planets GROUP BY gravity", 8, 1, None),
         ("SELECT CONCAT(missions) FROM $astronauts", 357, 1, None),
         ("SELECT CONCAT(('1', '2', '3'))", 1, 1, None),
         ("SELECT CONCAT(('1', '2', '3')) FROM $planets", 9, 1, None),
-        ("SELECT CONCAT_WS(', ', LIST(name)) FROM $planets GROUP BY gravity", 8, 1, None),
+        ("SELECT CONCAT_WS(', ', ARRAY_AGG(name)) FROM $planets GROUP BY gravity", 8, 1, None),
         ("SELECT CONCAT_WS('*', missions) FROM $astronauts LIMIT 5", 5, 1, None),
         ("SELECT CONCAT_WS('-', ('1', '2', '3'))", 1, 1, None),
         ("SELECT CONCAT_WS('-', ('1', '2', '3')) FROM $planets", 9, 1, None),
@@ -1323,11 +1317,11 @@ id > /* 0 */ 1
         ("SELECT * FROM $astronauts WHERE STARTS_WITH(name, 'Jo')", 23, 19, None),
         ("SELECT * FROM $planets WHERE ENDS_WITH(name, 'r')", 1, 20, None),
         ("SELECT * FROM $astronauts WHERE ENDS_WITH(name, 'son')", 17, 19, None),
-        ("SELECT CONCAT_WS(', ', LIST(mass)) as MASSES FROM $planets GROUP BY gravity", 8, 1, None),
-        ("SELECT GREATEST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
-        ("SELECT GREATEST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1, None),
-        ("SELECT LEAST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
-        ("SELECT LEAST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT CONCAT_WS(', ', ARRAY_AGG(mass)) as MASSES FROM $planets GROUP BY gravity", 8, 1, None),
+        ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT GREATEST(ARRAY_AGG(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT LEAST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT LEAST(ARRAY_AGG(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT IIF(SEARCH(missions, 'Apollo 13'), 1, 0), SEARCH(missions, 'Apollo 13'), missions FROM $astronauts", 357, 3, None),
         ("SELECT IIF(year > 1960, 1, 0), year FROM $astronauts", 357, 2, None),
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2, None),
@@ -1555,7 +1549,7 @@ id > /* 0 */ 1
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
 
-        ("SELECT mission, LIST(name) FROM $missions INNER JOIN (SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission) AS astronauts ON Mission = mission GROUP BY mission", 16, 2, None),
+        ("SELECT mission, ARRAY_AGG(name) FROM $missions INNER JOIN (SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission) AS astronauts ON Mission = mission GROUP BY mission", 16, 2, None),
         ("SELECT alma_matered FROM (SELECT alma_mater FROM $astronauts CROSS JOIN $satellites) AS bulked CROSS JOIN UNNEST(alma_mater) AS alma_matered", 120537, 1, None),
 
         # virtual dataset doesn't exist
@@ -1566,7 +1560,7 @@ id > /* 0 */ 1
         ("SELECT awesomeness_factor FROM $planets;", None, None, ColumnNotFoundError),
         ("SELECT * FROM $planets WHERE awesomeness_factor > 'Mega';", None, None, ColumnNotFoundError),
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
-        ("SELECT LIST(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
+        ("SELECT ARRAY_AGG(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions", None, None, SqlError),
         # Invalid temporal ranges
@@ -2127,10 +2121,10 @@ id > /* 0 */ 1
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, None),
         # [#475] a variation of #471
-        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q1 GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q2 GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', ARRAY_AGG(id)) AS ID, MAX(name) AS n FROM $planets AS Q1 GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', ARRAY_AGG(id)) AS ID, MAX(name) AS n FROM $planets AS Q2 GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
         # no issue number - but these two caused a headache
         # FUNCTION (AGG)
-        ("SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity", 8, 1, None),
+        ("SELECT CONCAT(ARRAY_AGG(name)) FROM $planets GROUP BY gravity", 8, 1, None),
         # AGG (FUNCTION)
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2, None),
         # [#527] variables referenced in subqueries

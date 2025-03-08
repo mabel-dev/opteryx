@@ -109,6 +109,9 @@ def align_tables(
     Aligns two tables based on provided indices, ensuring that the resulting table
     contains columns from both source_table and append_table.
 
+    This function was originally copied from
+    https://github.com/TomScheffers/pyarrow_ops/blob/main/pyarrow_ops/join.py
+
     Parameters:
         source_table: The pyarrow.Table to align.
         append_table: The pyarrow.Table to align with the source_table.
