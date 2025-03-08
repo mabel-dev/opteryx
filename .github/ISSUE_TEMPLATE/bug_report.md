@@ -3,6 +3,7 @@ name: Bug Report
 about: Something doesn't work as it should
 title: "🪲"
 labels: "Bug 🪲"
+type: "Bug"
 
 ---
 

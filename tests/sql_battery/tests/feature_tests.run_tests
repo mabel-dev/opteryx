@@ -4,7 +4,7 @@
 # SHOW FUNCTIONS LIKE '%date%';
 # SHOW FUNCTIONS LIKE '%zz';
 
-SELECT planetId, LEAST(LIST(magnitude)) FROM $satellites group by planetId;
+SELECT planetId, LEAST(ARRAY_AGG(magnitude)) FROM $satellites group by planetId;
 
 SELECT TIMESTAMP('2022-01-01');
 SELECT INTEGER('22');
