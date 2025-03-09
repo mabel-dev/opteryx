@@ -7,10 +7,9 @@
 import asyncio
 from functools import wraps
 
-from orso.cityhash import CityHash64
-
 from opteryx.config import MAX_CACHE_EVICTIONS_PER_QUERY
 from opteryx.config import MAX_CACHEABLE_ITEM_SIZE
+from opteryx.third_party.cyan4973.xxhash import hash_bytes
 
 __all__ = ("Cacheable", "async_read_thru_cache")
 
@@ -69,7 +68,7 @@ def async_read_thru_cache(func):
             nonlocal evictions_remaining
 
             source = SOURCE_NOT_FOUND
-            key = hex(CityHash64(blob_name)).encode()
+            key = hex(hash_bytes(blob_name)).encode()
             read_buffer_ref = None
             payload = None
             my_keys.add(key)
