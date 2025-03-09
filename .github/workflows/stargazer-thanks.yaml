@@ -1,0 +1,46 @@
+name: Thank New Stargazers (Testing)
+
+on:
+  schedule:
+    - cron: "0 15 * * *"  # Runs daily at 15 UTC
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  thank_stargazers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Latest Stargazers
+        id: get_stargazers
+        run: |
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/YOUR_USER/YOUR_REPO/stargazers?per_page=100" | \
+          jq -r '.[] | select(.starred_at >= "'$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')'") | .login' > new_stargazers.txt
+
+      - name: Thank New Stargazers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -s new_stargazers.txt ]; then
+            echo "New stargazers found."
+            while read -r STARGAZER; do
+              echo "Detected new stargazer: @$STARGAZER"
+              
+              # Replace actual username with 'joocer' for testing
+              STARGAZER="joocer"
+              
+              gh issue create --title "Thanks for starring, @$STARGAZER! 🌟" --body "$(cat <<EOF
+Hey @$STARGAZER, thanks for supporting Opteryx! 🎉  
+
+If you're interested in diving deeper, here are a few ways to get involved:  
+- 📖 **Explore the Docs** → [opteryx.dev](https://opteryx.dev)  
+- 💬 **Join the Discussion** → [Discord](https://discord.gg/qpv2tr989x)  
+- 🐘 **Follow Us** → [Mastodon](https://mastodon.social/@opteryx) | [Twitter/X](https://twitter.com/OpteryxSQL)  
+
+We’d love to hear how you’re using Opteryx! Let us know in **Discord** or by opening a discussion. 🚀
+EOF
+)" --label "thank-you"
+
+            done < new_stargazers.txt
+          else
+            echo "No new stargazers in the last 24 hours."
+          fi
