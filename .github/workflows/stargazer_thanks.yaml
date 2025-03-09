@@ -14,7 +14,7 @@ jobs:
         run: |
           # Correct API call with authentication to get `starred_at`
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/YOUR_USER/YOUR_REPO/stargazers?per_page=100&sort=starred_at&direction=desc" | \
+          "https://api.github.com/repos/mabel-dev/opteryx/stargazers?per_page=100&sort=starred_at&direction=desc" | \
           jq -r '[.[] | {login, starred_at}] | map(select(.starred_at >= "'$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')'")) | .[].login' > new_stargazers.txt
 
       - name: Thank New Stargazers
