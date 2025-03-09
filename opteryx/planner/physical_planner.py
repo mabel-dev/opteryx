@@ -89,6 +89,8 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             node = operators.ShowColumnsNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
             node = operators.UnionNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Unnest:
+            node = operators.UnnestJoinNode(query_properties, **node_config)
         else:  # pragma: no cover
             raise Exception(f"something unexpected happed - {node_type.name}")
         # fmt: on

@@ -430,9 +430,7 @@ def evaluate_and_append(expressions, table: Table):
 
             # if we know the intended type of the result column, cast it
             field = statement.schema_column.identity
-            if statement.schema_column.type in (OrsoTypes.ARRAY,):
-                pass
-            elif statement.schema_column.type not in (
+            if statement.schema_column.type not in (
                 0,
                 OrsoTypes._MISSING_TYPE,
                 OrsoTypes.INTERVAL,

@@ -384,3 +384,30 @@ SELECT COUNT(DISTINCT birth_place) FROM $astronauts; -- JSONB/STRUCT
 SELECT COUNT(DISTINCT death_date) AS AM FROM $astronauts; -- TIMESTAMP
 SELECT COUNT(DISTINCT id > 1) AS AM FROM $planets; -- BOOLEAN
 SELECT COUNT(DISTINCT surfacePressure > 1) AS AM FROM $planets; -- BOOLEAN (with nulls)
+
+SELECT TRY_CAST(alma_mater AS ARRAY<VARCHAR>) FROM testdata.astronauts
+SELECT TRY_CAST(alma_mater AS ARRAY<BLOB>) FROM testdata.astronauts
+SELECT TRY_CAST(alma_mater AS ARRAY<INTEGER>) FROM testdata.astronauts
+SELECT TRY_CAST(alma_mater AS ARRAY<DOUBLE>) FROM testdata.astronauts
+SELECT TRY_CAST(alma_mater AS ARRAY<TIMESTAMP>) FROM testdata.astronauts
+SELECT TRY_CAST(alma_mater AS ARRAY<BOOLEAN>) FROM testdata.astronauts
+
+SELECT CAST(alma_mater AS ARRAY<VARCHAR>) FROM testdata.astronauts
+SELECT CAST(alma_mater AS ARRAY<BLOB>) FROM testdata.astronauts
+
+SELECT * FROM $astronauts WHERE birth_place->>'town' ILIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->>'town' ILIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->>'town' LIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->>'town' LIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->'town' ILIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->'town' ILIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->'town' LIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE birth_place->'town' LIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE BLOB(birth_place->'town') ILIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE BLOB(birth_place->'town') ILIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE BLOB(birth_place->'town') LIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE BLOB(birth_place->'town') LIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') ILIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') ILIKE 'C%e%r'
+SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') LIKE b'C%e%r'
+SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') LIKE 'C%e%r'

@@ -54,16 +54,16 @@ def all_op(branch, alias: Optional[List[str]] = None, key=None):
 def array(branch, alias: Optional[List[str]] = None, key=None):
     value_nodes = [build(elem) for elem in branch["elem"]]
     value_list = {v.value for v in value_nodes}
-    list_value_type = {v.type for v in value_nodes}
-    if len(list_value_type) > 1:
+    element_type = {v.type for v in value_nodes}
+    if len(element_type) > 1:
         raise ArrayWithMixedTypesError("Literal ARRAY has values with mixed types.")
-    list_value_type = list_value_type.pop() if len(list_value_type) == 1 else OrsoTypes.VARCHAR
+    element_type = element_type.pop() if len(element_type) == 1 else OrsoTypes.VARCHAR
 
     return Node(
         node_type=NodeType.LITERAL,
         type=OrsoTypes.ARRAY,
+        element_type=element_type,
         value=value_list,
-        sub_type=list_value_type,
     )
 
 
@@ -176,6 +176,8 @@ def case_when(value, alias: Optional[List[str]] = None, key=None):
 def cast(branch, alias: Optional[List[str]] = None, key=None):
     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
 
+    from opteryx.planner import build_literal_node
+
     args = [build(branch["expr"])]
     kind = branch["kind"]
     data_type = branch["data_type"]
@@ -208,6 +210,14 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = "STRUCT"
     elif "Blob" in data_type:
         data_type = "BLOB"
+    elif "Array" in data_type:
+        element_key = branch["data_type"]["Array"].get("AngleBracket", {"Varchar": None})
+        if isinstance(element_key, dict):
+            element_key = next(iter(element_key))
+        if isinstance(element_key, str):
+            element_key = build_literal_node(element_key.upper())
+            args.append(element_key)
+        data_type = "ARRAY"
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 
@@ -366,16 +376,16 @@ def in_list(branch, alias: Optional[List[str]] = None, key=None):
     left_node = build(branch["expr"])
     value_nodes = [build(v) for v in branch["list"]]
     value_list = {v.value for v in value_nodes}
-    list_value_type = {v.type for v in value_nodes}
-    if len(list_value_type) > 1:
+    element_type = {v.type for v in value_nodes}
+    if len(element_type) > 1:
         raise ArrayWithMixedTypesError("Array in IN condition has values with mixed types.")
-    list_value_type = list_value_type.pop()
+    element_type = element_type.pop()
     operator = "NotInList" if branch["negated"] else "InList"
     right_node = Node(
         node_type=NodeType.LITERAL,
         type=OrsoTypes.ARRAY,
         value=value_list,
-        sub_type=list_value_type,
+        element_type=element_type,
     )
     return Node(
         node_type=NodeType.COMPARISON_OPERATOR,
@@ -676,10 +686,27 @@ def trim_string(branch, alias: Optional[List[str]] = None, key=None):
 
 
 def tuple_literal(branch, alias: Optional[List[str]] = None, key=None):
-    values = [build(t).value for t in branch]
+    # Tuples can have values of different types
+    # if they all are the same type, be explicit about it
+    node_values = [build(t) for t in branch]
+    values = [t.value for t in node_values]
+
+    # see if we can specify the element type for the arrat
+    node_types = {t.type for t in node_values}
+    element_type = None
+    if len(node_types) == 1:
+        element_type = node_types.pop()
+
     if values and isinstance(values[0], dict):
+        print("HERE")
         values = [build(val["Identifier"]).value for val in values]
-    return Node(NodeType.LITERAL, type=OrsoTypes.ARRAY, value=tuple(values), alias=alias)
+    return Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.ARRAY,
+        element_type=element_type,
+        value=tuple(values),
+        alias=alias,
+    )
 
 
 def typed_string(branch, alias: Optional[List[str]] = None, key=None):

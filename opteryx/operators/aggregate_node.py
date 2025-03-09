@@ -35,14 +35,9 @@ AGGREGATORS = {
     "COUNT_DISTINCT": "count_distinct",
     "DISTINCT": "distinct",  # fated
     "HISTOGRAM": "histogram",  # not supported everywhere
-    "LIST": "hash_list",  # fated
     "MAX": "max",
-    "MAXIMUM": "max",  # alias
-    "MEAN": "mean",
-    "AVG": "mean",  # alias
-    "AVERAGE": "mean",  # alias
+    "AVG": "mean",
     "MIN": "min",
-    "MINIMUM": "min",  # alias
     "MIN_MAX": "min_max",
     "ONE": "hash_one",
     "ANY_VALUE": "hash_one",

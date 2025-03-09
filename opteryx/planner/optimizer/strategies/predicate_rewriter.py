@@ -35,15 +35,12 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
+# fmt: off
 IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
 LIKE_REWRITES = {"Like": "Eq", "NotLike": "NotEq"}
 LITERALS_TO_THE_RIGHT = {"Plus": "Minus", "Minus": "Plus"}
-INSTR_REWRITES = {
-    "Like": "InStr",
-    "NotLike": "NotInStr",
-    "ILike": "IInStr",
-    "NotILike": "NotIInStr",
-}
+INSTR_REWRITES = {"Like": "InStr", "NotLike": "NotInStr", "ILike": "IInStr", "NotILike": "NotIInStr"}
+# fmt: on
 
 
 def rewrite_in_to_eq(predicate):
@@ -55,8 +52,8 @@ def rewrite_in_to_eq(predicate):
     """
     predicate.value = IN_REWRITES[predicate.value]
     predicate.right.value = predicate.right.value.pop()
-    predicate.right.type = predicate.right.sub_type or OrsoTypes.VARCHAR
-    predicate.right.sub_type = None
+    predicate.right.type = predicate.right.element_type or OrsoTypes.VARCHAR
+    predicate.right.element_type = None
     return predicate
 
 

@@ -40,6 +40,7 @@ class LogicalPlanStepType(int, Enum):
     Explain = auto()  # EXPLAIN
     Difference = auto()  # relation interection
     Join = auto()  # all joins
+    Unnest = auto()  # UNNEST
     #    Containment = auto() # IN (maybe also EXISTS?)
     AggregateAndGroup = auto()  # group by
     Aggregate = auto()
@@ -96,13 +97,11 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
-                distinct = " DISTINCT" if self.distinct else ""
-                filters = f"({self.unnest_alias} IN ({', '.join(self.filters)}))" if self.filters else ""
                 if self.on:
-                    return f"{self.type.upper()} JOIN{distinct} ({format_expression(self.on, True)}){filters}"
+                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)})"
                 if self.using:
-                    return f"{self.type.upper()} JOIN{distinct} (USING {','.join(map(format_expression, self.using))}){filters}"
-                return f"{self.type.upper()}{distinct} {filters}"
+                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
+                return f"{self.type.upper()}"
             if node_type == LogicalPlanStepType.HeapSort:
                 return f"HEAP SORT (LIMIT {self.limit}, ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}])"
             if node_type == LogicalPlanStepType.Limit:
@@ -151,6 +150,10 @@ class LogicalPlanNode(Node):
                 if self.columns:
                     columns = " [" + ", ".join(c.current_name for c in self.columns) + "]"
                 return f"UNION {'' if self.modifier is None else self.modifier.upper()}{columns}"
+            if node_type == LogicalPlanStepType.Unnest:
+                distinct = "DISTINCT " if self.distinct else ""
+                conditions = f" FILTER ({', '.join(self.filters)})" if self.filters else ""
+                return f"CROSS JOIN UNNEST ({distinct}{self.unnest_column.current_name}) AS {self.unnest_alias}{conditions}"
 
             # fmt:on
         except Exception as err:
@@ -578,9 +581,9 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             "LeftAnti": "left anti",
             "LeftOuter": "left outer",
             "LeftSemi": "left semi",
-            "RightAnti": "right anti",
+            "RightAnti": "right anti",  # not supported
             "RightOuter": "right outer",
-            "RightSemi": "right semi",
+            "RightSemi": "right semi",  # not supported
             "CrossJoin": "cross join",  # should never match, here for completeness
             "Natural": "natural join",  # should never match, here for completeness
         }.get(join_operator)
@@ -610,18 +613,12 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
 
         return join_on, join_using
 
-    def extract_unnest_dataset(join: dict, join_type: str) -> Tuple[Optional[str], Optional[str]]:
+    def create_unnest_node(join: dict, join_step: Node) -> Node:
         """
         Extracts information for an UNNEST dataset from the AST node representing the join.
         """
-        if (
-            join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper()
-            != "UNNEST"
-        ):
-            return None, None
-
-        if join_type not in ("cross join", "inner"):
-            raise UnsupportedSyntaxError("JOIN on UNNEST only supported for CROSS and INNER joins.")
+        if join_step.type != "cross join":
+            raise UnsupportedSyntaxError("JOIN on UNNEST only supported for CROSS joins.")
         unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"]["args"][0])
         if join["relation"]["Table"].get("alias") is None:
             raise UnnamedColumnError(
@@ -629,8 +626,14 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             )
         unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
 
-        # return the column we're going to UNNEST and what the new column is called
-        return unnest_column, unnest_alias
+        # if we're a UNNEST JOIN, we're a different node type
+        join_step.node_type = LogicalPlanStepType.Unnest
+        join_step.unnest_column = unnest_column
+        join_step.unnest_alias = unnest_alias
+        join_step.alias = f"$unnest-{random_string(6)}"
+
+        # return the updated node
+        return join_step
 
     join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
 
@@ -642,8 +645,10 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         )
 
     join_step.on, join_step.using = extract_join_condition(join)
-    # At this stage, CROSS JOIN UNNEST are represented in a single JOIN node
-    join_step.unnest_column, join_step.unnest_alias = extract_unnest_dataset(join, join_step.type)
+
+    # JOIN UNNEST needs to be handled differently
+    if join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper() == "UNNEST":
+        join_step = create_unnest_node(join, join_step)
 
     return join_step
 
@@ -785,6 +790,14 @@ def create_node_relation(relation):
         # this is the convention: select * from LEFT join RIGHT
 
         join_step = process_join_tree(join)
+
+        if join_step.node_type == LogicalPlanStepType.Unnest:
+            # UNNEST joins don't have a LEFT and RIGHT side
+            join_step_id = random_string()
+            sub_plan.add_node(join_step_id, join_step)
+            sub_plan.add_edge(root_node, join_step_id, "left")
+            root_node = join_step_id
+            continue
 
         right_node_id, right_plan = create_node_relation(join)
 

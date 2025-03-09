@@ -68,7 +68,7 @@ def async_read_thru_cache(func):
             nonlocal evictions_remaining
 
             source = SOURCE_NOT_FOUND
-            key = hex(hash_bytes(blob_name)).encode()
+            key = hex(hash_bytes(blob_name.encode())).encode()
             read_buffer_ref = None
             payload = None
             my_keys.add(key)

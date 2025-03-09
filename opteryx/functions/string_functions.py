@@ -357,6 +357,7 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
+    # import re2 as re
     import re
 
     pattern = _pattern[0]

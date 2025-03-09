@@ -307,16 +307,24 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                 node.type = result_type
                 node.value = fixed_function_result
             else:
-                _, result_type, _ = FUNCTIONS.get(node.value, (None, 0, None))
+                _, result_type, _ = FUNCTIONS.get(node.value, (None, "VARIANT", None))
+                element_type = None  # for types with elements (ARRAYs)
                 # If we don't know the return type from the function name, we can usually
                 # work it out from the parameters - all of the aggs are worked out this way
                 # even COUNT which is always an integer.
-                if result_type == 0:
+                if result_type == "VARIANT":
                     # Some functions return a fixed type, so return that type
                     if node.value == "COUNT":
                         result_type = OrsoTypes.INTEGER
                     elif node.value == "AVG":
                         result_type = OrsoTypes.DOUBLE
+                    elif node.value in ("ARRAY", "TRY_ARRAY"):
+                        result_type, _, _, _, element_type = OrsoTypes.from_name(
+                            f"ARRAY<{node.parameters[1].value}>"
+                        )
+                    elif node.value == "ARRAY_AGG":
+                        result_type = OrsoTypes.ARRAY
+                        element_type = node.parameters[0].schema_column.type
                     # Some functions return different types based on the input
                     # we need to find the first non-null parameter
                     elif node.value == "CASE":
@@ -346,6 +354,8 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                         result_type = node.parameters[1].schema_column.type
                     elif node.value in ("ABS", "MAX", "MIN", "NULLIF", "PASSTHRU", "SUM"):
                         result_type = node.parameters[0].schema_column.type
+                    elif node.value in ("GREATEST", "LEAST", "SORT"):
+                        result_type = node.parameters[0].schema_column.element_type
                     # Some functions support nulls different positions
                     elif node.value in ("COALESCE", "IFNULL", "IFNOTNULL"):
                         for param in node.parameters:
@@ -389,7 +399,9 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                     elif node.value in ("GET",):
                         result_type = 0  # OrsoTypes._MISSING_TYPE
 
-                schema_column = FunctionColumn(name=column_name, type=result_type, aliases=aliases)
+                schema_column = FunctionColumn(
+                    name=column_name, type=result_type, element_type=element_type, aliases=aliases
+                )
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []
             node.schema_column = schema_column
