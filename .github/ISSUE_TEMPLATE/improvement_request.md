@@ -1,7 +1,6 @@
 ---
 name: Improvement Request
 about: Suggest how we can make Opteryx better
-title: "✨"
 type: "Improvement"
 
 ---
