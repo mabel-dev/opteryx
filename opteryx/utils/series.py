@@ -17,13 +17,10 @@ def generate_series(*args):
     first_arg_type = args[0].type
 
     # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type in (
-        OrsoTypes.INTEGER,
-        OrsoTypes.DOUBLE,
-    ):
+    if first_arg_type.is_numeric():
         if arg_len not in (1, 2, 3):  # pragma: no cover
             raise SqlError(
-                "generate_series for numbers takes 1 (stop), 2 (start, stop) or 3 (start, stop, interval) parameters."
+                "GENERATE_SERIES for numbers takes 1 (stop), 2 (start, stop) or 3 (start, stop, interval) parameters."
             )
         return numeric_range(*arg_vals)
 

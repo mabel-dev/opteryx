@@ -306,3 +306,40 @@ def humanize(arr):
         return format_number(value)
 
     return [humanize_number(value) for value in arr]
+
+
+def array_cast(array, element_type):
+    from orso.types import OrsoTypes
+
+    result = numpy.empty(len(array), dtype=list)
+    parser = OrsoTypes[element_type[0]].parse
+    for i, row in enumerate(array):
+        row_res = []
+        if row is not None:
+            for element in row:
+                if element is None:
+                    continue
+                row_res.append(parser(element))
+            result[i] = row_res
+    return result
+
+
+def array_cast_safe(array, element_type):
+    from contextlib import suppress
+
+    from orso.types import OrsoTypes
+
+    result = numpy.empty(len(array), dtype=list)
+    parser = OrsoTypes[element_type[0]].parse
+    for i, row in enumerate(array):
+        row_res = []
+        if row is not None:
+            for element in row:
+                if element is None:
+                    continue
+                value = None
+                with suppress(Exception):
+                    value = parser(element)
+                    row_res.append(value)
+            result[i] = row_res
+    return result

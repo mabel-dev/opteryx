@@ -88,6 +88,52 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             else:
                 context.optimized_plan[context.node_id] = node
 
+        elif node.node_type == LogicalPlanStepType.Unnest:
+            # if we're a CROSS JOIN UNNEST, we can push some filters into the UNNEST
+            remaining_predicates = []
+            for predicate in context.collected_predicates:
+                known_columns = set(col.schema_column.identity for col in predicate.columns)
+                query_columns = {
+                    predicate.condition.left.schema_column.identity,
+                    predicate.condition.right.schema_column.identity,
+                }
+
+                # Here we're pushing filters into the UNNEST - this means that
+                # CROSS JOIN UNNEST will produce fewer rows... it still does
+                # the equality check, but all in one step which is generally faster
+                # Note: there are a lot of things that need to be true to push the
+                # filter into the UNNEST function
+                if (
+                    len(predicate.columns) == 1
+                    and predicate.condition.left.node_type
+                    in (NodeType.LITERAL, NodeType.IDENTIFIER)
+                    and predicate.condition.right.node_type
+                    in (NodeType.LITERAL, NodeType.IDENTIFIER)
+                    and predicate.columns[0].schema_column.identity
+                    == node.unnest_target.schema_column.identity
+                    and predicate.condition.value in {"Eq", "InList"}
+                ):
+                    filters = node.filters or []
+                    new_values = predicate.condition.right.value
+                    if not isinstance(new_values, (list, set, tuple)):
+                        new_values = [new_values]
+                    else:
+                        new_values = list(new_values)
+                    node.filters = set(filters + new_values)
+                    self.statistics.optimization_predicate_pushdown_cross_join_unnest += 1
+                    context.optimized_plan[context.node_id] = node
+
+                elif (
+                    query_columns == (known_columns) or node.unnest_target.identity in query_columns
+                ):
+                    self.statistics.optimization_predicate_pushdown += 1
+                    context.optimized_plan.insert_node_after(
+                        predicate.nid, predicate, context.node_id
+                    )
+                else:
+                    remaining_predicates.append(predicate)
+            context.collected_predicates = remaining_predicates
+
         elif node.node_type == LogicalPlanStepType.Join:
 
             def _inner(node):
@@ -155,52 +201,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             predicate.nid, predicate, context.node_id
                         )
                     context.collected_predicates = []
-                elif node.type == "cross join" and node.unnest_column:
-                    # if it's a CROSS JOIN UNNEST - don't try to push any further
-                    # IMPROVE: we should push everything that doesn't reference the unnested column
-                    # don't push filters we can't resolve here though
-                    remaining_predicates = []
-                    for predicate in context.collected_predicates:
-                        known_columns = set(col.schema_column.identity for col in predicate.columns)
-                        query_columns = {
-                            predicate.condition.left.schema_column.identity,
-                            predicate.condition.right.schema_column.identity,
-                        }
-
-                        # Here we're pushing filters into the UNNEST - this means that
-                        # CROSS JOIN UNNEST will produce fewer rows... it still does
-                        # the equality check, but all in one step which is generally faster
-                        # Note: there are a lot of things that need to be true to push the
-                        # filter into the UNNEST function
-                        if (
-                            len(predicate.columns) == 1
-                            and predicate.condition.left.node_type
-                            in (NodeType.LITERAL, NodeType.IDENTIFIER)
-                            and predicate.condition.right.node_type
-                            in (NodeType.LITERAL, NodeType.IDENTIFIER)
-                            and predicate.columns[0].value == node.unnest_alias
-                            and predicate.condition.value in {"Eq", "InList"}
-                        ):
-                            filters = node.filters or []
-                            new_values = predicate.condition.right.value
-                            if not isinstance(new_values, (list, set, tuple)):
-                                new_values = [new_values]
-                            else:
-                                new_values = list(new_values)
-                            node.filters = set(filters + new_values)
-                            self.statistics.optimization_predicate_pushdown_cross_join_unnest += 1
-
-                        elif (
-                            query_columns == (known_columns)
-                            or node.unnest_target.identity in query_columns
-                        ):
-                            self.statistics.optimization_predicate_pushdown += 1
-                            context.optimized_plan.insert_node_after(
-                                predicate.nid, predicate, context.node_id
-                            )
-                        else:
-                            remaining_predicates.append(predicate)
-                    context.collected_predicates = remaining_predicates
                 elif node.type in ("cross join",):  # , "inner"):
                     # IMPROVE: add predicates to INNER JOIN conditions
                     # we may be able to rewrite as an inner join

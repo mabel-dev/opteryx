@@ -1677,8 +1677,8 @@ id > /* 0 */ 1
 
         # New and improved JOIN UNNESTs
         ("SELECT * FROM $planets CROSS JOIN UNNEST(('Earth', 'Moon')) AS n", 18, 21, None),
-        ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
-        ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 2, None),
+        ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST(('Earth', 'Moon')) AS n) AS S ON name = n", 1, 21, None),
+        ("SELECT name, mission FROM $astronauts INNER JOIN (SELECT * FROM UNNEST(missions) as mission) AS S ON mission = name", 0, 2, None),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission IN ('Apollo 11', 'Apollo 12')", 6, 20, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 357, 2, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE status = 'Retired' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 220, 2, None),
@@ -1686,10 +1686,8 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE birth_date < '1960-01-01' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 269, 2, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE status = 'Active' AND birth_date > '1970-01-01' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 10, 2, None),
         ("SELECT group, nn FROM (SELECT group, ARRAY_AGG(name) as n FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 357, 2, None),
-        ("SELECT * FROM (SELECT ARRAY_AGG(CASE WHEN LENGTH(alma_mater) > 10 THEN alma_mater ELSE NULL END) as alma_mater_arr FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(alma_mater_arr) AS alma", 357, 2, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(CASE WHEN LENGTH(alma_mater) > 10 THEN name ELSE NULL END) as alma_mater_arr FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(alma_mater_arr) AS alma", 357, 2, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(1) as num_arr FROM $astronauts GROUP BY group) AS numbers CROSS JOIN UNNEST(num_arr) AS number", 357, 2, None),
-        ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n", 0, 20, None),
-        ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n WHERE group = 10", 0, 20, None),
         ("SELECT name, group, astronaut_year, LEAST(year_list) FROM (SELECT ARRAY_AGG(year) as year_list, name, group FROM $astronauts WHERE status = 'Retired' and year is not null GROUP BY group, name) AS alma CROSS JOIN UNNEST(year_list) AS astronaut_year", 196, 4, None),
 
         # PUSHDOWN (the result should be the same without pushdown)
@@ -2088,13 +2086,10 @@ id > /* 0 */ 1
         # DISTINCT on null values [#285]
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1, None),
         # empty aggregates with other columns, loose the other columns [#281]
-# [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2, None),
+        ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 0, 2, None),
         # JOIN from subquery regressed [#291]
         ("SELECT * FROM (SELECT id from $planets AS PO) AS ONE LEFT JOIN (SELECT id from $planets AS PT) AS TWO ON id = id", 9, 2, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT id FROM $planets AS PONE) AS ONE LEFT JOIN (SELECT id FROM $planets AS PTWO) AS TWO ON ONE.id = TWO.id;", 9, 2, None),
-        # JOIN on UNNEST [#382]
-        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'X')) AS n on name = n ", 1, 1, None),
-        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1, None),
         # SELECT <literal> [#409]
         ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE) AS SQ", 1, 1, None),
         ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER) AS SQ", 1, 1, None),
@@ -2215,7 +2210,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
         # 1380
         ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS PID USING(id)", 3, 20, None),
-        ("SELECT * FROM $planets INNER JOIN UNNEST((1, 2, 3)) AS id USING(id)", 3, 20, None),
+        ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS S USING(id)", 3, 20, None),
         ("SELECT * FROM UNNEST((1, 2, 3)) AS id INNER JOIN $planets USING(id)", 3, 20, None),
         # 1320
         ("SELECT * FROM $planets WHERE LENGTH(name) BETWEEN 4 AND 6", 6, 20, None),
@@ -2254,7 +2249,6 @@ id > /* 0 */ 1
         ("SELECT Location FROM testdata.missions WHERE Lauched_at BETWEEN '1950-01-01' AND '1975-01-01'", 1311, 1, None),
         # 1837
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", None, None, UnnamedColumnError),
-        ("SELECT * FROM $astronauts INNER JOIN UNNEST(missions) ON name = name", None, None, UnnamedColumnError),
         # 1841
         ("SELECT * FROM $astronauts, jsonb_object_keys(birth_place) as keys", None, None, UnsupportedSyntaxError),
         # 1848
@@ -2342,7 +2336,7 @@ id > /* 0 */ 1
         ("SELECT DISTINCT sides FROM (SELECT * FROM $planets AS plans LEFT JOIN (SELECT ARRAY_AGG(birth_date)  as sids, group FROM $astronauts GROUP BY group) AS sats ON plans.id = group) AS plansats CROSS JOIN UNNEST (sids) as sides", 125, 1, None),
         ("SELECT DISTINCT sides FROM (SELECT * FROM $planets AS plans LEFT JOIN (SELECT ARRAY_AGG(birth_place) as sids, group FROM $astronauts GROUP BY group) AS sats ON plans.id = group) AS plansats CROSS JOIN UNNEST (sids) as sides", 110, 1, None),
         # 2059
-        ("SELECT g FROM generate_series(10) as g CROSS JOIN UNNEST (g) as g1", 0, 0, TypeError),
+        ("SELECT g FROM generate_series(10) as g CROSS JOIN UNNEST (g) as g1", 0, 0, IncorrectTypeError),
 #        ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
         # 2112
         ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),

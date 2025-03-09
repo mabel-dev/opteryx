@@ -44,11 +44,9 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             return context
 
         if (
-            node.node_type == LogicalPlanStepType.Join
+            node.node_type == LogicalPlanStepType.Unnest
             and context.collected_distincts
-            and node.type == "cross join"
-            and node.unnest_target is not None
-            and node.pre_update_columns == {node.unnest_target.identity}
+            and node.pre_update_columns == {node.unnest_target.schema_column.identity}
         ):
             # Very specifically testing for a DISTINCT on the unnested column, only.
             # In this situation we do the DISTINCT on the intermediate results of the CJU,
@@ -69,6 +67,7 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.Subquery,
             LogicalPlanStepType.Union,
+            LogicalPlanStepType.Unnest,
         ):
             # we don't push past here
             context.collected_distincts.clear()

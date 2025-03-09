@@ -8,6 +8,7 @@ from typing import List
 from typing import Set
 from typing import Tuple
 
+from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
@@ -21,7 +22,6 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.planner.binder.binder import inner_binder
-from opteryx.planner.binder.binder import locate_identifier_in_loaded_schemas
 from opteryx.planner.binder.binder import merge_schemas
 from opteryx.planner.binder.binding_context import BindingContext
 from opteryx.planner.logical_planner import LogicalPlan
@@ -245,6 +245,7 @@ class BinderVisitor:
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, None)
         if visit_method is None:
+            # DEBUG: print(f"BinderVisitor: No method found for {visit_method_name}")
             return node, context
 
         return_node, return_context = visit_method(node.copy(), context.copy())
@@ -452,12 +453,18 @@ class BinderVisitor:
         # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
             relation_name = node.alias or f"$values-{random_string()}"
+            types = {}
+            if len(node.values) > 0:
+                for i, column in enumerate(node.columns):
+                    if len(node.values[0]) >= i:
+                        value = node.values[0][i]
+                        types[column] = value.type
             columns = [
                 LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
                     source_column=column,
                     source=relation_name,
-                    schema_column=FlatColumn(name=column, type=0),
+                    schema_column=FlatColumn(name=column, type=types.get(column, OrsoTypes.NULL)),
                 )
                 for column in node.columns
             ]
@@ -469,6 +476,7 @@ class BinderVisitor:
             node.columns = columns
             node.schema = schema
         elif node.function == "UNNEST":
+            # this is strictly SELECT * FROM UNNEST(literal) AS alias(column)
             relation_name = node.alias
 
             columns = [
@@ -484,13 +492,30 @@ class BinderVisitor:
             node.columns = columns
             node.schema = schema
         elif node.function == "GENERATE_SERIES":
+            element_type = OrsoTypes._MISSING_TYPE
+            first_arg = node.args[0]
+            if first_arg.node_type == NodeType.NESTED:
+                first_arg = first_arg.centre
+            if first_arg.type.is_numeric():
+                types = {n.type for n in node.args}
+                if len(types) == 1:
+                    element_type = list(types)[0]
+                elif types == {OrsoTypes.INTEGER, OrsoTypes.DOUBLE}:
+                    element_type = OrsoTypes.DOUBLE
+                else:
+                    raise InvalidFunctionParameterError(
+                        "GENERATE_SERIES for numbers takes 1 (stop), 2 (start, stop) or 3 (start, stop, interval) parameters."
+                    )
+            if first_arg.type.is_temporal():
+                element_type = OrsoTypes.TIMESTAMP
+
             node.relation_name = node.alias
             columns = [
                 LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
                     source_column=node.alias,
                     source=node.relation_name,
-                    schema_column=FlatColumn(name=node.alias, type=0),
+                    schema_column=FlatColumn(name=node.alias, type=element_type),
                 )
             ]
             schema = RelationSchema(
@@ -617,7 +642,7 @@ class BinderVisitor:
                 Updated node and context.
         """
         node.columns = []
-        # Handle 'natural join' by converting to a 'using'
+        # Handle 'natural join' by converting to an inner join with a 'using'
         if node.type == "natural join":
             left_columns = [
                 col
@@ -641,8 +666,7 @@ class BinderVisitor:
                 node.right_relation_names,
             )
         if node.on:
-            # All except CROSS JOINs have been mapped to have an ON condition
-            # The JOIN operator only support ON conditions.
+            # All conditions have been mapped to 'on' conditions
             comparisons = get_all_nodes_of_type(node.on, (NodeType.COMPARISON_OPERATOR,))
             if not all(com.value == "Eq" for com in comparisons):
                 from opteryx.exceptions import UnsupportedSyntaxError
@@ -695,27 +719,9 @@ class BinderVisitor:
             for schema in node.right_relation_names:
                 context.schemas.pop(schema)
 
-        # If we have an unnest_column, how how it is bound is different to other columns
-        if node.unnest_column:
-            # this is the column which is being unnested
-            node.unnest_column, context = inner_binder(node.unnest_column, context)
-            node.columns += [node.unnest_column]
-            # this is the column that is being created - find it from its name
-            node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
-                node.unnest_alias, context.schemas
-            )
-            if node.unnest_column.schema_column.type not in (
-                OrsoTypes._MISSING_TYPE,
-                OrsoTypes.ARRAY,
-                0,
-            ):
-                from opteryx.exceptions import IncorrectTypeError
-
-                raise IncorrectTypeError(
-                    f"CROSS JOIN UNNEST requires an ARRAY type column, not {node.unnest_column.schema_column.type}."
-                )
-
-        # this is very much not how we want to do this, but let's start somewhere
+        # This is very much not how we want to do this, but let's start somewhere
+        # we're estimating the size of each side of the join, but here all we're doing is
+        # using the row estimates for each table, ignoring any filtering etc.
         node.left_size = sum(
             context.schemas[relation_name].row_count_metric
             or context.schemas[relation_name].row_count_estimate
@@ -1045,6 +1051,71 @@ class BinderVisitor:
         node, context = self.visit_exit(node, context)
         return node, context
 
+    def visit_unnest(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        node.columns = []
+
+        # we create a new schema for the unnested column
+        unnest_schema = node.alias
+
+        # this is the column which is being unnested
+        if node.unnest_column.node_type == NodeType.LITERAL:
+            schema_column = ConstantColumn(name=node.unnest_alias)
+            schema_column.type = node.unnest_column.type
+            schema_column.value = node.unnest_column.value
+            schema_column.element_type = node.unnest_column.element_type
+            node.unnest_target = LogicalColumn(
+                alias=node.unnest_alias,
+                node_type=NodeType.IDENTIFIER,
+                source_column=node.unnest_alias,
+                source=unnest_schema,
+                schema_column=schema_column,
+            )
+            # create the schema for the unnested column
+            context.schemas[unnest_schema] = RelationSchema(
+                name=unnest_schema, columns=[schema_column]
+            )
+            # reference the new column in the node
+            node.columns.append(node.unnest_target)
+        else:
+            node.unnest_column, context = inner_binder(node.unnest_column, context)
+            node.columns += [node.unnest_column]
+
+            # we can only UNNEST an ARRAY type column, we need to find it before we know its type
+            if node.unnest_column.schema_column.type not in (
+                OrsoTypes._MISSING_TYPE,
+                OrsoTypes.ARRAY,
+                0,
+            ):
+                from opteryx.exceptions import IncorrectTypeError
+
+                raise IncorrectTypeError(
+                    f"CROSS JOIN UNNEST requires an ARRAY type column, not {node.unnest_column.schema_column.type}."
+                )
+
+            # this is the column that is being created
+            element_type = OrsoTypes.VARCHAR
+            if node.unnest_column.schema_column:
+                element_type = node.unnest_column.schema_column.element_type
+
+            schema_column = FlatColumn(name=node.unnest_alias, type=element_type)
+            node.unnest_target = LogicalColumn(
+                alias=node.unnest_alias,
+                node_type=NodeType.IDENTIFIER,
+                source_column=node.unnest_alias,
+                source=unnest_schema,
+                schema_column=schema_column,
+            )
+
+            # create the schema for the unnested column
+            context.schemas[unnest_schema] = RelationSchema(
+                name=unnest_schema, columns=[schema_column]
+            )
+
+            # reference the new column in the node
+            node.columns.append(node.unnest_target)
+
+        return node, context
+
     def post_bind(self, node):
         # The binder skips calculated fields when it performs binding because
         # sometimes it doesn't have access to all of the fields used in the
@@ -1095,7 +1166,7 @@ class BinderVisitor:
             for child in children:
                 # Each peer gets the exact copy of the context so they don't affect each other
                 _, child_context = self.traverse(graph, child[0], context.copy())
-                # Assuming merge_schemas is a function that merges the schemas from two contexts
+                # merges the schemas from two contexts
                 exit_context.schemas = merge_schemas(child_context.schemas, exit_context.schemas)
 
                 # Update relations if necessary

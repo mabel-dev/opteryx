@@ -276,7 +276,9 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                         columns=[
                             FlatColumn(
                                 name=column,
-                                type=0 if value is None else PYTHON_TO_ORSO_MAP[type(value)],
+                                type=OrsoTypes.NULL
+                                if value is None
+                                else PYTHON_TO_ORSO_MAP[type(value)],
                                 precision=38,
                                 scale=14,
                             )
