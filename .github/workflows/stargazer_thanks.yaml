@@ -12,9 +12,10 @@ jobs:
       - name: Get Latest Stargazers
         id: get_stargazers
         run: |
+          # Correct API call with authentication to get `starred_at`
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/YOUR_USER/YOUR_REPO/stargazers?per_page=100" | \
-          jq -r '.[] | select(.starred_at >= "'$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')'") | .login' > new_stargazers.txt
+          "https://api.github.com/repos/YOUR_USER/YOUR_REPO/stargazers?per_page=100&sort=starred_at&direction=desc" | \
+          jq -r '[.[] | {login, starred_at}] | map(select(.starred_at >= "'$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%SZ')'")) | .[].login' > new_stargazers.txt
 
       - name: Thank New Stargazers
         env:
@@ -31,15 +32,14 @@ jobs:
 
               gh issue create \
                 --title "Thanks for starring, @$STARGAZER! 🌟" \
-                --body |
-                Hey @$STARGAZER, thanks for supporting Opteryx! 🎉  
-                
+                --body "Hey @$STARGAZER, thanks for supporting Opteryx! 🎉  
+
                 If you're interested in diving deeper, here are a few ways to get involved:  
                 - 📖 **Explore the Docs** → [opteryx.dev](https://opteryx.dev)  
                 - 💬 **Join the Discussion** → [Discord](https://discord.gg/qpv2tr989x)  
                 - 🐘 **Follow Us** → [Mastodon](https://mastodon.social/@opteryx) | [Twitter/X](https://twitter.com/OpteryxSQL)  
 
-                We’d love to hear how you’re using Opteryx! Let us know in **Discord** or by opening a discussion. 🚀
+                We’d love to hear how you’re using Opteryx! Let us know in **Discord** or by opening a discussion. 🚀" \
                 --label "thank-you"
 
             done < new_stargazers.txt
