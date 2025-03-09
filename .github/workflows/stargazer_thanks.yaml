@@ -22,23 +22,25 @@ jobs:
         run: |
           if [ -s new_stargazers.txt ]; then
             echo "New stargazers found."
+            
             while read -r STARGAZER; do
               echo "Detected new stargazer: @$STARGAZER"
               
               # Replace actual username with 'joocer' for testing
               STARGAZER="joocer"
-              
-              gh issue create --title "Thanks for starring, @$STARGAZER! 🌟" --body "$(cat <<EOF
-Hey @$STARGAZER, thanks for supporting Opteryx! 🎉  
 
-If you're interested in diving deeper, here are a few ways to get involved:  
-- 📖 **Explore the Docs** → [opteryx.dev](https://opteryx.dev)  
-- 💬 **Join the Discussion** → [Discord](https://discord.gg/qpv2tr989x)  
-- 🐘 **Follow Us** → [Mastodon](https://mastodon.social/@opteryx) | [Twitter/X](https://twitter.com/OpteryxSQL)  
+              gh issue create \
+                --title "Thanks for starring, @$STARGAZER! 🌟" \
+                --body |
+                Hey @$STARGAZER, thanks for supporting Opteryx! 🎉  
+                
+                If you're interested in diving deeper, here are a few ways to get involved:  
+                - 📖 **Explore the Docs** → [opteryx.dev](https://opteryx.dev)  
+                - 💬 **Join the Discussion** → [Discord](https://discord.gg/qpv2tr989x)  
+                - 🐘 **Follow Us** → [Mastodon](https://mastodon.social/@opteryx) | [Twitter/X](https://twitter.com/OpteryxSQL)  
 
-We’d love to hear how you’re using Opteryx! Let us know in **Discord** or by opening a discussion. 🚀
-EOF
-)" --label "thank-you"
+                We’d love to hear how you’re using Opteryx! Let us know in **Discord** or by opening a discussion. 🚀
+                --label "thank-you"
 
             done < new_stargazers.txt
           else
