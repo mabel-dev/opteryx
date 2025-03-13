@@ -315,7 +315,7 @@ def array_cast(array, element_type):
     parser = OrsoTypes[element_type[0]].parse
     for i, row in enumerate(array):
         row_res = []
-        if row is not None:
+        if row is not None and hasattr(row, "__iter__"):
             for element in row:
                 if element is None:
                     continue
@@ -333,7 +333,7 @@ def array_cast_safe(array, element_type):
     parser = OrsoTypes[element_type[0]].parse
     for i, row in enumerate(array):
         row_res = []
-        if row is not None:
+        if row is not None and hasattr(row, "__iter__"):
             for element in row:
                 if element is None:
                     continue
