@@ -11,10 +11,12 @@ crate-type = ["cdylib"]
 [dependencies]
 pythonize = "0.23"
 serde = "1.0.171"
+regex = { version = "1.10", features = ["perf"] }
+regex-automata = "0.4"  # SIMD acceleration
 
 [dependencies.pyo3]
 version = "0.23"
-features = ["extension-module"]
+features = ["extension-module", "abi3", "abi3-py311"]
 
 [dependencies.sqlparser]
 version = "0.54.0"

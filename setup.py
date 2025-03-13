@@ -11,8 +11,6 @@ import glob
 import os
 import platform
 from distutils.sysconfig import get_config_var
-from typing import Any
-from typing import Dict
 
 import numpy
 from Cython.Build import cythonize
@@ -56,14 +54,6 @@ if includepy:
 include_dirs = [p for p in include_dirs if os.path.exists(p)]
 
 print("Include paths:", include_dirs)
-
-def rust_build(setup_kwargs: Dict[str, Any]) -> None:
-    setup_kwargs.update(
-        {
-            "rust_extensions": [RustExtension("opteryx.compute", "Cargo.toml", debug=False)],
-            "zip_safe": False,
-        }
-    )
 
 
 __author__ = "notset"
@@ -284,7 +274,9 @@ setup_config = {
     "python_requires": ">=3.9",
     "url": "https://github.com/mabel-dev/opteryx/",
     "install_requires": required,
-    "ext_modules": cythonize(extensions),
+    "rust_extensions": [RustExtension("opteryx.compute", "Cargo.toml", debug=False)],
+    
+    "zip_safe": False,
     "entry_points": {
         "console_scripts": ["opteryx=opteryx.command:main"],
     },
@@ -294,6 +286,6 @@ setup_config = {
     "compiler_directives": COMPILER_DIRECTIVES,
 }
 
-rust_build(setup_config)
-
+setup(**setup_config)
+setup_config["ext_modules"] = cythonize(extensions)
 setup(**setup_config)

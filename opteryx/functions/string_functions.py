@@ -357,8 +357,7 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    # import re2 as re
-    import re
+    from opteryx.compute import regex_replace_batch
 
     pattern = _pattern[0]
     if isinstance(pattern, numpy.generic):
@@ -368,7 +367,14 @@ def regex_replace(array, _pattern, _replacement):
     if isinstance(replacement, numpy.generic):
         replacement = replacement.item()
 
-    compiled_pattern = re.compile(pattern).sub
+    import time
+
+    print(array)
+    s = time.monotonic_ns()
+    ret = regex_replace_batch(pattern, replacement, array)
+    print(time.monotonic_ns() - s, len(array))
+    return ret
+
     return numpy.array(
-        [compiled_pattern(replacement, _value) for _value in array], dtype=numpy.bytes_
+        [replace(pattern, replacement, _value) for _value in array], dtype=numpy.bytes_
     )
