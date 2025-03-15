@@ -324,9 +324,11 @@ def array_cast(array, element_type):
 
     result = numpy.empty(len(array), dtype=list)
     parser = OrsoTypes[element_type[0]].parse
+    if hasattr(array, "to_numpy"):
+        array = array.to_numpy(zero_copy_only=False)
     for i, row in enumerate(array):
         row_res = []
-        if row is not None and hasattr(row, "__iter__"):
+        if row is not None:
             for element in row:
                 if element is None:
                     continue
@@ -344,13 +346,12 @@ def array_cast_safe(array, element_type):
     parser = OrsoTypes[element_type[0]].parse
     for i, row in enumerate(array):
         row_res = []
-        if row is not None and hasattr(row, "__iter__"):
-            for element in row:
-                if element is None:
-                    continue
-                value = None
-                with suppress(Exception):
+        with suppress(Exception):
+            if row is not None:
+                for element in row:
+                    if element is None:
+                        continue
                     value = parser(element)
                     row_res.append(value)
-            result[i] = row_res
+        result[i] = row_res
     return result
