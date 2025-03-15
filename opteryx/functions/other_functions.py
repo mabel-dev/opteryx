@@ -118,8 +118,13 @@ def if_null(values, replacements):
     if len(replacements) == 1:
         replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
 
-    # Use NumPy's where function to vectorize the operation
-    return numpy.where(is_null_mask, replacements, values).astype(replacements.dtype)
+    if hasattr(replacements, "to_numpy"):
+        replacements = replacements.to_numpy(zero_copy_only=False)
+    if hasattr(values, "to_numpy"):
+        values = values.to_numpy(zero_copy_only=False)
+
+    target_type = numpy.promote_types(values.dtype, replacements.dtype)
+    return numpy.where(is_null_mask, replacements, values).astype(target_type)
 
 
 def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.ndarray:
@@ -136,8 +141,14 @@ def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.nda
     """
     from opteryx.managers.expression.unary_operations import _is_not_null
 
+    if hasattr(replacements, "to_numpy"):
+        replacements = replacements.to_numpy(zero_copy_only=False)
+    if hasattr(values, "to_numpy"):
+        values = values.to_numpy(zero_copy_only=False)
+
     is_not_null_mask = _is_not_null(values)
-    return numpy.where(is_not_null_mask, replacements, values).astype(replacements.dtype)
+    target_type = numpy.promote_types(values.dtype, replacements.dtype)
+    return numpy.where(is_not_null_mask, replacements, values).astype(target_type)
 
 
 def null_if(col1, col2):
