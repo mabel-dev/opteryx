@@ -32,11 +32,11 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
-
 def get_tests(test_type):
     suites = glob.glob(f"**/**.{test_type}", recursive=True)
     for suite in suites:
         with open(suite, mode="r") as test_file:
+            yield f"/* TEST FILE: {suite.split('.')[1].split('/')[-1]} */ SELECT 1"
             yield from [
                 line for line in test_file.read().splitlines() if len(line) > 0 and not line.startswith(("#", "--"))
             ]

@@ -1,3 +1,8 @@
+# This is the clickbench suite, we run it on a 1/100th size dataset
+# primarily to ensure continued compatibility, note that most of the
+# problems running clickbench is due to the size of the data, these
+# may run but the benchmark may still have failures.
+
 SELECT COUNT(*) FROM testdata.clickbench_tiny;
 SELECT COUNT(*) FROM testdata.clickbench_tiny WHERE AdvEngineID <> 0;
 SELECT SUM(AdvEngineID), COUNT(*), AVG(ResolutionWidth) FROM testdata.clickbench_tiny;
