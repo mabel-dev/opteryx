@@ -19,7 +19,7 @@ firestore
 sqlalchemy
 pymysql
 psycopg2-binary
-duckdb==1.2.0  # 1040
+duckdb==1.2.1  # 1040
 duckdb-engine==0.15.0  # 1040
 cassandra-driver
 pyiceberg[sql-sqlite]
