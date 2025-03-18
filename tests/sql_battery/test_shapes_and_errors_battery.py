@@ -1539,7 +1539,8 @@ id > /* 0 */ 1
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
 
-#        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Russia, Kapustin')", 112, 8, None),
 
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01 01:00'", 1, 2, None),
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
