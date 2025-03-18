@@ -116,8 +116,8 @@ def parameter_list_binder(
         ]
 
     if isinstance(node, dict):
-        if "Value" in node and "Placeholder" in node["Value"]:
-            if node["Value"]["Placeholder"] != "?":
+        if "Value" in node and "Placeholder" in node["Value"]["value"]:
+            if node["Value"]["value"]["Placeholder"] != "?":
                 raise ParameterError("Parameter lists are only used with qmark (?) parameters.")
             if not parameter_set:
                 raise ParameterError(

@@ -262,8 +262,8 @@ def extract_value(clause):
 
 def extract_variable(clause):
     if len(clause) == 1:
-        return clause[0]["value"]
-    return [token["value"] for token in clause]
+        return clause[0]["Identifier"]["value"]
+    return [token["Identifier"]["value"] for token in clause]
 
 
 def extract_simple_filter(filters, identifier: str = "Name"):
@@ -289,7 +289,7 @@ def _table_name(branch):
             break
     if branch["relation"][key]["alias"]:
         return branch["relation"][key]["alias"]["name"]["value"]
-    return ".".join(part["value"] for part in branch["relation"][key]["name"])
+    return ".".join(part["Identifier"]["value"] for part in branch["relation"][key]["name"])
 
 
 def inner_query_planner(ast_branch):
@@ -338,7 +338,7 @@ def inner_query_planner(ast_branch):
             {
                 "relation": {
                     "Table": {
-                        "name": [{"value": "$no_table"}],
+                        "name": [{"Identifier": {"value": "$no_table"}}],
                         "args": None,
                         "alias": None,
                         "with_hints": [],
@@ -373,7 +373,7 @@ def inner_query_planner(ast_branch):
     if _groups is not None and _groups != []:
         if any(p.node_type == NodeType.WILDCARD for p in _projection):
             raise UnsupportedSyntaxError(
-                "SELECT * cannot be used with GROUP BY, fields in the SELECT must be aggregates or in the GROUP BY clause."
+                "SELECT * cannot be used with GROUP BY, Did you mean `GROUP BY ALL`."
             )
         # WILDCARD is used to represent GROUP BY ALL, we group by all columns in the projection
         # which aren't aggregates
@@ -423,13 +423,13 @@ def inner_query_planner(ast_branch):
     _order_by = ast_branch.get("order_by")
     _order_by_columns_not_in_projection = []
     _order_by_columns = []
-    if _order_by and _order_by.get("exprs"):
+    if _order_by and _order_by.get("kind") and _order_by["kind"].get("Expressions"):
         _order_by = [
             (
                 logical_planner_builders.build(item["expr"]),
-                True if item["asc"] is None else item["asc"],
+                True if item["options"]["asc"] is None else item["options"]["asc"],
             )
-            for item in _order_by["exprs"]
+            for item in _order_by["kind"]["Expressions"]
         ]
         if any(c[0].node_type == NodeType.LITERAL for c in _order_by):
             raise UnsupportedSyntaxError("Cannot ORDER BY constant values")
@@ -568,7 +568,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         """
         join_operator = join["join_operator"]
 
-        if join_operator == {"Inner": "Natural"}:
+        if join_operator == {"Join": "Natural"}:
             return "natural join"
         elif join_operator == "CrossJoin":
             return "cross join"
@@ -577,11 +577,14 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
 
         return {
             "FullOuter": "full outer",
+            "Join": "inner",
             "Inner": "inner",
             "LeftAnti": "left anti",
+            "Left": "left outer",
             "LeftOuter": "left outer",
             "LeftSemi": "left semi",
             "RightAnti": "right anti",  # not supported
+            "Right": "right outer",
             "RightOuter": "right outer",
             "RightSemi": "right semi",  # not supported
             "CrossJoin": "cross join",  # should never match, here for completeness
@@ -607,7 +610,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             )
         if join_condition == "Using":
             join_using = [
-                logical_planner_builders.build({"Identifier": identifier[0]})
+                logical_planner_builders.build(identifier[0])
                 for identifier in join["join_operator"][join_operator][join_condition]
             ]
 
@@ -647,8 +650,12 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
     join_step.on, join_step.using = extract_join_condition(join)
 
     # JOIN UNNEST needs to be handled differently
-    if join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper() == "UNNEST":
-        join_step = create_unnest_node(join, join_step)
+    if "Table" in join.get("relation", {}):
+        relation_name = ".".join(
+            logical_planner_builders.build(p).value for p in join["relation"]["Table"]["name"]
+        )
+        if relation_name.upper() == "UNNEST":
+            join_step = create_unnest_node(join, join_step)
 
     return join_step
 
@@ -656,6 +663,12 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
 def create_node_relation(relation):
     sub_plan = LogicalPlan()
     root_node = None
+
+    relation_name = None
+    if "Table" in relation["relation"]:
+        relation_name = ".".join(
+            logical_planner_builders.build(p).value for p in relation["relation"]["Table"]["name"]
+        )
 
     if "Derived" in relation["relation"]:
         if relation["relation"]["Derived"]["subquery"]:
@@ -711,9 +724,9 @@ def create_node_relation(relation):
                 root_node = step_id
         else:  # pragma: no cover
             raise NotImplementedError(relation["relation"]["Derived"])
-    elif is_view(relation["relation"]["Table"]["name"][0]["value"]):
+    elif is_view(relation_name):
         # We're a view, we need to add it to the plan as a subquery
-        view_name = relation["relation"]["Table"]["name"][0]["value"]
+        view_name = relation_name
         sub_plan = view_as_plan(view_name=view_name)
         plan_head = sub_plan.get_exit_points()[0]
 
@@ -736,7 +749,7 @@ def create_node_relation(relation):
     elif relation["relation"]["Table"]["args"]:
         # If we have args, we're a function dataset (like FAKE or UNNEST)
         function = relation["relation"]["Table"]
-        function_name = function["name"][0]["value"].upper()
+        function_name = relation_name.upper()
 
         if function["alias"] is None:
             from opteryx.exceptions import UnnamedColumnError
@@ -771,7 +784,7 @@ def create_node_relation(relation):
         # query (alias) and if there are any hints (hints)
         from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         table = relation["relation"]["Table"]
-        from_step.relation = ".".join(part["value"] for part in table["name"])
+        from_step.relation = relation_name
         from_step.alias = (
             from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
         )
@@ -850,7 +863,7 @@ def plan_execute_query(statement) -> LogicalPlan:
             "EXECUTE does not support USING syntax, please provide parameters in parenthesis."
         )
 
-    statement_name = statement["Execute"]["name"][0]["value"].upper()
+    statement_name = statement["Execute"]["name"][0]["Identifier"]["value"].upper()
     parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
         with open("prepared_statements.json", "r") as ps:
@@ -1028,7 +1041,7 @@ def plan_show_columns(statement):
 
     from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
     table = statement[root_node]["show_options"]["show_in"]["parent_name"]
-    from_step.relation = ".".join(part["value"] for part in table)
+    from_step.relation = ".".join(part["Identifier"]["value"] for part in table)
     from_step.alias = from_step.relation
     from_step.start_date = table[0].get("start_date")
     from_step.end_date = table[0].get("end_date")
