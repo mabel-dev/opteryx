@@ -213,7 +213,7 @@ def try_cast(_type):
 
 def _iterate_single_parameter(func):
     def _inner(array):
-        return numpy.array(list(map(func, array)))
+        return pyarrow.array(list(map(func, array)))
 
     return _inner
 
@@ -233,7 +233,7 @@ def _iterate_double_parameter(func):
     def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        return [func(item, literal[index]) for index, item in enumerate(array)]
+        return pyarrow.array(func(item, literal[index]) for index, item in enumerate(array))
 
     return _inner
 
@@ -242,6 +242,12 @@ def get_len(obj):
     """len, but nullsafe"""
     if hasattr(obj, "__len__"):
         return len(obj)
+    if hasattr(obj, "length"):  # Some Arrow scalar types have .length property
+        return obj.length
+    if hasattr(obj, "nbytes"):  # NumPy scalar types have .nbytes
+        return obj.nbytes
+    if hasattr(obj, "as_py") and isinstance(obj.as_py(), (bytes, str)):  # PyArrow string scalar
+        return len(obj.as_py())
     return None
 
 

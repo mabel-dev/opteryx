@@ -81,7 +81,6 @@ SELECT b'apple' ILIKE b'a%ple';
 SELECT BLOB('apple') RLIKE 'a%ple';
 SELECT b'apple' RLIKE b'a%ple';
 
-
 -- INTEGER Comparisons
 SELECT 42 = 42;        -- True
 SELECT 42 != 43;       -- True
@@ -202,7 +201,6 @@ SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY = current_time;
 SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + current_time = birth_date;
 SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + birth_date = current_time;
 
-
 -- NULL Handling
 SELECT BLOB('apple') = NULL;
 SELECT BLOB('apple') != NULL;
@@ -263,7 +261,6 @@ SELECT CAST(BLOB('42.0') AS DOUBLE) = 42.0;
 -- SELECT CAST(BLOB('21.5') AS DECIMAL) = 21.5;
 SELECT CAST(BLOB('true') AS BOOLEAN) = TRUE;
 -- SELECT CAST(BLOB('2024-10-09') AS DATE) = DATE '2024-10-09';
--- SELECT CAST(BLOB('12:00:00') AS TIME) = TIME '12:00:00';
 -- SELECT CAST(BLOB('2024-10-09 12:00:00') AS TIMESTAMP) = TIMESTAMP '2024-10-09 12:00:00';
 
 -- Type Equivalence Checks Across Different Types (Using CAST)
@@ -394,6 +391,13 @@ SELECT TRY_CAST(alma_mater AS ARRAY<BOOLEAN>) FROM testdata.astronauts
 
 SELECT CAST(alma_mater AS ARRAY<VARCHAR>) FROM testdata.astronauts
 SELECT CAST(alma_mater AS ARRAY<BLOB>) FROM testdata.astronauts
+SELECT CAST(alma_mater AS ARRAY<BOOLEAN>) FROM testdata.astronauts
+SELECT alma_mater::ARRAY<BLOB> FROM testdata.astronauts
+SELECT alma_mater::ARRAY<VARCHAR> FROM testdata.astronauts
+SELECT alma_mater::ARRAY<BOOLEAN> FROM testdata.astronauts
+
+SELECT CAST(CAST(alma_mater AS ARRAY<BOOLEAN>) AS ARRAY<VARCHAR>) FROM testdata.astronauts
+SELECT CAST(CAST(alma_mater AS ARRAY<BLOB>) AS ARRAY<VARCHAR>) FROM testdata.astronauts
 
 SELECT * FROM $astronauts WHERE birth_place->>'town' ILIKE b'C%e%r'
 SELECT * FROM $astronauts WHERE birth_place->>'town' ILIKE 'C%e%r'

@@ -2039,6 +2039,12 @@ id > /* 0 */ 1
         ("SELECT DISTINCT id > 1 AS AM FROM $planets", 2, 1, None), # BOOLEAN
         ("SELECT DISTINCT surfacePressure > 1 AS AM FROM $planets", 3, 1, None), # BOOLEAN (with nulls)
 
+        ("SELECT CAST(p.name AS ARRAY<VARCHAR>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+        ("SELECT CAST(p.id AS ARRAY<VARCHAR>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+        ("SELECT CAST(p.mass AS ARRAY<VARCHAR>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+        ("SELECT CAST(p.name AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+        ("SELECT CAST(p.id AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+        ("SELECT CAST(p.mass AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
@@ -2394,6 +2400,9 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        # 2489
+        ("SELECT name FROM $planets where len(md5(name)) == 32", 9, 1, None),
+        ("SELECT name FROM $planets WHERE case when name is null then '' else name end == 'Earth'", 1, 1, None),
 ]
 # fmt:on
 

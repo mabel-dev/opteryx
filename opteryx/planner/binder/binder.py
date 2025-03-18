@@ -216,6 +216,8 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
     (executing comparisons).
     """
     # Import relevant classes and functions
+    from orso.types import find_compatible_type
+
     from opteryx.managers.expression import ExpressionColumn
     from opteryx.managers.expression import format_expression
     from opteryx.managers.expression import get_all_nodes_of_type
@@ -358,18 +360,20 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                         result_type = node.parameters[0].schema_column.element_type
                     # Some functions support nulls different positions
                     elif node.value in ("COALESCE", "IFNULL", "IFNOTNULL"):
+                        discovered_types = []
                         for param in node.parameters:
                             if param.node_type in (
                                 NodeType.LITERAL,
                                 NodeType.IDENTIFIER,
                                 NodeType.FUNCTION,
+                                NodeType.AGGREGATOR,
                             ) and param.schema_column.type not in (
                                 OrsoTypes.NULL,
                                 0,
                                 OrsoTypes._MISSING_TYPE,
                             ):
-                                result_type = param.schema_column.type
-                                break
+                                discovered_types.append(param.schema_column.type)
+                        result_type = find_compatible_type(discovered_types)
                         # if we have a type, we should ensure all the parameters are the same type
                         if result_type not in (OrsoTypes._MISSING_TYPE, 0):
                             parameters = []

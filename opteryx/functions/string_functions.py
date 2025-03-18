@@ -21,7 +21,9 @@ def string_slicer_left(arr, length):
     if not hasattr(length, "__iter__"):
         length = [length] * len(arr)
     if hasattr(arr, "to_numpy"):
-        arr = arr.to_numpy(False)
+        arr = arr.to_numpy(zero_copy_only=False)
+    if hasattr(length, "to_numpy"):
+        length = length.to_numpy(zero_copy_only=False)
     return [None if s is None else s[: int(length[i])] for i, s in enumerate(arr)]
 
 
@@ -34,7 +36,9 @@ def string_slicer_right(arr, length):
     if not hasattr(length, "__iter__"):
         length = [length] * len(arr)
     if hasattr(arr, "to_numpy"):
-        arr = arr.to_numpy(False)
+        arr = arr.to_numpy(zero_copy_only=False)
+    if hasattr(length, "to_numpy"):
+        length = length.to_numpy(zero_copy_only=False)
     return [None if s is None else s[-int(length[i]) :] for i, s in enumerate(arr)]
 
 
