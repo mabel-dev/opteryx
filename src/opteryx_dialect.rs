@@ -111,8 +111,8 @@ impl Dialect for OpteryxDialect {
     }
 
     // Does the dialect support the `MATCH() AGAINST()` syntax?
-//    fn supports_match_against(&self) -> bool {
-//        true
-//    }
+    fn supports_match_against(&self) -> bool {
+        true
+    }
 
 }
