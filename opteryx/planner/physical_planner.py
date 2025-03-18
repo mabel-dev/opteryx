@@ -63,7 +63,7 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
                 node = operators.FilterJoinNode(query_properties, **node_config)
             else:
                 # We don't support other JOIN types, e.g. RIGHT SEMI, RIGHT ANTI
-                raise InvalidInternalStateError(f"Unsupported JOIN type '{node_config['type']}'")
+                raise InvalidInternalStateError(f"Unsupported JOIN type '{node_config.get('type')}'")
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, **{k:v for k,v in node_config.items() if k in ("limit", "offset", "all_relations")})
         elif node_type == LogicalPlanStepType.Order:

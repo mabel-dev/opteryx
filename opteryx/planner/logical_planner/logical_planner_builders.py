@@ -141,8 +141,9 @@ def case_when(value, alias: Optional[List[str]] = None, key=None):
     else_result = build(value["else_result"])
 
     conditions = []
+    results = []
     for condition in value["conditions"]:
-        operand = build(condition)
+        operand = build(condition["condition"])
         if fixed_operand is None:
             conditions.append(operand)
         else:
@@ -154,15 +155,13 @@ def case_when(value, alias: Optional[List[str]] = None, key=None):
                     right=operand,
                 )
             )
+        result = build(condition["result"])
+        results.append(result)
+
     if else_result is not None:
         conditions.append(Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True))
-    conditions_node = Node(NodeType.EXPRESSION_LIST, parameters=conditions)
-
-    results = []
-    for result in value["results"]:
-        results.append(build(result))
-    if else_result is not None:
         results.append(else_result)
+    conditions_node = Node(NodeType.EXPRESSION_LIST, parameters=conditions)
     results_node = Node(NodeType.EXPRESSION_LIST, parameters=results)
 
     return Node(
@@ -191,7 +190,7 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
     if "Custom" in data_type:
-        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
+        data_type = branch["data_type"]["Custom"][0][0]["Identifier"]["value"].upper()
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif data_type == "Date":
@@ -295,7 +294,7 @@ def floor(value, alias: Optional[List[str]] = None, key=None):
 
 
 def function(branch, alias: Optional[List[str]] = None, key=None):
-    func = branch["name"][0]["value"].upper()
+    func = ".".join(build(p).value for p in branch["name"]).upper()
 
     order_by = None
     limit = None
@@ -310,7 +309,11 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
         for clause in branch["args"]["List"]["clauses"]:
             if "OrderBy" in clause:
                 order_by = [
-                    (build(item["expr"]), not bool(item["asc"])) for item in clause["OrderBy"]
+                    (
+                        build(item["expr"]),
+                        True if item["options"]["asc"] is None else item["options"]["asc"],
+                    )
+                    for item in clause["OrderBy"]
                 ]
             elif "Limit" in clause:
                 limit = build(clause["Limit"]).value
@@ -365,6 +368,8 @@ def hex_literal(branch, alias: Optional[List[str]] = None, key=None):
 
 def identifier(branch, alias: Optional[List[str]] = None, key=None):
     """idenitifier doesn't have a qualifier (recorded in source)"""
+    if "Identifier" in branch:
+        return build(branch["Identifier"], alias=alias)
     return LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
         alias=alias,  # type: ignore
@@ -644,7 +649,7 @@ def position(value, alias: Optional[List[str]] = None, key=None):
 
 
 def qualified_wildcard(branch, alias: Optional[List[str]] = None, key=None):
-    parts = [part["value"] for part in [node for node in branch if isinstance(node, list)][0]]
+    parts = [build(part).value for part in branch[0]["ObjectName"]]
     qualifier = (".".join(parts),)
     return Node(NodeType.WILDCARD, value=qualifier, alias=alias)
 
@@ -723,7 +728,7 @@ def typed_string(branch, alias: Optional[List[str]] = None, key=None):
         data_type = type_key
     data_type = data_type.upper()
 
-    data_value = branch["value"]
+    data_value = build(branch["value"]).value
 
     Datatype_Map: Dict[str, Tuple[str, Callable]] = {
         "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
@@ -746,11 +751,11 @@ def unary_op(branch, alias: Optional[List[str]] = None, key=None):
         centre = build(branch["expr"])
         return Node(node_type=NodeType.NOT, centre=centre)
     if branch["op"] == "Minus":
-        node = literal_number(branch["expr"]["Value"]["Number"], alias=alias)
+        node = literal_number(branch["expr"]["Value"]["value"]["Number"], alias=alias)
         node.value = 0 - node.value
         return node
     if branch["op"] == "Plus":
-        return literal_number(branch["expr"]["Value"]["Number"], alias=alias)
+        return literal_number(branch["expr"]["Value"]["value"]["Number"], alias=alias)
 
 
 def wildcard_filter(branch, alias: Optional[List[str]] = None, key=None):
@@ -848,6 +853,7 @@ BUILDERS = {
     "UnaryOp": unary_op,
     "Unnamed": build,
     "Value": build,
+    "value": build,
     "Wildcard": wildcard_filter,
     "UnnamedExpr": build,
 }
