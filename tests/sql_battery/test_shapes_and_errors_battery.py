@@ -2006,7 +2006,10 @@ id > /* 0 */ 1
         
         ("SELECT HUMANIZE(1000)", 1, 1, None),
         ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
-        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
+        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None),
+        ("SELECT * FROM $satellites WHERE id > 1_00", 77, 8, None),
+        ("SELECT * FROM $satellites WHERE radius > 10.0_0", 77, 8, None),
+        ("SELECT * FROM $satellites WHERE radius > 10.0_0 and id > 1_00", 42, 8, None),
 
         ("SELECT * EXCEPT(id) FROM $planets", 9, 19, None),
         ("SELECT * EXCEPT(id, name) FROM $planets", 9, 18, None),

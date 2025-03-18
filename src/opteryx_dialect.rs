@@ -106,9 +106,9 @@ impl Dialect for OpteryxDialect {
     }
 
     // Returns true if the dialect supports numbers containing underscores, e.g. `10_000_000`
-//    fn supports_numeric_literal_underscores(&self) -> bool {
-//        true
-//    }
+    fn supports_numeric_literal_underscores(&self) -> bool {
+        true
+    }
 
     // Does the dialect support the `MATCH() AGAINST()` syntax?
 //    fn supports_match_against(&self) -> bool {
