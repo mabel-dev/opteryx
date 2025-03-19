@@ -115,13 +115,13 @@ def if_null(values, replacements):
     # Create a mask for null values
     is_null_mask = _is_null(values)
 
-    if len(replacements) == 1:
-        replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
-
     if hasattr(replacements, "to_numpy"):
         replacements = replacements.to_numpy(zero_copy_only=False)
     if hasattr(values, "to_numpy"):
         values = values.to_numpy(zero_copy_only=False)
+
+    if len(replacements) == 1:
+        replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
 
     target_type = numpy.promote_types(values.dtype, replacements.dtype)
     return numpy.where(is_null_mask, replacements, values).astype(target_type)

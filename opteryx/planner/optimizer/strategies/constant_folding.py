@@ -298,6 +298,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 pass
             # what ever the reason, just skip
             # DEBUG:log (err)
+
     return root
 
 

@@ -9,11 +9,29 @@ Optimization Rule - Predicate rewriter
 Type: Heuristic
 Goal: Chose more efficient predicate evaluations
 
-We rewrite some conditions to a more optimal form; for example if doing a
-LIKE comparison and the pattern contains no wildcards, we rewrite to be an
-equals check.
+We rewrite conditions to a more optimal form based on two objectives:
+1) the execution of the condition is faster
+2) the condition is more likely to be able to be pushed to the storage layer
 
-Rewrite to a form which is just faster, even if it can't be pushed.
+Rewrites Implemented:
+
+x IN (single_value) → x = single_value
+x NOT IN (single_value) → x != single_value
+x LIKE 'pattern' → x = 'pattern' (when no wildcards)
+x NOT LIKE 'pattern' → x != 'pattern' (when no wildcards)
+x LIKE '%pattern%' → x INSTR 'pattern' (for contains without underscores)
+x NOT LIKE '%pattern%' → x NOT INSTR 'pattern' (for contains without underscores)
+x ILIKE '%pattern%' → x IINSTR 'pattern' (case-insensitive version)
+x NOT ILIKE '%pattern%' → x NOT IINSTR 'pattern' (case-insensitive version)
+x LIKE '%%%pattern%%' → x LIKE '%pattern%' (removing adjacent wildcards)
+x ANY_OP = value → x IN (value) (when right side is a literal)
+end - start > interval → start + interval < end (for date comparisons)
+CASE WHEN x IS NULL THEN y ELSE x END → IFNULL(x, y)
+CASE WHEN x THEN y ELSE z END → IIF(x, y, z)
+COALESCE(x, y) → IFNULL(x, y) (when only two parameters)
+SUBSTRING(x, 1, n) → LEFT(x, n) (when starting at position 1)
+x LIKE 'pattern1%' OR x LIKE '%pattern2' → x REGEX 'pattern1.*|.*pattern2$' (for ORed LIKE conditions)
+
 """
 
 import re
@@ -31,6 +49,7 @@ from opteryx.planner.binder.operator_map import determine_type
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
+from opteryx.utils.sql import sql_like_to_regex
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
@@ -96,6 +115,77 @@ def reorder_interval_calc(predicate):
         return predicate
 
 
+def rewrite_ored_like_to_regex(predicate, statistics):
+    """
+    Rewrite multiple OR'ed LIKE conditions on the same column to a single regex pattern.
+
+    Example:
+    col LIKE 'pattern1%' OR col LIKE '%pattern2' OR col LIKE '%pattern3%'
+    -->
+    col REGEX '^pattern1.*|.*pattern2$|.*pattern3.*$'
+
+    This optimization reduces multiple string pattern checks to a single regex evaluation.
+    """
+    # Collect LIKE conditions that can be combined
+    like_conditions = {}
+    can_rewrite = True
+
+    def collect_likes(node, likes_dict):
+        nonlocal can_rewrite
+
+        # Base case: LIKE/ILIKE condition
+        if node.node_type == NodeType.COMPARISON_OPERATOR and node.value in {"Like", "ILike"}:
+            # Only proceed if the right side is a literal
+            if node.right.node_type == NodeType.LITERAL:
+                # Get column identifier for grouping
+                col_id = None
+                if node.left.node_type == NodeType.IDENTIFIER:
+                    col_id = node.left.schema_column.identity
+
+                if col_id:
+                    is_case_sensitive = node.value == "Like"
+                    if col_id not in likes_dict:
+                        likes_dict[col_id] = {
+                            "patterns": [],
+                            "nodes": [],
+                            "case_sensitive": is_case_sensitive,
+                        }
+                    elif likes_dict[col_id]["case_sensitive"] != is_case_sensitive:
+                        # Mixed case sensitivity not supported in single regex
+                        can_rewrite = False
+                        return
+
+                    likes_dict[col_id]["patterns"].append(node.right.value)
+                    likes_dict[col_id]["nodes"].append(node)
+            return
+
+        # Recursive cases
+        if node.node_type == NodeType.OR:
+            collect_likes(node.left, likes_dict)
+            collect_likes(node.right, likes_dict)
+
+    collect_likes(predicate, like_conditions)
+
+    for col_id, like_data in like_conditions.items():
+        if len(like_data["patterns"]) > 1 and can_rewrite:
+            statistics.optimization_predicate_rewriter_like_to_regex += 1
+            # Create a new regex pattern
+            regex_pattern = "|".join(
+                sql_like_to_regex(pattern, full_match=False) for pattern in like_data["patterns"]
+            )
+            if not like_data["case_sensitive"]:
+                regex_pattern = f"(?i)({regex_pattern})"
+            new_node = like_data["nodes"][0]
+            new_node.value = "RLike"
+            new_node.right.value = regex_pattern
+            for node in like_data["nodes"][1:]:
+                node.value = False
+                node.node_type = NodeType.LITERAL
+                node.type = OrsoTypes.BOOLEAN
+
+    return predicate
+
+
 # Define dispatcher conditions and actions
 dispatcher: Dict[str, Callable] = {
     "rewrite_in_to_eq": rewrite_in_to_eq,
@@ -108,9 +198,11 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
     if predicate.node_type == NodeType.FUNCTION:
         return _rewrite_function(predicate, statistics)
 
-    elif predicate.node_type not in {NodeType.BINARY_OPERATOR, NodeType.COMPARISON_OPERATOR}:
-        # after rewrites, some filters aren't actually predicates
-        return predicate
+    # Add our new rewrite for ORed LIKE conditions
+    if predicate.node_type == NodeType.OR:
+        rewritten = rewrite_ored_like_to_regex(predicate, statistics)
+        if rewritten != predicate:
+            return rewritten
 
     # if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
     if predicate.left:
@@ -119,6 +211,10 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
         predicate.right = _rewrite_predicate(predicate.right, statistics)
     if predicate.centre:
         predicate.centre = _rewrite_predicate(predicate.centre, statistics)
+
+    if predicate.node_type not in {NodeType.BINARY_OPERATOR, NodeType.COMPARISON_OPERATOR}:
+        # after rewrites, some filters aren't actually predicates
+        return predicate
 
     if predicate.right.type == OrsoTypes.VARCHAR:
         if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
