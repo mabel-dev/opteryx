@@ -333,6 +333,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE name RLIKE '.a.y.s.'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE name RLIKE '^Cal.*'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE name rlike '^Cal.*'", 4, 8, None),
+        ("SELECT * FROM $satellites WHERE name RLIKE '(?i)cal.*'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE TRUE", 177, 8, None),
         ("SELECT * FROM $satellites WHERE FALSE", 0, 8, None),
         ("SELECT * FROM $satellites WHERE NOT TRUE", 0, 8, None),
@@ -1546,7 +1547,6 @@ id > /* 0 */ 1
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
         ("SELECT * EXCEPT (id, name, gravity) FROM $planets", 9, 17, None),
 
-
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
 
@@ -1983,6 +1983,22 @@ id > /* 0 */ 1
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, IncorrectTypeError),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name LIKE '%i%'", 4, 1, None),
+        ("SELECT name FROM $planets WHERE name ILIKE '%e%' OR name ILIKE '%i%'", 5, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name LIKE '%i%' OR name LIKE '%a%'", 8, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name ILIKE '%i%'", 4, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR diameter > 50000 OR name LIKE '%i%'", 6, 1, None),
+        ("SELECT name FROM $planets WHERE (name LIKE '%e%' OR name ILIKE '%i%') AND mass > 1e-24", 4, 1, None),
+        ("SELECT name FROM $planets WHERE (name LIKE '%u%' OR name LIKE '%a%') AND (mass > 1e-24 OR diameter < 30000)", 9, 1, None),
+        ("SELECT name FROM $planets WHERE ((name LIKE '%m%' OR name LIKE '%v%') OR (name ILIKE '%u%' OR name ILIKE '%o%'))", 7, 1, None),
+        ("SELECT name FROM $planets WHERE ((name LIKE '%m%' OR name ILIKE '%o%') OR (name ILIKE '%u%' OR name LIKE '%v%'))", 7, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%m%' OR name ILIKE '%o%' OR name ILIKE '%u%' OR name LIKE '%v%'", 7, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%m%' OR (name ILIKE '%o%' OR name ILIKE '%u%') OR name LIKE '%v%'", 7, 1, None),
+        ("SELECT name FROM $planets WHERE ((name ILIKE '%m%' OR name ILIKE '%v%') AND (name LIKE '%u%' OR name LIKE '%o%'))", 2, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name IN ('Earth', 'Mars', 'Jupiter')", 6, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%r%' AND NOT name LIKE '%e%'", 4, 1, None),
+        ("SELECT COUNT(*), name FROM $planets WHERE name LIKE '%a%' OR name ILIKE '%o%' GROUP BY name HAVING COUNT(*) > 0", 5, 2, None),
+
         ("SELECT max(current_time), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max(1) FROM $satellites", 1, 1, None),
@@ -2407,6 +2423,8 @@ id > /* 0 */ 1
         # 2489
         ("SELECT name FROM $planets where len(md5(name)) == 32", 9, 1, None),
         ("SELECT name FROM $planets WHERE case when name is null then '' else name end == 'Earth'", 1, 1, None),
+        #2514
+        ("SELECT * FROM (SELECT '{\"name\": \"John\"}' AS details) AS t WHERE IFNULL(details->'name', '') == 'John'", 1, 1, None),
 ]
 # fmt:on
 

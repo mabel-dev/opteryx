@@ -6,7 +6,7 @@ import numpy
 ESCAPE_SPECIAL_CHARS = re.compile(r"([.^$*+?{}[\]|()\\])")
 
 
-def sql_like_to_regex(pattern: str) -> str:
+def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: bool = True) -> str:
     """
     Converts an SQL `LIKE` pattern into a regular expression.
 
@@ -19,7 +19,7 @@ def sql_like_to_regex(pattern: str) -> str:
         pattern (str): The SQL LIKE pattern.
 
     Returns:
-        str: The equivalent regex pattern, anchored with `^` and `$`.
+        str: The equivalent regex pattern.
 
     Examples:
         sql_like_to_regex("a%")       -> "^a.*?$"
@@ -34,6 +34,13 @@ def sql_like_to_regex(pattern: str) -> str:
 
     # Replace SQL wildcards with regex equivalents
     regex_pattern = "^" + escaped_pattern.replace("%", ".*?").replace("_", ".") + "$"
+    if not full_match:
+        if regex_pattern.startswith("^.*?"):
+            regex_pattern = regex_pattern[4:]
+        if regex_pattern.endswith(".*?$"):
+            regex_pattern = regex_pattern[:-4]
+    if not case_sensitive:
+        regex_pattern = f"(?i)({regex_pattern})"
     return regex_pattern
 
 
