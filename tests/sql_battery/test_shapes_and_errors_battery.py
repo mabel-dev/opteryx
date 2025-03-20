@@ -2369,7 +2369,7 @@ id > /* 0 */ 1
         #2144
         ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->'town' AS town FROM $astronauts) AS T", 357, 2, None),
         ("SELECT town, LENGTH(NULLIF(town, b'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
-        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", None, None, IncompatibleTypesError),
+        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
         # 2159
         ("SELECT * FROM (SELECT 1 * surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure * 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
