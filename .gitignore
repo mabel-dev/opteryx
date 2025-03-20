@@ -183,3 +183,4 @@ tmp/iceberg/**
 hits_split/*.parquet
 clickbench/**
 .github/environment/splunk/docker-compose.yml
+testdata/iceberg/**

@@ -174,6 +174,7 @@ def null_if(col1, col2):
 
     from orso.types import PYTHON_TO_ORSO_MAP
     from orso.types import OrsoTypes
+    from orso.types import find_compatible_type
 
     def get_first_non_null_type(array):
         for item in array:
@@ -184,7 +185,7 @@ def null_if(col1, col2):
     col1_type = get_first_non_null_type(col1.tolist())
     col2_type = get_first_non_null_type(col2.tolist())
 
-    if col1_type != col2_type:
+    if find_compatible_type([col1_type, col2_type], None) is None:
         raise IncompatibleTypesError(
             left_type=col1_type,
             right_type=col2_type,

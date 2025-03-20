@@ -31,6 +31,8 @@ CASE WHEN x THEN y ELSE z END → IIF(x, y, z)
 COALESCE(x, y) → IFNULL(x, y) (when only two parameters)
 SUBSTRING(x, 1, n) → LEFT(x, n) (when starting at position 1)
 x LIKE 'pattern1%' OR x LIKE '%pattern2' → x REGEX 'pattern1.*|.*pattern2$' (for ORed LIKE conditions)
+CONCAT(x, y, z) → x || y || z (CONCAT to operators)
+CONCAT_WS(x, y, z) → y || x || z (CONCAT_WS to operators)
 
 """
 
@@ -128,11 +130,8 @@ def rewrite_ored_like_to_regex(predicate, statistics):
     """
     # Collect LIKE conditions that can be combined
     like_conditions = {}
-    can_rewrite = True
 
     def collect_likes(node, likes_dict):
-        nonlocal can_rewrite
-
         # Base case: LIKE/ILIKE condition
         if node.node_type == NodeType.COMPARISON_OPERATOR and node.value in {"Like", "ILike"}:
             # Only proceed if the right side is a literal
@@ -148,14 +147,13 @@ def rewrite_ored_like_to_regex(predicate, statistics):
                         likes_dict[col_id] = {
                             "patterns": [],
                             "nodes": [],
-                            "case_sensitive": is_case_sensitive,
                         }
-                    elif likes_dict[col_id]["case_sensitive"] != is_case_sensitive:
-                        # Mixed case sensitivity not supported in single regex
-                        can_rewrite = False
-                        return
 
-                    likes_dict[col_id]["patterns"].append(node.right.value)
+                    likes_dict[col_id]["patterns"].append(
+                        sql_like_to_regex(
+                            node.right.value, full_match=False, case_sensitive=is_case_sensitive
+                        )
+                    )
                     likes_dict[col_id]["nodes"].append(node)
             return
 
@@ -167,14 +165,10 @@ def rewrite_ored_like_to_regex(predicate, statistics):
     collect_likes(predicate, like_conditions)
 
     for col_id, like_data in like_conditions.items():
-        if len(like_data["patterns"]) > 1 and can_rewrite:
+        if len(like_data["patterns"]) > 1:
             statistics.optimization_predicate_rewriter_like_to_regex += 1
             # Create a new regex pattern
-            regex_pattern = "|".join(
-                sql_like_to_regex(pattern, full_match=False) for pattern in like_data["patterns"]
-            )
-            if not like_data["case_sensitive"]:
-                regex_pattern = f"(?i)({regex_pattern})"
+            regex_pattern = "|".join(pattern for pattern in like_data["patterns"])
             new_node = like_data["nodes"][0]
             new_node.value = "RLike"
             new_node.right.value = regex_pattern
@@ -323,6 +317,46 @@ def _rewrite_function(function, statistics: QueryStatistics):
         function.value = "LEFT"
         function.parameters = [function.parameters[0], function.parameters[2]]
         return function
+    # CONCAT(x, y, z) → x || y || z
+    if function.value == "CONCAT" and len(function.parameters) > 1:
+        statistics.optimization_predicate_rewriter_concat_to_double_pipe += 1
+        left_node = function.parameters[0]
+        for param in function.parameters[1:]:
+            this_node = Node(
+                node_type=NodeType.BINARY_OPERATOR,
+                value="StringConcat",
+                left=left_node,
+                right=param,
+                schema_column=ExpressionColumn(name="", type=OrsoTypes.VARCHAR),
+            )
+            left_node = this_node
+        this_node.alias = function.alias
+        this_node.schema_column = function.schema_column
+        function = this_node
+    # CONCAT_WS(x, y, z) → y || x || z
+    if function.value == "CONCAT_WS" and len(function.parameters) > 2:
+        statistics.optimization_predicate_rewriter_concatws_to_double_pipe += 1
+        separator = function.parameters[0]
+        left_node = function.parameters[1]
+        for param in function.parameters[2:]:
+            separator_node = Node(
+                node_type=NodeType.BINARY_OPERATOR,
+                value="StringConcat",
+                left=left_node,
+                right=separator,
+                schema_column=ExpressionColumn(name="", type=OrsoTypes.VARCHAR),
+            )
+            this_node = Node(
+                node_type=NodeType.BINARY_OPERATOR,
+                value="StringConcat",
+                left=separator_node,
+                right=param,
+                schema_column=ExpressionColumn(name="", type=OrsoTypes.VARCHAR),
+            )
+            left_node = this_node
+        this_node.alias = function.alias
+        this_node.schema_column = function.schema_column
+        function = this_node
 
     return function
 
