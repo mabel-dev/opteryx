@@ -409,7 +409,7 @@ FUNCTIONS = {
     "HEX_DECODE": (_iterate_single_parameter(string_functions.get_hex_decode), "BLOB", 1.0),
 
     # OTHER
-    "GET": (_get, 0, 1.0),
+    "GET": (_get, "VARIANT", 1.0),
     "GET_STRING": (_get_string, "VARCHAR", 1.0),
     "LIST_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),

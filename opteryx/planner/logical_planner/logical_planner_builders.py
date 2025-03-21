@@ -731,12 +731,12 @@ def typed_string(branch, alias: Optional[List[str]] = None, key=None):
     data_value = build(branch["value"]).value
 
     Datatype_Map: Dict[str, Tuple[str, Callable]] = {
-        "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
-        "DATE": ("DATE", lambda x: numpy.datetime64(x, "D")),
-        "INTEGER": ("INTEGER", numpy.int64),
-        "DOUBLE": ("DOUBLE", numpy.float64),
-        "DECIMAL": ("DECIMAL", decimal.Decimal),
-        "BOOLEAN": ("BOOLEAN", bool),
+        "TIMESTAMP": (OrsoTypes.TIMESTAMP, lambda x: numpy.datetime64(x, "us")),
+        "DATE": (OrsoTypes.DATE, lambda x: numpy.datetime64(x, "D")),
+        "INTEGER": (OrsoTypes.INTEGER, numpy.int64),
+        "DOUBLE": (OrsoTypes.DOUBLE, numpy.float64),
+        "DECIMAL": (OrsoTypes.DECIMAL, decimal.Decimal),
+        "BOOLEAN": (OrsoTypes.BOOLEAN, bool),
     }
 
     mapper = Datatype_Map.get(data_type)

@@ -44,10 +44,6 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
         "AllOpEq",
         "AllOpNotEq",
         "AtArrow",
-        "InStr",
-        "NotInStr",
-        "IInStr",
-        "NotIInStr",
     ):  # and right_type != OrsoTypes.NULL:
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(left_arr)
@@ -152,18 +148,26 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value[0])
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         return numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value[0])
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         matches = numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value[0])
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         return numpy.asarray(
             list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
         )
     if operator == "NotIInStr":
         needle = str(value[0])
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         matches = numpy.asarray(
             list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
         )
