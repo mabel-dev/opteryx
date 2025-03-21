@@ -82,22 +82,6 @@ class NodeType(int, Enum):
     EVALUATED = 44  # 0010 1100 - memoize results
 
 
-ORSO_TO_NUMPY_MAP = {
-    OrsoTypes.ARRAY: numpy.dtype("O"),
-    OrsoTypes.BLOB: numpy.dtype("S"),
-    OrsoTypes.BOOLEAN: numpy.dtype("?"),
-    OrsoTypes.DATE: numpy.dtype("datetime64[D]"),  # [2.5e16 BC, 2.5e16 AD]
-    OrsoTypes.DECIMAL: numpy.dtype("O"),
-    OrsoTypes.DOUBLE: numpy.dtype("float64"),
-    OrsoTypes.INTEGER: numpy.dtype("int64"),
-    OrsoTypes.INTERVAL: numpy.dtype("m"),
-    OrsoTypes.STRUCT: numpy.dtype("O"),
-    OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
-    OrsoTypes.TIME: numpy.dtype("O"),
-    OrsoTypes.VARCHAR: numpy.dtype("U"),
-    OrsoTypes.NULL: numpy.dtype("O"),
-}
-
 LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
     NodeType.AND: pyarrow.compute.and_,
     NodeType.OR: pyarrow.compute.or_,
@@ -238,10 +222,12 @@ def _inner_evaluate(root: Node, table: Table):
             return numpy.array([root.value] * table.num_rows, dtype=numpy.bytes_)
         if literal_type == OrsoTypes.INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
+        if isinstance(literal_type, OrsoTypes):
+            literal_type = literal_type.numpy_dtype
         return numpy.full(
             shape=table.num_rows,
             fill_value=root.value,
-            dtype=ORSO_TO_NUMPY_MAP[literal_type],
+            dtype=literal_type,
         )  # type:ignore
 
     # BOOLEAN OPERATORS
@@ -421,9 +407,7 @@ def evaluate_and_append(expressions, table: Table):
                 new_column = evaluate_statement(statement, table)
             else:
                 # we make all unknown fields to object type
-                new_column = numpy.array(
-                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, object)
-                )
+                new_column = numpy.array([], dtype=statement.schema_column.type.numpy_dtype)
                 new_column = pyarrow.array(new_column)
 
             if isinstance(new_column, pyarrow.ChunkedArray):

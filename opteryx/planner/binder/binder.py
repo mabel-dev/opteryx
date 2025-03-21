@@ -400,8 +400,14 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                         else:
                             result_type = OrsoTypes.INTEGER
                     # Some function we don't know the return type until run time
-                    elif node.value in ("GET",):
-                        result_type = 0  # OrsoTypes._MISSING_TYPE
+                    elif node.value == "GET":
+                        result_type = 0
+                        if node.parameters[1].type == OrsoTypes.INTEGER:
+                            schema_column = node.parameters[0].schema_column
+                            if schema_column.type == OrsoTypes.ARRAY:
+                                result_type = schema_column.element_type
+                            elif schema_column.type in (OrsoTypes.VARCHAR, OrsoTypes.BLOB):
+                                result_type = schema_column.type
 
                 schema_column = FunctionColumn(
                     name=column_name, type=result_type, element_type=element_type, aliases=aliases
