@@ -12,7 +12,7 @@ from orso.types import OrsoTypes
 
 import opteryx
 import opteryx.virtual_datasets
-from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
+from opteryx.managers.expression import NodeType, evaluate
 from opteryx.models import Node, QueryStatistics
 
 stats = QueryStatistics()
@@ -50,7 +50,7 @@ def test_literals(node_type, value_type, value):
     node = Node(node_type, type=value_type, value=value, schema_column=schema_column)
     values = evaluate(node, table=planets)
     if value_type != OrsoTypes.ARRAY:
-        assert values.dtype == ORSO_TO_NUMPY_MAP[value_type], values
+        assert values.dtype == value_type.numpy_dtype, values
     else:
         assert type(values[0]) == numpy.ndarray, values[0]
 #    assert len(values) == planets.num_rows, f"{len(values)} != {planets.num_rows}"
