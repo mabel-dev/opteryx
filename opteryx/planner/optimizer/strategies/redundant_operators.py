@@ -40,6 +40,13 @@ class RedundantOperationsStrategy(OptimizationStrategy):
         # not doing anything so can be removed.
         if node.node_type == LogicalPlanStepType.Project:
             providers = context.pre_optimized_tree.ingoing_edges(context.node_id)
+            consumer = context.pre_optimized_tree.outgoing_edges(context.node_id)
+            if consumer:
+                consumer_node = context.pre_optimized_tree[consumer[0][1]]
+                if consumer_node.node_type == LogicalPlanStepType.Union:
+                    # if the consumer is a union, we can't remove the project
+                    return context
+
             if len(providers) == 1:
                 provider_nid = providers[0][0]
                 provider_node = context.pre_optimized_tree[provider_nid]
