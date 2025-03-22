@@ -2160,7 +2160,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets GROUP BY name", 9, 1, UnsupportedSyntaxError),
         # found testing
         ("SELECT user_name FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
-        #769
+        # 769
         ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT LEAST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT SORT(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
@@ -2366,7 +2366,7 @@ id > /* 0 */ 1
 #        ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
         # 2112
         ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),
-        #2144
+        # 2144
         ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->'town' AS town FROM $astronauts) AS T", 357, 2, None),
         ("SELECT town, LENGTH(NULLIF(town, b'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
         ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
@@ -2423,8 +2423,12 @@ id > /* 0 */ 1
         # 2489
         ("SELECT name FROM $planets where len(md5(name)) == 32", 9, 1, None),
         ("SELECT name FROM $planets WHERE case when name is null then '' else name end == 'Earth'", 1, 1, None),
-        #2514
+        # 2514
         ("SELECT * FROM (SELECT '{\"name\": \"John\"}' AS details) AS t WHERE IFNULL(details->'name', '') == 'John'", 1, 1, None),
+        # 2523
+        ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 1, 2, None),
+        ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION ALL SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 2, 2, None),
+
 ]
 # fmt:on
 

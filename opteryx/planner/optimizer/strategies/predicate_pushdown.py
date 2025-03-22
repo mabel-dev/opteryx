@@ -62,7 +62,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if context.last_nid:
                 context.optimized_plan.add_edge(context.node_id, context.last_nid)
 
-        elif node.node_type == LogicalPlanStepType.Limit:
+        elif node.node_type in (LogicalPlanStepType.Limit, LogicalPlanStepType.Union):
             # don't push filters past limits
 
             for predicate in context.collected_predicates:
