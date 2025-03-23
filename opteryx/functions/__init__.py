@@ -328,7 +328,7 @@ FUNCTIONS = {
     "CONNECTION_ID": (lambda x: None, "VARCHAR", 1.0),
     "DATABASE": (lambda x: None, "VARCHAR", 1.0),
     "USER": (lambda x: None, "VARCHAR", 1.0),
-    # DEBUG: "SLEEP": (lambda x: [sleep(x)], OrsoTypes.NULL, 1.0), # SLEEP is only available in 'debug' mode
+    # DEBUG: "SLEEP": (lambda x: [sleep(x)], OrsoTypes.NULL, 10.0), # SLEEP is only available in 'debug' mode
 
     # TYPE CONVERSION
     "ARRAY": (other_functions.array_cast, "VARIANT", 1.0),
