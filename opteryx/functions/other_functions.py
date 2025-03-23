@@ -129,15 +129,21 @@ def if_null(values, replacements):
 
 def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.ndarray:
     """
-    Retain non-null values in `values`, replacing null values with `replacements`.
+    Optimizer helper function: replace a value only if it is not null.
+
+    This is *not* SQL's IFNULL/COALESCE. This is used during constant folding
+    to preserve null-awareness while simplifying expressions.
+
+    For each element:
+        if value is NOT null → use replacement
+        if value IS null → keep the original null
 
     Parameters:
-        values: A NumPy array containing the original values.
-        replacements: A NumPy array of replacement values.
-        is_null: A function that identifies null values in `values`.
+        values: Original values (may include nulls).
+        replacements: Values to use if the original is not null.
 
     Returns:
-        A NumPy array with non-null values retained.
+        Array with replacements where applicable, nulls otherwise.
     """
     from opteryx.managers.expression.unary_operations import _is_not_null
 
