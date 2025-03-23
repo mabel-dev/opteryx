@@ -47,6 +47,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.models import Node
 from opteryx.models import QueryStatistics
+from opteryx.planner import build_literal_node
 from opteryx.planner.binder.operator_map import determine_type
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
@@ -180,6 +181,63 @@ def rewrite_ored_like_to_regex(predicate, statistics):
     return predicate
 
 
+def rewrite_ored_eq_to_inlist(predicate, statistics):
+    """
+    Rewrite multiple OR'ed Equals conditions on the same column to a single regex pattern.
+
+    Example:
+    name = 'Earth' OR name = 'Mars' OR name = 'Venus'
+    -->
+    name IN ('Earth', 'Mars', 'Venus')
+    """
+    # Collect Equals conditions that can be combined
+    eq_conditions = {}
+
+    def collect_eqs(node, eqs_dict):
+        # Base case: LIKE/ILIKE condition
+        if node.node_type == NodeType.COMPARISON_OPERATOR and node.value in {"Eq"}:
+            # Only proceed if the right side is a literal
+            if node.right.node_type == NodeType.LITERAL:
+                # Get column identifier for grouping
+                col_id = None
+                if node.left.node_type == NodeType.IDENTIFIER:
+                    col_id = node.left.schema_column.identity
+
+                if col_id:
+                    if col_id not in eqs_dict:
+                        eqs_dict[col_id] = {
+                            "values": [],
+                            "nodes": [],
+                        }
+
+                    eqs_dict[col_id]["values"].append(node.right.value)
+                    eqs_dict[col_id]["nodes"].append(node)
+            return
+
+        # Recursive cases
+        if node.node_type == NodeType.OR:
+            collect_eqs(node.left, eqs_dict)
+            collect_eqs(node.right, eqs_dict)
+
+    collect_eqs(predicate, eq_conditions)
+
+    for col_id, eq_data in eq_conditions.items():
+        if len(eq_data["values"]) > 1:
+            statistics.optimization_predicate_rewriter_eqs_to_list += 1
+            # Create a new regex pattern
+            new_node = eq_data["nodes"][0]
+            new_node.value = "InList"
+            new_node.right.value = set(eq_data["values"])
+            new_node.right.element_type = new_node.right.type
+            new_node.right.type = OrsoTypes.ARRAY
+            for node in eq_data["nodes"][1:]:
+                node.value = False
+                node.node_type = NodeType.LITERAL
+                node.type = OrsoTypes.BOOLEAN
+
+    return predicate
+
+
 # Define dispatcher conditions and actions
 dispatcher: Dict[str, Callable] = {
     "rewrite_in_to_eq": rewrite_in_to_eq,
@@ -195,6 +253,7 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
     # Add our new rewrite for ORed LIKE conditions
     if predicate.node_type == NodeType.OR:
         rewritten = rewrite_ored_like_to_regex(predicate, statistics)
+        rewritten = rewrite_ored_eq_to_inlist(rewritten, statistics)
         if rewritten != predicate:
             return rewritten
 
