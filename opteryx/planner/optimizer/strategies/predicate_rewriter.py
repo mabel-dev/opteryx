@@ -11,7 +11,7 @@ Goal: Chose more efficient predicate evaluations
 
 We rewrite conditions to a more optimal form based on two objectives:
 1) the execution of the condition is faster
-2) the condition is more likely to be able to be pushed to the storage layer
+2) the condition is more likely to be able to be pushed to the storage layer (where its faster)
 
 Rewrites Implemented:
 
@@ -30,9 +30,10 @@ CASE WHEN x IS NULL THEN y ELSE x END → IFNULL(x, y)
 CASE WHEN x THEN y ELSE z END → IIF(x, y, z)
 COALESCE(x, y) → IFNULL(x, y) (when only two parameters)
 SUBSTRING(x, 1, n) → LEFT(x, n) (when starting at position 1)
-x LIKE 'pattern1%' OR x LIKE '%pattern2' → x REGEX 'pattern1.*|.*pattern2$' (for ORed LIKE conditions)
+x LIKE 'pattern1%' OR x LIKE '%pattern2' → x REGEX '^pattern1.*|.*pattern2$' (for ORed LIKE conditions)
 CONCAT(x, y, z) → x || y || z (CONCAT to operators)
 CONCAT_WS(x, y, z) → y || x || z (CONCAT_WS to operators)
+x = 'a' OR x = 'b' OR x = 'c' → x IN ('a', 'b', 'c') (for ORed Equals conditions)
 
 """
 
