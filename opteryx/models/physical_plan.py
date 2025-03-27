@@ -85,7 +85,7 @@ class PhysicalPlan(Graph):
 
             tester = self.breadth_first_search(nid, reverse=True)
             if not any(r == "left" for s, t, r in tester):
-                raise InvalidInternalStateError("Join has no LEFT leg")
+                raise InvalidInternalStateError("Unable to determine LEFT side of join.")
             if not any(r == "right" for s, t, r in tester):
                 raise InvalidInternalStateError("Join has no RIGHT leg")
 

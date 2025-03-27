@@ -64,11 +64,17 @@ class SimpleAggregateCollector:
                 raise ValueError(f"Unsupported aggregate type: {self.aggregate_type}")
         else:
             if self.aggregate_type in ("SUM", "AVG"):
-                self.current_value += pyarrow.compute.sum(values).as_py()
+                new_value = pyarrow.compute.sum(values).as_py()
+                if new_value is not None:
+                    self.current_value += new_value
             elif self.aggregate_type == "MIN":
-                self.current_value = min(self.current_value, pyarrow.compute.min(values).as_py())
+                new_value = pyarrow.compute.min(values).as_py()
+                if new_value is not None:
+                    self.current_value = min(self.current_value, new_value)
             elif self.aggregate_type == "MAX":
-                self.current_value = max(self.current_value, pyarrow.compute.max(values).as_py())
+                new_value = pyarrow.compute.max(values).as_py()
+                if new_value is not None:
+                    self.current_value = max(self.current_value, new_value)
             elif self.aggregate_type == "HISTOGRAM":
                 self.current_value.bulkload(values.to_numpy(False))
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
