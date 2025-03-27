@@ -51,8 +51,8 @@ def _build_passthru_node(root, value, statistics) -> Node:
     if root.node_type == NodeType.COMPARISON_OPERATOR:
         return root
 
-    if value.node_type == NodeType.FUNCTION and value.value == "PASSTHRU":
-        # we're already a passthru, no point wrapping in another
+    # We're already a function, no point wrapping in another
+    if value.node_type == NodeType.FUNCTION:
         return value
 
     node = Node(node_type=NodeType.FUNCTION)
