@@ -1884,6 +1884,27 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT * FROM $planets WHERE False) AS S LEFT JOIN $satellites USING(id)", 0, 27, None),
         ("SELECT * FROM $planets LEFT JOIN (SELECT * FROM $satellites WHERE False) AS S USING(id)", 9, 27, None),
 
+        ("WITH cold_planets AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature < 0) SELECT name FROM cold_planets WHERE name != 'Uranus';", 5, 1, None),
+        ("WITH eccentric_planets AS (SELECT id, name, orbitalEccentricity FROM $planets WHERE orbitalEccentricity > 0.05) SELECT name FROM eccentric_planets WHERE orbitalEccentricity < 0.1 ORDER BY name;", 2, 1, None),
+        ("WITH warm AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature > 0) SELECT COUNT(*) FROM warm WHERE meanTemperature > 200;", 1, 1, None),
+        ("WITH rounded_gravity AS (SELECT id, name, ROUND(gravity, 0) AS g FROM $planets) SELECT name FROM rounded_gravity WHERE g >= 10;", 3, 1, None),
+        ("WITH giant_planets AS (SELECT id, name, diameter FROM $planets WHERE diameter > 100000) SELECT name, diameter FROM giant_planets ORDER BY diameter ASC LIMIT 2;", 2, 2, None),
+        ("WITH polar AS (SELECT id, name, obliquityToOrbit FROM $planets) SELECT name FROM polar WHERE obliquityToOrbit BETWEEN 85 AND 95;", 0, 1, None),
+        ("WITH dense AS (SELECT id, name, density FROM $planets WHERE density IS NOT NULL) SELECT name FROM dense WHERE density > 4 AND density < 6;", 0, 1, None),
+        ("WITH lo_temp AS (SELECT id, name, meanTemperature FROM $planets) SELECT name FROM lo_temp WHERE meanTemperature < -100 ORDER BY meanTemperature DESC;", 5, 1, None),
+        ("WITH orbit_years AS (SELECT id, name, orbitalPeriod FROM $planets) SELECT name FROM orbit_years WHERE orbitalPeriod > 365 ORDER BY orbitalPeriod;", 7, 1, None),
+        ("WITH spin AS (SELECT id, name, rotationPeriod FROM $planets) SELECT name FROM spin WHERE rotationPeriod > 500 ORDER BY rotationPeriod;", 1, 1, None),
+        ("WITH flat_names AS (SELECT id, LOWER(name) AS name FROM $planets) SELECT name FROM flat_names WHERE name LIKE 'm%' ORDER BY name;", 2, 1, None),
+        ("WITH far_planets AS (SELECT id, name, distanceFromSun FROM $planets WHERE distanceFromSun > 1000) SELECT name FROM far_planets WHERE distanceFromSun < 5000;", 3, 1, None),
+        ("WITH odd_moons AS (SELECT id, name, numberOfMoons FROM $planets) SELECT name FROM odd_moons WHERE numberOfMoons % 2 = 1;", 4, 1, None),
+        ("WITH names AS (SELECT id, name FROM $planets) SELECT UPPER(name) FROM names WHERE LENGTH(name) < 6;", 4, 1, None),
+        ("WITH nonzero_pressure AS (SELECT id, surfacePressure FROM $planets) SELECT COUNT(*) FROM nonzero_pressure WHERE surfacePressure > 0;", 1, 1, None),
+        ("WITH normalized AS (SELECT id, name, gravity / 9.8::DECIMAL AS g FROM $planets WHERE gravity IS NOT NULL) SELECT name FROM normalized WHERE g > 1.1;", 1, 1, None),
+        ("WITH weird_rotation AS (SELECT id, name, rotationPeriod FROM $planets) SELECT name FROM weird_rotation WHERE rotationPeriod < 0 ORDER BY rotationPeriod;", 3, 1, None),
+        ("WITH matching AS (SELECT id, name FROM $planets) SELECT COUNT(*) FROM matching WHERE name = 'Mars';", 1, 1, None),
+        ("WITH categorised AS (SELECT id, name, CASE WHEN mass > 1 THEN 'large' ELSE 'small' END AS size FROM $planets) SELECT size, COUNT(*) FROM categorised GROUP BY size;", 2, 2, None),
+        ("WITH orbshape AS (SELECT id, orbitalEccentricity FROM $planets) SELECT COUNT(*) FROM orbshape WHERE orbitalEccentricity BETWEEN 0.01 AND 0.05;", 1, 1, None),
+
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),
         # Handling NULL Comparisons in WHERE Clause
