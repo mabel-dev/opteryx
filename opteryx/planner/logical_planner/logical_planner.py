@@ -28,8 +28,6 @@ from opteryx.models import Node
 from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import logical_planner_builders
 from opteryx.planner.logical_planner.logical_planner_rewriter import _decompose_aggregates
-from opteryx.planner.views import is_view
-from opteryx.planner.views import view_as_plan
 from opteryx.third_party.travers import Graph
 
 
@@ -250,7 +248,11 @@ def extract_ctes(branch, planner):
     if branch.get("Query", branch).get("with"):
         for _ast in branch.get("Query", branch)["with"]["cte_tables"]:
             alias = _ast.get("alias")["name"]["value"]
-            ctes[alias] = planner(_ast["query"]["body"])
+            logical_plan = planner(_ast["query"]["body"])
+            # CTEs don't have an exit node
+            plan_head = logical_plan.get_exit_points()[0]
+            logical_plan.remove_node(plan_head, True)
+            ctes[alias] = logical_plan
     return ctes
 
 
@@ -292,7 +294,7 @@ def _table_name(branch):
     return ".".join(part["Identifier"]["value"] for part in branch["relation"][key]["name"])
 
 
-def inner_query_planner(ast_branch):
+def inner_query_planner(ast_branch: dict) -> LogicalPlan:
     if "Query" in ast_branch:
         # Sometimes we get a full query plan here (e.g. when queries in set
         # functions are in parenthesis)
@@ -660,7 +662,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
     return join_step
 
 
-def create_node_relation(relation):
+def create_node_relation(relation: dict):
     sub_plan = LogicalPlan()
     root_node = None
 
@@ -724,27 +726,6 @@ def create_node_relation(relation):
                 root_node = step_id
         else:  # pragma: no cover
             raise NotImplementedError(relation["relation"]["Derived"])
-    elif is_view(relation_name):
-        # We're a view, we need to add it to the plan as a subquery
-        view_name = relation_name
-        sub_plan = view_as_plan(view_name=view_name)
-        plan_head = sub_plan.get_exit_points()[0]
-
-        # Replace the exit node with a subquery node
-        # We call the subquery the name of the view if we don't have an alias
-        # and we use the colums from the exit node
-        subquery_node = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
-        subquery_node.alias = (
-            view_name
-            if relation["relation"]["Table"]["alias"] is None
-            else relation["relation"]["Table"]["alias"]["name"]["value"]
-        )
-        subquery_node.columns = sub_plan[plan_head].columns
-        sub_plan[plan_head] = subquery_node
-        root_node = plan_head
-
-        # DEBUG: log (f"VIEW PLAN")
-        # DEBUG: log (sub_plan)
 
     elif relation["relation"]["Table"]["args"]:
         # If we have args, we're a function dataset (like FAKE or UNNEST)
@@ -835,7 +816,7 @@ def create_node_relation(relation):
     return root_node, sub_plan
 
 
-def plan_execute_query(statement) -> LogicalPlan:
+def plan_execute_query(statement, **kwargs) -> LogicalPlan:
     import orjson
 
     from opteryx.exceptions import SqlError
@@ -905,7 +886,7 @@ def plan_execute_query(statement) -> LogicalPlan:
     return do_logical_planning_phase(parsed_statements[0])[0]
 
 
-def plan_explain(statement) -> LogicalPlan:
+def plan_explain(statement, **kwargs) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]
@@ -925,7 +906,7 @@ def plan_explain(statement) -> LogicalPlan:
     return plan
 
 
-def plan_query(statement):
+def plan_query(statement: dict) -> LogicalPlan:
     """ """
 
     root_node = statement
@@ -1023,7 +1004,7 @@ def plan_query(statement):
     return planned_query
 
 
-def plan_set_variable(statement):
+def plan_set_variable(statement, **kwargs):
     root_node = "SetVariable"
     plan = LogicalPlan()
     set_step = LogicalPlanNode(
@@ -1035,7 +1016,7 @@ def plan_set_variable(statement):
     return plan
 
 
-def plan_show_columns(statement):
+def plan_show_columns(statement, **kwargs):
     root_node = "ShowColumns"
     plan = LogicalPlan()
 
@@ -1069,7 +1050,7 @@ def plan_show_columns(statement):
     return plan
 
 
-def plan_show_create_query(statement):
+def plan_show_create_query(statement, **kwargs):
     root_node = "ShowCreate"
     plan = LogicalPlan()
     show_step = LogicalPlanNode(node_type=LogicalPlanStepType.Show)

@@ -182,7 +182,7 @@ def query_planner(
         logical_plan,
         connection=connection.context,
         qid=qid,
-        # common_table_expressions=ctes,
+        common_table_expressions=ctes,
     )
     statistics.time_planning_binder += time.monotonic_ns() - start
 

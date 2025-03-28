@@ -328,6 +328,15 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
         node_type = NodeType.AGGREGATOR
     else:  # pragma: no cover
         from opteryx.exceptions import FunctionNotFoundError
+        from opteryx.functions import DEPRECATED_FUNCTIONS
+
+        if func in DEPRECATED_FUNCTIONS:
+            alt = DEPRECATED_FUNCTIONS.get(func)
+            if alt:
+                raise UnsupportedSyntaxError(
+                    f"Function '{func}' has been deprecated, '{alt}' offers similar functionality."
+                )
+            raise UnsupportedSyntaxError(f"Function '{func}' has been deprecated.")
 
         likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
         if likely_match is None:
