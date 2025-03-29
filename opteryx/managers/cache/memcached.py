@@ -100,7 +100,7 @@ class MemcachedCache(BaseKeyValueStore):
                 self.hits += 1
                 return bytes(response)
         except Exception as err:  # pragma: no cover
-            # DEBUG: log(f"Unable to 'get' Memcache cache {type(err)}")
+            # DEBUG: print(f"Unable to 'get' Memcache cache {type(err)}")
             self._consecutive_failures += 1
             if self._consecutive_failures >= MAX_CONSECUTIVE_CACHE_FAILURES:
                 import datetime
@@ -121,7 +121,7 @@ class MemcachedCache(BaseKeyValueStore):
                 self.sets += 1
             except Exception as err:
                 # if we fail to set, stop trying
-                # DEBUG: log(f"Unable to 'set' Memcache cache {err}")
+                # DEBUG: print(f"Unable to 'set' Memcache cache {err}")
                 self._consecutive_failures = MAX_CONSECUTIVE_CACHE_FAILURES
                 self.errors += 1
                 import datetime
@@ -140,10 +140,10 @@ class MemcachedCache(BaseKeyValueStore):
             except Exception as err:  # nosec
                 if not err:
                     pass
-                # DEBUG: log(f"Unable to 'touch' Memcache cache {err}")
+                # DEBUG: print(f"Unable to 'touch' Memcache cache {err}")
                 self.errors += 1
                 pass
 
     def __del__(self):
         pass
-        # DEBUG: log(f"Memcached <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors} touches={self.touches}>")
+        # DEBUG: print(f"Memcached <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors} touches={self.touches}>")
