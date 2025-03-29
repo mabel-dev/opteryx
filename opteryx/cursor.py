@@ -342,7 +342,7 @@ class Cursor(DataFrame):
             pyarrow.ArrowInvalid,
             pyarrow.ArrowTypeError,
         ) as err:  # pragma: no cover
-            # DEBUG: log (err)
+            # DEBUG: print(err)
             if "struct" in str(err):
                 raise InconsistentSchemaError(
                     "Unable to resolve different schemas, most likely related to a STRUCT column."

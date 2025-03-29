@@ -8,7 +8,7 @@ Opteryx and Orso Import Customization
 -------------------------------------
 This module provides custom import mechanics for modules within Opteryx and Orso projects.
 In production, Python's import system will see the original source code without comments.
-In a development environment, specific comments like '# DEBUG: log' are transformed into
+In a development environment, specific comments like '# DEBUG:' are transformed into
 print statements, providing additional debugging information.
 
 The custom import system utilizes Python's importlib and AST manipulation to achieve this.
@@ -26,7 +26,7 @@ class OpteryxOrsoImportFinder(importlib.abc.MetaPathFinder):
     Custom Import Finder that looks for modules starting with 'opteryx' or 'Orso'.
     """
 
-    def find_spec(self, fullname, path, target=None):
+    def find_spec(self, fullname, path: str, target=None):
         if not (fullname.startswith("opteryx") or fullname.startswith("Orso")):
             return None
 
@@ -67,17 +67,15 @@ class OpteryxOrsoImportLoader(importlib.abc.SourceLoader):
             with open(filepath, "r", encoding="utf-8") as f:
                 original_source = f.read()
 
-            cleaned_source = self._remove_comments(original_source)
+            cleaned_source = self._enable_debug_messages(original_source)
             return cleaned_source.encode("utf-8")
 
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
 
-    def _remove_comments(self, source: str) -> str:
-        debug_mode_enabled = source.replace("# DEBUG: log", "print")
-        debug_mode_enabled = debug_mode_enabled.replace("# DEBUG: ", "")
-        return debug_mode_enabled
+    def _enable_debug_messages(self, source: str) -> str:
+        return source.replace("# DEBUG: ", "")
 
 
 # Register the custom MetaPathFinder

@@ -115,7 +115,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
 
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
-            # DEBUG: log ("READ   ", name)
+            # DEBUG: print("READ   ", name)
             stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
             data = stream.read()
 

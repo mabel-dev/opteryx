@@ -176,8 +176,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         convert_time = 0.0
 
         with self._engine.connect() as conn:
-            # DEBUG: log ("READ DATASET\n", str(query_builder))
-            # DEBUG: log ("PARAMETERS\n", parameters)
+            # DEBUG: print("READ DATASET\n", str(query_builder))
+            # DEBUG: print("PARAMETERS\n", parameters)
             # Execution Options allows us to handle datasets larger than memory
             result = conn.execution_options(stream_results=True, max_row_buffer=25000).execute(
                 text(str(query_builder)), parameters=parameters
@@ -214,7 +214,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     self.chunk_size = (self.chunk_size // MIN_CHUNK_SIZE) * MIN_CHUNK_SIZE
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     self.chunk_size = min(self.chunk_size, 1000000)  # cap at 1 million
-                    # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE} ({morsel.nbytes} bytes).")
+                    # DEBUG: print(f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE} ({morsel.nbytes} bytes).")
 
                 yield morsel
                 at_least_once = True
@@ -222,7 +222,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         if not at_least_once:
             yield DataFrame(schema=result_schema).arrow()
 
-        # DEBUG: log (f"time spent converting: {convert_time/1e9}s")
+        # DEBUG: print(f"time spent converting: {convert_time/1e9}s")
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
@@ -231,7 +231,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
             return self.schema
 
         # get the schema from the dataset
-        # DEBUG: log ("GET SQL SCHEMA:", self.dataset)
+        # DEBUG: print("GET SQL SCHEMA:", self.dataset)
         try:
             table = Table(self.dataset, self.metadata, autoload_with=self._engine)
 
@@ -262,15 +262,15 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                 pass
             # Fall back to getting the schema from the first few rows, this is the column names,
             # and where possible, column types.
-            # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
+            # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
             from sqlalchemy.sql import text
 
             try:
                 with self._engine.connect() as conn:
                     query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                    # DEBUG: log ("READ ROW\n", str(query))
+                    # DEBUG: print("READ ROW\n", str(query))
                     row = conn.execute(text(str(query))).fetchone()._asdict()
-                    # DEBUG: log ("ROW:", row)
+                    # DEBUG: print("ROW:", row)
                     self.schema = RelationSchema(
                         name=self.dataset,
                         columns=[
@@ -285,7 +285,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                             for column, value in row.items()
                         ],
                     )
-                    # DEBUG: log ("SCHEMA:", self.schema)
+                    # DEBUG: print("SCHEMA:", self.schema)
             except Exception as err:
                 raise DatasetReadError(f"Unable to read dataset '{self.dataset}'.") from err
 

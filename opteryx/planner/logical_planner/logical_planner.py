@@ -998,8 +998,8 @@ def plan_query(statement: dict) -> LogicalPlan:
 
     planned_query = inner_query_planner(root_node["body"])
 
-    # DEBUG: log ("LOGICAL PLAN")
-    # DEBUG: log (planned_query.draw())
+    # DEBUG: print("LOGICAL PLAN")
+    # DEBUG: print(planned_query.draw())
 
     return planned_query
 
