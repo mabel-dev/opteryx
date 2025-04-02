@@ -74,7 +74,7 @@ def rewrite_in_to_eq(predicate):
     This optimization replaces the IN condition with a faster equality check.
     """
     predicate.value = IN_REWRITES[predicate.value]
-    predicate.right.value = predicate.right.value.pop()
+    predicate.right.value = tuple(predicate.right.value)[0]
     predicate.right.type = predicate.right.element_type or OrsoTypes.VARCHAR
     predicate.right.element_type = None
     return predicate
