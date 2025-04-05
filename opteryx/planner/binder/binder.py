@@ -426,6 +426,7 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             # IMPROVE: check types here
             schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
+            schemas["$derived"].columns.append(schema_column)
         else:
             # fmt:off
             from opteryx.planner.binder.binder_visitor import get_mismatched_condition_column_types

@@ -69,6 +69,8 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         # We're essentially doing a LIKE here
         from opteryx.compiled import list_ops
 
+        array = pyarrow.array(array)
+
         if ignore_case[0]:
             results_mask = numpy.asarray(
                 list_ops.list_substring.list_substring_case_insensitive(array, str(item)),
