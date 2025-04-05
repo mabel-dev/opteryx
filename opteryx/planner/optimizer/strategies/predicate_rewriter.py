@@ -48,7 +48,6 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.models import Node
 from opteryx.models import QueryStatistics
-from opteryx.planner import build_literal_node
 from opteryx.planner.binder.operator_map import determine_type
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
@@ -74,7 +73,7 @@ def rewrite_in_to_eq(predicate):
     This optimization replaces the IN condition with a faster equality check.
     """
     predicate.value = IN_REWRITES[predicate.value]
-    predicate.right.value = predicate.right.value.pop()
+    predicate.right.value = tuple(predicate.right.value)[0]
     predicate.right.type = predicate.right.element_type or OrsoTypes.VARCHAR
     predicate.right.element_type = None
     return predicate
@@ -286,6 +285,7 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
                 "_" not in predicate.right.value
                 and predicate.right.value.endswith("%")
                 and predicate.right.value.startswith("%")
+                and "%" not in predicate.right.value[1:-1]
             ):
                 statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
                 predicate.right.value = predicate.right.value[1:-1]
