@@ -18,10 +18,10 @@ import numpy
 cimport numpy
 numpy.import_array()
 
-from cpython.unicode cimport PyUnicode_AsUTF8String
 from cpython.bytes cimport PyBytes_AsString
-from libc.stdint cimport uint8_t
+from libc.stdint cimport int32_t, uint8_t, uintptr_t
 import platform
+
 
 cdef extern from "string.h":
     int strncasecmp(const char *s1, const char *s2, size_t n)
@@ -92,67 +92,130 @@ cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, c
     return 0  # No match found
 
 
-cpdef uint8_t[::1] list_substring(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
+cdef inline uint8_t[::1] _substring_in_single_array(object arrow_array, str needle):
     """
-    Used as the InStr operator, which was written to replace using LIKE to execute list_substring
-    matching. We tried using PyArrow's substring but the performance was almost identical to LIKE.
+    Internal helper: performs substring search on a single Arrow array
+    (StringArray or BinaryArray).
     """
-    cdef Py_ssize_t n = haystack.shape[0]
-    cdef bytes needle_bytes = needle.encode('utf-8')
-    cdef char *c_pattern = PyBytes_AsString(needle_bytes)
-    cdef size_t pattern_length = len(needle_bytes)
-    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
-    cdef Py_ssize_t i = 0
-    cdef Py_ssize_t length
-    cdef char *data
-    cdef int index
+    cdef:
+        Py_ssize_t n = len(arrow_array)
+        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
+        uint8_t[::1] result_view = result
 
-    cdef uint8_t[::1] result_view = result
+        bytes needle_bytes = needle.encode('utf-8')
+        char *c_pattern = PyBytes_AsString(needle_bytes)
+        size_t pattern_length = len(needle_bytes)
 
-    cdef int str_processor = 0
+        # Arrow buffer pointers
+        list buffers = arrow_array.buffers()
+        const uint8_t* validity = NULL
+        const int32_t* offsets = NULL
+        const char* data = NULL
+
+        # Arrow indexing
+        Py_ssize_t arr_offset = arrow_array.offset
+        Py_ssize_t offset_in_bits = arr_offset & 7
+        Py_ssize_t offset_in_bytes = arr_offset >> 3
+
+        # For loop variables
+        Py_ssize_t i, byte_index, bit_index
+        Py_ssize_t start, end, length
+        int index
+
+    # Get raw pointers from buffers (if they exist)
+    if len(buffers) > 0 and buffers[0]:
+        validity = <const uint8_t*><uintptr_t>(buffers[0].address)
+    if len(buffers) > 1 and buffers[1]:
+        offsets = <const int32_t*><uintptr_t>(buffers[1].address)
+    if len(buffers) > 2 and buffers[2]:
+        data = <const char*><uintptr_t>(buffers[2].address)
+
+    # If needle is empty or no data rows, fill with 0
+    if pattern_length == 0 or n == 0:
+        for i in range(n):
+            result_view[i] = 0
+        return result_view
+
     for i in range(n):
-        if isinstance(haystack[i], str):
-            str_processor = 1
-            break
+        # Default to no-match
+        result_view[i] = 0
 
-    if str_processor:
-        for i in range(n):
-            result_view[i] = 0
-            item = haystack[i]
-            if item is None:
-                continue
-
-            item = PyUnicode_AsUTF8String(item)
-            data = <char*> PyBytes_AsString(item)
-            length = len(item)
-            # if the needle is bigger than the haystack, it's not there
-            if length < pattern_length:
-                continue
-            # find the first instance of the first character
-            index = searcher(data, length, needle[0])
-            # if we didn't find it, it's not there
-            if index == -1:
-                continue
-            # use BMH to search
-            if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
-                result_view[i] = 1
-    else:
-        for i in range(n):
-            result_view[i] = 0
-            item = haystack[i]
-            if item is None:
+        # Check null bit if we have a validity bitmap
+        if validity is not NULL:
+            byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
+            bit_index = (offset_in_bits + i) & 7
+            if not (validity[byte_index] & (1 << bit_index)):
+                # Null → remain 0
                 continue
 
-            data = <char*> item
-            length = len(item)
-            if length < pattern_length:
-                continue
-            index = searcher(data, length, needle[0])
-            if index == -1:
-                continue
-            if boyer_moore_horspool(data + index, length - index, c_pattern, pattern_length):
-                result_view[i] = 1
-    return result
+        # Offsets for this value
+        start = offsets[arr_offset + i]
+        end = offsets[arr_offset + i + 1]
+        length = end - start
+        if length < pattern_length:
+            continue  # too short to contain needle
+
+        # SIMD-based first-char check
+        index = searcher(data + start, length, needle[0])
+        if index == -1:
+            continue
+
+        # BMH from that index
+        if boyer_moore_horspool(
+            data + start + index,
+            <size_t>(length - index),
+            c_pattern,
+            pattern_length
+        ):
+            result_view[i] = 1
+
+    return result_view
+
+cpdef uint8_t[::1] list_substring(object column, str needle):
+    """
+    Search for `needle` within every row of an Arrow column (StringArray, BinaryArray,
+    or ChunkedArray of those). Returns a NumPy array (dtype=uint8) with 1 for matches,
+    0 otherwise (null included).
+
+    Parameters:
+        column: object
+            An Arrow array or ChunkedArray of strings/binary.
+        needle: str
+            The pattern to find.
+
+    Returns:
+        A 1-D numpy.uint8 array of length = total rows in `column`.
+        Each element is 1 if `needle` occurs in that row, else 0.
+    """
+    cdef:
+        Py_ssize_t total_length
+        numpy.ndarray[numpy.uint8_t, ndim=1] final_result
+        uint8_t[::1] final_view
+        Py_ssize_t offset = 0
+        uint8_t[::1] chunk_view
+        object chunk
+
+    # If it's already a single array, just process and return
+    if not hasattr(column, "chunks"):
+        # Not a ChunkedArray
+        return _substring_in_single_array(column, needle)
+
+    # If we have a ChunkedArray, figure out total length
+    total_length = 0
+    for chunk in column.chunks:
+        total_length += len(chunk)
+
+    final_result = numpy.empty(total_length, dtype=numpy.uint8)
+    final_view = final_result
+
+    # Process each chunk individually, then place the results contiguously
+    offset = 0
+    for chunk in column.chunks:
+        chunk_view = _substring_in_single_array(chunk, needle)
+        final_view[offset : offset + len(chunk)] = chunk_view
+        offset += len(chunk)
+
+    return final_view
 
 
 cdef inline int boyer_moore_horspool_case_insensitive(const char *haystack, size_t haystacklen, const char *needle, size_t needlelen):
@@ -207,58 +270,119 @@ cdef inline int boyer_moore_horspool_case_insensitive(const char *haystack, size
     return 0  # No match found
 
 
-cpdef uint8_t[::1] list_substring_case_insensitive(numpy.ndarray[numpy.str, ndim=1] haystack, str needle):
+cdef inline uint8_t[::1] _substring_in_single_array_case_insensitive(object arrow_array, str needle):
     """
-    Used as the InStr operator, which was written to replace using LIKE to execute list_substring
-    matching. We tried using PyArrow's substring but the performance was almost identical to LIKE.
+    Internal helper: performs case-insensitive substring search on a single
+    Arrow array (StringArray or BinaryArray). No SIMD 'searcher' filter.
     """
-    cdef Py_ssize_t n = haystack.shape[0]
-    cdef bytes needle_bytes = needle.encode('utf-8')
-    cdef char *c_pattern = PyBytes_AsString(needle_bytes)
-    cdef size_t pattern_length = len(needle_bytes)
-    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
-    cdef Py_ssize_t i = 0
-    cdef Py_ssize_t length
-    cdef char *data
+    cdef:
+        Py_ssize_t n = len(arrow_array)
+        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.empty(n, dtype=numpy.uint8)
+        uint8_t[::1] result_view = result
 
-    cdef uint8_t[::1] result_view = result
+        bytes needle_bytes = needle.encode('utf-8')
+        char *c_pattern = PyBytes_AsString(needle_bytes)
+        size_t pattern_length = len(needle_bytes)
 
-    cdef int str_processor = 0
+        # Arrow buffer pointers
+        list buffers = arrow_array.buffers()
+        const uint8_t* validity = NULL
+        const int32_t* offsets = NULL
+        const char* data = NULL
+
+        # Arrow indexing
+        Py_ssize_t arr_offset = arrow_array.offset
+        Py_ssize_t offset_in_bits = arr_offset & 7
+        Py_ssize_t offset_in_bytes = arr_offset >> 3
+
+        # Loop variables
+        Py_ssize_t i, byte_index, bit_index
+        Py_ssize_t start, end, length
+
+    # Fetch raw pointers (if present)
+    if len(buffers) > 0 and buffers[0]:
+        validity = <const uint8_t*><uintptr_t>(buffers[0].address)
+    if len(buffers) > 1 and buffers[1]:
+        offsets = <const int32_t*><uintptr_t>(buffers[1].address)
+    if len(buffers) > 2 and buffers[2]:
+        data = <const char*><uintptr_t>(buffers[2].address)
+
+    # If needle is empty or array empty, everything is 0
+    if pattern_length == 0 or n == 0:
+        for i in range(n):
+            result_view[i] = 0
+        return result_view
+
+    # Main loop
     for i in range(n):
-        if isinstance(haystack[i], str):
-            str_processor = 1
-            break
+        # Default to no match
+        result_view[i] = 0
 
-    if str_processor:
-        for i in range(n):
-            result_view[i] = 0
-            item = haystack[i]
-            if item is None:
-                continue
+        # Check null bit
+        if validity is not NULL:
+            byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
+            bit_index = (offset_in_bits + i) & 7
+            if not (validity[byte_index] & (1 << bit_index)):
+                continue  # null → 0
 
-            item = PyUnicode_AsUTF8String(item)
-            data = <char*> PyBytes_AsString(item)
-            length = len(item)
+        # Calculate string (or binary) boundaries
+        start = offsets[arr_offset + i]
+        end = offsets[arr_offset + i + 1]
+        length = end - start
 
-            if length < pattern_length:
-                continue
+        if length < pattern_length:
+            continue
 
-            if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                result_view[i] = 1
+        # Direct call to case-insensitive BMH
+        if boyer_moore_horspool_case_insensitive(
+            data + start,
+            <size_t>length,
+            c_pattern,
+            pattern_length
+        ):
+            result_view[i] = 1
 
-    else:
-        for i in range(n):
-            result_view[i] = 0
-            item = haystack[i]
-            if item is None:
-                continue
-            data = <char*> item
-            length = len(item)
+    return result_view
 
-            if length < pattern_length:
-                continue
 
-            if boyer_moore_horspool_case_insensitive(data, length, c_pattern, pattern_length):
-                result_view[i] = 1
+cpdef uint8_t[::1] list_substring_case_insensitive(object column, str needle):
+    """
+    Perform a case-insensitive substring search on an Arrow column, which may be
+    a single Array or a ChunkedArray of strings/binaries. Returns a NumPy uint8
+    array (1 for match, 0 for non-match/null).
 
-    return result
+    Parameters:
+        column: object
+            Arrow array or ChunkedArray (StringArray/BinaryArray).
+        needle: str
+            Pattern to find, ignoring case.
+
+    Returns:
+        A contiguous numpy.uint8 array of length == sum(len(chunk) for chunk in column).
+    """
+    cdef:
+        Py_ssize_t total_length = 0
+        numpy.ndarray[numpy.uint8_t, ndim=1] final_result
+        uint8_t[::1] final_view
+        Py_ssize_t offset = 0
+        uint8_t[::1] chunk_view
+        object chunk
+
+    # If it's not chunked, just do the single-array logic
+    if not hasattr(column, "chunks"):
+        return _substring_in_single_array_case_insensitive(column, needle)
+
+    # Otherwise, handle chunked array
+    for chunk in column.chunks:
+        total_length += len(chunk)
+
+    final_result = numpy.empty(total_length, dtype=numpy.uint8)
+    final_view = final_result
+
+    offset = 0
+    for chunk in column.chunks:
+        chunk_view = _substring_in_single_array_case_insensitive(chunk, needle)
+        final_view[offset : offset + len(chunk)] = chunk_view
+        offset += len(chunk)
+
+    return final_view

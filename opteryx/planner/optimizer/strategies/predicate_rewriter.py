@@ -285,6 +285,7 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
                 "_" not in predicate.right.value
                 and predicate.right.value.endswith("%")
                 and predicate.right.value.startswith("%")
+                and "%" not in predicate.right.value[1:-1]
             ):
                 statistics.optimization_predicate_rewriter_replace_like_with_in_string += 1
                 predicate.right.value = predicate.right.value[1:-1]
