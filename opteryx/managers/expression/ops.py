@@ -24,6 +24,14 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
     if len(left_arr) == 0 or len(right_arr) == 0:
         return numpy.array([], dtype=bool)
 
+    # INTEGERS and DECIMALS don't play nicely so we cast the INTS to DECIMALS
+    if left_type == OrsoTypes.DECIMAL and right_type == OrsoTypes.INTEGER:
+        right_arr = compute.cast(right_arr, pyarrow.float64())
+        right_type = OrsoTypes.DOUBLE
+    elif right_type == OrsoTypes.DECIMAL and left_type == OrsoTypes.INTEGER:
+        left_arr = compute.cast(left_arr, pyarrow.float64())
+        left_type = OrsoTypes.DOUBLE
+
     compressed = False
 
     if operator not in (
@@ -50,14 +58,14 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
 
         # compute null positions
         left_null_positions = compute.is_null(left_arr, nan_is_null=True)
-        right_null_positions = compute.is_null(right_arr, nan_is_null=True)
 
         # if the right side is an array, combine the null positions
         if len(right_arr) > 1:
+            right_null_positions = compute.is_null(right_arr, nan_is_null=True)
             null_positions = numpy.logical_or(left_null_positions, right_null_positions)
         # if the right side is a scalar and is null, we can just return all nulls
-        elif right_null_positions[0].as_py():
-            null_positions = numpy.array([True] * morsel_size, dtype=bool)
+        elif len(right_arr) == 1 and right_arr[0] is None:
+            return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
         # if the right side is a scalar and is not null, we can just use the left nulls
         else:
             null_positions = left_null_positions.to_numpy(False)
@@ -75,6 +83,22 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
             compressed = True
             if len(right_arr) > 1 and isinstance(right_arr, numpy.ndarray):
                 right_arr = right_arr.compress(valid_positions)
+            elif len(right_arr) > 1 and isinstance(
+                right_arr, (pyarrow.Array, pyarrow.ChunkedArray)
+            ):
+                right_arr = compute.filter(right_arr, valid_positions)
+
+        # similarly, if we're working with pyarrow arrays we can remove nulls
+        if null_positions.any() and isinstance(left_arr, (pyarrow.Array, pyarrow.ChunkedArray)):
+            valid_positions = ~null_positions
+            left_arr = compute.filter(left_arr, valid_positions)
+            compressed = True
+            if len(right_arr) > 1 and isinstance(right_arr, numpy.ndarray):
+                right_arr = right_arr.compress(valid_positions)
+            elif len(right_arr) > 1 and isinstance(
+                right_arr, (pyarrow.Array, pyarrow.ChunkedArray)
+            ):
+                right_arr = compute.filter(right_arr, valid_positions)
 
     if (
         OrsoTypes.TIMESTAMP in (left_type, right_type) or OrsoTypes.DATE in (left_type, right_type)
@@ -119,7 +143,17 @@ def _inner_filter_operations(arr, operator, value):
     Execute filter operations, this returns an array of the indexes of the rows that
     match the filter
     """
-    # ADDED FOR OPTERYX
+    if operator.startswith(("AnyOp", "AllOp")) and isinstance(
+        value, (pyarrow.Array, pyarrow.ChunkedArray)
+    ):
+        if len(value) == 1:
+            value = value[0]
+    elif len(value) == 1:
+        value = value[0]
+        if hasattr(value, "item"):
+            value = value.item()
+        if isinstance(value, (tuple, list)):
+            value = pyarrow.array(value)
 
     if operator == "Eq":
         return compute.equal(arr, value).to_numpy(False).astype(dtype=bool)
@@ -134,74 +168,67 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
-        values = set(value[0])
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(value, "to_numpy"):
+            value = value.to_numpy(zero_copy_only=False)
+        values = set(value)
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
             return list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
             return list_ops.list_in_list.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
-        values = set(value[0])
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(value, "to_numpy"):
+            value = value.to_numpy(zero_copy_only=False)
+        values = set(value)
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
             matches = list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
             matches = list_ops.list_in_list.list_in_list(arr.astype(object), values)
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
-        needle = str(value[0])
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        needle = str(value)
         return numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
     if operator == "NotInStr":
-        needle = str(value[0])
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        needle = str(value)
         matches = numpy.asarray(list_ops.list_substring.list_substring(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "IInStr":
-        needle = str(value[0])
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        needle = str(value)
         return numpy.asarray(
             list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
         )
     if operator == "NotIInStr":
-        needle = str(value[0])
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        needle = str(value)
         matches = numpy.asarray(
             list_ops.list_substring.list_substring_case_insensitive(arr, needle), dtype=bool
         )
         return numpy.invert(matches)
     if operator == "Like":
-        # MODIFIED FOR OPTERYX
-        # null input emits null output, which should be false/0
-        return compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
+        return compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "NotLike":
-        # MODIFIED FOR OPTERYX - see comment above
-        matches = compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
+        matches = compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
         return numpy.invert(matches)
     if operator == "ILike":
-        # MODIFIED FOR OPTERYX - see comment above
-        return (
-            compute.match_like(arr, value[0], ignore_case=True).to_numpy(False).astype(dtype=bool)
-        )  # [#325]
+        return compute.match_like(arr, value, ignore_case=True).to_numpy(False).astype(dtype=bool)
     if operator == "NotILike":
-        # MODIFIED FOR OPTERYX - see comment above
-        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
+        matches = compute.match_like(arr, value, ignore_case=True)
         return numpy.invert(matches)
     if operator == "RLike":
-        # MODIFIED FOR OPTERYX - see comment above
-        return (
-            compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
-        )  # [#325]
+        return compute.match_substring_regex(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "NotRLike":
-        # MODIFIED FOR OPTERYX - see comment above
-        matches = compute.match_substring_regex(arr, value[0])  # [#325]
+        matches = compute.match_substring_regex(arr, value)  # [#325]
         return numpy.invert(matches)
     if operator == "AnyOpEq":
-        return list_ops.list_anyop_eq.list_anyop_eq(arr[0], value)
+        return list_ops.list_anyop_eq.list_anyop_eq(literal=arr[0], column=value)
     if operator == "AnyOpNotEq":
-        return list_ops.list_anyop_neq.list_anyop_neq(arr[0], value)
+        return list_ops.list_anyop_neq.list_anyop_neq(literal=arr[0], column=value)
     if operator == "AnyOpGt":
         return list_ops.list_anyop_gt.list_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":
@@ -218,34 +245,35 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpILike":
         from opteryx.utils.sql import regex_match_any
 
-        return regex_match_any(arr, value[0], flags=re.IGNORECASE)
+        return regex_match_any(arr, value, flags=re.IGNORECASE)
 
     if operator == "AnyOpLike":
         from opteryx.utils.sql import regex_match_any
 
-        return regex_match_any(arr, value[0])
+        return regex_match_any(arr, value)
 
     if operator == "AnyOpNotLike":
         from opteryx.utils.sql import regex_match_any
 
-        return regex_match_any(arr, value[0], invert=True)
+        return regex_match_any(arr, value, invert=True)
 
     if operator == "AnyOpNotILike":
         from opteryx.utils.sql import regex_match_any
 
-        return regex_match_any(arr, value[0], flags=re.IGNORECASE, invert=True)
+        return regex_match_any(arr, value, flags=re.IGNORECASE, invert=True)
 
     if operator == "AtQuestion":
         from opteryx.third_party.tktech import csimdjson as simdjson
 
-        element = value[0]
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
 
         parser = simdjson.Parser()
 
-        if not element.startswith("$."):
+        if not value.startswith("$."):
             # Not a JSONPath, treat as a simple key existence check
             return pyarrow.array(
-                [element in parser.parse(doc).keys() for doc in arr],
+                [value in parser.parse(doc).keys() for doc in arr],
                 type=pyarrow.bool_(),  # type: ignore
             )
 
@@ -260,7 +288,7 @@ def _inner_filter_operations(arr, operator, value):
             return json_pointer
 
         # Convert "$.key1.key2" to JSON Pointer "/key1/key2"
-        json_pointer = jsonpath_to_pointer(element)
+        json_pointer = jsonpath_to_pointer(value)
 
         def check_json_pointer(doc, pointer):
             try:
@@ -279,11 +307,15 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtArrow":
         from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
         if len(arr) == 0:
             return numpy.array([], dtype=bool)
         if len(arr) == 1:
-            return numpy.array([set(arr[0]).intersection(value[0])], dtype=bool)
+            return numpy.array([set(arr[0]).intersection(value)], dtype=bool)
 
-        return list_contains_any(arr, set(value[0]))
+        return list_contains_any(arr, set(value))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

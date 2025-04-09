@@ -54,6 +54,9 @@ def _get(array, key):
     if isinstance(key, str):
         from opteryx.third_party.tktech import csimdjson as simdjson
 
+        if hasattr(array, "to_numpy"):
+            array = array.to_numpy(False)
+
         def extract(doc, elem):
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "as_list"):
@@ -310,13 +313,21 @@ DEPRECATED_FUNCTIONS = {
     "MAXIMUM": "MAX",  # deprecated, removed 0.21.0
     "MINIMUM": "MIN",  # deprecated, removed 0.21.0
     "AVERAGE": "AVG",  # deprecated, removed 0.21.0
-    "NUMERIC": "DOUBLE",  # deprecated, remove 0.19.0
-    "CEILING": "CEIL",  # deprecated, remove 0.19.0
+    "CEILING": "CEIL",  # deprecated, removed 0.21.0
     "ABSOLUTE": "ABS",  # deprecated, removed 0.21.0
-    "TRUNCATE": "TRUNC",  # deprecated, remove 0.19.0
-    "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, remove 0.20.0
-    "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, remove 0.20.0
-    "STRUCT": None,  # deprecated, remove 0.21.0
+    "TRUNCATE": "TRUNC",  # deprecated, removed 0.21.0
+    "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, removed 0.22.0
+    "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, removed 0.22.0
+    "STRUCT": None,  # deprecated, removed 0.22.0,
+    "NUMERIC": "DOUBLE",  # deprecated, removed 0.22.0
+    "LIST_CONTAINS": "ARRAY_COUNTAINS",  # deprecated, remove 0.24.0
+    "STR": "VARCHAR",  # deprecated, remove 0.24.0
+    "STRING": "VARCHAR",  # deprecated, remove 0.24.0
+    "FLOAT": "DOUBLE",  # deprecated, remove 0.24.0
+    "TRY_NUMERIC": "TRY_DOUBLE",  # deprecated, remove 0.24.0
+    "TRY_STRING": "TRY_VARCHAR",  # deprecated, remove 0.24.0
+    "TRY_STRUCT": None,  # deprecated, remove 0.24.0
+    "LEN": "LENGTH",  # deprecated, remove 0.24.0
 }
 
 # fmt:off
@@ -334,7 +345,6 @@ FUNCTIONS = {
     "ARRAY": (other_functions.array_cast, "VARIANT", 1.0),
     "TIMESTAMP": (lambda x: compute.cast(x, pyarrow.timestamp("us")), "TIMESTAMP", 1.0),
     "BOOLEAN": (lambda x: compute.cast(x, "bool"), "BOOLEAN", 1.0),
-    "NUMERIC": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "FLOAT": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
@@ -342,7 +352,6 @@ FUNCTIONS = {
     "VARCHAR": (cast_varchar, "VARCHAR", 1.0),
     "STRING": (cast_varchar, "VARCHAR", 1.0),
     "STR": (cast_varchar, "VARCHAR", 1.0),
-    "STRUCT": (try_cast("BLOB"), "BLOB", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
     "BLOB": (cast_blob, "BLOB", 1.0),
@@ -413,9 +422,7 @@ FUNCTIONS = {
     "GET_STRING": (_get_string, "VARCHAR", 1.0),
     "LIST_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
-    "LIST_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
-    "LIST_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
     "SEARCH": (other_functions.search, "BOOLEAN", 1.0),
     "COALESCE": (_coalesce, "VARIANT", 1.0),

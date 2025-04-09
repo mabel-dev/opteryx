@@ -41,6 +41,7 @@ import re
 from typing import Callable
 from typing import Dict
 
+from orso.schema import ConstantColumn
 from orso.types import OrsoTypes
 
 from opteryx.managers.expression import ExpressionColumn
@@ -230,6 +231,12 @@ def rewrite_ored_eq_to_inlist(predicate, statistics):
             new_node.right.value = set(eq_data["values"])
             new_node.right.element_type = new_node.right.type
             new_node.right.type = OrsoTypes.ARRAY
+            new_node.right.schema_column = ConstantColumn(
+                name=new_node.right.name,
+                type=OrsoTypes.ARRAY,
+                element_type=new_node.right.element_type,
+                value=new_node.right.value,
+            )
             for node in eq_data["nodes"][1:]:
                 node.value = False
                 node.node_type = NodeType.LITERAL
@@ -316,6 +323,11 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
         if predicate.right.node_type == NodeType.LITERAL:
             statistics.optimization_predicate_rewriter_any_to_inlist += 1
             predicate.value = "InList"
+
+    if predicate.value == "AnyOpNotEq":
+        if predicate.right.node_type == NodeType.LITERAL:
+            statistics.optimization_predicate_rewriter_any_to_inlist += 1
+            predicate.value = "NotInList"
 
     if predicate.value in IN_REWRITES:
         if predicate.right.node_type == NodeType.LITERAL and len(predicate.right.value) == 1:
