@@ -10,6 +10,7 @@ import pyarrow
 from pyarrow import compute
 
 from opteryx.exceptions import InvalidFunctionParameterError
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import SqlError
 from opteryx.utils.dates import parse_iso
 
@@ -26,8 +27,10 @@ def convert_int64_array_to_pyarrow_datetime(values: numpy.ndarray) -> pyarrow.Ar
         PyArrow Array
             The converted timestamps in PyArrow compatible format.
     """
+    if hasattr(values, "to_numpy"):
+        values = values.to_numpy()
     if not isinstance(values, numpy.ndarray):
-        raise ValueError("Input must be a numpy ndarray of int values.")
+        raise InvalidInternalStateError("Cannot convert non numpy Int64 array to timestamps.")
 
     if not numpy.issubdtype(values.dtype, numpy.integer):
         raise ValueError("Cannot convert non-integer column to a timestamp.")
