@@ -2447,6 +2447,8 @@ id > /* 0 */ 1
         # 2523
         ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 1, 2, None),
         ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION ALL SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 2, 2, None),
+        # 2547
+        ("SELECT * FROM $planets WHERE name ILIKE '%art%h%'", 1, 20, None),
 
 ]
 # fmt:on
