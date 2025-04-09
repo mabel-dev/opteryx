@@ -107,8 +107,10 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
 
         if left_type == OrsoTypes.INTEGER:
             left_arr = convert_int64_array_to_pyarrow_datetime(left_arr)
+            left_type = OrsoTypes.TIMESTAMP
         if right_type == OrsoTypes.INTEGER:
             right_arr = convert_int64_array_to_pyarrow_datetime(right_arr)
+            right_type = OrsoTypes.TIMESTAMP
 
     if OrsoTypes.INTERVAL in (left_type, right_type):
         from opteryx.custom_types.intervals import INTERVAL_KERNELS
