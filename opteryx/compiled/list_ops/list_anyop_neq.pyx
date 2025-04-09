@@ -76,8 +76,14 @@ cdef uint8_t[::1] _anyop_neq_string_chunk(object literal, object list_array):
     """
     Chunk processor for List<Binary> or List<String>. Uses memcmp.
     """
+    cdef literal_bytes
+
+    if isinstance(literal, bytes):
+        literal_bytes = literal
+    else:
+        literal_bytes = literal.encode('utf-8')
+
     cdef:
-        bytes literal_bytes = literal.encode('utf-8')
         const char* literal_ptr = PyBytes_AsString(literal_bytes)
         size_t literal_len = len(literal_bytes)
 
@@ -121,7 +127,7 @@ cdef uint8_t[::1] _anyop_neq_string_chunk(object literal, object list_array):
         if outer_validity is not NULL:
             if not (outer_validity[offset_in_bytes + ((offset_in_bits + i) >> 3)] &
                     (1 << ((offset_in_bits + i) & 7))):
-                continue  # Null row → result[i] remains 0
+                continue  # Null row → result[i] is 0
 
         # Row-level offsets into the flat value array
         outer_start = offsets[arr_offset + i]
@@ -131,18 +137,21 @@ cdef uint8_t[::1] _anyop_neq_string_chunk(object literal, object list_array):
             # Optionally skip nulls in the inner values
             if inner_validity is not NULL:
                 if not (inner_validity[j >> 3] & (1 << (j & 7))):
+                    result_view[i] = 1
                     continue
 
             val_start = value_offsets[j]
             val_end = value_offsets[j + 1]
             val_len = val_end - val_start
 
+            # if they're different lengths, they don't match
             if val_len != literal_len:
-                continue
+                result_view[i] = 1
+                break  # short-circuit
 
             if memcmp(value_data + val_start, literal_ptr, literal_len) != 0:
                 result_view[i] = 1
-                break  # short-circuit
+                break
 
     return result_view
 
@@ -193,7 +202,8 @@ cdef uint8_t[::1] _anyop_neq_primitive_chunk(object literal, object list_array):
         if outer_validity is not NULL:
             if not (outer_validity[offset_in_bytes + ((offset_in_bits + i) >> 3)] &
                     (1 << ((offset_in_bits + i) & 7))):
-                continue  # null row
+                result_view[i] = 0
+                continue  # Null row → result[i] is 0
 
         outer_start = offsets[arr_offset + i]
         outer_end = offsets[arr_offset + i + 1]
@@ -233,7 +243,7 @@ cdef uint8_t[::1] _anyop_neq_boolean_chunk(object literal, object list_array):
         Py_ssize_t i, j, outer_start, outer_end, byte_index, bit_index
         uint8_t literal_val = bool(literal)
 
-        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
+        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.ones(row_count, dtype=numpy.uint8)
         uint8_t[::1] result_view = result
 
     if len(buffers) > 0 and buffers[0]:
@@ -250,7 +260,8 @@ cdef uint8_t[::1] _anyop_neq_boolean_chunk(object literal, object list_array):
         if outer_validity is not NULL:
             if not (outer_validity[offset_in_bytes + ((offset_in_bits + i) >> 3)] &
                     (1 << ((offset_in_bits + i) & 7))):
-                continue
+                result_view[i] = 0
+                continue  # Null row → result[i] is 0
 
         outer_start = offsets[arr_offset + i]
         outer_end = offsets[arr_offset + i + 1]
@@ -264,8 +275,8 @@ cdef uint8_t[::1] _anyop_neq_boolean_chunk(object literal, object list_array):
             bit_index = j & 7
             value_bit = (inner_values[byte_index] >> bit_index) & 1
 
-            if value_bit != literal_val:
-                result_view[i] = 1
+            if value_bit == literal_val:
+                result_view[i] = 0
                 break
 
     return result_view
@@ -280,7 +291,7 @@ cdef uint8_t[::1] _anyop_neq_generic_chunk(object literal, object array):
         Py_ssize_t offset = array.offset
         Py_ssize_t i
         object value
-        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
+        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.ones(row_count, dtype=numpy.uint8)
         uint8_t[::1] result_view = result
 
     if hasattr(literal, "item"):
@@ -290,7 +301,9 @@ cdef uint8_t[::1] _anyop_neq_generic_chunk(object literal, object array):
 
     for i in range(row_count):
         value = array[i + offset]
-        if value is not None and literal not in value:
-            result_view[i] = 1
+        if value is None:
+            result_view[i] = 0
+        elif literal in value:
+            result_view[i] = 0
 
     return result_view

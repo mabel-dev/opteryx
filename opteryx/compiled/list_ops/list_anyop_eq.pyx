@@ -76,8 +76,14 @@ cdef uint8_t[::1] _anyop_eq_string_chunk(object literal, object list_array):
     """
     Chunk processor for List<Binary> or List<String>. Uses memcmp.
     """
+    cdef literal_bytes
+
+    if isinstance(literal, bytes):
+        literal_bytes = literal
+    else:
+        literal_bytes = literal.encode('utf-8')
+
     cdef:
-        bytes literal_bytes = literal.encode('utf-8')
         const char* literal_ptr = PyBytes_AsString(literal_bytes)
         size_t literal_len = len(literal_bytes)
 

@@ -143,15 +143,17 @@ def _inner_filter_operations(arr, operator, value):
     Execute filter operations, this returns an array of the indexes of the rows that
     match the filter
     """
-    # ADDED FOR OPTERYX
-
-    if operator.startswith(("AnyOp", "AllOp")):
+    if operator.startswith(("AnyOp", "AllOp")) and isinstance(
+        value, (pyarrow.Array, pyarrow.ChunkedArray)
+    ):
         if len(value) == 1:
             value = value[0]
     elif len(value) == 1:
         value = value[0]
         if hasattr(value, "item"):
             value = value.item()
+        if isinstance(value, (tuple, list)):
+            value = pyarrow.array(value)
 
     if operator == "Eq":
         return compute.equal(arr, value).to_numpy(False).astype(dtype=bool)
@@ -166,6 +168,10 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(value, "to_numpy"):
+            value = value.to_numpy(zero_copy_only=False)
         values = set(value)
         if hasattr(arr, "to_numpy"):
             arr = arr.to_numpy(zero_copy_only=False)
@@ -174,6 +180,10 @@ def _inner_filter_operations(arr, operator, value):
         else:
             return list_ops.list_in_list.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(value, "to_numpy"):
+            value = value.to_numpy(zero_copy_only=False)
         values = set(value)
         if hasattr(arr, "to_numpy"):
             arr = arr.to_numpy(zero_copy_only=False)
@@ -201,11 +211,8 @@ def _inner_filter_operations(arr, operator, value):
         )
         return numpy.invert(matches)
     if operator == "Like":
-        # MODIFIED FOR OPTERYX
-        # null input emits null output, which should be false/0
         return compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "NotLike":
-        # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
         return numpy.invert(matches)
     if operator == "ILike":
@@ -221,7 +228,7 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AnyOpEq":
         return list_ops.list_anyop_eq.list_anyop_eq(literal=arr[0], column=value)
     if operator == "AnyOpNotEq":
-        return list_ops.list_anyop_neq.list_anyop_neq(arr[0], value)
+        return list_ops.list_anyop_neq.list_anyop_neq(literal=arr[0], column=value)
     if operator == "AnyOpGt":
         return list_ops.list_anyop_gt.list_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":

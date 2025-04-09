@@ -21,6 +21,16 @@ def test_eq_strings():
     _test_eq_comparison("a\0", "a\0", 1)
     _test_eq_comparison("a\0", "a", 0)
 
+def test_eq_bytes():
+    _test_eq_comparison(b"a", b"a", 1, pa.binary())
+    _test_eq_comparison(b"a", b"b", 0, pa.binary())
+    _test_eq_comparison(b"abc", b"abc", 1, pa.binary())
+    _test_eq_comparison(b"abc", b"ABC", 0, pa.binary())
+    _test_eq_comparison(b"", b"", 1, pa.binary())
+    _test_eq_comparison(b" ", b" ", 1, pa.binary())
+    _test_eq_comparison(b"a\0", b"a\0", 1, pa.binary())
+    _test_eq_comparison(b"a\0", b"a", 0, pa.binary())
+
 def test_eq_integers():
     _test_eq_comparison(1, 1, 1, pa.int64())
     _test_eq_comparison(1, 0, 0, pa.int64())

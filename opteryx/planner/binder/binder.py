@@ -19,6 +19,7 @@ from orso.types import OrsoTypes
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import IncompatibleTypesError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import DEPRECATED_FUNCTIONS
@@ -424,6 +425,16 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             )
         ):
             # IMPROVE: check types here
+            if node.right.node_type == NodeType.LITERAL:
+                import pyarrow
+
+                try:
+                    node.right.value = pyarrow.array(node.right.value)
+
+                except pyarrow.ArrowTypeError as e:
+                    raise IncompatibleTypesError(
+                        message=f"Cannot construct ARRAY from incompatible types."
+                    ) from e
             schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
             schemas["$derived"].columns.append(schema_column)
@@ -434,8 +445,6 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             # fmt:on
             mismatches = get_mismatched_condition_column_types(node, relaxed=True)
             if mismatches:
-                from opteryx.exceptions import IncompatibleTypesError
-
                 raise IncompatibleTypesError(**mismatches)
 
             schema_column = ExpressionColumn(

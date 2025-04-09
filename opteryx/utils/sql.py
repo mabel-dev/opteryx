@@ -145,6 +145,8 @@ def regex_match_any(
     Returns:
         numpy.ndarray of object dtype (bool or None per row)
     """
+    if hasattr(patterns, "to_pylist"):
+        patterns = patterns.to_pylist()
     if any(not isinstance(p, str) for p in patterns if p):
         from opteryx.exceptions import IncorrectTypeError
 
