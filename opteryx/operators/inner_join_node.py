@@ -85,6 +85,7 @@ class InnerJoinNode(JoinNode):
         self.right_columns = parameters.get("right_columns")
 
         self.left_buffer = []
+        self.left_columns = None
         self.left_hash = None
         self.left_filter = None
 
@@ -131,6 +132,10 @@ class InnerJoinNode(JoinNode):
                         self.statistics.time_build_bloom_filter += time.monotonic_ns() - start
                         self.statistics.feature_bloom_filter += 1
                 else:
+                    if self.left_columns is None:
+                        self.left_columns = morsel.schema.names
+                    else:
+                        morsel = morsel.select(self.left_columns)
                     self.left_buffer.append(morsel)
                 yield None
                 return

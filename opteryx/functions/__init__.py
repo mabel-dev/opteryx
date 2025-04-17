@@ -162,10 +162,10 @@ def fixed_value_function(function, context):
     return None, None
 
 
-def safe(func, *parms):
+def safe(func, *parms, **kwargs):
     """execute a function, return None if fails"""
     try:
-        return func(*parms)
+        return func(*parms, **kwargs)
     except (
         ValueError,
         IndexError,
@@ -175,6 +175,30 @@ def safe(func, *parms):
         decimal.InvalidOperation,
     ):
         return None
+
+
+def cast_decimal(value, precision=None, scale=None):
+    from orso.tools import DecimalFactory
+
+    scale = 21 if scale is None else int(scale[0])
+    precision = 38 if precision is None else int(precision[0])
+    value = (
+        value.as_py()
+        if hasattr(value, "as_py")
+        else (
+            value.item()
+            if hasattr(value, "item") and not isinstance(value, (list, dict, tuple))
+            else value
+        )
+    )
+    factory = DecimalFactory.new_factory(precision, scale)
+    return (
+        None
+        if value is None
+        else factory(str(value).strip())
+        if isinstance(value, (int, float, str))
+        else value
+    )
 
 
 def try_cast(_type):
@@ -198,7 +222,7 @@ def try_cast(_type):
         "DOUBLE": float,
         "BLOB": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
         "INTEGER": lambda x: int(float(x)),
-        "DECIMAL": decimal.Decimal,
+        "DECIMAL": cast_decimal,
         "VARCHAR": lambda x: str(x) if x is not None else x,
         "TIMESTAMP": dates.parse_iso,
         "STRUCT": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
@@ -206,9 +230,9 @@ def try_cast(_type):
     }
     if _type in casters:
 
-        def _inner(arr):
+        def _inner(arr, precision=None, scale=None):
             caster = casters[_type]
-            return [safe(caster, i) for i in arr]
+            return [safe(caster, i, precision=precision, scale=scale) for i in arr]
 
         return _inner
     raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
@@ -348,7 +372,7 @@ FUNCTIONS = {
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "FLOAT": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
-    "DECIMAL": (lambda x: compute.cast(x, pyarrow.decimal128(19)), "DECIMAL", 1.0),
+    "DECIMAL": (cast_decimal, "DECIMAL", 1.0),
     "VARCHAR": (cast_varchar, "VARCHAR", 1.0),
     "STRING": (cast_varchar, "VARCHAR", 1.0),
     "STR": (cast_varchar, "VARCHAR", 1.0),

@@ -312,6 +312,14 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             else:
                 _, result_type, _ = FUNCTIONS.get(node.value, (None, "VARIANT", None))
                 element_type = None  # for types with elements (ARRAYs)
+                precision = 38  # Maximum precision for Decimal128
+                scale = 21  # A reasonable scale that's less than precision
+
+                if node.value == "DECIMAL":
+                    result_type = OrsoTypes.DECIMAL
+                    precision = node.parameters[1].value if len(node.parameters) > 1 else precision
+                    scale = node.parameters[2].value if len(node.parameters) > 2 else scale
+
                 # If we don't know the return type from the function name, we can usually
                 # work it out from the parameters - all of the aggs are worked out this way
                 # even COUNT which is always an integer.
@@ -411,7 +419,12 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                                 result_type = schema_column.type
 
                 schema_column = FunctionColumn(
-                    name=column_name, type=result_type, element_type=element_type, aliases=aliases
+                    name=column_name,
+                    type=result_type,
+                    element_type=element_type,
+                    aliases=aliases,
+                    precision=precision,
+                    scale=scale,
                 )
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []

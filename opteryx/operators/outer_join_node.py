@@ -183,6 +183,7 @@ class OuterJoinNode(JoinNode):
         self.right_readers = parameters.get("right_readers")
 
         self.left_buffer = []
+        self.left_columns = None
         self.right_buffer = []
         self.left_relation = None
         self.empty_right_relation = None
@@ -213,6 +214,10 @@ class OuterJoinNode(JoinNode):
                     self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
             else:
+                if self.left_columns is None:
+                    self.left_columns = morsel.schema.names
+                else:
+                    morsel = morsel.select(self.left_columns)
                 self.left_buffer.append(morsel)
             yield None
             return
