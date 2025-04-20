@@ -1,6 +1,6 @@
 numpy>=2.0.0
 orjson
-orso>=0.0.200
+orso>=0.0.204
 psutil
 pyarrow>=12.0.1
 requests

@@ -199,6 +199,11 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
         data_type = "DECIMAL"
+        if "PrecisionAndScale" in branch["data_type"]["Decimal"]:
+            precision = branch["data_type"]["Decimal"]["PrecisionAndScale"][0]
+            scale = branch["data_type"]["Decimal"]["PrecisionAndScale"][1]
+            args.append(build_literal_node(precision))
+            args.append(build_literal_node(scale))
     elif "Integer" in data_type:
         data_type = "INTEGER"
     elif "Double" in data_type:

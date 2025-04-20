@@ -1896,7 +1896,7 @@ id > /* 0 */ 1
         ("WITH odd_moons AS (SELECT id, name, numberOfMoons FROM $planets) SELECT name FROM odd_moons WHERE numberOfMoons % 2 = 1;", 4, 1, None),
         ("WITH names AS (SELECT id, name FROM $planets) SELECT UPPER(name) FROM names WHERE LENGTH(name) < 6;", 4, 1, None),
         ("WITH nonzero_pressure AS (SELECT id, surfacePressure FROM $planets) SELECT COUNT(*) FROM nonzero_pressure WHERE surfacePressure > 0;", 1, 1, None),
-        ("WITH normalized AS (SELECT id, name, gravity / 9.8::DECIMAL AS g FROM $planets WHERE gravity IS NOT NULL) SELECT name FROM normalized WHERE g > 1.1;", 1, 1, None),
+        ("WITH normalized AS (SELECT id, name, round(CAST(gravity AS DOUBLE) / 9.8, 2) AS g  FROM $planets WHERE gravity IS NOT NULL) SELECT name FROM normalized WHERE g > 1.1;", 2, 1, None),
         ("WITH weird_rotation AS (SELECT id, name, rotationPeriod FROM $planets) SELECT name FROM weird_rotation WHERE rotationPeriod < 0 ORDER BY rotationPeriod;", 3, 1, None),
         ("WITH matching AS (SELECT id, name FROM $planets) SELECT COUNT(*) FROM matching WHERE name = 'Mars';", 1, 1, None),
         ("WITH categorised AS (SELECT id, name, CASE WHEN mass > 1 THEN 'large' ELSE 'small' END AS size FROM $planets) SELECT size, COUNT(*) FROM categorised GROUP BY size;", 2, 2, None),

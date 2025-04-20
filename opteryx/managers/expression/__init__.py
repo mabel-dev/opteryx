@@ -24,6 +24,7 @@ from pyarrow import Table
 from pyarrow import compute
 
 from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
+from opteryx.exceptions import IncorrectTypeError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import apply_function
 from opteryx.managers.expression.binary_operators import binary_operations
@@ -413,10 +414,15 @@ def evaluate_and_append(expressions, table: Table):
                     name=statement.schema_column.identity,
                     type=statement.schema_column.arrow_field.type,
                 )
-                if isinstance(new_column, pyarrow.Array):
-                    new_column = new_column.cast(field.type)
-                else:
-                    new_column = pyarrow.array(new_column[0], type=field.type)
+                try:
+                    if isinstance(new_column, pyarrow.Array):
+                        new_column = new_column.cast(field.type)
+                    else:
+                        new_column = pyarrow.array(new_column[0], type=field.type)
+                except pyarrow.lib.ArrowInvalid as e:
+                    raise IncorrectTypeError(
+                        f"Unable to cast '{statement.schema_column.name}' to {field.type}"
+                    ) from e
 
             table = table.append_column(field, new_column)
 
