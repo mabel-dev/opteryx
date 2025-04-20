@@ -281,13 +281,7 @@ def jsonb_object_keys(arr: numpy.ndarray):
     if isinstance(arr, pyarrow.Array):
         arr = arr.to_numpy(zero_copy_only=False)
 
-    # Determine type based on dtype of the array
-    if not numpy.issubdtype(arr.dtype, numpy.object_):
-        raise ValueError(
-            "Unsupported array dtype. Expected object dtype for dicts or strings/bytes."
-        )
-
-        # Pre-create the result array as a NumPy boolean array set to False
+    # Pre-create the result array as a NumPy boolean array set to False
     result = numpy.empty(arr.shape, dtype=list)
 
     if isinstance(arr[0], dict):

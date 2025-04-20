@@ -9,6 +9,7 @@ These are a set of functions that can be applied to data.
 
 import datetime
 import decimal
+import inspect
 import time
 
 import numpy
@@ -173,69 +174,46 @@ def safe(func, *parms, **kwargs):
         ArrowNotImplementedError,
         AttributeError,
         decimal.InvalidOperation,
-    ):
+    ) as e:
         return None
-
-
-def cast_decimal(value, precision=None, scale=None):
-    from orso.tools import DecimalFactory
-
-    scale = 21 if scale is None else int(scale[0])
-    precision = 38 if precision is None else int(precision[0])
-    value = (
-        value.as_py()
-        if hasattr(value, "as_py")
-        else (
-            value.item()
-            if hasattr(value, "item") and not isinstance(value, (list, dict, tuple))
-            else value
-        )
-    )
-    factory = DecimalFactory.new_factory(precision, scale)
-    return (
-        None
-        if value is None
-        else factory(str(value).strip())
-        if isinstance(value, (int, float, str))
-        else value
-    )
 
 
 def try_cast(_type):
     """cast a column to a specified type"""
 
-    bools = {
-        "TRUE": True,
-        "FALSE": False,
-        "ON": True,
-        "OFF": False,
-        "YES": True,
-        "NO": False,
-        "1": True,
-        "0": False,
-        "1.0": True,
-        "0.0": False,
-    }
+    def _inner(arr, *args):
+        args = [a[0] for a in args]
+        kwargs = {}
 
-    casters = {
-        "BOOLEAN": lambda x: bools.get(str(x).upper()),
-        "DOUBLE": float,
-        "BLOB": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
-        "INTEGER": lambda x: int(float(x)),
-        "DECIMAL": cast_decimal,
-        "VARCHAR": lambda x: str(x) if x is not None else x,
-        "TIMESTAMP": dates.parse_iso,
-        "STRUCT": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
-        "DATE": lambda x: dates.parse_iso(x).date(),
-    }
-    if _type in casters:
+        caster = OrsoTypes[_type].parse
 
-        def _inner(arr, precision=None, scale=None):
-            caster = casters[_type]
-            return [safe(caster, i, precision=precision, scale=scale) for i in arr]
+        sig = inspect.signature(caster)
+        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
 
-        return _inner
-    raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
+        kwargs = {param.name: arg for param, arg in zip(params, args)}
+
+        return [safe(caster, i, **kwargs) for i in arr]
+
+    return _inner
+
+
+def cast(_type):
+    """cast a column to a specified type"""
+
+    def _inner(arr, *args):
+        args = [a[0] for a in args]
+        kwargs = {}
+
+        caster = OrsoTypes[_type].parse
+
+        sig = inspect.signature(caster)
+        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
+
+        kwargs = {param.name: arg for param, arg in zip(params, args)}
+
+        return [caster(i, **kwargs) for i in arr]
+
+    return _inner
 
 
 def _iterate_single_parameter(func):
@@ -372,13 +350,13 @@ FUNCTIONS = {
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "FLOAT": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
-    "DECIMAL": (cast_decimal, "DECIMAL", 1.0),
-    "VARCHAR": (cast_varchar, "VARCHAR", 1.0),
-    "STRING": (cast_varchar, "VARCHAR", 1.0),
-    "STR": (cast_varchar, "VARCHAR", 1.0),
+    "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
+    "VARCHAR": (cast("VARCHAR"), "VARCHAR", 1.0),
+    "STRING": (cast("VARCHAR"), "VARCHAR", 1.0),
+    "STR": (cast("VARCHAR"), "VARCHAR", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
-    "BLOB": (cast_blob, "BLOB", 1.0),
+    "BLOB": (cast("BLOB"), "BLOB", 1.0),
     "TRY_ARRAY": (other_functions.array_cast_safe, "VARIANT", 1.0),
     "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), "TIMESTAMP", 1.0),
     "TRY_BOOLEAN": (try_cast("BOOLEAN"), "BOOLEAN", 1.0),
