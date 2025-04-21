@@ -29,11 +29,11 @@ HALF_INVERSIONS: dict = {
     "Like": "NotLike",
     "ILike": "NotILike",
     "RLike": "NotRLike",
-    "AnyOpEq": "AnyOpNotEq",
-    "AnyOpGtEq": "AnyOpLt",
-    "AnyOpLtEq": "AnyOpGt",
     "InStr": "NotInStr",
     "IInStr": "NotIInStr",
+    # Any to All conversions (De Morgan's laws)
+    "AnyOpEq": "AllOpNotEq",  # NOT(ANY x = y) → ALL x != y
+    "AnyOpGtEq": "AllOpLt",  # NOT(ANY x >= y) → ALL x < y
 }
 
 INVERSIONS = {**HALF_INVERSIONS, **{v: k for k, v in HALF_INVERSIONS.items()}}

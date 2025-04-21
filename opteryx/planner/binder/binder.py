@@ -19,6 +19,7 @@ from orso.types import OrsoTypes
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import IncompatibleTypesError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import DEPRECATED_FUNCTIONS
@@ -311,6 +312,14 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             else:
                 _, result_type, _ = FUNCTIONS.get(node.value, (None, "VARIANT", None))
                 element_type = None  # for types with elements (ARRAYs)
+                precision = 38  # Maximum precision for Decimal128
+                scale = 21  # A reasonable scale that's less than precision
+
+                if node.value == "DECIMAL":
+                    result_type = OrsoTypes.DECIMAL
+                    precision = node.parameters[1].value if len(node.parameters) > 1 else precision
+                    scale = node.parameters[2].value if len(node.parameters) > 2 else scale
+
                 # If we don't know the return type from the function name, we can usually
                 # work it out from the parameters - all of the aggs are worked out this way
                 # even COUNT which is always an integer.
@@ -410,7 +419,12 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
                                 result_type = schema_column.type
 
                 schema_column = FunctionColumn(
-                    name=column_name, type=result_type, element_type=element_type, aliases=aliases
+                    name=column_name,
+                    type=result_type,
+                    element_type=element_type,
+                    aliases=aliases,
+                    precision=precision,
+                    scale=scale,
                 )
             schemas["$derived"].columns.append(schema_column)
             node.derived_from = []
@@ -424,8 +438,19 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             )
         ):
             # IMPROVE: check types here
+            if node.right.node_type == NodeType.LITERAL:
+                import pyarrow
+
+                try:
+                    node.right.value = pyarrow.array(node.right.value)
+
+                except pyarrow.ArrowTypeError as e:
+                    raise IncompatibleTypesError(
+                        message=f"Cannot construct ARRAY from incompatible types."
+                    ) from e
             schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
+            schemas["$derived"].columns.append(schema_column)
         else:
             # fmt:off
             from opteryx.planner.binder.binder_visitor import get_mismatched_condition_column_types
@@ -433,8 +458,6 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
             # fmt:on
             mismatches = get_mismatched_condition_column_types(node, relaxed=True)
             if mismatches:
-                from opteryx.exceptions import IncompatibleTypesError
-
                 raise IncompatibleTypesError(**mismatches)
 
             schema_column = ExpressionColumn(

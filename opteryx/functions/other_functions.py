@@ -69,6 +69,8 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         # We're essentially doing a LIKE here
         from opteryx.compiled import list_ops
 
+        array = pyarrow.array(array)
+
         if ignore_case[0]:
             results_mask = numpy.asarray(
                 list_ops.list_substring.list_substring_case_insensitive(array, str(item)),
@@ -279,13 +281,7 @@ def jsonb_object_keys(arr: numpy.ndarray):
     if isinstance(arr, pyarrow.Array):
         arr = arr.to_numpy(zero_copy_only=False)
 
-    # Determine type based on dtype of the array
-    if not numpy.issubdtype(arr.dtype, numpy.object_):
-        raise ValueError(
-            "Unsupported array dtype. Expected object dtype for dicts or strings/bytes."
-        )
-
-        # Pre-create the result array as a NumPy boolean array set to False
+    # Pre-create the result array as a NumPy boolean array set to False
     result = numpy.empty(arr.shape, dtype=list)
 
     if isinstance(arr[0], dict):

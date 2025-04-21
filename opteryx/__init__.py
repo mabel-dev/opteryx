@@ -5,15 +5,15 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-This module sets up various parts of the Engine - we do somethings in a specific order
-to ensure they load correctly.
+Opteryx is a SQL query engine optimized for speed and efficiency.
 
-- If a .env file is present and 'dotEnv' is installed, we load the .env file
-- If OPTERYX_DEBUG is set, we put the engine in DEBUG mode which means additional
-  logging and validation
-- Initialize the CacheManager
-- Define functions for user access
+To get started:
+    import opteryx
+    results = opteryx.query("SELECT * FROM my_table")
 
+Opteryx handles parsing, planning, and execution of SQL queries with a focus on low-latency analytics over local or remote data sources.
+
+For more information check out https://opteryx.dev.
 """
 
 import datetime

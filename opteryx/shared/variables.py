@@ -39,8 +39,8 @@ class VariableOwner(int, Enum):
 
 
 class Visibility(str, Enum):
-    RESTRICTED = "restricted"
-    UNRESTRICTED = "unrestricted"
+    RESTRICTED = "restricted"  # only visible to the server
+    UNRESTRICTED = "unrestricted"  # visible to all users
 
 
 VariableSchema = Tuple[Type, Any, VariableOwner, Visibility]
@@ -90,7 +90,7 @@ SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     "disable_optimizer": (OrsoTypes.BOOLEAN, config.DISABLE_OPTIMIZER, VariableOwner.USER, Visibility.RESTRICTED),
     "disable_high_priority": (OrsoTypes.BOOLEAN, config.DISABLE_HIGH_PRIORITY, VariableOwner.SERVER, Visibility.RESTRICTED),
     "concurrent_reads": (OrsoTypes.INTEGER, config.CONCURRENT_READS, VariableOwner.SERVER, Visibility.RESTRICTED),
-    "user_memberships": (OrsoTypes.ARRAY, [], VariableOwner.INTERNAL, Visibility.UNRESTRICTED),
+    "user_memberships": (OrsoTypes.ARRAY, [[]], VariableOwner.INTERNAL, Visibility.UNRESTRICTED),
     "morsel_size": (OrsoTypes.INTEGER, config.MORSEL_SIZE, VariableOwner.SERVER, Visibility.RESTRICTED),
 }
 # fmt: on

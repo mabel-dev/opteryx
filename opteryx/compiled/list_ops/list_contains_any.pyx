@@ -37,6 +37,7 @@ cpdef uint8_t[::1] list_contains_any(object[::1] array, set items):
         test_set = array[i]
         if test_set is not None and test_set.shape[0] > 0:
             for j in range(test_set.shape[0]):
+                print(test_set[j], res_view[i])
                 if test_set[j] in items:
                     res_view[i] = 1
                     break

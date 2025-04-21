@@ -290,8 +290,8 @@ class IncompatibleTypesError(Exception):
 
     def __init__(
         self,
-        left_type: str,
-        right_type: str,
+        left_type: str = None,
+        right_type: str = None,
         column: Optional[str] = None,
         left_column: Optional[str] = None,
         right_column: Optional[str] = None,

@@ -9,6 +9,7 @@ These are a set of functions that can be applied to data.
 
 import datetime
 import decimal
+import inspect
 import time
 
 import numpy
@@ -53,6 +54,9 @@ def _get(array, key):
         return cython_arrow_op(array, key)
     if isinstance(key, str):
         from opteryx.third_party.tktech import csimdjson as simdjson
+
+        if hasattr(array, "to_numpy"):
+            array = array.to_numpy(False)
 
         def extract(doc, elem):
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
@@ -159,10 +163,10 @@ def fixed_value_function(function, context):
     return None, None
 
 
-def safe(func, *parms):
+def safe(func, *parms, **kwargs):
     """execute a function, return None if fails"""
     try:
-        return func(*parms)
+        return func(*parms, **kwargs)
     except (
         ValueError,
         IndexError,
@@ -170,45 +174,46 @@ def safe(func, *parms):
         ArrowNotImplementedError,
         AttributeError,
         decimal.InvalidOperation,
-    ):
+    ) as e:
         return None
 
 
 def try_cast(_type):
     """cast a column to a specified type"""
 
-    bools = {
-        "TRUE": True,
-        "FALSE": False,
-        "ON": True,
-        "OFF": False,
-        "YES": True,
-        "NO": False,
-        "1": True,
-        "0": False,
-        "1.0": True,
-        "0.0": False,
-    }
+    def _inner(arr, *args):
+        args = [a[0] for a in args]
+        kwargs = {}
 
-    casters = {
-        "BOOLEAN": lambda x: bools.get(str(x).upper()),
-        "DOUBLE": float,
-        "BLOB": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
-        "INTEGER": lambda x: int(float(x)),
-        "DECIMAL": decimal.Decimal,
-        "VARCHAR": lambda x: str(x) if x is not None else x,
-        "TIMESTAMP": dates.parse_iso,
-        "STRUCT": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
-        "DATE": lambda x: dates.parse_iso(x).date(),
-    }
-    if _type in casters:
+        caster = OrsoTypes[_type].parse
 
-        def _inner(arr):
-            caster = casters[_type]
-            return [safe(caster, i) for i in arr]
+        sig = inspect.signature(caster)
+        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
 
-        return _inner
-    raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
+        kwargs = {param.name: arg for param, arg in zip(params, args)}
+
+        return [safe(caster, i, **kwargs) for i in arr]
+
+    return _inner
+
+
+def cast(_type):
+    """cast a column to a specified type"""
+
+    def _inner(arr, *args):
+        args = [a[0] for a in args]
+        kwargs = {}
+
+        caster = OrsoTypes[_type].parse
+
+        sig = inspect.signature(caster)
+        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
+
+        kwargs = {param.name: arg for param, arg in zip(params, args)}
+
+        return [caster(i, **kwargs) for i in arr]
+
+    return _inner
 
 
 def _iterate_single_parameter(func):
@@ -310,13 +315,21 @@ DEPRECATED_FUNCTIONS = {
     "MAXIMUM": "MAX",  # deprecated, removed 0.21.0
     "MINIMUM": "MIN",  # deprecated, removed 0.21.0
     "AVERAGE": "AVG",  # deprecated, removed 0.21.0
-    "NUMERIC": "DOUBLE",  # deprecated, remove 0.19.0
-    "CEILING": "CEIL",  # deprecated, remove 0.19.0
+    "CEILING": "CEIL",  # deprecated, removed 0.21.0
     "ABSOLUTE": "ABS",  # deprecated, removed 0.21.0
-    "TRUNCATE": "TRUNC",  # deprecated, remove 0.19.0
-    "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, remove 0.20.0
-    "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, remove 0.20.0
-    "STRUCT": None,  # deprecated, remove 0.21.0
+    "TRUNCATE": "TRUNC",  # deprecated, removed 0.21.0
+    "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, removed 0.22.0
+    "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, removed 0.22.0
+    "STRUCT": None,  # deprecated, removed 0.22.0,
+    "NUMERIC": "DOUBLE",  # deprecated, removed 0.22.0
+    "LIST_CONTAINS": "ARRAY_COUNTAINS",  # deprecated, remove 0.24.0
+    "STR": "VARCHAR",  # deprecated, remove 0.24.0
+    "STRING": "VARCHAR",  # deprecated, remove 0.24.0
+    "FLOAT": "DOUBLE",  # deprecated, remove 0.24.0
+    "TRY_NUMERIC": "TRY_DOUBLE",  # deprecated, remove 0.24.0
+    "TRY_STRING": "TRY_VARCHAR",  # deprecated, remove 0.24.0
+    "TRY_STRUCT": None,  # deprecated, remove 0.24.0
+    "LEN": "LENGTH",  # deprecated, remove 0.24.0
 }
 
 # fmt:off
@@ -334,18 +347,16 @@ FUNCTIONS = {
     "ARRAY": (other_functions.array_cast, "VARIANT", 1.0),
     "TIMESTAMP": (lambda x: compute.cast(x, pyarrow.timestamp("us")), "TIMESTAMP", 1.0),
     "BOOLEAN": (lambda x: compute.cast(x, "bool"), "BOOLEAN", 1.0),
-    "NUMERIC": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "FLOAT": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
-    "DECIMAL": (lambda x: compute.cast(x, pyarrow.decimal128(19)), "DECIMAL", 1.0),
-    "VARCHAR": (cast_varchar, "VARCHAR", 1.0),
-    "STRING": (cast_varchar, "VARCHAR", 1.0),
-    "STR": (cast_varchar, "VARCHAR", 1.0),
-    "STRUCT": (try_cast("BLOB"), "BLOB", 1.0),
+    "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
+    "VARCHAR": (cast("VARCHAR"), "VARCHAR", 1.0),
+    "STRING": (cast("VARCHAR"), "VARCHAR", 1.0),
+    "STR": (cast("VARCHAR"), "VARCHAR", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
-    "BLOB": (cast_blob, "BLOB", 1.0),
+    "BLOB": (cast("BLOB"), "BLOB", 1.0),
     "TRY_ARRAY": (other_functions.array_cast_safe, "VARIANT", 1.0),
     "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), "TIMESTAMP", 1.0),
     "TRY_BOOLEAN": (try_cast("BOOLEAN"), "BOOLEAN", 1.0),
@@ -413,9 +424,7 @@ FUNCTIONS = {
     "GET_STRING": (_get_string, "VARCHAR", 1.0),
     "LIST_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
-    "LIST_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
-    "LIST_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
     "SEARCH": (other_functions.search, "BOOLEAN", 1.0),
     "COALESCE": (_coalesce, "VARIANT", 1.0),

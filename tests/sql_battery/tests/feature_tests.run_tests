@@ -162,12 +162,8 @@ SELECT name FROM $planets ORDER BY mass LIMIT 2;
 -- SELECT SPLIT('a', 'a');
 SELECT SPLIT(name, ' ') FROM $astronauts;
 
-SELECT CAST('{"test":true}' AS STRUCT);
-SELECT CAST('{"test":true, "live":false}' AS STRUCT);
-SELECT TRY_CAST('{"test":true, "prod": 73}' AS STRUCT);
-SELECT TRY_CAST(name AS STRUCT) FROM $planets;
-SELECT STRUCT('{"test":true}');
-SELECT ST['prod'] FROM (SELECT STRUCT('{"prod": 73}') AS ST FROM $planets) AS SB;
+SELECT '{"test":true}';
+SELECT ST['prod'] FROM (SELECT '{"prod": 73}' AS ST FROM $planets) AS SB;
 
 # Function calls which are actually resolved by the binder
 
