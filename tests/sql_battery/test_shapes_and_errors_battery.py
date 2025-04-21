@@ -2083,6 +2083,8 @@ id > /* 0 */ 1
         ("SELECT CAST(p.name AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
         ("SELECT CAST(p.id AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
         ("SELECT CAST(p.mass AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+
+        ("SELECT * FROM testdata.flat.struct_array WHERE data[0]->'id' = 1", 1, 2, None),
         
         # ****************************************************************************************
 
