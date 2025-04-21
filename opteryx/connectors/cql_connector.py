@@ -148,8 +148,8 @@ class CqlConnector(BaseConnector, PredicatePushable, LimitPushable):
             query_builder.LIMIT(str(limit))
 
         session = self.cluster.connect()
-        # DEBUG: log ("READ DATASET\n", str(query_builder))
-        # DEBUG: log ("PARAMETERS\n", parameters)
+        # DEBUG: print("READ DATASET\n", str(query_builder))
+        # DEBUG: print("PARAMETERS\n", parameters)
         # Execution Options allows us to handle datasets larger than memory
         statement = session.prepare(str(query_builder) + " ALLOW FILTERING;")
         results = session.execute(statement, parameters=parameters)
@@ -174,10 +174,10 @@ class CqlConnector(BaseConnector, PredicatePushable, LimitPushable):
         session = self.cluster.connect()
         query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
         statement = session.prepare(str(query))
-        # DEBUG: log ("READ 1 ROWS\n", str(query))
+        # DEBUG: print("READ 1 ROWS\n", str(query))
         results = session.execute(statement)[0]
         columns = list(results._asdict().keys())
-        # DEBUG: log ("COLUMNS:", columns)
+        # DEBUG: print("COLUMNS:", columns)
         self.schema = RelationSchema(
             name=self.dataset,
             columns=[

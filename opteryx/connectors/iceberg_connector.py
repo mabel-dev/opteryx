@@ -83,6 +83,10 @@ def to_iceberg_filter(root):
             root.left.schema_column.type = OrsoTypes.BLOB
         if root.right.schema_column.type == OrsoTypes.VARCHAR:
             root.right.schema_column.type = OrsoTypes.BLOB
+        if root.right.schema_column.type != root.left.schema_column.type:
+            raise NotSupportedError(
+                f"{root.right.schema_column.type} != {root.left.schema_column.type}"
+            )
         if root.right.schema_column.type == OrsoTypes.DOUBLE:
             # iceberg needs doubles to be cast to floats
             root.right.value = float(root.right.value)
@@ -94,10 +98,6 @@ def to_iceberg_filter(root):
             if isinstance(root.right.value, numpy.datetime64):
                 root.right.value = root.right.value.astype(datetime.datetime)
             root.right.value = root.right.value.isoformat()
-        if root.right.schema_column.type != root.left.schema_column.type:
-            raise NotSupportedError(
-                f"{root.right.schema_column.type} != {root.left.schema_column.type}"
-            )
         return ICEBERG_FILTERS[root.value](root.left.value, root.right.value)
 
     iceberg_filter = None

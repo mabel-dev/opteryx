@@ -53,3 +53,18 @@ SELECT * FROM (SELECT 0 + 1 as opt, surface_pressure FROM $planets) AS sub WHERE
 SELECT * FROM (SELECT 1 - 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT 0 - 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
 SELECT * FROM (SELECT 1 / 0 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL
+
+SELECT * FROM $planets WHERE name = 'Earth' OR name = 'Mars' OR name = 'Venus'
+SELECT * FROM $planets WHERE id = 1 OR id = 2 OR id = 3
+SELECT * FROM $planets WHERE name = 'Earth' OR id = 3 OR name = 'Mars' OR id = 4
+SELECT * FROM $planets WHERE name = 'Earth' OR id < 3 OR name = 'Mars' OR id = 4
+SELECT * FROM $planets WHERE name = 'Mercury' OR name = 'Neptune' OR name = 'Pluto'
+SELECT * FROM $planets WHERE id = 5 OR id = 6 OR id = 7 OR id = 8
+SELECT * FROM $planets WHERE id = 1 OR name = 'Venus' OR id = 3 OR name = 'Jupiter'
+SELECT * FROM $planets WHERE id < 2 OR name = 'Saturn' OR id = 4
+SELECT * FROM $planets WHERE name = 'Earth' OR (id = 1 OR id = 2)
+SELECT * FROM $planets WHERE (name = 'Earth' OR name = 'Mars') OR (id = 3 OR id = 4)
+SELECT * FROM $planets WHERE name = 'Earth' OR name IN ('Mars', 'Venus')
+SELECT * FROM $planets WHERE id = 1 OR (id = 2 OR (id = 3 OR id = 4))
+SELECT * FROM $planets WHERE name = 'Venus' OR (id < 5 OR name = 'Saturn')
+SELECT * FROM $planets WHERE (name = 'Earth' OR id = 3) OR (name = 'Mars' OR id = 4)

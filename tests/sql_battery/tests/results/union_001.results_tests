@@ -1,0 +1,12 @@
+{
+  "summary": "Bug fix, difficult to test with other tests",
+  "statement": "
+    SELECT name, id FROM $planets AS A
+    UNION
+    SELECT name, id FROM $planets AS B
+",
+  "result": {
+    "name": ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"],
+    "id": [1,2,3,4,5,6,7,8,9],
+    }
+}

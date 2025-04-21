@@ -11,7 +11,7 @@ cd io
 PYBIN="/opt/python/cp${PYTHON_VERSION//.}-cp${PYTHON_VERSION//.}/bin"
 
 # Install necessary packages
-"${PYBIN}/python" -m pip install -U setuptools wheel setuptools-rust numpy cython pyarrow
+"${PYBIN}/python" -m pip install -U setuptools wheel setuptools-rust numpy cython==3.1.0a1 pyarrow
 "${PYBIN}/python" -c "import pyarrow; pyarrow.create_library_symlinks();"
 
 # Build the wheel

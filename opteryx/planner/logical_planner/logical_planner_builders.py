@@ -199,6 +199,11 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
         data_type = "DECIMAL"
+        if "PrecisionAndScale" in branch["data_type"]["Decimal"]:
+            precision = branch["data_type"]["Decimal"]["PrecisionAndScale"][0]
+            scale = branch["data_type"]["Decimal"]["PrecisionAndScale"][1]
+            args.append(build_literal_node(precision))
+            args.append(build_literal_node(scale))
     elif "Integer" in data_type:
         data_type = "INTEGER"
     elif "Double" in data_type:
@@ -328,6 +333,15 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
         node_type = NodeType.AGGREGATOR
     else:  # pragma: no cover
         from opteryx.exceptions import FunctionNotFoundError
+        from opteryx.functions import DEPRECATED_FUNCTIONS
+
+        if func in DEPRECATED_FUNCTIONS:
+            alt = DEPRECATED_FUNCTIONS.get(func)
+            if alt:
+                raise UnsupportedSyntaxError(
+                    f"Function '{func}' has been deprecated, '{alt}' offers similar functionality."
+                )
+            raise UnsupportedSyntaxError(f"Function '{func}' has been deprecated.")
 
         likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
         if likely_match is None:
@@ -423,7 +437,7 @@ def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
 
 def in_unnest(branch, alias: Optional[List[str]] = None, key=None):
     left_node = build(branch["expr"])
-    operator = "AnyOpNotEq" if branch["negated"] else "AnyOpEq"
+    operator = "AllOpNotEq" if branch["negated"] else "AnyOpEq"
     right_node = build(branch["array_expr"])
     return Node(
         node_type=NodeType.COMPARISON_OPERATOR,
@@ -731,12 +745,12 @@ def typed_string(branch, alias: Optional[List[str]] = None, key=None):
     data_value = build(branch["value"]).value
 
     Datatype_Map: Dict[str, Tuple[str, Callable]] = {
-        "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
-        "DATE": ("DATE", lambda x: numpy.datetime64(x, "D")),
-        "INTEGER": ("INTEGER", numpy.int64),
-        "DOUBLE": ("DOUBLE", numpy.float64),
-        "DECIMAL": ("DECIMAL", decimal.Decimal),
-        "BOOLEAN": ("BOOLEAN", bool),
+        "TIMESTAMP": (OrsoTypes.TIMESTAMP, lambda x: numpy.datetime64(x, "us")),
+        "DATE": (OrsoTypes.DATE, lambda x: numpy.datetime64(x, "D")),
+        "INTEGER": (OrsoTypes.INTEGER, numpy.int64),
+        "DOUBLE": (OrsoTypes.DOUBLE, numpy.float64),
+        "DECIMAL": (OrsoTypes.DECIMAL, decimal.Decimal),
+        "BOOLEAN": (OrsoTypes.BOOLEAN, bool),
     }
 
     mapper = Datatype_Map.get(data_type)

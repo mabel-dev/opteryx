@@ -2,11 +2,12 @@ import re
 from typing import List
 
 import numpy
+import pyarrow
 
 ESCAPE_SPECIAL_CHARS = re.compile(r"([.^$*+?{}[\]|()\\])")
 
 
-def sql_like_to_regex(pattern: str) -> str:
+def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: bool = True) -> str:
     """
     Converts an SQL `LIKE` pattern into a regular expression.
 
@@ -19,7 +20,7 @@ def sql_like_to_regex(pattern: str) -> str:
         pattern (str): The SQL LIKE pattern.
 
     Returns:
-        str: The equivalent regex pattern, anchored with `^` and `$`.
+        str: The equivalent regex pattern.
 
     Examples:
         sql_like_to_regex("a%")       -> "^a.*?$"
@@ -34,6 +35,13 @@ def sql_like_to_regex(pattern: str) -> str:
 
     # Replace SQL wildcards with regex equivalents
     regex_pattern = "^" + escaped_pattern.replace("%", ".*?").replace("_", ".") + "$"
+    if not full_match:
+        if regex_pattern.startswith("^.*?"):
+            regex_pattern = regex_pattern[4:]
+        if regex_pattern.endswith(".*?$"):
+            regex_pattern = regex_pattern[:-4]
+    if not case_sensitive:
+        regex_pattern = f"(?i)({regex_pattern})"
     return regex_pattern
 
 
@@ -119,87 +127,66 @@ def split_sql_statements(sql: str) -> List[str]:
 
 
 def regex_match_any(
-    arr: numpy.ndarray,
+    arr: pyarrow.Array,
     patterns: List[str],
     flags: int = 0,
     invert: bool = False,
 ) -> numpy.ndarray:
     """
     Evaluates whether each row in `arr` matches ANY of the given LIKE patterns.
-    Patterns are converted to regexes, combined, and compiled once.
+    Compatible with Arrow Arrays (flat or List<String>).
 
     Parameters:
-        arr: numpy.ndarray
-            1D array of rows. Each element can be:
-                - None
-                - A single string/bytes
-                - A list/tuple/array of strings/bytes
-              (all non-None elements are assumed to be the same structure).
-        patterns: List[str]
-            A list of SQL LIKE patterns. These get combined into a single regex.
-        flags: int, optional
-            Flags to pass to `re.compile()`, e.g. re.IGNORECASE for ILIKE.
+        arr: pyarrow.Array or ChunkedArray
+        patterns: list of SQL LIKE patterns (converted to regex)
+        flags: regex flags (e.g. re.IGNORECASE)
+        invert: True to negate the result (i.e., NOT LIKE ANY)
 
     Returns:
-        numpy.ndarray:
-            A 1D object array with True, False, or None,
-            indicating whether each row did (or did not) match the patterns.
+        numpy.ndarray of object dtype (bool or None per row)
     """
+    if hasattr(patterns, "to_pylist"):
+        patterns = patterns.to_pylist()
     if any(not isinstance(p, str) for p in patterns if p):
         from opteryx.exceptions import IncorrectTypeError
 
         raise IncorrectTypeError("Patterns for LIKE ANY comparisons must be strings.")
 
-    # 1) Combine the LIKE patterns into a single compiled regex
-    #    (Empty patterns list => empty string => matches nothing)
-    combined_pattern_str = r"|".join(sql_like_to_regex(p) for p in patterns if p)
-    # If there are no valid patterns, we build a "never match" pattern
-    if not combined_pattern_str:
-        combined_pattern_str = r"(?!x)"  # Negative lookahead to never match
+    # Compile a single combined regex
+    pattern_str = r"|".join(sql_like_to_regex(p) for p in patterns if p) or r"(?!x)"
+    combined_regex = re.compile(pattern_str, flags=flags)
 
-    combined_regex = re.compile(combined_pattern_str, flags=flags)
+    # Normalize to a flat list of Arrow chunks
+    chunks = arr.chunks if isinstance(arr, pyarrow.ChunkedArray) else [arr]
+    total_len = sum(len(chunk) for chunk in chunks)
+    out = numpy.empty(total_len, dtype=object)
 
-    # 2) Create the output array (dtype=object so we can store None/bool)
-    out = numpy.empty(arr.size, dtype=object)
-
-    # 3) Determine if the array consists of single strings or lists-of-strings
-    first_non_none = None
-    for x in arr:
-        if x is not None:
-            first_non_none = x
-            break
-
-    # If the entire array is None, just return all None
-    if first_non_none is None:
-        out[:] = None
-        return out
-
-    single_string_mode = isinstance(first_non_none, (str, bytes))
-
-    # 4) Main loop
-    if single_string_mode:
-        # Single-string mode
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-            else:
-                # Match or not?
-                is_match = combined_regex.search(row) is not None
-                out[i] = (not is_match) if invert else is_match
-    else:
-        # Lists-of-strings mode
-        for i, row in enumerate(arr):
-            if row is None:
-                out[i] = None
-            else:
-                # row is assumed to be an iterable of strings/bytes
-                if row.size == 0:
-                    # Probably a numpy array with zero length
-                    is_match = False
+    offset = 0
+    for chunk in chunks:
+        if pyarrow.types.is_list(chunk.type):
+            values = chunk.values.to_pylist()
+            offsets = chunk.offsets.to_numpy()
+            validity = chunk.is_valid().to_numpy(False)
+            for i in range(len(chunk)):
+                if not validity[i]:
+                    out[offset + i] = None
                 else:
-                    # If anything in the row matches, it's True
-                    is_match = any(combined_regex.search(elem) for elem in row)
-                out[i] = (not is_match) if invert else is_match
+                    sublist = values[offsets[i] : offsets[i + 1]]
+                    out[offset + i] = (
+                        (not any(combined_regex.search(x) for x in sublist))
+                        if invert
+                        else (any(combined_regex.search(x) for x in sublist))
+                    )
+        else:
+            validity = chunk.is_valid().to_numpy(False)
+            strings = chunk.to_pylist()
+            for i in range(len(chunk)):
+                if not validity[i]:
+                    out[offset + i] = None
+                else:
+                    is_match = combined_regex.search(strings[i]) is not None
+                    out[offset + i] = not is_match if invert else is_match
+        offset += len(chunk)
 
     return out
 

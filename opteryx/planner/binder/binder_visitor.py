@@ -838,10 +838,8 @@ class BinderVisitor:
                         name=name, columns=[col.schema_column for col in columns]
                     )
 
-        node.columns = columns
-
         # Bind the local columns to physical columns
-        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
+        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in columns))
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
         # Check for duplicates
@@ -891,7 +889,9 @@ class BinderVisitor:
         if "$derived" not in context.schemas:
             context.schemas["$derived"] = derived.schema()
 
-        node.columns = columns
+        # update the columns attribute, preserving order
+        bound_columns = {c.schema_column.identity: c for c in columns}
+        node.columns = [bound_columns[c.schema_column.identity] for c in node.columns]
 
         return node, context
 

@@ -415,3 +415,67 @@ SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') ILIKE b'C%e%r'
 SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') ILIKE 'C%e%r'
 SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') LIKE b'C%e%r'
 SELECT * FROM $astronauts WHERE VARCHAR(birth_place->'town') LIKE 'C%e%r'
+
+SELECT * FROM $astronauts WHERE 'MIT' = ANY(alma_mater);
+SELECT 1 = ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 = ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 = ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' = ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) = ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True = ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' != ANY(alma_mater);
+SELECT 1 != ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 != ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 != ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' != ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) != ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True != ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' > ANY(alma_mater);
+SELECT 1 > ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 > ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 > ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' > ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) > ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True > ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' >= ANY(alma_mater);
+SELECT 1 >= ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 >= ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 >= ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' >= ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) >= ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True >= ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' < ANY(alma_mater);
+SELECT 1 < ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 < ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 < ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' < ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) < ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True < ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' <= ANY(alma_mater);
+SELECT 1 <= ANY(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 <= ANY(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 <= ANY(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' <= ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) <= ANY(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True <= ANY(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' = ALL(alma_mater);
+SELECT 1 = ALL(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 = ALL(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 = ALL(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' = ALL(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) = ALL(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True = ALL(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;
+
+SELECT * FROM $astronauts WHERE 'MIT' != ALL(alma_mater);
+SELECT 1 != ALL(i) FROM (SELECT ARRAY_AGG(id) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 != ALL(i) FROM (SELECT ARRAY_AGG(mass) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT 1 != ALL(i) FROM (SELECT ARRAY_AGG(gravity) AS i FROM $planets GROUP BY gravity) AS A;
+SELECT '1936-03-07' != ALL(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A;
+SELECT CAST('1936-03-07' AS DATE) != ALL(i), i FROM (SELECT ARRAY_AGG(birth_date) AS i FROM $astronauts GROUP BY status) AS A
+SELECT True != ALL(i) FROM (SELECT ARRAY_AGG(id > 5) AS i FROM $planets GROUP BY gravity) AS A;

@@ -57,8 +57,6 @@ def measure_performance(data_type, op):
             operand = evaluate(operand, table)
             break
 
-    if op == "InStr" and data_type == OrsoTypes.VARCHAR:
-        pass
     t = time.monotonic_ns()
     try:
         filter_operations(operand, data_type, op, operand, data_type)

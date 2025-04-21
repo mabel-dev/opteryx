@@ -39,6 +39,8 @@ import os
 import pytest
 import sys
 
+#import opteryx
+
 from typing import Optional
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -333,6 +335,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE name RLIKE '.a.y.s.'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE name RLIKE '^Cal.*'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE name rlike '^Cal.*'", 4, 8, None),
+        ("SELECT * FROM $satellites WHERE name RLIKE '(?i)cal.*'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE TRUE", 177, 8, None),
         ("SELECT * FROM $satellites WHERE FALSE", 0, 8, None),
         ("SELECT * FROM $satellites WHERE NOT TRUE", 0, 8, None),
@@ -610,10 +613,9 @@ id > /* 0 */ 1
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 1, None),
         ("SELECT STR(planetId) FROM $satellites GROUP BY STR(planetId)", 7, 1, None),
         ("SELECT COUNT(*) FROM $satellites GROUP BY TIMESTAMP('2022-01-0' || VARCHAR(planetId))", 7, 1, None),
-        ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY NUMERIC(planetId)", 7, 1, None),
+        ("SELECT DOUBLE(planetId) FROM $satellites GROUP BY DOUBLE(planetId)", 7, 1, None),
         ("SELECT INT(planetId) FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
         ("SELECT INTEGER(planetId) FROM $satellites GROUP BY INTEGER(planetId)", 7, 1, None),
-        ("SELECT FLOAT(planetId) FROM $satellites GROUP BY FLOAT(planetId)", 7, 1, None),
         ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1, None),
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT CAST('2022-01-0' || VARCHAR(planetId) AS TIMESTAMP) FROM $satellites", 177, 1, None),
@@ -628,7 +630,7 @@ id > /* 0 */ 1
         ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS INTEGER) FROM $satellites", 177, 1, None),
-        ("SELECT NUMERIC(planetId) AS VALUE FROM $satellites GROUP BY NUMERIC(planetId)", 7, 1, None),
+        ("SELECT DOUBLE(planetId) AS VALUE FROM $satellites GROUP BY DOUBLE(planetId)", 7, 1, None),
         ("SELECT INT(planetId) AS VALUE FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
         ("SELECT INTEGER(planetId) AS VALUE FROM $satellites GROUP BY INTEGER(planetId)", 7, 1, None),
         ("SELECT FLOAT(planetId) AS VALUE FROM $satellites GROUP BY FLOAT(planetId)", 7, 1, None),
@@ -640,8 +642,7 @@ id > /* 0 */ 1
         ("SELECT TRY_CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS DECIMAL) AS VALUE FROM $satellites", 177, 1, None),
-        ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
-        ("SELECT * FROM $planets WHERE STRUCT('{\"a\":1,\"b\":\"c\"}')->'a' = id", 1, 20, None),
+        ("SELECT * FROM $planets WHERE id = GET('{\"a\":1,\"b\":\"c\"}', 'a')", 1, 20, None),
         ("SELECT * FROM $planets WHERE '{\"a\":1,\"b\":\"c\"}'->'a' = id", 1, 20, None),
         ("SELECT b'binary'", 1, 1, None),
         ("SELECT B'binary'", 1, 1, None),
@@ -749,7 +750,7 @@ id > /* 0 */ 1
         ("SELECT BP->'state' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
         ("SELECT BP->>'state' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
         ("SELECT BP->>'address' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
-        ("SELECT dict->>'list', dict->'list' AS thisisalongercolumnname, STRUCT(dict)->'list', dict->>'once', dict->'once' FROM testdata.flat.struct", 6, 5, None),
+        ("SELECT dict->>'list', dict->'list' AS thisisalongercolumnname, dict->>'once', dict->'once' FROM testdata.flat.struct", 6, 4, None),
         ("SELECT cve -> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve ->> 'CVE_data_meta' ->> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
         ("SELECT cve -> 'CVE_data_meta' -> 'ASSIGNER' FROM testdata.flat.nvd limit 10", 10, 1, None),
@@ -762,7 +763,6 @@ id > /* 0 */ 1
         ("SELECT cve @? '$.CVE_data_meta' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),
         ("SELECT cve @? 'CVE_data_meta' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),
         ("SELECT cve @? '$.CVE_data_meta.REASSIGNER' FROM testdata.flat.nvd LIMIT 10", 10, 1, None),
-        ("SELECT struct(dict) @? '$.list' FROM testdata.flat.struct", 6, 1, None),
         ("SELECT birth_place @? '$.town' FROM $astronauts", 357, 1, None),
 
         ("SELECT dict @? 'list' FROM testdata.flat.atquestion", 6, 1, None),  # List exists in all but id=5
@@ -1036,9 +1036,6 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8, None),
 
         ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS(missions, 'Apollo 8')", 3, 1, None),
-        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, ('Apollo 8', 'Apollo 13'))", 5, 1, None),
-        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
-        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS(missions, 'Apollo 8')", 3, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, ('Apollo 8', 'Apollo 13'))", 5, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
@@ -1046,19 +1043,19 @@ id > /* 0 */ 1
         ("SELECT missions FROM $astronauts WHERE missions @> ('Apollo 8', 'Apollo 13')", 5, 1, None),
 
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions)", 3, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater)", 3, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'B' < any(alma_mater)", 15, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != any(missions)", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'C' > any(alma_mater)", 19, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' < any(alma_mater)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != any(missions)", 334, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions)", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = all(missions)", 0, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions) AND True", 3, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater) OR 'Z' > any(alma_mater)", 3, 19, None),
-        ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'B' < any(alma_mater)", 15, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater) OR 'Z' > any(alma_mater)", 357, 19, None),
+        ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'B' < any(alma_mater)", 353, 19, None),
         ("SELECT * FROM $astronauts WHERE name != 'Brian' OR 'Apollo 11' != any(missions)", 357, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions) AND name != 'Brian'", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'Apollo 11' = all(missions)", 0, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'X' >= any(alma_mater)", 3, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'B' <= any(alma_mater)", 15, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' >= any(alma_mater)", 357, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'B' <= any(alma_mater)", 353, 19, None),
 
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8, UnsupportedSyntaxError),  # temp
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20, UnsupportedSyntaxError),  # temp
@@ -1366,7 +1363,7 @@ id > /* 0 */ 1
         ("SET @variable = 'Apollo 11'; SELECT * FROM $astronauts WHERE @variable IN UNNEST(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE NOT 'Apollo 12' = ANY(missions) or missions is null", 354, 19, None),
         ("SELECT * FROM $astronauts WHERE NOT 'Apollo 12' = ANY(missions) and missions is null", 0, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != ANY(missions)", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != ANY(missions)", 334, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != ANY(missions) and missions is null", 0, 19, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id = @id;", 1, 1, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id;", 2, 1, None),
@@ -1537,14 +1534,14 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets CROSS JOIN UNNEST(name) AS G", None, None, IncorrectTypeError),
 
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
-        ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
+        ("SELECT name FROM $astronauts WHERE GET(VARCHAR(birth_place), 'state') = birth_place['state']", 357, 1, None),
 
-#        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Russia, Kapustin')", 112, 8, None),
 
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01 01:00'", 1, 2, None),
         ("SELECT * FROM testdata.partitioned.hourly FOR '2024-01-01'", 2, 2, None),
         ("SELECT * EXCEPT (id, name, gravity) FROM $planets", 9, 17, None),
-
 
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
@@ -1582,7 +1579,7 @@ id > /* 0 */ 1
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
-        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 6, 1, None),
+        ("SELECT dict FROM testdata.flat.struct", 6, 1, None),
 
         # Test the order of the predicates shouldn't matter
         ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 20, None),
@@ -1699,7 +1696,7 @@ id > /* 0 */ 1
 
         ("SELECT missions[0] as m FROM $astronauts CROSS JOIN FAKE(1, 1) AS F order by m", 357, 1, None),
         ("SELECT name[id] as m FROM $planets", None, None, UnsupportedSyntaxError),
-        ("SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
         ("SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'", 1, 8, None),
         ("SELECT * FROM $planets WHERE name = any(@@user_memberships)", 0, 20, None),
         ("SELECT name FROM $planets WHERE 'Apollo 11' = ANY(@@user_memberships) OR name = 'Saturn'", 9, 1, None),
@@ -1859,6 +1856,7 @@ id > /* 0 */ 1
         ("SELECT pids FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 1, None),
         ("SELECT pid FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites CROSS JOIN UNNEST(pids) AS pid", 177, 1, None),
         ("SELECT * FROM (SELECT LENGTH(ARRAY_AGG(DISTINCT planetId)) AS L FROM $satellites GROUP BY planetId) AS I WHERE L == 1;", 7, 1, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(id) AS sid FROM $satellites GROUP BY planetId) AS A WHERE sid @> (1,2,3)", 2, 1, None),
 
         ("SHOW CREATE VIEW mission_reports", 1, 1, None),
         ("SHOW CREATE VIEW mission.reports", 1, 1, DatasetNotFoundError),
@@ -1882,6 +1880,27 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets LEFT JOIN $satellites USING(id) WHERE False", 0, 27, None),
         ("SELECT * FROM (SELECT * FROM $planets WHERE False) AS S LEFT JOIN $satellites USING(id)", 0, 27, None),
         ("SELECT * FROM $planets LEFT JOIN (SELECT * FROM $satellites WHERE False) AS S USING(id)", 9, 27, None),
+
+        ("WITH cold_planets AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature < 0) SELECT name FROM cold_planets WHERE name != 'Uranus';", 5, 1, None),
+        ("WITH eccentric_planets AS (SELECT id, name, orbitalEccentricity FROM $planets WHERE orbitalEccentricity > 0.05) SELECT name FROM eccentric_planets WHERE orbitalEccentricity < 0.1 ORDER BY name;", 2, 1, None),
+        ("WITH warm AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature > 0) SELECT COUNT(*) FROM warm WHERE meanTemperature > 200;", 1, 1, None),
+        ("WITH rounded_gravity AS (SELECT id, name, ROUND(gravity, 0) AS g FROM $planets) SELECT name FROM rounded_gravity WHERE g >= 10;", 3, 1, None),
+        ("WITH giant_planets AS (SELECT id, name, diameter FROM $planets WHERE diameter > 100000) SELECT name, diameter FROM giant_planets ORDER BY diameter ASC LIMIT 2;", 2, 2, None),
+        ("WITH polar AS (SELECT id, name, obliquityToOrbit FROM $planets) SELECT name FROM polar WHERE obliquityToOrbit BETWEEN 85 AND 95;", 0, 1, None),
+        ("WITH dense AS (SELECT id, name, density FROM $planets WHERE density IS NOT NULL) SELECT name FROM dense WHERE density > 4 AND density < 6;", 0, 1, None),
+        ("WITH lo_temp AS (SELECT id, name, meanTemperature FROM $planets) SELECT name FROM lo_temp WHERE meanTemperature < -100 ORDER BY meanTemperature DESC;", 5, 1, None),
+        ("WITH orbit_years AS (SELECT id, name, orbitalPeriod FROM $planets) SELECT name FROM orbit_years WHERE orbitalPeriod > 365 ORDER BY orbitalPeriod;", 7, 1, None),
+        ("WITH spin AS (SELECT id, name, rotationPeriod FROM $planets) SELECT name FROM spin WHERE rotationPeriod > 500 ORDER BY rotationPeriod;", 1, 1, None),
+        ("WITH flat_names AS (SELECT id, LOWER(name) AS name FROM $planets) SELECT name FROM flat_names WHERE name LIKE 'm%' ORDER BY name;", 2, 1, None),
+        ("WITH far_planets AS (SELECT id, name, distanceFromSun FROM $planets WHERE distanceFromSun > 1000) SELECT name FROM far_planets WHERE distanceFromSun < 5000;", 3, 1, None),
+        ("WITH odd_moons AS (SELECT id, name, numberOfMoons FROM $planets) SELECT name FROM odd_moons WHERE numberOfMoons % 2 = 1;", 4, 1, None),
+        ("WITH names AS (SELECT id, name FROM $planets) SELECT UPPER(name) FROM names WHERE LENGTH(name) < 6;", 4, 1, None),
+        ("WITH nonzero_pressure AS (SELECT id, surfacePressure FROM $planets) SELECT COUNT(*) FROM nonzero_pressure WHERE surfacePressure > 0;", 1, 1, None),
+        ("WITH normalized AS (SELECT id, name, round(CAST(gravity AS DOUBLE) / 9.8, 2) AS g  FROM $planets WHERE gravity IS NOT NULL) SELECT name FROM normalized WHERE g > 1.1;", 2, 1, None),
+        ("WITH weird_rotation AS (SELECT id, name, rotationPeriod FROM $planets) SELECT name FROM weird_rotation WHERE rotationPeriod < 0 ORDER BY rotationPeriod;", 3, 1, None),
+        ("WITH matching AS (SELECT id, name FROM $planets) SELECT COUNT(*) FROM matching WHERE name = 'Mars';", 1, 1, None),
+        ("WITH categorised AS (SELECT id, name, CASE WHEN mass > 1 THEN 'large' ELSE 'small' END AS size FROM $planets) SELECT size, COUNT(*) FROM categorised GROUP BY size;", 2, 2, None),
+        ("WITH orbshape AS (SELECT id, orbitalEccentricity FROM $planets) SELECT COUNT(*) FROM orbshape WHERE orbitalEccentricity BETWEEN 0.01 AND 0.05;", 1, 1, None),
 
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),
@@ -1948,7 +1967,7 @@ id > /* 0 */ 1
         ("SELECT name, missions FROM $astronauts WHERE missions NOT LIKE ANY ('Apollo 11')", 331, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apollo_%')", 34, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('Apo__o%')", 34, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 34, 2, IncorrectTypeError),
+        ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%Apoll%', 123)", 34, 2, IncompatibleTypesError),
         ("SELECT name, missions FROM $astronauts WHERE missions LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
 
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY '%armstrong%'", 0, 2, None),
@@ -1979,8 +1998,24 @@ id > /* 0 */ 1
         ("SELECT name, missions FROM $astronauts WHERE name NOT LIKE ANY ('Neil A. Armstrong')", 356, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%__Armstrong%')", 1, 2, None),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Arm__rong%')", 1, 2, None),
-        ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, IncorrectTypeError),
+        ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%Armstrong%', 123)", 1, 2, IncompatibleTypesError),
         ("SELECT name, missions FROM $astronauts WHERE name LIKE ANY ('%pattern1%', '%pattern2%', '%pattern3%', '%pattern4%', '%pattern5%', '%pattern6%', '%pattern7%', '%pattern8%', '%pattern9%', '%pattern10%', '%pattern11%', '%pattern12%', '%pattern13%', '%pattern14%', '%pattern15%', '%pattern16%', '%pattern17%', '%pattern18%', '%pattern19%', '%pattern20%', '%pattern21%', '%pattern22%', '%pattern23%', '%pattern24%', '%pattern25%', '%pattern26%', '%pattern27%', '%pattern28%', '%pattern29%', '%pattern30%', '%pattern31%', '%pattern32%', '%pattern33%', '%pattern34%', '%pattern35%', '%pattern36%', '%pattern37%', '%pattern38%', '%pattern39%', '%pattern40%', '%pattern41%', '%pattern42%', '%pattern43%', '%pattern44%', '%pattern45%', '%pattern46%', '%pattern47%', '%pattern48%', '%pattern49%', '%pattern50%');", 0, 2, None),
+
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name LIKE '%i%'", 4, 1, None),
+        ("SELECT name FROM $planets WHERE name ILIKE '%e%' OR name ILIKE '%i%'", 5, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name LIKE '%i%' OR name LIKE '%a%'", 8, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name ILIKE '%i%'", 4, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR diameter > 50000 OR name LIKE '%i%'", 6, 1, None),
+        ("SELECT name FROM $planets WHERE (name LIKE '%e%' OR name ILIKE '%i%') AND mass > 1e-24", 4, 1, None),
+        ("SELECT name FROM $planets WHERE (name LIKE '%u%' OR name LIKE '%a%') AND (mass > 1e-24 OR diameter < 30000)", 9, 1, None),
+        ("SELECT name FROM $planets WHERE ((name LIKE '%m%' OR name LIKE '%v%') OR (name ILIKE '%u%' OR name ILIKE '%o%'))", 7, 1, None),
+        ("SELECT name FROM $planets WHERE ((name LIKE '%m%' OR name ILIKE '%o%') OR (name ILIKE '%u%' OR name LIKE '%v%'))", 7, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%m%' OR name ILIKE '%o%' OR name ILIKE '%u%' OR name LIKE '%v%'", 7, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%m%' OR (name ILIKE '%o%' OR name ILIKE '%u%') OR name LIKE '%v%'", 7, 1, None),
+        ("SELECT name FROM $planets WHERE ((name ILIKE '%m%' OR name ILIKE '%v%') AND (name LIKE '%u%' OR name LIKE '%o%'))", 2, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%e%' OR name IN ('Earth', 'Mars', 'Jupiter')", 6, 1, None),
+        ("SELECT name FROM $planets WHERE name LIKE '%r%' AND NOT name LIKE '%e%'", 4, 1, None),
+        ("SELECT COUNT(*), name FROM $planets WHERE name LIKE '%a%' OR name ILIKE '%o%' GROUP BY name HAVING COUNT(*) > 0", 5, 2, None),
 
         ("SELECT max(current_time), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max(1), name FROM $satellites group by name", 177, 2, None),
@@ -2006,7 +2041,10 @@ id > /* 0 */ 1
         
         ("SELECT HUMANIZE(1000)", 1, 1, None),
         ("SELECT HUMANIZE(COUNT(*)) FROM $planets", 1, 1, None),
-        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None), 
+        ("SELECT HUMANIZE(gravity) FROM $planets", 9, 1, None),
+        ("SELECT * FROM $satellites WHERE id > 1_00", 77, 8, None),
+        ("SELECT * FROM $satellites WHERE radius > 10.0_0", 77, 8, None),
+        ("SELECT * FROM $satellites WHERE radius > 10.0_0 and id > 1_00", 42, 8, None),
 
         ("SELECT * EXCEPT(id) FROM $planets", 9, 19, None),
         ("SELECT * EXCEPT(id, name) FROM $planets", 9, 18, None),
@@ -2045,6 +2083,9 @@ id > /* 0 */ 1
         ("SELECT CAST(p.name AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
         ("SELECT CAST(p.id AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
         ("SELECT CAST(p.mass AS ARRAY<INTEGER>) FROM $satellites as s LEFT JOIN $planets as p ON s.id = p.id WHERE s.id > 10", 167, 1, None),
+
+        ("SELECT * FROM testdata.flat.struct_array WHERE data[0]->'id' = 1", 1, 2, None),
+        
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
@@ -2140,7 +2181,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets GROUP BY name", 9, 1, UnsupportedSyntaxError),
         # found testing
         ("SELECT user_name FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
-        #769
+        # 769
         ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT LEAST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT SORT(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
@@ -2346,10 +2387,10 @@ id > /* 0 */ 1
 #        ("SELECT DISTINCT l FROM (SELECT split('a b c d e f g h i j', ' ') as letters) as plet CROSS JOIN UNNEST (letters) as l", 10, 1, None),
         # 2112
         ("SELECT id FROM $planets WHERE surface_pressure / surface_pressure is null", 5, 1, None),
-        #2144
+        # 2144
         ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->'town' AS town FROM $astronauts) AS T", 357, 2, None),
         ("SELECT town, LENGTH(NULLIF(town, b'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
-        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", None, None, IncompatibleTypesError),
+        ("SELECT town, LENGTH(NULLIF(town, 'Inglewood')) FROM (SELECT birth_place->>'town' AS town FROM $astronauts) AS T", 357, 2, None),
         # 2159
         ("SELECT * FROM (SELECT 1 * surface_pressure as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
         ("SELECT * FROM (SELECT surface_pressure * 1 as opt, surface_pressure FROM $planets) AS sub WHERE opt IS NULL", 4, 2, None),
@@ -2401,8 +2442,16 @@ id > /* 0 */ 1
         ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         # 2489
-        ("SELECT name FROM $planets where len(md5(name)) == 32", 9, 1, None),
+        ("SELECT name FROM $planets where length(md5(name)) == 32", 9, 1, None),
         ("SELECT name FROM $planets WHERE case when name is null then '' else name end == 'Earth'", 1, 1, None),
+        # 2514
+        ("SELECT * FROM (SELECT '{\"name\": \"John\"}' AS details) AS t WHERE IFNULL(details->'name', '') == 'John'", 1, 1, None),
+        # 2523
+        ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 1, 2, None),
+        ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION ALL SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 2, 2, None),
+        # 2547
+        ("SELECT * FROM $planets WHERE name ILIKE '%art%h%'", 1, 20, None),
+
 ]
 # fmt:on
 

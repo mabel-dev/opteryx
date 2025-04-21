@@ -51,6 +51,10 @@ def _build_passthru_node(root, value, statistics) -> Node:
     if root.node_type == NodeType.COMPARISON_OPERATOR:
         return root
 
+    # We're already a function, no point wrapping in another
+    if value.node_type == NodeType.FUNCTION:
+        return value
+
     node = Node(node_type=NodeType.FUNCTION)
     node.value = "PASSTHRU"
     node.parameters = [value]
@@ -298,6 +302,7 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 pass
             # what ever the reason, just skip
             # DEBUG:log (err)
+
     return root
 
 

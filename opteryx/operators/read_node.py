@@ -56,6 +56,34 @@ def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
                 i, pyarrow.field(name=field.name, type=pyarrow.binary()), json_array
             )
 
+        # Check for LIST<STRUCT>
+        if pyarrow.types.is_list(field.type) and pyarrow.types.is_struct(field.type.value_type):
+            list_array = table.column(i)
+
+            # Convert each list element
+            converted_data = []
+            for item in list_array:
+                if item is None:
+                    converted_data.append(None)
+                else:
+                    # Each item is a list of structs
+                    converted_list = []
+                    for struct in item.as_py():
+                        if struct is None:
+                            converted_list.append(None)
+                        else:
+                            converted_list.append(orjson.dumps(struct))
+                    converted_data.append(converted_list)
+
+            # Build the new array
+            jsonb_array = pyarrow.array(converted_data, type=pyarrow.list_(pyarrow.binary()))
+
+            # Drop original column and insert new one at same position
+            table = table.drop_columns(field.name)
+            table = table.add_column(
+                i, pyarrow.field(name=field.name, type=jsonb_array.type), jsonb_array
+            )
+
     return table
 
 

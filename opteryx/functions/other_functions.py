@@ -69,6 +69,8 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
         # We're essentially doing a LIKE here
         from opteryx.compiled import list_ops
 
+        array = pyarrow.array(array)
+
         if ignore_case[0]:
             results_mask = numpy.asarray(
                 list_ops.list_substring.list_substring_case_insensitive(array, str(item)),
@@ -115,13 +117,13 @@ def if_null(values, replacements):
     # Create a mask for null values
     is_null_mask = _is_null(values)
 
-    if len(replacements) == 1:
-        replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
-
     if hasattr(replacements, "to_numpy"):
         replacements = replacements.to_numpy(zero_copy_only=False)
     if hasattr(values, "to_numpy"):
         values = values.to_numpy(zero_copy_only=False)
+
+    if len(replacements) == 1:
+        replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
 
     target_type = numpy.promote_types(values.dtype, replacements.dtype)
     return numpy.where(is_null_mask, replacements, values).astype(target_type)
@@ -129,15 +131,21 @@ def if_null(values, replacements):
 
 def if_not_null(values: numpy.ndarray, replacements: numpy.ndarray) -> numpy.ndarray:
     """
-    Retain non-null values in `values`, replacing null values with `replacements`.
+    Optimizer helper function: replace a value only if it is not null.
+
+    This is *not* SQL's IFNULL/COALESCE. This is used during constant folding
+    to preserve null-awareness while simplifying expressions.
+
+    For each element:
+        if value is NOT null → use replacement
+        if value IS null → keep the original null
 
     Parameters:
-        values: A NumPy array containing the original values.
-        replacements: A NumPy array of replacement values.
-        is_null: A function that identifies null values in `values`.
+        values: Original values (may include nulls).
+        replacements: Values to use if the original is not null.
 
     Returns:
-        A NumPy array with non-null values retained.
+        Array with replacements where applicable, nulls otherwise.
     """
     from opteryx.managers.expression.unary_operations import _is_not_null
 
@@ -174,6 +182,7 @@ def null_if(col1, col2):
 
     from orso.types import PYTHON_TO_ORSO_MAP
     from orso.types import OrsoTypes
+    from orso.types import find_compatible_type
 
     def get_first_non_null_type(array):
         for item in array:
@@ -184,7 +193,7 @@ def null_if(col1, col2):
     col1_type = get_first_non_null_type(col1.tolist())
     col2_type = get_first_non_null_type(col2.tolist())
 
-    if col1_type != col2_type:
+    if find_compatible_type([col1_type, col2_type], None) is None:
         raise IncompatibleTypesError(
             left_type=col1_type,
             right_type=col2_type,
@@ -272,13 +281,7 @@ def jsonb_object_keys(arr: numpy.ndarray):
     if isinstance(arr, pyarrow.Array):
         arr = arr.to_numpy(zero_copy_only=False)
 
-    # Determine type based on dtype of the array
-    if not numpy.issubdtype(arr.dtype, numpy.object_):
-        raise ValueError(
-            "Unsupported array dtype. Expected object dtype for dicts or strings/bytes."
-        )
-
-        # Pre-create the result array as a NumPy boolean array set to False
+    # Pre-create the result array as a NumPy boolean array set to False
     result = numpy.empty(arr.shape, dtype=list)
 
     if isinstance(arr[0], dict):

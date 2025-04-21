@@ -41,6 +41,10 @@ def view_as_plan(view_name: str) -> dict:
     parsed_statements = sqloxide.parse_sql(clean_sql, _dialect="opteryx")
     logical_plan, _, _ = do_logical_planning_phase(parsed_statements[0])
 
+    # views don't have an exit node
+    plan_head = logical_plan.get_exit_points()[0]
+    logical_plan.remove_node(plan_head, True)
+
     return logical_plan
 
 

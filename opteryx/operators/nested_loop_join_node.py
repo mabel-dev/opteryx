@@ -71,7 +71,11 @@ class NestedLoopJoinNode(JoinNode):
                     yield EOS
                     return
 
-                left_indexes, right_indexes = nested_loop_join(
-                    self.left_relation, morsel, self.left_columns, self.right_columns
-                )
+                if self.left_relation.num_rows == 0 or morsel.num_rows == 0:
+                    left_indexes = numpy.array([], dtype=numpy.int64)
+                    right_indexes = numpy.array([], dtype=numpy.int64)
+                else:
+                    left_indexes, right_indexes = nested_loop_join(
+                        self.left_relation, morsel, self.left_columns, self.right_columns
+                    )
                 yield align_tables(self.left_relation, morsel, left_indexes, right_indexes)

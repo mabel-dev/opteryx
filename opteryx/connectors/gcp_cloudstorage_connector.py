@@ -149,7 +149,7 @@ class GcpCloudStorageConnector(
         from opteryx import system_statistics
 
         bucket, _, _, _ = paths.get_parts(blob_name)
-        # DEBUG: log ("READ   ", blob_name)
+        # DEBUG: print("READ   ", blob_name)
 
         # Ensure the credentials are valid, refreshing them if necessary
         if not self.client_credentials.valid:  # pragma: no cover
@@ -192,7 +192,7 @@ class GcpCloudStorageConnector(
             bucket = bucket.replace("va_data", "va-data")
             bucket = bucket.replace("data_", "data-")
 
-        # DEBUG: log (f"[GCS] bucket: '{bucket}', path: '{object_path}'")
+        # DEBUG: print(f"[GCS] bucket: '{bucket}', path: '{object_path}'")
 
         object_path = urllib.parse.quote(object_path, safe="")
         bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe

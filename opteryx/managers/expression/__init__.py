@@ -24,6 +24,7 @@ from pyarrow import Table
 from pyarrow import compute
 
 from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
+from opteryx.exceptions import IncorrectTypeError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import apply_function
 from opteryx.managers.expression.binary_operators import binary_operations
@@ -81,22 +82,6 @@ class NodeType(int, Enum):
     EXPRESSION_LIST = 43  # 0010 1011 (CASE WHEN)
     EVALUATED = 44  # 0010 1100 - memoize results
 
-
-ORSO_TO_NUMPY_MAP = {
-    OrsoTypes.ARRAY: numpy.dtype("O"),
-    OrsoTypes.BLOB: numpy.dtype("S"),
-    OrsoTypes.BOOLEAN: numpy.dtype("?"),
-    OrsoTypes.DATE: numpy.dtype("datetime64[D]"),  # [2.5e16 BC, 2.5e16 AD]
-    OrsoTypes.DECIMAL: numpy.dtype("O"),
-    OrsoTypes.DOUBLE: numpy.dtype("float64"),
-    OrsoTypes.INTEGER: numpy.dtype("int64"),
-    OrsoTypes.INTERVAL: numpy.dtype("m"),
-    OrsoTypes.STRUCT: numpy.dtype("O"),
-    OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
-    OrsoTypes.TIME: numpy.dtype("O"),
-    OrsoTypes.VARCHAR: numpy.dtype("U"),
-    OrsoTypes.NULL: numpy.dtype("O"),
-}
 
 LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
     NodeType.AND: pyarrow.compute.and_,
@@ -238,10 +223,12 @@ def _inner_evaluate(root: Node, table: Table):
             return numpy.array([root.value] * table.num_rows, dtype=numpy.bytes_)
         if literal_type == OrsoTypes.INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
+        if isinstance(literal_type, OrsoTypes):
+            literal_type = literal_type.numpy_dtype
         return numpy.full(
             shape=table.num_rows,
             fill_value=root.value,
-            dtype=ORSO_TO_NUMPY_MAP[literal_type],
+            dtype=literal_type,
         )  # type:ignore
 
     # BOOLEAN OPERATORS
@@ -283,33 +270,23 @@ def _inner_evaluate(root: Node, table: Table):
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            if (
-                root.value
-                in (
-                    "InStr",
-                    "NotInStr",
-                    "IInStr",
-                    "NotIInStr",
-                    "InList",
-                    "NotInList",
-                    "Like",
-                    "NotLike",
-                    "ILike",
-                    "NotILike",
-                    "Rlike",
-                    "AnyOpILike",
-                    "AnyOpLike",
-                    "AnyOpNotLike",
-                    "AnyOpNotILike",
-                    "AtQuestion",
-                )
-                and root.right.node_type == NodeType.LITERAL
-            ):
-                right = [root.right.value]
-            else:
-                right = _inner_evaluate(root.right, table)
+            right = None
+            left = None
 
-            left = _inner_evaluate(root.left, table)
+            if root.right.node_type == NodeType.LITERAL:
+                right = [root.right.value]
+
+            if right is None:
+                if root.right.node_type == NodeType.IDENTIFIER:
+                    right = table[root.right.schema_column.identity]
+                else:
+                    right = _inner_evaluate(root.right, table)
+            if left is None:
+                if root.left.node_type == NodeType.IDENTIFIER:
+                    left = table[root.left.schema_column.identity]
+                else:
+                    left = _inner_evaluate(root.left, table)
+
             result = filter_operations(
                 left,
                 root.left.schema_column.type,
@@ -420,9 +397,7 @@ def evaluate_and_append(expressions, table: Table):
                 new_column = evaluate_statement(statement, table)
             else:
                 # we make all unknown fields to object type
-                new_column = numpy.array(
-                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, object)
-                )
+                new_column = numpy.array([], dtype=statement.schema_column.type.numpy_dtype)
                 new_column = pyarrow.array(new_column)
 
             if isinstance(new_column, pyarrow.ChunkedArray):
@@ -439,10 +414,15 @@ def evaluate_and_append(expressions, table: Table):
                     name=statement.schema_column.identity,
                     type=statement.schema_column.arrow_field.type,
                 )
-                if isinstance(new_column, pyarrow.Array):
-                    new_column = new_column.cast(field.type)
-                else:
-                    new_column = pyarrow.array(new_column[0], type=field.type)
+                try:
+                    if isinstance(new_column, pyarrow.Array):
+                        new_column = new_column.cast(field.type)
+                    else:
+                        new_column = pyarrow.array(new_column[0], type=field.type)
+                except pyarrow.lib.ArrowInvalid as e:
+                    raise IncorrectTypeError(
+                        f"Unable to cast '{statement.schema_column.name}' to {field.type}"
+                    ) from e
 
             table = table.append_column(field, new_column)
 

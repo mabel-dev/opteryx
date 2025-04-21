@@ -72,9 +72,9 @@ def _cross_join_unnest_column(
 
         # Filter out null values
         valid_offsets = column_data.is_valid()
-        column_data = column_data.drop_null()
-        if len(column_data) == 0:
+        if valid_offsets.true_count == 0:
             continue
+        column_data = column_data.filter(valid_offsets)
         left_block = left_block.filter(valid_offsets)
 
         # Build indices and new column data

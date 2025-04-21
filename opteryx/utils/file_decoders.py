@@ -368,7 +368,6 @@ def jsonl_decoder(
         return None
 
     import orjson
-    import pyarrow.json
 
     from opteryx.third_party.tktech import csimdjson as simdjson
 

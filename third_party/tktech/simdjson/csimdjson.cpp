@@ -5,7 +5,7 @@
     "distutils": {
         "depends": [],
         "extra_compile_args": [
-            "-O2",
+            "-O3",
             "-std=c++17"
         ],
         "language": "c++",

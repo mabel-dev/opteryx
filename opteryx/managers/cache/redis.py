@@ -106,4 +106,4 @@ class RedisCache(BaseKeyValueStore):
 
     def __del__(self):
         pass
-        # DEBUG: log(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")
+        # DEBUG: print(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")

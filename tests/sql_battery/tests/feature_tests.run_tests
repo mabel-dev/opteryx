@@ -162,12 +162,8 @@ SELECT name FROM $planets ORDER BY mass LIMIT 2;
 -- SELECT SPLIT('a', 'a');
 SELECT SPLIT(name, ' ') FROM $astronauts;
 
-SELECT CAST('{"test":true}' AS STRUCT);
-SELECT CAST('{"test":true, "live":false}' AS STRUCT);
-SELECT TRY_CAST('{"test":true, "prod": 73}' AS STRUCT);
-SELECT TRY_CAST(name AS STRUCT) FROM $planets;
-SELECT STRUCT('{"test":true}');
-SELECT ST['prod'] FROM (SELECT STRUCT('{"prod": 73}') AS ST FROM $planets) AS SB;
+SELECT '{"test":true}';
+SELECT ST['prod'] FROM (SELECT '{"prod": 73}' AS ST FROM $planets) AS SB;
 
 # Function calls which are actually resolved by the binder
 
@@ -218,3 +214,24 @@ SELECT HUMANIZE(NULL)
 SELECT HUMANIZE(10000.00)
 SELECT HUMANIZE(SUM(gravity)) FROM $planets
 SELECT HUMANIZE(-1)
+
+WITH large_planets AS (SELECT id, name, mass, diameter FROM $planets WHERE mass > 1.0) SELECT lp.name AS large_planet FROM large_planets lp;
+WITH cold_planets AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature < 0) SELECT name FROM cold_planets;
+WITH long_days AS (SELECT id, name, lengthOfDay FROM $planets WHERE lengthOfDay > 1000) SELECT name, lengthOfDay FROM long_days;
+WITH dense_planets AS (SELECT id, name, density FROM $planets WHERE density > 5) SELECT COUNT(*) FROM dense_planets;
+WITH far_planets AS (SELECT id, name, distanceFromSun FROM $planets WHERE distanceFromSun > 1000) SELECT name FROM far_planets ORDER BY distanceFromSun DESC;
+WITH fast_planets AS (SELECT id, name, orbitalVelocity FROM $planets WHERE orbitalVelocity > 30) SELECT name FROM fast_planets ORDER BY orbitalVelocity DESC;
+WITH inclined_planets AS (SELECT id, name, orbitalInclination FROM $planets WHERE orbitalInclination > 3) SELECT COUNT(*) FROM inclined_planets;
+WITH eccentric_planets AS (SELECT id, name, orbitalEccentricity FROM $planets WHERE orbitalEccentricity > 0.05) SELECT name, orbitalEccentricity FROM eccentric_planets;
+WITH high_gravity AS (SELECT id, name, gravity FROM $planets WHERE gravity > 10) SELECT name FROM high_gravity;
+WITH escaping_planets AS (SELECT id, name, escapeVelocity FROM $planets WHERE escapeVelocity > 50) SELECT name FROM escaping_planets;
+WITH slow_rotators AS (SELECT id, name, rotationPeriod FROM $planets WHERE rotationPeriod > 500) SELECT COUNT(*) FROM slow_rotators;
+WITH big_diameter AS (SELECT id, name, diameter FROM $planets WHERE diameter > 100000) SELECT name FROM big_diameter;
+WITH temperate_planets AS (SELECT id, name, meanTemperature FROM $planets WHERE meanTemperature BETWEEN -50 AND 50) SELECT name FROM temperate_planets ORDER BY meanTemperature;
+WITH atmospheric_planets AS (SELECT id, name, surfacePressure FROM $planets WHERE surfacePressure IS NOT NULL) SELECT COUNT(*) FROM atmospheric_planets;
+WITH moonful_planets AS (SELECT id, name, numberOfMoons FROM $planets WHERE numberOfMoons > 0) SELECT name, numberOfMoons FROM moonful_planets;
+WITH matching_names AS (SELECT id, name FROM $planets WHERE name LIKE 'M%') SELECT COUNT(*) FROM matching_names;
+WITH short_names AS (SELECT id, name FROM $planets WHERE LENGTH(name) < 5) SELECT name FROM short_names;
+WITH exact_gravity AS (SELECT id, name FROM $planets WHERE gravity = 9.8) SELECT name FROM exact_gravity;
+WITH retrograde AS (SELECT id, name, obliquityToOrbit FROM $planets WHERE obliquityToOrbit > 90) SELECT name FROM retrograde;
+WITH flattened_names AS (SELECT id, LOWER(name) AS name FROM $planets) SELECT name FROM flattened_names ORDER BY name;
