@@ -2451,6 +2451,8 @@ id > /* 0 */ 1
         ("SELECT * FROM (SELECT name, id FROM $planets AS A UNION ALL SELECT name, id FROM $planets AS B) AS C WHERE name = 'Earth'", 2, 2, None),
         # 2547
         ("SELECT * FROM $planets WHERE name ILIKE '%art%h%'", 1, 20, None),
+        # 2483
+        ("SELECT * FROM $planets LEFT JOIN testdata.flat.null_lists", None, None, UnsupportedSyntaxError),
 
 ]
 # fmt:on

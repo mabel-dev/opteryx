@@ -650,6 +650,10 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         )
 
     join_step.on, join_step.using = extract_join_condition(join)
+    if not join_step.on and not join_step.using and join_step.type in ("left outer", "right outer"):
+        raise UnsupportedSyntaxError(
+            f"{join_step.type.upper()} JOIN must have an ON or USING clause."
+        )
 
     # JOIN UNNEST needs to be handled differently
     if "Table" in join.get("relation", {}):
