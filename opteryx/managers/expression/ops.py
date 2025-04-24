@@ -145,12 +145,7 @@ def _inner_filter_operations(arr, operator, value):
     Execute filter operations, this returns an array of the indexes of the rows that
     match the filter
     """
-    if operator.startswith(("AnyOp", "AllOp")) and isinstance(
-        value, (pyarrow.Array, pyarrow.ChunkedArray)
-    ):
-        if len(value) == 1:
-            value = value[0]
-    elif len(value) == 1:
+    if not operator.startswith(("AnyOp", "AllOp")) and len(value) == 1:
         value = value[0]
         if hasattr(value, "item"):
             value = value.item()
