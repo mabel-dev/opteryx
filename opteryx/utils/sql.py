@@ -30,6 +30,9 @@ def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: boo
     if pattern is None:
         raise ValueError("Pattern cannot be None")
 
+    if isinstance(pattern, bytes):
+        pattern = pattern.decode("utf-8")
+
     # Escape special regex characters in the pattern
     escaped_pattern = ESCAPE_SPECIAL_CHARS.sub(r"\\\1", pattern)
 
