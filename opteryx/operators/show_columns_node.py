@@ -13,7 +13,6 @@ Gives information about a dataset's columns
 
 import pyarrow
 
-from opteryx import EOS
 from opteryx.models import QueryProperties
 
 from . import BasePlanNode
@@ -23,11 +22,20 @@ def _simple_collector(schema):
     """
     We've been given the schema, so just translate to a table
     """
+
     buffer = []
     for column in schema.columns:
+        type_label = str(column.type)
+        if column.length is not None:
+            type_label += f"[{column.length}]"
+        if column.scale is not None and column.precision is not None:
+            type_label += f"({column.precision},{column.scale})"
+        if column.element_type is not None:
+            type_label += f"<{column.element_type}>"
+
         new_row = {
             "name": column.name,
-            "type": column.type,
+            "type": type_label,
             "nullable": column.nullable,
             "aliases": column.aliases,
         }
@@ -61,8 +69,6 @@ class ShowColumnsNode(BasePlanNode):
         return dic
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
-        from orso import DataFrame
-
         if self.seen:
             yield None
             return
