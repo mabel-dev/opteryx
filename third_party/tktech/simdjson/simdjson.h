@@ -6184,6 +6184,21 @@ namespace internal {
 
 template<class formatter>
 class base_formatter {
+
+private:
+  // These methods are expected to be implemented by the derived formatter class
+  simdjson_inline void print_newline() {
+    static_cast<formatter*>(this)->print_newline();
+  }
+
+  simdjson_inline void print_indents(size_t depth) {
+    static_cast<formatter*>(this)->print_indents(depth);
+  }
+
+  simdjson_inline void print_space() {
+    static_cast<formatter*>(this)->print_space();
+  }
+
 public:
   /** Add a comma **/
   simdjson_inline void comma();

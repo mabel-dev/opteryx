@@ -281,7 +281,7 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
         update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
-cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) nogil:
+cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) nogil noexcept:
     """Combine column hashes using a stronger mixing function (MurmurHash3 finalizer)"""
     cdef uint64_t h = row_hashes[row_idx] ^ col_hash
 
