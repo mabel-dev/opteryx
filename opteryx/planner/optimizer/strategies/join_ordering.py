@@ -15,6 +15,7 @@ We also decide if we should use a nested loop join or a hash join based on the s
 """
 
 from opteryx.config import features
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -30,6 +31,10 @@ class JoinOrderingStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
+
+        if node.node_type == LogicalPlanStepType.Join and node.type == "cross join":
+            # 1438
+            pass
 
         if node.node_type == LogicalPlanStepType.Join and node.type == "inner":
             # our very basic hueristic is to always put the smaller table on the left
