@@ -1086,12 +1086,20 @@ def apply_visibility_filters(
         Recursively build an expression tree from a DNF list structure.
         The DNF list consists of ORs of ANDs of simple predicates.
         """
+        while isinstance(dnf_list, list) and len(dnf_list) == 1 and isinstance(dnf_list[0], list):
+            # This means we a list with a single element, so we unpack it
+            dnf_list = dnf_list[0]
+
         if isinstance(dnf_list[0], list):
             # This means we have a list of lists, so it's a disjunction (OR)
             or_node = None
             for conjunction in dnf_list:
                 and_node = None
                 for predicate in conjunction:
+                    while isinstance(predicate, list):
+                        # This means we a list with a single element, so we unpack it
+                        predicate = predicate[0]
+
                     # Unpack the predicate (assume it comes as [identifier, operator, value])
                     identifier, operator, value = predicate
                     comparison_node = Node(
@@ -1124,6 +1132,10 @@ def apply_visibility_filters(
             # Single conjunction (list of predicates)
             and_node = None
             for predicate in dnf_list:
+                while isinstance(predicate, list):
+                    # This means we a list with a single element, so we unpack it
+                    predicate = predicate[0]
+
                 identifier, operator, value = predicate
                 # we have special handling for True and False literals in the place of identifiers
                 if identifier is True or identifier is False:
