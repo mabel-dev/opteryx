@@ -316,18 +316,15 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
         inner_plan += sub_plan
 
     # If there's any peer relations, they are implicit cross joins
-    if len(_relations) > 2:
-        raise UnsupportedSyntaxError("Cannot CROSS JOIN more than two relations.")
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
         join_step.type = "cross join"
+        join_step.implied_join = True
 
-        join_step.right_relation_names = [_table_name(_relations[0])]
-        join_step.left_relation_names = [_table_name(_relations[1])]
+        join_step.relation_names = [_table_name(_relation) for _relation in _relations]
 
         reader_nodes = list(inner_plan._nodes.values())
-        join_step.left_readers = [reader_nodes[0].uuid]
-        join_step.right_readers = [reader_nodes[1].uuid]
+        join_step.readers = [r.uuid for r in reader_nodes]
 
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)

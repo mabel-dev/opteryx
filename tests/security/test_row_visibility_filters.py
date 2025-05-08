@@ -74,6 +74,9 @@ test_cases = [
     ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [("id", "Eq", 4), ("name", "Like", "M%")]}, (1, 20)),
     ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
+
+    ("SELECT * FROM mission_reports", {"mission_reports": [("id", "Eq", 4)]}, (177, 1)),
+    ("SELECT * FROM mission_reports", {"$satellites": [("id", "Eq", 4)]}, (1, 1)),
 ]
 
 
