@@ -128,7 +128,6 @@ def query_planner(
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter
     from opteryx.planner.binder import do_bind_phase
-    from opteryx.planner.logical_planner import apply_visibility_filters
     from opteryx.planner.logical_planner import do_logical_planning_phase
     from opteryx.planner.optimizer import do_optimizer
     from opteryx.planner.physical_planner import create_physical_plan
@@ -173,9 +172,6 @@ def query_planner(
 
         raise PermissionsError(f"User does not have permission to execute '{query_type}' queries.")
 
-    if visibility_filters:
-        logical_plan = apply_visibility_filters(logical_plan, visibility_filters, statistics)
-
     # The Binder adds schema information to the logical plan
     start = time.monotonic_ns()
     bound_plan = do_bind_phase(
@@ -183,6 +179,8 @@ def query_planner(
         connection=connection.context,
         qid=qid,
         common_table_expressions=ctes,
+        visibility_filters=visibility_filters,
+        statistics=statistics,
     )
     statistics.time_planning_binder += time.monotonic_ns() - start
 

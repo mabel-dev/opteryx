@@ -57,6 +57,7 @@ from opteryx.planner.binder.binder_visitor import BinderVisitor
 from opteryx.planner.binder.binding_context import BindingContext
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
+from opteryx.planner.logical_planner import apply_visibility_filters
 
 
 def rename_relations(plan: LogicalPlan):
@@ -185,7 +186,12 @@ def bind_logical_relations(plan: LogicalPlan, ctes: dict) -> LogicalPlan:
 
 
 def do_bind_phase(
-    plan: LogicalPlan, connection=None, qid: str = None, common_table_expressions: dict = None
+    plan: LogicalPlan,
+    connection=None,
+    qid: str = None,
+    common_table_expressions: dict = None,
+    visibility_filters: dict = None,
+    statistics=None,
 ) -> LogicalPlan:
     """
     Execute the bind phase of the query engine.
@@ -206,6 +212,9 @@ def do_bind_phase(
         common_table_expressions = {}
 
     plan = bind_logical_relations(plan, common_table_expressions)
+
+    if visibility_filters:
+        plan = apply_visibility_filters(plan, visibility_filters, statistics)
 
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
