@@ -696,27 +696,28 @@ def set_up_iceberg():
                 )
 
             if pyarrow.types.is_decimal(field.type):
-                precision = field.type.precision
                 scale = field.type.scale
+
+                column_data = dataset.column(field.name)
                 
-                # For small precision decimals, convert to INT32 based
-                if precision <= 9:
-                    # Scale values appropriately
-                    column_data = dataset.column(field.name)
-                    # Multiply by 10^scale to convert to int, then back to decimal
-                    dataset = dataset.set_column(
-                        i,
-                        field.name,
-                        pyarrow.compute.cast(
-                            pyarrow.compute.cast(column_data, pyarrow.decimal128(precision, 0)),
-                            pyarrow.decimal128(precision, scale)
-                        )
-                    )
+                # Extract values as float, scale them up, and convert to integers
+                values = column_data.to_numpy(zero_copy_only=False)
+                int_values = [int(float(v) * (10**scale)) if v is not None else None for v in values]
+                
+                # Create INT array (no need to convert back to decimal)
+                int_array = pyarrow.array(int_values, type=pyarrow.int64())
+                
+                # Replace column directly with the int array
+                dataset = dataset.set_column(i, field.name, int_array)
 
 
         return dataset
 
     existing = os.path.exists(ICEBERG_BASE_PATH)
+    if existing:
+        import shutil
+        shutil.rmtree(ICEBERG_BASE_PATH)
+
     os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
 
     # Step 1: Create a local Iceberg catalog
@@ -729,8 +730,8 @@ def set_up_iceberg():
     )
 
 
-    if existing:
-        return catalog
+#    if existing: 
+#        return catalog
 
     catalog.create_namespace("iceberg")
 
@@ -746,7 +747,7 @@ def set_up_iceberg():
         data = cast_dataset(data)
 
         table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
-        table.overwrite(data)
+        table.append(data)
 
         iceberged = opteryx.query(f"SELECT * FROM iceberg.{dataset}")
         assert iceberged.rowcount == data.num_rows

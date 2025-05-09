@@ -730,7 +730,7 @@ class BinderVisitor:
         # SEMI and ANTI joins only return columns from one table
         if node.type in ("left anti", "left semi"):
             for schema in node.right_relation_names:
-                context.schemas.pop(schema)
+                context.schemas.pop(schema, None)
 
         # This is very much not how we want to do this, but let's start somewhere
         # we're estimating the size of each side of the join, but here all we're doing is
