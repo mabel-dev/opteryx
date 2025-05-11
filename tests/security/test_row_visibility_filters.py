@@ -5,8 +5,8 @@ Test the permissions model is correctly allowing and blocking queries being exec
 
 import os
 import sys
-import pytest
 import decimal
+import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -74,6 +74,41 @@ test_cases = [
     ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [("id", "Eq", 4), ("name", "Like", "M%")]}, (1, 20)),
     ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
     ("SELECT * FROM $planets", {"$planets": [("id", "Eq", 4), ("name", "NotLike", "M%")]}, (0, 20)),
+
+    # SQL and visibility filters together
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("name", "Eq", "Earth")]}, (0, 20)),
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("name", "Eq", "Mars")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE name = 'Mars'", {"$planets": [("name", "Like", "M%")]}, (1, 20)),  # SQL narrows
+    ("SELECT * FROM $planets WHERE name = 'Mercury'", {"$planets": [("name", "Like", "M%")]}, (1, 20)),
+    ("SELECT * FROM $planets WHERE name = 'Venus'", {"$planets": [("name", "Like", "M%")]}, (0, 20)),  # SQL blocks
+    ("SELECT * FROM $planets WHERE id > 3", {"$planets": [("id", "Lt", 6)]}, (2, 20)),  # id in (4, 5)
+    ("SELECT * FROM $planets WHERE id IN (3,4)", {"$planets": [("id", "NotEq", 4)]}, (1, 20)),  # only id=3 remains
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [("id", "NotEq", 4)]}, (0, 20)),
+    ("SELECT * FROM $planets WHERE id = 4", {"$planets": [[("id", "Eq", 4)], [("id", "Eq", 5)]]}, (1, 20)),  # SQL restricts
+    ("SELECT * FROM $planets p JOIN $satellites s ON p.id = s.planetId WHERE p.id = 4", {"$satellites": [("id", "Gt", 5)]}, (0, 28)),
+
+    # double list brackets
+    ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [[("name", "Like", "M%")]]}, (2, 20)),
+    ("SELECT * FROM $planets WHERE id > 3 AND name LIKE 'M%'", {"$planets": [[("id", "Gt", 3), ("name", "Like", "M%")]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[("name", "Eq", "Earth"), ("id", "Eq", 4)], [("id", "Gt", 7)]]}, (2, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[("name", "Eq", "Earth"), ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (3, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[("name", "Eq", "Earth"), ("id", "Eq", 4)], [[("id", "Gt", 7)]]]}, (2, 20)),
+
+    # misformed filters
+    ("SELECT * FROM $planets", {"$planets": [[[(("id", "Eq", 1) )]]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[("id", "Eq", 1)]]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[[("id", "Eq", 1)]]]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[("id", "Eq", 1)]], [[("id", "Eq", 2)]]]}, (2, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 1)], [[("id", "Eq", 2)]]]}, (2, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 3), [[("name", "Eq", "Earth")]]]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[[("name", "Eq", "Earth")], ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (3, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[[(("id", "Eq", 1))]]]]}, (1, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 4), ("name", "Eq", "Earth")], [[[[("id", "Gt", 7)]]]]]}, (2, 20)),
+
+    # the visibility filter isn't applied to the VIEW
+    ("SELECT * FROM mission_reports", {"mission_reports": [("id", "Eq", 4)]}, (177, 1)),
+    # the visibility filter is applied to the table underneath the view
+    ("SELECT * FROM mission_reports", {"$satellites": [(("id", "Eq", 4))]}, (1, 1)),
 ]
 
 

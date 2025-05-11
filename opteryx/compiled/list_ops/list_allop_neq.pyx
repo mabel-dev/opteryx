@@ -34,7 +34,7 @@ cpdef uint8_t[::1] list_allop_neq(object literal, object column):
         uint8_t[::1]: mask of matching rows.
     """
     cdef:
-        list chunks = column.chunks if hasattr(column, "chunks") else [column]
+        list chunks = column if isinstance(column, list) else (column.chunks if hasattr(column, "chunks") else [column])
         Py_ssize_t total_length = 0
         numpy.ndarray[numpy.uint8_t, ndim=1] final_result
         uint8_t[::1] final_view

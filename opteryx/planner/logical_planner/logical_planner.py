@@ -316,18 +316,15 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
         inner_plan += sub_plan
 
     # If there's any peer relations, they are implicit cross joins
-    if len(_relations) > 2:
-        raise UnsupportedSyntaxError("Cannot CROSS JOIN more than two relations.")
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
         join_step.type = "cross join"
+        join_step.implied_join = True
 
-        join_step.right_relation_names = [_table_name(_relations[0])]
-        join_step.left_relation_names = [_table_name(_relations[1])]
+        join_step.relation_names = [_table_name(_relation) for _relation in _relations]
 
         reader_nodes = list(inner_plan._nodes.values())
-        join_step.left_readers = [reader_nodes[0].uuid]
-        join_step.right_readers = [reader_nodes[1].uuid]
+        join_step.readers = [r.uuid for r in reader_nodes]
 
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
@@ -1089,12 +1086,20 @@ def apply_visibility_filters(
         Recursively build an expression tree from a DNF list structure.
         The DNF list consists of ORs of ANDs of simple predicates.
         """
+        while isinstance(dnf_list, list) and len(dnf_list) == 1 and isinstance(dnf_list[0], list):
+            # This means we a list with a single element, so we unpack it
+            dnf_list = dnf_list[0]
+
         if isinstance(dnf_list[0], list):
             # This means we have a list of lists, so it's a disjunction (OR)
             or_node = None
             for conjunction in dnf_list:
                 and_node = None
                 for predicate in conjunction:
+                    while isinstance(predicate, list):
+                        # This means we a list with a single element, so we unpack it
+                        predicate = predicate[0]
+
                     # Unpack the predicate (assume it comes as [identifier, operator, value])
                     identifier, operator, value = predicate
                     comparison_node = Node(
@@ -1127,6 +1132,10 @@ def apply_visibility_filters(
             # Single conjunction (list of predicates)
             and_node = None
             for predicate in dnf_list:
+                while isinstance(predicate, list):
+                    # This means we a list with a single element, so we unpack it
+                    predicate = predicate[0]
+
                 identifier, operator, value = predicate
                 # we have special handling for True and False literals in the place of identifiers
                 if identifier is True or identifier is False:

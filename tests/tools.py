@@ -684,16 +684,40 @@ def set_up_iceberg():
     ICEBERG_BASE_PATH: str = f"tmp/iceberg/{worker_id}"
 
     def cast_dataset(dataset):
-        for column in dataset.column_names:
-            if pyarrow.types.is_date64(dataset.schema.field(column).type):
+        for i, column in enumerate(dataset.column_names):
+
+            field = dataset.schema.field(column)
+
+            if pyarrow.types.is_date64(field.type):
                 dataset = dataset.set_column(
                     dataset.schema.get_field_index(column),
                     column,
                     pyarrow.compute.cast(dataset[column], pyarrow.timestamp('ms'))
                 )
+
+            if pyarrow.types.is_decimal(field.type):
+                scale = field.type.scale
+
+                column_data = dataset.column(field.name)
+                
+                # Extract values as float, scale them up, and convert to integers
+                values = column_data.to_numpy(zero_copy_only=False)
+                int_values = [int(float(v) * (10**scale)) if v is not None else None for v in values]
+                
+                # Create INT array (no need to convert back to decimal)
+                int_array = pyarrow.array(int_values, type=pyarrow.int64())
+                
+                # Replace column directly with the int array
+                dataset = dataset.set_column(i, field.name, int_array)
+
+
         return dataset
 
     existing = os.path.exists(ICEBERG_BASE_PATH)
+    if existing:
+        import shutil
+        shutil.rmtree(ICEBERG_BASE_PATH)
+
     os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
 
     # Step 1: Create a local Iceberg catalog
@@ -706,8 +730,8 @@ def set_up_iceberg():
     )
 
 
-    if existing:
-        return catalog
+#    if existing: 
+#        return catalog
 
     catalog.create_namespace("iceberg")
 
@@ -716,15 +740,17 @@ def set_up_iceberg():
     table.append(data.slice(0, 50000))
     table.append(data.slice(50000, 50000))
 
+    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+
     for dataset in ('planets', 'satellites', 'missions', 'astronauts'):
         data = opteryx.query_to_arrow(f"SELECT * FROM ${dataset}")
         data = cast_dataset(data)
-        try:
-            table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
-            table.append(data)
-        except Exception as e:
-            print(f"Error creating table {dataset}: {e}")
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+        table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
+        table.append(data)
+
+        iceberged = opteryx.query(f"SELECT * FROM iceberg.{dataset}")
+        assert iceberged.rowcount == data.num_rows
+
 
     return catalog

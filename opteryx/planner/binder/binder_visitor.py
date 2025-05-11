@@ -642,6 +642,19 @@ class BinderVisitor:
                 Updated node and context.
         """
         node.columns = []
+
+        if node.type == "cross join" and node.implied_join:
+            # 1438
+            if len(node.readers) > 2:
+                from opteryx.exceptions import UnsupportedSyntaxError
+
+                raise UnsupportedSyntaxError("Cannot CROSS JOIN more than two relations.")
+            node.left_relation_names = node.relation_names[0]
+            node.right_relation_names = node.relation_names[1]
+            node.left_readers = node.readers[0]
+            node.right_readers = node.readers[1]
+            node.type = "cross join"
+
         # Handle 'natural join' by converting to an inner join with a 'using'
         if node.type == "natural join":
             left_columns = [
@@ -717,7 +730,7 @@ class BinderVisitor:
         # SEMI and ANTI joins only return columns from one table
         if node.type in ("left anti", "left semi"):
             for schema in node.right_relation_names:
-                context.schemas.pop(schema)
+                context.schemas.pop(schema, None)
 
         # This is very much not how we want to do this, but let's start somewhere
         # we're estimating the size of each side of the join, but here all we're doing is
