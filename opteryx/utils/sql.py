@@ -148,6 +148,8 @@ def regex_match_any(
     Returns:
         numpy.ndarray of object dtype (bool or None per row)
     """
+    patterns = patterns[0]
+
     if hasattr(patterns, "to_pylist"):
         patterns = patterns.to_pylist()
     if any(not isinstance(p, str) for p in patterns if p):
