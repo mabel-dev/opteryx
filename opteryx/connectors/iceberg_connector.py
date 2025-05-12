@@ -138,7 +138,6 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         OrsoTypes.VARCHAR,
         OrsoTypes.TIMESTAMP,
         OrsoTypes.DATE,
-        OrsoTypes.DECIMAL,
     }
 
     def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):

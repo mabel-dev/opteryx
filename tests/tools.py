@@ -702,21 +702,21 @@ def set_up_iceberg():
                 
                 # Extract values as float, scale them up, and convert to integers
                 values = column_data.to_numpy(zero_copy_only=False)
-                int_values = [int(float(v) * (10**scale)) if v is not None else None for v in values]
-                
+                #int_values = [int(float(v) * (10**scale)) if v is not None else None for v in values]
+                float_values = [float(v)  if v is not None else None for v in values]
                 # Create INT array (no need to convert back to decimal)
-                int_array = pyarrow.array(int_values, type=pyarrow.int64())
+                float_array = pyarrow.array(float_values, type=pyarrow.float64())
                 
                 # Replace column directly with the int array
-                dataset = dataset.set_column(i, field.name, int_array)
+                dataset = dataset.set_column(i, field.name, float_array)
 
 
         return dataset
 
     existing = os.path.exists(ICEBERG_BASE_PATH)
-    if existing:
-        import shutil
-        shutil.rmtree(ICEBERG_BASE_PATH)
+    #if existing:
+    #    import shutil
+    #    shutil.rmtree(ICEBERG_BASE_PATH)
 
     os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
 
@@ -730,8 +730,8 @@ def set_up_iceberg():
     )
 
 
-#    if existing: 
-#        return catalog
+    if existing: 
+        return catalog
 
     catalog.create_namespace("iceberg")
 
