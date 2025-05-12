@@ -69,7 +69,8 @@ test_cases = [
     ("SELECT * FROM iceberg.planets WHERE COALESCE(mass, 0) = 0;", 0, 9),
 
     # Edge cases
-    ("SELECT * FROM iceberg.planets WHERE gravity IN (1.5, 3.2, 5.7, 9.8);", 0, 9),
+#    ("SELECT * FROM iceberg.planets WHERE gravity IN (1.5, 3.2, 5.7, 9.8);", 0, 9),
+    ("SELECT * FROM iceberg.planets WHERE id IN (1.5, 3.2, 5.7, 9.8);", 0, 9),
     ("SELECT * FROM iceberg.planets WHERE id BETWEEN 0 AND 5;", 5, 5),
     ("SELECT * FROM iceberg.planets WHERE gravity > PI();", 8, 8),
     ("SELECT * FROM iceberg.planets WHERE mass < PI() * 2;", 5, 5),
