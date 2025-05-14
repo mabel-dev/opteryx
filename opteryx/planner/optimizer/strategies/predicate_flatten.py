@@ -36,6 +36,7 @@ class PredicateFlatteningStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Filter:
+            node.nid = context.node_id
             context.collected_predicates.append(node)
             return context
 
