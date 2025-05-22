@@ -39,9 +39,10 @@ Exception
                  ├── ColumnNotFoundError
                  ├── ColumnReferencedBeforeEvaluationError
                  ├── DatasetNotFoundError
+                 ├── FunctionExecutionError
+                 │   └── InvalidFunctionParameterError
                  ├── FunctionNotFoundError
                  ├── IncorrectTypeError
-                 ├── InvalidFunctionParameterError
                  ├── InvalidTemporalRangeFilterError
                  ├── IncompatibleTypesError
                  ├── UnexpectedDatasetReferenceError
@@ -252,7 +253,11 @@ class InvalidTemporalRangeFilterError(SqlError):
     """Exception raised for invalid temporal range filters."""
 
 
-class InvalidFunctionParameterError(SqlError):
+class FunctionExecutionError(SqlError):
+    """Exception raised for function execution errors."""
+
+
+class InvalidFunctionParameterError(FunctionExecutionError):
     """Exception raised for invalid function parameters."""
 
 
