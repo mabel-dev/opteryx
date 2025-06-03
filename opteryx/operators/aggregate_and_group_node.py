@@ -81,6 +81,10 @@ class AggregateAndGroupNode(BasePlanNode):
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
         if morsel == EOS:
+            if not self.buffer:
+                yield EOS
+                return
+
             # merge all the morsels together into one table, selecting only the columns
             # we're pretty sure we're going to use - this will fail for datasets
             # larger than memory
