@@ -16,7 +16,7 @@ def test_polars():
         opteryx.register_df("twitter", polars_df)
     except NotSupportedError:
         # skip this test
-        return True
+        return
     
     curr = opteryx.Connection().cursor()
     # this is the same statement as the CSV format test
