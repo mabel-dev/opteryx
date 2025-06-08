@@ -11,9 +11,6 @@ Goal: Fewer Operations
 
 If we have chains of filters, we can flatten them into a ANDed single filter.
 
-Once flattened we can try to simplify the filter further - such as combining multiple LIKE
-predicates into a single REGEX, or consolidating ranges into the smallest possible range.
-
 A later cost-based strategy can then order these filters to be more efficient.
 """
 
