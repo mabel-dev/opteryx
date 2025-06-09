@@ -28,7 +28,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE NOT name != 'Earth'", "optimization_boolean_rewrite_inversion"),
         ("SELECT CASE WHEN surface_pressure IS NULL THEN -100.00 ELSE surface_pressure END FROM $planets", "optimization_predicate_rewriter_case_to_ifnull"),
         ("SELECT * FROM $satellites INNER JOIN $planets ON planet_id = $planets.id", "optimization_inner_join_smallest_table_left"),
-        ("SELECT user_name FROM scratch.parquet WHERE 'MIT' = ANY(hash_tags) OR 'Stanford' = ANY(hash_tags) OR 'Harvard' = ANY(hash_tags)", "optimization_predicate_rewriter_anyeq_to_contains")
+        ("SELECT user_name FROM $astronauts WHERE 'MIT' = ANY(alma_mater) OR 'Stanford' = ANY(alma_mater) OR 'Harvard' = ANY(alma_mater)", "optimization_predicate_rewriter_anyeq_to_contains")
     ]
 # fmt:on
 
