@@ -15,26 +15,28 @@ We rewrite conditions to a more optimal form based on two objectives:
 
 Rewrites Implemented:
 
-x IN (single_value)                      → x = single_value
-x NOT IN (single_value)                  → x != single_value
-x LIKE 'pattern'                         → x = 'pattern' (when no wildcards)
-x NOT LIKE 'pattern'                     → x != 'pattern' (when no wildcards)
-x LIKE '%pattern%'                       → x INSTR 'pattern' (for contains without underscores)
-x NOT LIKE '%pattern%'                   → x NOT INSTR 'pattern' (for contains without underscores)
-x ILIKE '%pattern%'                      → x IINSTR 'pattern' (case-insensitive version)
-x NOT ILIKE '%pattern%'                  → x NOT IINSTR 'pattern' (case-insensitive version)
-x LIKE '%%%pattern%%'                    → x LIKE '%pattern%' (removing adjacent wildcards)
-x ANY_OP = value                         → x IN (value) (when right side is a literal)
-end - start > interval                   → start + interval < end (for date comparisons)
-CASE WHEN x IS NULL THEN y ELSE x END    → IFNULL(x, y)
-CASE WHEN x THEN y ELSE z END            → IIF(x, y, z)
-COALESCE(x, y)                           → IFNULL(x, y) (when only two parameters)
-SUBSTRING(x, 1, n)                       → LEFT(x, n) (when starting at position 1)
-x LIKE 'pattern1%' OR x LIKE '%pattern2' → x REGEX '^pattern1.*|.*pattern2$' (for ORed LIKE conditions)
-CONCAT(x, y, z)                          → x || y || z (CONCAT to operators)
-CONCAT_WS(x, y, z)                       → y || x || z (CONCAT_WS to operators)
-x = 'a' OR x = 'b' OR x = 'c'            → x IN ('a', 'b', 'c') (for ORed Equals conditions)
-a = ANY(z) OR b = ANY(z) OR c = ANY(z)   → (a, b, c) @> z
+x IN (single_value)                         → x = single_value
+x NOT IN (single_value)                     → x != single_value
+x LIKE 'pattern'                            → x = 'pattern' (when no wildcards)
+x NOT LIKE 'pattern'                        → x != 'pattern' (when no wildcards)
+x LIKE '%pattern%'                          → x INSTR 'pattern' (for contains without underscores)
+x NOT LIKE '%pattern%'                      → x NOT INSTR 'pattern' (for contains without underscores)
+x ILIKE '%pattern%'                         → x IINSTR 'pattern' (case-insensitive version)
+x NOT ILIKE '%pattern%'                     → x NOT IINSTR 'pattern' (case-insensitive version)
+x LIKE '%%%pattern%%'                       → x LIKE '%pattern%' (removing adjacent wildcards)
+x ANY_OP = value                            → x IN (value) (when right side is a literal)
+end - start > interval                      → start + interval < end (for date comparisons)
+CASE WHEN x IS NULL THEN y ELSE x END       → IFNULL(x, y)
+CASE WHEN x THEN y ELSE z END               → IIF(x, y, z)
+COALESCE(x, y)                              → IFNULL(x, y) (when only two parameters)
+SUBSTRING(x, 1, n)                          → LEFT(x, n) (when starting at position 1)
+x LIKE 'pattern1%' OR x LIKE '%pattern2'    → x REGEX '^pattern1.*|.*pattern2$' (for ORed LIKE conditions)
+CONCAT(x, y, z)                             → x || y || z (CONCAT to operators)
+CONCAT_WS(x, y, z)                          → y || x || z (CONCAT_WS to operators)
+x = 'a' OR x = 'b' OR x = 'c'               → x IN ('a', 'b', 'c') (for ORed Equals conditions)
+a = ANY(z) OR b = ANY(z) OR c = ANY(z)      → (a, b, c) @> z
+ENDS_WITH(x, pattern)                       → x LIKE '%pattern'
+STARTS_WITH(x, pattern)                     → x LIKE 'pattern%'
 """
 
 import re
@@ -492,6 +494,38 @@ def _rewrite_function(function, statistics: QueryStatistics):
                 schema_column=ExpressionColumn(name="", type=OrsoTypes.VARCHAR),
             )
             left_node = this_node
+        this_node.alias = function.alias
+        this_node.schema_column = function.schema_column
+        function = this_node
+
+    # STARTS_WITH → x LIKE 'pattern%'
+    if function.value == "STARTS_WITH":
+        statistics.optimization_predicate_rewriter_starts_with_to_like += 1
+        left_node = function.parameters[0]
+        function.parameters[1].value = function.parameters[1].value + "%"
+        this_node = Node(
+            node_type=NodeType.COMPARISON_OPERATOR,
+            value="Like",
+            left=left_node,
+            right=function.parameters[1],
+            schema_column=ExpressionColumn(name="", type=OrsoTypes.BOOLEAN),
+        )
+        this_node.alias = function.alias
+        this_node.schema_column = function.schema_column
+        function = this_node
+
+    # ENDS_WITH → x LIKE '%pattern'
+    if function.value == "ENDS_WITH":
+        statistics.optimization_predicate_rewriter_ends_with_to_like += 1
+        left_node = function.parameters[0]
+        function.parameters[1].value = "%" + function.parameters[1].value
+        this_node = Node(
+            node_type=NodeType.COMPARISON_OPERATOR,
+            value="Like",
+            left=left_node,
+            right=function.parameters[1],
+            schema_column=ExpressionColumn(name="", type=OrsoTypes.BOOLEAN),
+        )
         this_node.alias = function.alias
         this_node.schema_column = function.schema_column
         function = this_node

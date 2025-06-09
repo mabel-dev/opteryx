@@ -386,8 +386,8 @@ FUNCTIONS = {
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
     "CONCAT_WS": (string_functions.concat_ws, "VARCHAR", 1.0),
-    "STARTS_WITH": (string_functions.starts_w, "BOOLEAN", 1.0),
-    "ENDS_WITH": (string_functions.ends_w, "BOOLEAN", 1.0),
+    "STARTS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
+    "ENDS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
     "SUBSTRING": (string_functions.substring, "VARCHAR", 1.0),
     "POSITION": (_iterate_double_parameter(string_functions.position), "INTEGER", 1.0),
     "TRIM": (string_functions.trim, "VARCHAR", 1.0),
