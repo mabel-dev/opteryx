@@ -20,7 +20,7 @@ class VersionStatus(Enum):
 
 
 _major = 0
-_minor = 22
+_minor = 23
 _revision = 0
 _status = VersionStatus.BETA
 

@@ -28,6 +28,9 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE NOT name != 'Earth'", "optimization_boolean_rewrite_inversion"),
         ("SELECT CASE WHEN surface_pressure IS NULL THEN -100.00 ELSE surface_pressure END FROM $planets", "optimization_predicate_rewriter_case_to_ifnull"),
         ("SELECT * FROM $satellites INNER JOIN $planets ON planet_id = $planets.id", "optimization_inner_join_smallest_table_left"),
+        ("SELECT name FROM $astronauts WHERE 'MIT' = ANY(alma_mater) OR 'Stanford' = ANY(alma_mater) OR 'Harvard' = ANY(alma_mater)", "optimization_predicate_rewriter_anyeq_to_contains"),
+        ("SELECT COUNT(*) FROM $planets WHERE STARTS_WITH(name, 'M')", "optimization_predicate_rewriter_starts_with_to_like"),
+        ("SELECT COUNT(*) FROM $planets WHERE ENDS_WITH(name, 's')", "optimization_predicate_rewriter_ends_with_to_like"),
     ]
 # fmt:on
 

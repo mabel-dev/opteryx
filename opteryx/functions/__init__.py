@@ -22,7 +22,7 @@ from pyarrow import compute
 import opteryx
 from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
-from opteryx.exceptions import FunctionNotFoundError
+from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
@@ -386,8 +386,8 @@ FUNCTIONS = {
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
     "CONCAT_WS": (string_functions.concat_ws, "VARCHAR", 1.0),
-    "STARTS_WITH": (string_functions.starts_w, "BOOLEAN", 1.0),
-    "ENDS_WITH": (string_functions.ends_w, "BOOLEAN", 1.0),
+    "STARTS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
+    "ENDS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
     "SUBSTRING": (string_functions.substring, "VARCHAR", 1.0),
     "POSITION": (_iterate_double_parameter(string_functions.position), "INTEGER", 1.0),
     "TRIM": (string_functions.trim, "VARCHAR", 1.0),
@@ -532,7 +532,12 @@ def apply_function(function: str = None, *parameters):
             parameters = [arr.compress(valid_positions) for arr in parameters]
             compressed = True
 
-    interim_results = FUNCTIONS[function][0](*parameters)
+    try:
+        interim_results = FUNCTIONS[function][0](*parameters)
+    except FunctionExecutionError as e:
+        raise e
+    except Exception as e:
+        raise FunctionExecutionError(e) from e
 
     if compressed:
         # fill the result set

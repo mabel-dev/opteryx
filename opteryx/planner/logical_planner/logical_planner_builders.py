@@ -717,7 +717,6 @@ def tuple_literal(branch, alias: Optional[List[str]] = None, key=None):
         element_type = node_types.pop()
 
     if values and isinstance(values[0], dict):
-        print("HERE")
         values = [build(val["Identifier"]).value for val in values]
     return Node(
         NodeType.LITERAL,

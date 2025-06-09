@@ -190,7 +190,7 @@ def test_polars_integration_input():
         opteryx.register_df("nephews", df)
     except NotSupportedError:
         # skip this test
-        return True
+        return
 
     results = opteryx.query("SELECT * FROM nephews").arrow()
 
