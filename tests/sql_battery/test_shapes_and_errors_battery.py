@@ -2456,6 +2456,8 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets LEFT JOIN testdata.flat.null_lists", None, None, UnsupportedSyntaxError),
         # 2588
         ("SELECT CAST(M AS INTEGER) FROM (SELECT CAST(mass AS VARCHAR) AS M FROM $planets) AS A", None, None, FunctionExecutionError),
+        # 2592
+        ("SELECT AVG(mass), COUNT(*), name FROM (SELECT name, mass FROM $planets WHERE mass < 0 GROUP BY name, mass) AS A group by name", 0, 3, None),
 ]
 # fmt:on
 

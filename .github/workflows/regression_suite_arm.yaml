@@ -36,7 +36,7 @@ jobs:
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade numpy cython pyarrow
+          python -m pip install --upgrade numpy cython==3.1.2 pyarrow
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
           python -c "import pyarrow; pyarrow.create_library_symlinks();"
