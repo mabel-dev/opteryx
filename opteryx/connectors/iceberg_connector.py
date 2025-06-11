@@ -225,7 +225,13 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
         batch = None
         for batch in reader:
+            # Check for decimal columns in the batch schema
+            for field in batch.schema:
+                if pyarrow.types.is_decimal(field.type):
+                    raise NotSupportedError("Decimal columns are not supported in Iceberg tables.")
+
             table = pyarrow.Table.from_batches([batch])
+
             if unsupported:
                 table = filter_records(unsupported, table)
             yield table
