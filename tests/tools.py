@@ -696,8 +696,6 @@ def set_up_iceberg():
                 )
 
             if pyarrow.types.is_decimal(field.type):
-                scale = field.type.scale
-
                 column_data = dataset.column(field.name)
                 
                 # Extract values as float, scale them up, and convert to integers
@@ -714,9 +712,6 @@ def set_up_iceberg():
         return dataset
 
     existing = os.path.exists(ICEBERG_BASE_PATH)
-    #if existing:
-    #    import shutil
-    #    shutil.rmtree(ICEBERG_BASE_PATH)
 
     os.makedirs(ICEBERG_BASE_PATH, exist_ok=True)
 
