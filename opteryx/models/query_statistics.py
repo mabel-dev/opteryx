@@ -31,15 +31,12 @@ class _QueryStatistics:
         else:
             self._stats[attr] = value
 
-    def increase(self, attr: str, amount: float):
+    def increase(self, attr: str, amount: float = 1.0):
         self._stats[attr] += amount
 
     def add_message(self, message: str):
         """collect warnings"""
-        if "messages" not in self._stats:
-            self._stats["messages"] = [message]
-        else:
-            self._stats["messages"].append(message)
+        self._stats["messages"].append(message)
 
     def as_dict(self):
         """
