@@ -333,14 +333,22 @@ DEPRECATED_FUNCTIONS = {
 }
 
 # fmt:off
-# Function definitions optionally include the type and the function.
-# The type is needed particularly when returning Python objects that
-# the first entry is NONE.
+# Function definition look up table
+# <function_name>: (function, return_type, cost_estimate)
+# Note: * Return_type of VARIANT is used for functions that can return any type of data and the
+#         actual type will be determined at runtime.
+#       * cost_estimate is a float that represents the estimated time to execute a function
+#         one million times - this is currently always 1.0 and is not used. 
 FUNCTIONS = {
+
+    # These functions are rewritten at plan time, they're here so the function resolver in the 
+    # first phase of planning can find them
     "VERSION": (lambda x: None, "VARCHAR", 1.0),
     "CONNECTION_ID": (lambda x: None, "VARCHAR", 1.0),
     "DATABASE": (lambda x: None, "VARCHAR", 1.0),
     "USER": (lambda x: None, "VARCHAR", 1.0),
+    "STARTS_WITH": (lambda x: None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
+    "ENDS_WITH": (lambda x: None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
     # DEBUG: "SLEEP": (lambda x: [sleep(x)], OrsoTypes.NULL, 10.0), # SLEEP is only available in 'debug' mode
 
     # TYPE CONVERSION
@@ -386,8 +394,6 @@ FUNCTIONS = {
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
     "CONCAT_WS": (string_functions.concat_ws, "VARCHAR", 1.0),
-    "STARTS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
-    "ENDS_WITH": (None, "BOOLEAN", 1.0),  # always rewritten as a LIKE
     "SUBSTRING": (string_functions.substring, "VARCHAR", 1.0),
     "POSITION": (_iterate_double_parameter(string_functions.position), "INTEGER", 1.0),
     "TRIM": (string_functions.trim, "VARCHAR", 1.0),
@@ -548,12 +554,12 @@ def apply_function(function: str = None, *parameters):
     return interim_results
 
 
-def is_function(name):
+def is_function(name: str) -> bool:
     """
     sugar
     """
     return name.upper() in FUNCTIONS
 
 
-def functions():
+def functions() -> list[str]:
     return list(FUNCTIONS.keys())

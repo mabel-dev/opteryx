@@ -18,6 +18,7 @@ limitations under the License.
 
 from pathlib import Path
 from typing import Any
+from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -27,18 +28,27 @@ import orjson
 from opteryx.exceptions import MissingDependencyError
 
 
-def print_tree_inner(tree, prefix="", last=True):
+def print_tree_inner(
+    tree, prefix="", last=True, ascii_safe: bool = False
+) -> Generator[str, None, None]:
     """
     Prints a nested dictionary as an ascii tree
     """
 
     yield prefix
     if last:
-        yield "└─ "
+        if ascii_safe:
+            yield "+- "
+        else:
+            yield "└─ "
         prefix += "   "
     else:
-        yield "├─ "
-        prefix += "│  "
+        if ascii_safe:
+            yield "|- "
+            prefix += "|  "
+        else:
+            yield "├─ "
+            prefix += "│  "
 
     yield str(tree["node"]) + "\n"
 
@@ -46,7 +56,7 @@ def print_tree_inner(tree, prefix="", last=True):
     count = len(tree["children"])
     for i, child in enumerate(tree["children"]):
         last = i == count - 1
-        yield from print_tree_inner(child, prefix, last)
+        yield from print_tree_inner(child, prefix, last, ascii_safe)
 
 
 class Graph(object):
@@ -508,9 +518,9 @@ class Graph(object):
     def __contains__(self, nid: str) -> bool:
         return nid in self._nodes
 
-    def draw(self):
+    def draw(self, ascii_safe: bool = False) -> str:
         tree = self.depth_first_search()
-        return "".join(print_tree_inner(tree))
+        return "".join(print_tree_inner(tree, ascii_safe=ascii_safe))
 
     def copy(self) -> "Graph":
         """

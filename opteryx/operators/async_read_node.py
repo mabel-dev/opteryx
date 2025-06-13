@@ -91,7 +91,7 @@ class AsyncReaderNode(ReaderNode):
                 orso_schema_cols.append(col)
         orso_schema.columns = orso_schema_cols
 
-        self.statistics.columns_read = len(orso_schema.columns)
+        self.statistics.columns_read += len(orso_schema.columns)
 
         blob_names = reader.partition_scheme.get_blobs_in_partition(
             start_date=reader.start_date,
