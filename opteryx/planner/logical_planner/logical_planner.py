@@ -68,97 +68,16 @@ class LogicalPlanNode(Node):
 
     def __str__(self):  # pragma: no cover
         try:
-            # fmt:off
-            node_type = self.node_type
-            if node_type == LogicalPlanStepType.AggregateAndGroup:
-                return f"AGGREGATE [{', '.join(format_expression(col) for col in self.aggregates)}] GROUP BY [{', '.join(format_expression(col) for col in self.groups)}]"
-            if node_type == LogicalPlanStepType.Aggregate:
-                return f"AGGREGATE [{', '.join(format_expression(col) for col in self.aggregates)}]"
-            if node_type == LogicalPlanStepType.Distinct:
-                distinct_on = ""
-                if self.on is not None:
-                    distinct_on = f" ON [{','.join(format_expression(col) for col in self.on)}]"
-                return f"DISTINCT{distinct_on}"
-            if node_type == LogicalPlanStepType.Explain:
-                return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (FORMAT ' + self.format + ')') if self.format else ''}"
-            if node_type == LogicalPlanStepType.FunctionDataset:
-                if self.function == "FAKE":
-                    return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
-                if self.function == "GENERATE_SERIES":
-                    return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
-                if self.function == "VALUES":
-                    return f"VALUES (({', '.join(c.value for c in self.columns)}) x {len(self.values)} AS {self.alias})"
-                if self.function == "UNNEST":
-                    return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.unnest_target if self.unnest_target else ''})"
-                if self.function == "HTTP":
-                    return f"HTTP ({self.url}) AS {self.alias}"
-            if node_type == LogicalPlanStepType.Filter:
-                return f"FILTER ({format_expression(self.condition)})"
-            if node_type == LogicalPlanStepType.Join:
-                if self.on:
-                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)})"
-                if self.using:
-                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
-                return f"{self.type.upper()}"
-            if node_type == LogicalPlanStepType.HeapSort:
-                return f"HEAP SORT (LIMIT {self.limit}, ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}])"
-            if node_type == LogicalPlanStepType.Limit:
-                limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
-                offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
-                return (limit_str + offset_str).strip()
-            if node_type == LogicalPlanStepType.Order:
-                return f"ORDER BY [{', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)}]"
-            if node_type == LogicalPlanStepType.Project:
-                order_by_indicator = f" + ({', '.join(format_expression(col) for col in self.order_by_columns)})" if self.order_by_columns else ""
-                except_columns = f" EXCEPT ({', '.join(format_expression(col) for col in self.except_columns)})" if self.except_columns else ""
-                return f"PROJECT [{', '.join(format_expression(col) for col in self.columns)}]{except_columns}{order_by_indicator}"
-            if node_type == LogicalPlanStepType.Scan:
-                io_async = "ASYNC " if hasattr(self.connector, "async_read_blob") else ""
-                date_range = ""
-                if self.start_date == self.end_date and self.start_date is not None:
-                    date_range = f" FOR '{self.start_date}'"
-                elif self.start_date is not None:
-                    date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
-                alias = ""
-                if self.relation != self.alias:
-                    alias = f" AS {self.alias}"
-                columns = ""
-                if self.columns:
-                    columns = " [" + ", ".join(c.source_column for c in self.columns) + "]"
-                predicates = ""
-                if self.predicates:
-                    predicates = " (" + " AND ".join(map(format_expression, self.predicates)) + ")"
-                limit = ""
-                if self.limit:
-                    limit = f" LIMIT {self.limit}"
-                return f"{io_async}READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}{limit}"
-            if node_type == LogicalPlanStepType.Set:
-                return f"SET ({self.variable} TO {self.value.value})"
-            if node_type == LogicalPlanStepType.Show:
-                if self.object_type == "VARIABLE":
-                    return f"SHOW ({' '.join(self.items)})"
-                if self.object_type == "VIEW":
-                    return f"SHOW (CREATE VIEW {self.object_name})"
-            if node_type == LogicalPlanStepType.ShowColumns:
-                return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
-            if node_type == LogicalPlanStepType.Subquery:
-                return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.Union:
-                columns = ""
-                if self.columns:
-                    columns = " [" + ", ".join(c.current_name for c in self.columns) + "]"
-                return f"UNION {'' if self.modifier is None else self.modifier.upper()}{columns}"
-            if node_type == LogicalPlanStepType.Unnest:
-                distinct = "DISTINCT " if self.distinct else ""
-                conditions = f" FILTER ({', '.join(self.filters)})" if self.filters else ""
-                return f"CROSS JOIN UNNEST ({distinct}{self.unnest_column.current_name}) AS {self.unnest_alias}{conditions}"
+            from opteryx.planner.logical_planner.logical_planner_renderers import _render_registry
 
-            # fmt:on
+            render_fn = _render_registry.get(self.node_type)
+            if render_fn:
+                return render_fn(self)
         except Exception as err:
             import warnings
 
             warnings.warn(f"Problem drawing logical plan - {err}")
-        return f"{str(self.node_type)[20:].upper()}"
+        return self.node_type.name
 
 
 def get_subplan_schemas(sub_plan: Graph) -> List[str]:

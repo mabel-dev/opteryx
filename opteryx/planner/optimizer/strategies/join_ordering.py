@@ -15,7 +15,6 @@ We also decide if we should use a nested loop join or a hash join based on the s
 """
 
 from opteryx.config import features
-from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -46,6 +45,7 @@ class JoinOrderingStrategy(OptimizationStrategy):
                 node.left_relation_names, node.right_relation_names = node.right_relation_names, node.left_relation_names
                 # fmt:on
                 self.statistics.optimization_inner_join_smallest_table_left += 1
+                context.optimized_plan[context.node_id] = node
 
             # Tiny datasets benefit from nested loop joins (avoids building a hash table)
             if (
