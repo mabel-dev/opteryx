@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: update-version
+        name: build_counter
+        entry: python ./build_counter.py
+        language: python
+        stages: [pre-commit]
