@@ -13,6 +13,8 @@ These joins are used to filter rows from the left table based on the
 presence or absence of matching rows in the right table.
 """
 
+import time
+
 import pyarrow
 
 from opteryx import EOS
@@ -65,7 +67,9 @@ class FilterJoinNode(JoinNode):
                     seen_hashes=self.right_hash_set,
                 )
         if join_leg == "right" and morsel != EOS:
+            start = time.monotonic_ns()
             self.right_hash_set = filter_join_set(morsel, self.right_columns, self.right_hash_set)
+            self.statistics.time_build_filter_hash_table += time.monotonic_ns() - start
             yield None
 
 
