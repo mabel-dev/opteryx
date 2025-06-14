@@ -18,9 +18,6 @@ from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 
 import pyarrow
-import numpy
-cimport numpy
-numpy.import_array()
 
 cdef:
     int64_t NULL_HASH = <int64_t>0xBADF00D
