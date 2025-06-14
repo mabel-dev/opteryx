@@ -494,6 +494,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         join_operator = next(iter(join["join_operator"]))
 
         return {
+            "Anti": "left anti",  # ANTI JOIN is a LEFT ANTI JOIN
             "FullOuter": "full outer",
             "Join": "inner",
             "Inner": "inner",
@@ -505,6 +506,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             "Right": "right outer",
             "RightOuter": "right outer",
             "RightSemi": "right semi",  # not supported
+            "Semi": "left semi",  # SEMI JOIN is a LEFT SEMI JOIN
             "CrossJoin": "cross join",  # should never match, here for completeness
             "Natural": "natural join",  # should never match, here for completeness
         }.get(join_operator)

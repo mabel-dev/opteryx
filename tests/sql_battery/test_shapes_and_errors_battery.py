@@ -1597,8 +1597,10 @@ id > /* 0 */ 1
         # V2 New Syntax Checks
 #        ("SELECT * FROM $planets AS P1 UNION SELECT * FROM $planets AS P2;", 9, 20, UnsupportedSyntaxError),
         ("SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S ON S.id = P.id;", 0, 20, None),
+        ("SELECT * FROM $planets AS P ANTI JOIN $satellites AS S ON S.id = P.id;", 0, 20, None),
         ("SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON S.id = P.id;", 168, 8, UnsupportedSyntaxError),
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 20, None),
+        ("SELECT * FROM $planets AS P SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 20, None),
         ("SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 8, UnsupportedSyntaxError),
         ("SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S USING(id);", 0, 20, None),
         ("SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S USING(id);", 168, 8, UnsupportedSyntaxError),
