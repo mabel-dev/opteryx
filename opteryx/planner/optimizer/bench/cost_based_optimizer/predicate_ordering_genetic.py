@@ -48,7 +48,7 @@ def generate_initial_population(predicates):
     population_size = (len(predicates) // 2) + 1
 
     for _ in range(population_size):
-        arrangement = random.sample(predicates, len(predicates))
+        arrangement = random.sample(predicates, len(predicates))  # nosec B311
         population.append(tuple(a for a in arrangement))
         arrangement.reverse()
         population.append(tuple(a for a in arrangement))
@@ -67,7 +67,7 @@ def mutate(arrangement, variations=1):
     # Swap the order of two randomly selected predicates in the arrangement
     mutated_arrangement = list(arrangement)[:]
     for i in range(variations):
-        idx1, idx2 = random.sample(range(len(arrangement)), 2)
+        idx1, idx2 = random.sample(range(len(arrangement)), 2)  # nosec B311
         mutated_arrangement[idx1], mutated_arrangement[idx2] = (
             mutated_arrangement[idx2],
             mutated_arrangement[idx1],
