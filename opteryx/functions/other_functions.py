@@ -125,8 +125,10 @@ def if_null(values, replacements):
     if len(replacements) == 1:
         if isinstance(replacements, numpy.ndarray):
             replacement = replacements[0]
+            if hasattr(is_null_mask, "tolist"):
+                is_null_mask = is_null_mask.tolist()
             return numpy.array(
-                [values[i] if is_null else replacement for i, is_null in enumerate(is_null_mask)],
+                [replacement if is_null else values[i] for i, is_null in enumerate(is_null_mask)],
                 dtype=values.dtype,
             )
 
