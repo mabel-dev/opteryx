@@ -38,8 +38,8 @@ class NestedLoopJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 
-        self.left_columns = numpy.array(parameters.get("left_columns"), dtype=numpy.bytes_)
-        self.right_columns = numpy.array(parameters.get("right_columns"), dtype=numpy.bytes_)
+        self.left_columns = parameters.get("left_columns")
+        self.right_columns = parameters.get("right_columns")
 
         self.left_relation = None
         self.left_buffer = []

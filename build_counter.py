@@ -1,3 +1,4 @@
+import subprocess
 
 __build__ = None
 
@@ -23,5 +24,4 @@ with open("opteryx/__version__.py", mode="r") as v:
 exec(vers)  # nosec
 print(__version__)
 
-import subprocess
 subprocess.run(["git", "add", "opteryx/__version__.py"])
