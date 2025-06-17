@@ -123,6 +123,15 @@ def if_null(values, replacements):
         values = values.to_numpy(zero_copy_only=False)
 
     if len(replacements) == 1:
+        if isinstance(replacements, numpy.ndarray):
+            replacement = replacements[0]
+            if hasattr(is_null_mask, "tolist"):
+                is_null_mask = is_null_mask.tolist()
+            return numpy.array(
+                [replacement if is_null else values[i] for i, is_null in enumerate(is_null_mask)],
+                dtype=values.dtype,
+            )
+
         replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
 
     target_type = numpy.promote_types(values.dtype, replacements.dtype)

@@ -2480,6 +2480,13 @@ id > /* 0 */ 1
         ("SELECT CAST(M AS INTEGER) FROM (SELECT CAST(mass AS VARCHAR) AS M FROM $planets) AS A", None, None, FunctionExecutionError),
         # 2592
         ("SELECT AVG(mass), COUNT(*), name FROM (SELECT name, mass FROM $planets WHERE mass < 0 GROUP BY name, mass) AS A group by name", 0, 3, None),
+        # 2614
+        ("SELECT name FROM $planets WHERE IFNULL(surface_pressure, 0) == 0", 5, 1, None),
+        ("SELECT name FROM $planets WHERE IFNULL(surface_pressure, 1) == 1", 5, 1, None),
+        ("SELECT name FROM $planets WHERE IFNULL(surface_pressure, 2) == 2", 4, 1, None),
+        ("SELECT IFNULL(missions, []) FROM $astronauts", 357, 1, None),
+        ("SELECT IFNULL(missions, ['Training']) FROM $astronauts", 357, 1, None),
+        ("SELECT IFNULL(missions, []) FROM $astronauts WHERE missions IS NULL", 23, 1, None),
 ]
 # fmt:on
 
