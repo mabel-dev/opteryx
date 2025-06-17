@@ -111,8 +111,8 @@ cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, l
     cdef uint64_t[::1] right_hashes = numpy.empty(nr, dtype=numpy.uint64)
 
     # remove the rows from the relations
-    left_relation = left_relation.select(left_columns).drop_null()
-    right_relation = right_relation.select(right_columns).drop_null()
+    left_relation = left_relation.select(sorted(set(left_columns))).drop_null()
+    right_relation = right_relation.select(sorted(set(right_columns))).drop_null()
 
     # build hashes for the columns we're joining on
     compute_row_hashes(left_relation, left_columns, left_hashes)
