@@ -169,8 +169,8 @@ def test_sql_fuzzing_connector_comparisons(i):
         opteryx_statement = statement.replace(table_name, table["opteryx_name"])
         opteryx_result = opteryx.query(opteryx_statement).arrow()
 
-        assert duck_result.shape[0] == opteryx_result.shape[0]
-        assert duck_result.shape[1] == opteryx_result.shape[1]
+        assert duck_result.shape[0] == opteryx_result.shape[0], f"Row count mismatch: {duck_result.shape[0]} != {opteryx_result.shape[0]}"
+        assert duck_result.shape[1] == opteryx_result.shape[1], f"Column count mismatch: {duck_result.shape[1]} != {opteryx_result.shape[1]}"
 
     except Exception as e:
         import traceback

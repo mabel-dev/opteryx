@@ -19,7 +19,8 @@ numpy.import_array()
 
 
 cdef class HashTable:
-    cdef public unordered_map[int64_t, vector[int64_t]] hash_table
+    # Declared in .pxd:
+    # cdef public unordered_map[int64_t, vector[int64_t]] hash_table
 
     def __init__(self):
         self.hash_table = unordered_map[int64_t, vector[int64_t]]()

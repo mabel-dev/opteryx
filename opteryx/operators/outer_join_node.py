@@ -22,10 +22,10 @@ from typing import List
 import pyarrow
 
 from opteryx import EOS
-from opteryx.compiled.joins.inner_join import abs_hash_join_map
+from opteryx.compiled.joins.inner_join import build_side_hash_map
+from opteryx.compiled.joins.inner_join import probe_side_hash_map
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable
-from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.third_party.abseil.containers import FlatHashMap
 from opteryx.utils.arrow import align_tables
@@ -51,7 +51,7 @@ def left_outer_join_matching_rows_part(
     left_indexes = IntBuffer()
     right_indexes = IntBuffer()
 
-    right_hash = hash_join_map(right_relation, join_columns)
+    right_hash = probe_side_hash_map(right_relation, join_columns)
 
     for h, right_rows in right_hash.hash_table.items():
         left_rows = hash_table.get(h)
@@ -211,7 +211,7 @@ class OuterJoinNode(JoinNode):
                 self.left_buffer.clear()
                 if self.join_type == "left outer":
                     start = time.monotonic_ns()
-                    self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
+                    self.left_hash = build_side_hash_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
             else:
                 if self.left_buffer_columns is None:
