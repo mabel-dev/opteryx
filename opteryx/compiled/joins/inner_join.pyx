@@ -18,6 +18,7 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 from opteryx.third_party.abseil.containers cimport FlatHashMap
 from opteryx.compiled.structures.buffers cimport IntBuffer
+from opteryx.compiled.structures.hash_table cimport HashTable
 
 cdef:
     int64_t NULL_HASH = <int64_t>0xBADF00D
@@ -25,72 +26,43 @@ cdef:
     uint64_t SEED = <uint64_t>0x9e3779b97f4a7c15
 
 
-cpdef FlatHashMap abs_hash_join_map(relation, list join_columns):
+cpdef HashTable probe_side_hash_map(object relation, list join_columns):
     """
-    Build a hash table for the join operations.
-
-    Parameters:
-        relation: The pyarrow.Table to preprocess.
-        join_columns: A list of column names to join on.
-
-    Returns:
-        A FlatHashMap where keys are hashes of the join column entries and
-        values are lists of row indices corresponding to each hash key.
+    Build a hash table for the join operations (probe-side) using buffer-level hashing.
     """
-    cdef FlatHashMap ht = FlatHashMap()
-
-    # Get the dimensions of the dataset we're working with
+    cdef HashTable ht = HashTable()
     cdef int64_t num_rows = relation.num_rows
-    cdef int64_t num_columns = len(join_columns)
+    cdef int64_t[::1] non_null_indices
+    cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
+    cdef Py_ssize_t i
 
-    # Memory view for combined nulls (used to check for nulls in any column)
-    cdef uint8_t[:,] combined_nulls = numpy.full(num_rows, 1, dtype=numpy.uint8)
+    non_null_indices = non_null_row_indices(relation, join_columns)
 
-    # Process each column to update the combined null bitmap
-    cdef int64_t i
-    cdef uint8_t bit, byte
-    cdef uint8_t[::1] bitmap_array
+    # Compute hash of each row on the buffer level
+    compute_row_hashes(relation, join_columns, row_hashes)
 
-    for column_name in join_columns:
-        column = relation.column(column_name)
-
-        if column.null_count > 0:
-            # Get the null bitmap for the current column
-            bitmap_buffer = column.combine_chunks().buffers()[0]
-
-            if bitmap_buffer is not None:
-                # Memory view for the bitmap array
-                bitmap_array = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
-
-                # Apply bitwise operations on the bitmap
-                for i in range(num_rows):
-                    byte = bitmap_array[i // 8]
-                    bit = (byte >> (i % 8)) & 1
-                    combined_nulls[i] &= bit
-
-    # Get non-null indices using memory views
-    cdef numpy.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
-
-    # Memory view for the values array (for the join columns)
-    cdef object[:, ::1] values_array = numpy.array(list(relation.take(non_null_indices).select(join_columns).itercolumns()), dtype=object)
-
-    cdef int64_t hash_value
-
-    if num_columns == 1:
-        col = values_array[0, :]
-        for i in range(len(col)):
-            hash_value = PyObject_Hash(col[i])
-            ht.insert(hash_value, non_null_indices[i])
-    else:
-        for i in range(values_array.shape[1]):
-            # Combine the hashes of each value in the row
-            hash_value = 0
-            for value in values_array[:, i]:
-                hash_value = <int64_t>(hash_value * 31 + PyObject_Hash(value))
-            ht.insert(hash_value, non_null_indices[i])
+    # Insert into HashTable using row index + buffer-computed hash
+    for i in range(non_null_indices.shape[0]):
+        ht.insert(row_hashes[non_null_indices[i]], non_null_indices[i])
 
     return ht
 
+
+cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
+    cdef FlatHashMap ht = FlatHashMap()
+    cdef int64_t num_rows = relation.num_rows
+    cdef int64_t[::1] non_null_indices
+    cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
+    cdef Py_ssize_t i
+
+    non_null_indices = non_null_row_indices(relation, join_columns)
+
+    compute_row_hashes(relation, join_columns, row_hashes)
+
+    for i in range(non_null_indices.shape[0]):
+        ht.insert(row_hashes[non_null_indices[i]], non_null_indices[i])
+
+    return ht
 
 cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, list right_columns):
     """
@@ -98,8 +70,8 @@ cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, l
     Only intended for small relations (<1000 rows), primarily used for correctness testing or fallbacks.
     """
     # determine the rows we're going to try to join on
-    cdef numpy.ndarray[int64_t, ndim=1] left_non_null_indices = non_null_row_indices(left_relation, left_columns)
-    cdef numpy.ndarray[int64_t, ndim=1] right_non_null_indices = non_null_row_indices(right_relation, right_columns)
+    cdef int64_t[::1] left_non_null_indices = non_null_row_indices(left_relation, left_columns)
+    cdef int64_t[::1] right_non_null_indices = non_null_row_indices(right_relation, right_columns)
 
     cdef int64_t nl = left_non_null_indices.shape[0]
     cdef int64_t nr = right_non_null_indices.shape[0]
@@ -335,19 +307,20 @@ cdef inline void compute_row_hashes(object table, list columns, uint64_t[::1] ro
         process_column(table.column(col_name), row_hashes)
 
 
-cdef inline numpy.ndarray[int64_t, ndim=1] non_null_row_indices(object relation, list column_names):
+cdef inline int64_t[::1] non_null_row_indices(object relation, list column_names):
     """
     Compute indices of rows where all `column_names` in `relation` are non-null.
-    Returns an array of row indices (int64).
+    Returns a memoryview of row indices (int64).
     """
     cdef:
         Py_ssize_t num_rows = relation.num_rows
         numpy.ndarray[uint8_t, ndim=1] combined_nulls_np = numpy.ones(num_rows, dtype=numpy.uint8)
         uint8_t[::1] combined_nulls = combined_nulls_np
         object column, bitmap_buffer
-        numpy.ndarray[uint8_t, ndim=1] bitmap_array
         uint8_t[::1] bitmap_view
-        Py_ssize_t i
+        numpy.ndarray[int64_t, ndim=1] indices = numpy.empty(num_rows, dtype=numpy.int64)
+        int64_t[::1] indices_view = indices
+        Py_ssize_t i, count = 0
         uint8_t byte, bit
 
     for column_name in column_names:
@@ -356,12 +329,16 @@ cdef inline numpy.ndarray[int64_t, ndim=1] non_null_row_indices(object relation,
         if column.null_count > 0:
             bitmap_buffer = column.combine_chunks().buffers()[0]
             if bitmap_buffer is not None:
-                bitmap_array = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
-                bitmap_view = bitmap_array
+                bitmap_view = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
 
                 for i in range(num_rows):
                     byte = bitmap_view[i >> 3]
                     bit = (byte >> (i & 7)) & 1
                     combined_nulls[i] &= bit
 
-    return numpy.nonzero(combined_nulls_np)[0]
+    for i in range(num_rows):
+        if combined_nulls[i]:
+            indices_view[count] = i
+            count += 1
+
+    return indices_view[:count]

@@ -32,10 +32,10 @@ from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx import EOS
-from opteryx.compiled.joins.inner_join import abs_hash_join_map
+from opteryx.compiled.joins.inner_join import build_side_hash_map
+from opteryx.compiled.joins.inner_join import probe_side_hash_map
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.buffers import IntBuffer
-from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
@@ -58,13 +58,17 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     left_indexes = IntBuffer()
     right_indexes = IntBuffer()
 
-    right_hash = hash_join_map(right_relation, join_columns)
+    right_hash = probe_side_hash_map(right_relation, join_columns)
+    #    right_hash = build_side_hash_map(right_relation, join_columns)
 
     for h, right_rows in right_hash.hash_table.items():
+        #    for key in right_hash.keys():
         left_rows = hash_table.get(h)
+        #        left_rows = hash_table.get(key)
         if left_rows is None:
             continue
         for l in left_rows:
+            #            right_rows = right_hash[key]
             left_indexes.extend([l] * len(right_rows))
             right_indexes.extend(right_rows)
 
@@ -109,8 +113,10 @@ class InnerJoinNode(JoinNode):
                     self.left_buffer.clear()
 
                     start = time.monotonic_ns()
-                    self.left_hash = abs_hash_join_map(self.left_relation, self.left_columns)
-                    self.statistics.time_build_hash_map += time.monotonic_ns() - start
+                    self.left_hash = build_side_hash_map(self.left_relation, self.left_columns)
+                    self.statistics.time_inner_join_build_side_hash_map += (
+                        time.monotonic_ns() - start
+                    )
 
                     left_join_column = [
                         c for c in self.columns if c.schema_column.identity in self.left_columns
