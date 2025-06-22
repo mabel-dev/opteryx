@@ -4,7 +4,7 @@
 # cython: initializedcheck=False
 # cython: infer_types=True
 # cython: wraparound=False
-# cccython: boundscheck=False
+# cython: boundscheck=False
 
 """
 This is not a general perpose Bloom Filter, if used outside Opteryx it may not
@@ -76,16 +76,16 @@ cdef class BloomFilter:
 
     def __cinit__(self, uint32_t expected_records=50000):
         """Initialize Bloom Filter based on expected number of records."""
-        if expected_records <= 1_001:
+        if expected_records <= 1_000:
             self.byte_array_size = BYTE_ARRAY_SIZE_TINY
             self.bit_array_size = BIT_ARRAY_SIZE_TINY
-        elif expected_records <= 62_001:
+        elif expected_records <= 62_000:
             self.byte_array_size = BYTE_ARRAY_SIZE_SMALL
             self.bit_array_size = BIT_ARRAY_SIZE_SMALL
-        elif expected_records <= 1_000_001:
+        elif expected_records <= 1_000_000:
             self.byte_array_size = BYTE_ARRAY_SIZE_LARGE
             self.bit_array_size = BIT_ARRAY_SIZE_LARGE
-        elif expected_records <= 16_000_001:
+        elif expected_records <= 16_000_000:
             self.byte_array_size = BYTE_ARRAY_SIZE_HUGE
             self.bit_array_size = BIT_ARRAY_SIZE_HUGE
         else:

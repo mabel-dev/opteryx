@@ -205,7 +205,7 @@ def test_bloom_filter_single_key():
     items = ["apple"]
     create_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
     bf = create_bloom_filter(create_relation, ["items"])
-    test_relation = FakeRelation({"items": pyarrow.array([b"apple"], type=pyarrow.string())})
+    test_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
     assert bf.possibly_contains_many(test_relation, ["items"]), f"BloomFilter failed to handle a single key.\nseed: {SEED}"
 
 def test_bloom_filter_no_keys():

@@ -19,7 +19,6 @@ milliseconds of performance difference between this and a hash join.
 """
 
 import time
-from threading import Lock
 
 import numpy
 import pyarrow
@@ -45,7 +44,6 @@ class NestedLoopJoinNode(JoinNode):
 
         self.left_relation = None
         self.left_buffer = []
-        self.lock = Lock()
 
         self.left_filter = None  # bloom filter for the left relation
 
