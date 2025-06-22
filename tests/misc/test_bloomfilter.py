@@ -206,14 +206,14 @@ def test_bloom_filter_single_key():
     create_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
     bf = create_bloom_filter(create_relation, ["items"])
     test_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
-    assert bf.possibly_contains_many(test_relation, ["items"]), f"BloomFilter failed to handle a single key.\nseed: {SEED}"
+    assert all(bf.possibly_contains_many(test_relation, ["items"])), f"BloomFilter failed to handle a single key.\nseed: {SEED}"
 
 def test_bloom_filter_no_keys():
     """Test BloomFilter with an empty array."""
     create_relation = FakeRelation({"items": pyarrow.array([], type=pyarrow.string())})
     bf = create_bloom_filter(create_relation, ["items"])
     test_relation = FakeRelation({"items": pyarrow.array([b"apple"], type=pyarrow.string())})
-    assert not bf.possibly_contains_many(test_relation, ["items"]), f"BloomFilter failed to handle an empty array.\nseed: {SEED}"
+    assert not bf.possibly_contains_many(test_relation, ["items"]).any(), f"BloomFilter failed to handle an empty array.\nseed: {SEED}"
 
 def test_bloom_filter_special_characters():
     """Test BloomFilter with strings containing special characters."""

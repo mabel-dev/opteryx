@@ -15,7 +15,7 @@ We have four size options, all using 2 hashes:
     - a 8k slot bit array for up to 1000 items (about 4.9% FPR)
     - a 512k slot bit array for up to 60k items (about 4.2% FPR)
     - a 8m slot bit array for up to 1m items (about 4.5% FPR)
-    - a 128m slot but array for up to 16m items (about 4.7% FPR)
+    - a 128m slot bit array for up to 16m items (about 4.7% FPR)
 
 We perform one hash and then use a calculation based on the golden ratio to
 determine the second position. This is cheaper than performing two hashes whilst
