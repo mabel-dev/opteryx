@@ -11,7 +11,7 @@ cimport numpy
 
 # Declaration of the BloomFilter class
 cdef class BloomFilter:
-    cdef public unsigned char* bit_array
+    cdef unsigned char* bit_array
     cdef uint32_t bit_array_size
     cdef uint32_t byte_array_size
 

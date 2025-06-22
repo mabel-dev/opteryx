@@ -49,12 +49,13 @@ cdef extern from "<stdint.h>":
 cdef uint32_t BYTE_ARRAY_SIZE_TINY = 1 * 1024          # 1 KB for <= 1K records
 cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024        # 64 KB for <= 60K records
 cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024      # 1 MB for <=  1M records
-cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 16 * 1024 * 1024  # 8 MB for <= 16M records
+cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 16 * 1024 * 1024  # 16 MB for <= 16M records
 
 cdef uint32_t BIT_ARRAY_SIZE_TINY = BYTE_ARRAY_SIZE_TINY << 3    # 8 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_SMALL = BYTE_ARRAY_SIZE_SMALL << 3  # 512 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_LARGE = BYTE_ARRAY_SIZE_LARGE << 3  # 8 Mbits
 cdef uint32_t BIT_ARRAY_SIZE_HUGE = BYTE_ARRAY_SIZE_HUGE << 3    # 128 Mbits
+
 
 cdef uint8_t bit_masks[8]
 bit_masks[0] = 1
@@ -65,8 +66,6 @@ bit_masks[4] = 16
 bit_masks[5] = 32
 bit_masks[6] = 64
 bit_masks[7] = 128
-
-cdef int64_t EMPTY_HASH = <int64_t>0xBADC0FFEE
 
 cdef class BloomFilter:
     # defined in the .pxd file only - here so they aren't magic
