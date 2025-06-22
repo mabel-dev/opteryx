@@ -237,6 +237,20 @@ extensions = [
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
+        name="opteryx.compiled.table_ops.hash_ops",
+        sources=["opteryx/compiled/table_ops/hash_ops.pyx"],
+        include_dirs=include_dirs + ["third_party/abseil"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+    Extension(
+        name="opteryx.compiled.table_ops.null_avoidant_ops",
+        sources=["opteryx/compiled/table_ops/null_avoidant_ops.pyx"],
+        include_dirs=include_dirs,
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+    Extension(
         name="opteryx.third_party.fuzzy",
         sources=["opteryx/compiled/third_party/fuzzy_soundex.pyx"],
         extra_compile_args=C_COMPILE_FLAGS,

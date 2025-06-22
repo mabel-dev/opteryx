@@ -4,14 +4,15 @@
 # cython: initializedcheck=False
 # cython: infer_types=True
 # cython: wraparound=False
-# cython: boundscheck=False
+# cccython: boundscheck=False
 
 """
 This is not a general perpose Bloom Filter, if used outside Opteryx it may not
 perform entirely as expected as it is optimized for a specific configuration
 and constraints.
 
-We have two size options, both using 2 hashes:
+We have four size options, all using 2 hashes:
+    - a 8k slot bit array for up to 1000 items (about 4.9% FPR)
     - a 512k slot bit array for up to 60k items (about 4.2% FPR)
     - a 8m slot bit array for up to 1m items (about 4.5% FPR)
     - a 128m slot but array for up to 16m items (about 4.7% FPR)
@@ -25,30 +26,32 @@ The primary use for this structure is to prefilter JOINs, it is many times faste
 that to look up the item in the hash table.
 
 Building the filter is fast - for tables up to 1 million records we create the filter
-(1m records is roughly a 0.01s build). If the filter isn't effective (less that 5%
+(1m records is roughly a 0.005s build). If the filter isn't effective (less that 5%
 eliminations) we discard it which has meant some waste work.
 
-The 16m set is the limit at the moment, it takes about 0.23 seconds to build which
+The 16m set is the limit at the moment, it takes about 0.08 seconds to build which
 is the limit of what we think we should speculatively build.
 """
 
 from libc.stdlib cimport calloc, free
-from libc.stdint cimport uint8_t, int32_t
+from libc.stdint cimport uint8_t
 
-from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
+from opteryx.compiled.table_ops.hash_ops cimport compute_row_hashes
+from opteryx.compiled.table_ops.null_avoidant_ops cimport non_null_row_indices
 
 import numpy
 cimport numpy
-import pyarrow
 
 cdef extern from "<stdint.h>":
     ctypedef unsigned long uintptr_t
 
-# Define sizes for the two Bloom filters
+# Define sizes for the Bloom filters
+cdef uint32_t BYTE_ARRAY_SIZE_TINY = 1 * 1024          # 1 KB for <= 1K records
 cdef uint32_t BYTE_ARRAY_SIZE_SMALL = 64 * 1024        # 64 KB for <= 60K records
 cdef uint32_t BYTE_ARRAY_SIZE_LARGE = 1024 * 1024      # 1 MB for <=  1M records
 cdef uint32_t BYTE_ARRAY_SIZE_HUGE = 16 * 1024 * 1024  # 8 MB for <= 16M records
 
+cdef uint32_t BIT_ARRAY_SIZE_TINY = BYTE_ARRAY_SIZE_TINY << 3    # 8 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_SMALL = BYTE_ARRAY_SIZE_SMALL << 3  # 512 Kbits
 cdef uint32_t BIT_ARRAY_SIZE_LARGE = BYTE_ARRAY_SIZE_LARGE << 3  # 8 Mbits
 cdef uint32_t BIT_ARRAY_SIZE_HUGE = BYTE_ARRAY_SIZE_HUGE << 3    # 128 Mbits
@@ -67,14 +70,16 @@ cdef int64_t EMPTY_HASH = <int64_t>0xBADC0FFEE
 
 cdef class BloomFilter:
     # defined in the .pxd file only - here so they aren't magic
-    # cdef uint8_t* bit_array_backing
     # cdef unsigned char* bit_array
     # cdef uint32_t bit_array_size
     # cdef uint32_t byte_array_size
 
     def __cinit__(self, uint32_t expected_records=50000):
         """Initialize Bloom Filter based on expected number of records."""
-        if expected_records <= 62_000:
+        if expected_records <= 1_001:
+            self.byte_array_size = BYTE_ARRAY_SIZE_TINY
+            self.bit_array_size = BIT_ARRAY_SIZE_TINY
+        elif expected_records <= 62_001:
             self.byte_array_size = BYTE_ARRAY_SIZE_SMALL
             self.bit_array_size = BIT_ARRAY_SIZE_SMALL
         elif expected_records <= 1_000_001:
@@ -95,10 +100,9 @@ cdef class BloomFilter:
         if self.bit_array:
             free(self.bit_array)
 
-    cdef inline void _add(self, const void *member, size_t length):
-        cdef uint32_t item, h1, h2
+    cdef inline void _add(self, const uint64_t item):
+        cdef uint32_t h1, h2
 
-        item = cy_xxhash3_64(member, length)
         h1 = item & (self.bit_array_size - 1)
         # Apply the golden ratio to the item and use a mask to keep within the
         # size of the bit array.
@@ -106,114 +110,71 @@ cdef class BloomFilter:
         self.bit_array[h1 >> 3] |= bit_masks[h1 & 7]
         self.bit_array[h2 >> 3] |= bit_masks[h2 & 7]
 
-    cpdef void add(self, bytes member):
-        self._add(<char*>member, len(member))
+    cpdef void add(self, const uint64_t item):
+        self._add(item)
 
-    cdef inline bint _possibly_contains(self, const void *member, size_t length):
+    cdef inline bint _possibly_contains(self, const uint64_t item):
         """Check if the item might be in the set"""
-        cdef uint32_t item, h1, h2
+        cdef uint32_t h1, h2
 
-        item = cy_xxhash3_64(member, length)
         h1 = item & (self.bit_array_size - 1)
         h2 = (item * 2654435769U) & (self.bit_array_size - 1)
         return ((self.bit_array[h1 >> 3] & bit_masks[h1 & 7]) != 0) and \
                ((self.bit_array[h2 >> 3] & bit_masks[h2 & 7]) != 0)
 
-    cpdef bint possibly_contains(self, bytes member):
-        return self._possibly_contains(<char*>member, len(member))
+    cpdef bint possibly_contains(self, const uint64_t item):
+        return self._possibly_contains(item)
 
-    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, keys):
+    cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, object relation, list columns):
         """
-        Return a boolean array indicating whether each key might be in the Bloom filter.
-
-        Parameters:
-            keys: numpy.ndarray
-                Array of keys to test for membership.
-
-        Returns:
-            A boolean array of the same length as `keys` with True or False values.
+        Return a boolean array indicating whether each row in `relation` might be in the Bloom filter.
+        Null-containing rows are considered not present (False).
         """
-        cdef Py_ssize_t i, j, length
-        cdef const char* data
-        cdef const uint8_t* validity
-        cdef const int32_t* offsets
-        cdef Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes
-        cdef Py_ssize_t start_offset, end_offset
-        cdef const char* empty_str = b""
+        cdef:
+            Py_ssize_t num_rows = relation.num_rows
+            numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=numpy.bool)
+            uint8_t[::1] result_view = result
+            int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
+            Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
+            numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint64)
+            uint64_t[::1] row_hashes = row_hashes_np
+            Py_ssize_t i
+            int64_t row_id
 
-        # Create BloomFilter
-        cdef Py_ssize_t n = len(keys)
-        cdef result = numpy.empty(n, dtype=numpy.bool)
-        cdef uint8_t[::1] result_view = result
+        if num_valid_rows == 0:
+            return result
 
-        i = 0
-        for chunk in keys.chunks if isinstance(keys, pyarrow.ChunkedArray) else [keys]:
-            buffers = chunk.buffers()
-            offsets = <const int32_t*><uintptr_t>buffers[1].address
-            data = <const char*><uintptr_t>buffers[2].address
-            validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
-            length = len(chunk)
-            arr_offset = chunk.offset
+        # Compute hashes only for non-null rows
+        compute_row_hashes(relation, columns, row_hashes)
 
-            # Calculate the byte and bit offset for validity
-            offset_in_bits = arr_offset & 7
-            offset_in_bytes = arr_offset >> 3
-
-            for j in range(length):
-                result_view[i] = 0
-                byte_index = offset_in_bytes + ((offset_in_bits + j) >> 3)
-                bit_index = (offset_in_bits + j) & 7
-                if validity == NULL or (validity[byte_index] & (1 << bit_index)):
-                    start_offset = offsets[arr_offset + j]
-                    end_offset = offsets[arr_offset + j + 1]
-                    if start_offset >= 0 and end_offset >= start_offset:
-                        if end_offset > start_offset:
-                            result_view[i] = self._possibly_contains(
-                                data + start_offset,
-                                end_offset - start_offset
-                            )
-                        else:
-                            result_view[i] = self._possibly_contains(empty_str, 0)
-                i += 1
+        for i in range(num_valid_rows):
+            row_id = valid_row_ids[i]
+            result_view[row_id] = self._possibly_contains(row_hashes[row_id])
 
         return result
 
-cpdef BloomFilter create_bloom_filter(keys):
-    cdef Py_ssize_t j, length
-    cdef const char* data
-    cdef const uint8_t* validity
-    cdef const int32_t* offsets
-    cdef Py_ssize_t start_offset, end_offset, arr_offset, offset_in_bits, offset_in_bytes
-    cdef const char* empty_str = b""
+cpdef BloomFilter create_bloom_filter(object relation, list columns):
+    """
+    Create a BloomFilter from the specified `columns` in `relation`,
+    ignoring rows with nulls in any of the columns.
+    """
+    cdef:
+        Py_ssize_t num_rows = relation.num_rows
+        int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
+        Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
+        numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint64)
+        uint64_t[::1] row_hashes = row_hashes_np
+        Py_ssize_t i
+        BloomFilter bf = BloomFilter(num_valid_rows)
 
-    cdef Py_ssize_t n = len(keys)
-    cdef BloomFilter bf = BloomFilter(n)
+    if num_valid_rows == 0:
+        return bf
 
-    for chunk in keys.chunks if isinstance(keys, pyarrow.ChunkedArray) else [keys]:
-        buffers = chunk.buffers()
-        offsets = <const int32_t*><uintptr_t>buffers[1].address
-        data = <const char*><uintptr_t>buffers[2].address
-        validity = <const uint8_t*><uintptr_t>buffers[0].address if buffers[0] else NULL
-        length = len(chunk)
-        arr_offset = chunk.offset
+    # Populate row hashes using the selected columns
+    compute_row_hashes(relation, columns, row_hashes)
 
-        offset_in_bits = arr_offset & 7
-        offset_in_bytes = arr_offset >> 3
-
-        for j in range(length):
-
-            # locate validity bit for this row
-            byte_index = offset_in_bytes + ((offset_in_bits + j) >> 3)
-            bit_index = (offset_in_bits + j) & 7
-
-            if validity == NULL or (validity[byte_index] & (1 << bit_index)):
-                # Use chunk-local offsets
-                start_offset = offsets[arr_offset + j]
-                end_offset = offsets[arr_offset + j + 1]
-                if start_offset >= 0 and end_offset >= start_offset:
-                    if end_offset > start_offset:
-                        bf._add(data + start_offset, end_offset - start_offset)
-                    else:
-                        bf._add(empty_str, 0)  # Normalize empty strings
+    # Add to bloom filter
+    for i in range(num_valid_rows):
+        bf._add(row_hashes[valid_row_ids[i]])
 
     return bf
