@@ -8,27 +8,20 @@ Inner Join Node
 
 This is a SQL Query Execution Plan Node.
 
-PyArrow has a good LEFT JOIN implementation, but it errors when the
-relations being joined contain STRUCT or ARRAY columns, this is true
-for all of the JOIN types, however we've only written our own INNER
-and LEFT JOINs.
+This is an implementation of a hash join for the INNER JOIN operation in Opteryx. This is a
+native implementation that does not use PyArrow's join capabilities. We heavily rely on
+Cython to ensure performance.
 
-It is comparible performance to the PyArrow INNER JOIN, in benchmarks
-sometimes native is faster, sometimes PyArrow is faster. Generally
-PyArrow is more forgiving when the relations are the "wrong" way around
-(unoptimized order) but native is faster for well-ordered relations, as
-we intend to take steps to help ensure relations are well-ordered, this
-should work in our favour.
+This implementation includes the use of a bloom filter to quickly eliminate rows.
 
-This is a hash join, this is completely rewritten from the earlier
-pyarrow_ops implementation which was a variation of a sort-merge join.
+This implementation doesn't suffer from the limitations of PyArrow's join, such as the
+inability to join on STRUCT or ARRAY columns.
 """
 
 import time
 from threading import Lock
 
 import pyarrow
-from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx import EOS
@@ -118,22 +111,13 @@ class InnerJoinNode(JoinNode):
                         time.monotonic_ns() - start
                     )
 
-                    left_join_column = [
-                        c for c in self.columns if c.schema_column.identity in self.left_columns
-                    ][0]
-
                     # If the left side is small enough to quickly build a bloom filter, do that.
                     # - We use 1m + 1 as the upper limit to catch LIMIT on 1m rows
                     # The bloom filter has a 16m variation coded, but so far it's not fast enough.
-                    if (
-                        self.left_relation.num_rows < 1_000_001
-                        and len(self.left_columns) == 1
-                        and left_join_column.schema_column.type
-                        in (OrsoTypes.BLOB, OrsoTypes.VARCHAR)
-                    ):
+                    if self.left_relation.num_rows < 16_000_001:
                         start = time.monotonic_ns()
                         self.left_filter = create_bloom_filter(
-                            self.left_relation.column(self.left_columns[0])
+                            self.left_relation, self.left_columns
                         )
                         self.statistics.time_build_bloom_filter += time.monotonic_ns() - start
                         self.statistics.feature_bloom_filter += 1
@@ -155,10 +139,9 @@ class InnerJoinNode(JoinNode):
                     # Filter the morsel using the bloom filter, it's a quick way to
                     # reduce the number of rows that need to be joined.
                     start = time.monotonic_ns()
-
-                    column = morsel.column(self.right_columns[0])
-                    maybe_in_left = self.left_filter.possibly_contains_many(column)
-
+                    maybe_in_left = self.left_filter.possibly_contains_many(
+                        morsel, self.right_columns
+                    )
                     self.statistics.time_bloom_filtering += time.monotonic_ns() - start
                     morsel = morsel.filter(maybe_in_left)
 

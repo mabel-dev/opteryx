@@ -18,7 +18,7 @@ This is a toy implementation, whilst it is used in production payloads we're pla
 milliseconds of performance difference between this and a hash join.
 """
 
-from threading import Lock
+import time
 
 import numpy
 import pyarrow
@@ -26,6 +26,7 @@ from pyarrow import Table
 
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import nested_loop_join
+from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
@@ -43,7 +44,8 @@ class NestedLoopJoinNode(JoinNode):
 
         self.left_relation = None
         self.left_buffer = []
-        self.lock = Lock()
+
+        self.left_filter = None  # bloom filter for the left relation
 
     @property
     def name(self):  # pragma: no cover
@@ -54,28 +56,45 @@ class NestedLoopJoinNode(JoinNode):
         return ""
 
     def execute(self, morsel: Table, join_leg: str) -> Table:
-        with self.lock:
-            if join_leg == "left":
-                if morsel == EOS:
-                    self.left_relation = pyarrow.concat_tables(
-                        self.left_buffer, promote_options="none"
-                    )
-                    self.left_buffer.clear()
-                else:
-                    self.left_buffer.append(morsel)
-                yield None
+        if join_leg == "left":
+            if morsel == EOS:
+                self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
+                self.left_buffer.clear()
+
+                # build a bloom filter for the left relation if it's small enough
+                start = time.monotonic_ns()
+                self.left_filter = create_bloom_filter(self.left_relation, self.left_columns)
+                self.statistics.time_build_bloom_filter += time.monotonic_ns() - start
+                self.statistics.feature_bloom_filter += 1
+
+            else:
+                self.left_buffer.append(morsel)
+            yield None
+            return
+
+        if join_leg == "right":
+            if morsel == EOS:
+                yield EOS
                 return
 
-            if join_leg == "right":
-                if morsel == EOS:
-                    yield EOS
-                    return
-
-                if self.left_relation.num_rows == 0 or morsel.num_rows == 0:
-                    left_indexes = numpy.array([], dtype=numpy.int64)
-                    right_indexes = numpy.array([], dtype=numpy.int64)
-                else:
-                    left_indexes, right_indexes = nested_loop_join(
-                        self.left_relation, morsel, self.left_columns, self.right_columns
+            if self.left_relation.num_rows == 0 or morsel.num_rows == 0:
+                left_indexes = numpy.array([], dtype=numpy.int64)
+                right_indexes = numpy.array([], dtype=numpy.int64)
+            else:
+                if self.left_filter is not None:
+                    # Filter the morsel using the bloom filter, it's a quick way to
+                    # reduce the number of rows that need to be joined.
+                    start = time.monotonic_ns()
+                    maybe_in_left = self.left_filter.possibly_contains_many(
+                        morsel, self.right_columns
                     )
-                yield align_tables(self.left_relation, morsel, left_indexes, right_indexes)
+                    self.statistics.time_bloom_filtering += time.monotonic_ns() - start
+
+                    morsel = morsel.filter(maybe_in_left)
+                    eliminated_rows = len(maybe_in_left) - morsel.num_rows
+                    self.statistics.rows_eliminated_by_bloom_filter += eliminated_rows
+
+                left_indexes, right_indexes = nested_loop_join(
+                    self.left_relation, morsel, self.left_columns, self.right_columns
+                )
+            yield align_tables(self.left_relation, morsel, left_indexes, right_indexes)

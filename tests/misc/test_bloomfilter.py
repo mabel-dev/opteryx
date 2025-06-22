@@ -6,12 +6,47 @@ import random
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.compiled.structures.bloom_filter import BloomFilter
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
+from opteryx.compiled.structures.bloom_filter import BloomFilter
 from orso.tools import random_string
 
 SEED: int = random.randint(0, 2**32 - 1)
 NUM_ITEMS: int = 1_000_000
+
+class FakeRelation:
+    """
+    A fake relation class to simulate a pyarrow Table-like structure for testing.
+    """
+    def __init__(self, columns: dict):
+        """
+        Parameters:
+            columns: dict[str, pyarrow.Array or pyarrow.ChunkedArray]
+                Mapping of column names to Arrow arrays
+        """
+        self._columns = columns
+        # Assumes all columns are the same length — valid for BloomFilter use
+        self.num_rows = len(next(iter(columns.values())))
+
+    def column(self, name: str):
+        return self._columns[name]
+    
+    def drop_null(self):
+        """
+        Drop null values from all columns in the relation.
+        """
+        null_columns = []
+        for column in self._columns.values():
+            if isinstance(column, pyarrow.ChunkedArray):
+                column = column.combine_chunks()
+            for i in range(len(column)):
+                if not column[i].is_valid:
+                    null_columns.append(i)
+        null_columns = set(null_columns)
+        valid_rows = [i for i in range(self.num_rows) if i not in null_columns]
+        return FakeRelation({
+            name: column.take(valid_rows) for name, column in self._columns.items()
+        })
+    
 
 def generate_seeded_byte_items(num_items=NUM_ITEMS, item_length=4, seed=SEED, null_probability=0.01):
     """
@@ -59,103 +94,56 @@ def to_chunked_array(items, chunk_size=1000):
     # Combine chunks into a ChunkedArray
     return pyarrow.chunked_array(chunks)
 
-def test_bloom_filter_incremental_add_incremental_check():
-    """ Test incremental addition of items to the BloomFilter """
-    items = generate_seeded_byte_items()
-    bf = BloomFilter(len(items))
-    for item in items:
-        if item is not None:
-            bf.add(item)
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' after it was added incrementally.\nseed: {SEED}"
-    for item in items:
-        if item is not None:
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' in final check.\nseed: {SEED}"
-
-def test_bloom_filter_bulk_add_incremental_check():
-    """ Test bulk addition of items to the BloomFilter """
-    items = generate_seeded_byte_items()
-    bf = create_bloom_filter(pyarrow.array(items))
-    for item in items:
-        if item is not None:
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' after bulk addition.\nseed: {SEED}"
-
 def test_bloom_filter_bulk_add_bulk_check():
     """ Test bulk addition of items to the BloomFilter """
     items = generate_seeded_byte_items()
     bulk = pyarrow.array(items)
-    bf = create_bloom_filter(bulk)
-    matches = bf.possibly_contains_many(bulk)
-    assert sum(matches) == len(bulk.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}"
+    relation = FakeRelation({"items": bulk})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
+    assert sum(matches) == len(bulk.drop_null()), f"BloomFilter failed to find all items in bulk check - {sum(matches)} != {len(bulk.drop_null())}.\nseed: {SEED}"
 
 def test_bloom_filter_bulk_add_chunked_check():
     """ Test bulk addition of items to the BloomFilter """
     items = generate_seeded_byte_items()
-    bulk = pyarrow.array(items)
     chunked = to_chunked_array(items)
-    bf = create_bloom_filter(bulk)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert sum(matches) == len(chunked.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_chunked_add_bulk_check():
     """ Test bulk addition of items to the BloomFilter """
     items = generate_seeded_byte_items()
-    bulk = pyarrow.array(items)
     chunked = to_chunked_array(items)
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(bulk)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert sum(matches) == len(chunked.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_chunked_add_chunk_check():
     """ Test bulk addition of items to the BloomFilter """
     items = generate_seeded_byte_items()
     chunked = to_chunked_array(items)
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert sum(matches) == len(chunked.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}\n{matches}"
-
-def test_bloom_filter_chunked_add_incremental_check():
-    """ Test bulk addition of items to the BloomFilter """
-    items = generate_seeded_byte_items()
-    chunked = to_chunked_array(items)
-    bf = create_bloom_filter(chunked)
-    for item in items:
-        if item is not None:
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' after bulk addition.\nseed: {SEED}"
-
-def test_bloom_filter_incremental_add_chunked_check():
-    items = generate_seeded_byte_items()
-    chunked = to_chunked_array(items)
-    bf = BloomFilter(len(items))
-    for item in items:
-        if item is not None:
-            bf.add(item)
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' after it was added incrementally.\nseed: {SEED}"
-    matches = bf.possibly_contains_many(chunked)
-    assert sum(matches) == len(chunked.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}\n{matches}"
-
-def test_bloom_filter_incremental_add_bulk_check():
-    items = generate_seeded_byte_items()
-    bulk = pyarrow.array(items)
-    bf = BloomFilter(len(items))
-    for item in items:
-        if item is not None:
-            bf.add(item)
-            assert bf.possibly_contains(item), f"BloomFilter failed to find '{item}' after it was added incrementally.\nseed: {SEED}"    
-    matches = bf.possibly_contains_many(bulk)
-    assert sum(matches) == len(bulk.drop_null()), f"{sum(matches)} != {len(bulk.drop_null())} BloomFilter failed to find all items in bulk check.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_empty_strings():
     """Test BloomFilter with empty strings."""
     items = ["apple", "", "banana"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.string()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle empty strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_empty_binary():
     """Test BloomFilter with empty strings."""
     items = ["apple", "", "banana"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.binary()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.binary()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.binary())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle empty strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_chunk_boundaries():
@@ -163,24 +151,27 @@ def test_bloom_filter_chunk_boundaries():
     chunk1 = pyarrow.array(["apple", "banana"], type=pyarrow.string())
     chunk2 = pyarrow.array(["cherry", "date"], type=pyarrow.string())
     chunked = pyarrow.chunked_array([chunk1, chunk2])
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle chunk boundaries.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_single_chunk():
     """Test BloomFilter with a single chunk."""
     items = ["apple", "banana", "cherry"]
     chunked = pyarrow.chunked_array([pyarrow.array(items, type=pyarrow.string())])
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle single-chunk data.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_large_chunks():
     """Test BloomFilter with large chunks."""
     items = ["key_" + str(i) for i in range(100000)]
     chunked = pyarrow.chunked_array([pyarrow.array(items, type=pyarrow.string())])
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle large chunks.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_mixed_chunk_sizes():
@@ -188,68 +179,64 @@ def test_bloom_filter_mixed_chunk_sizes():
     chunk1 = pyarrow.array(["apple", "banana"], type=pyarrow.string())
     chunk2 = pyarrow.array(["cherry"], type=pyarrow.string())
     chunked = pyarrow.chunked_array([chunk1, chunk2])
-    bf = create_bloom_filter(chunked)
-    matches = bf.possibly_contains_many(chunked)
+    relation = FakeRelation({"items": chunked})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle mixed chunk sizes.\nseed: {SEED}\n{matches}"
-
-def test_bloom_filter_false_positives():
-    """ Test bulk addition of items to the BloomFilter """
-    items = generate_seeded_byte_items()
-    bulk = pyarrow.array(items)
-    bf = create_bloom_filter(bulk)
-
-    hits = 0
-    for _ in range(1000):
-        if bf.possibly_contains(random_string().encode()):
-            hits += 1
-    # FPR should be about 5%
-    assert hits < (1000 * 0.90), f"BloomFilter returned too many false positives.\nseed: {SEED}"
     
 def test_bloom_filter_all_empty_strings():
     """Test BloomFilter with a chunk containing only empty strings."""
     items = ["", "", ""]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.string()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle all empty strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_all_empty_binary():
     """Test BloomFilter with a chunk containing only empty strings."""
     items = ["", "", ""]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.binary()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.binary()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.binary())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle all empty strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_single_key():
     """Test BloomFilter with a single key."""
     items = ["apple"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    assert bf.possibly_contains(b"apple"), f"BloomFilter failed to handle a single key.\nseed: {SEED}"
+    create_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    bf = create_bloom_filter(create_relation, ["items"])
+    test_relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    assert all(bf.possibly_contains_many(test_relation, ["items"])), f"BloomFilter failed to handle a single key.\nseed: {SEED}"
 
 def test_bloom_filter_no_keys():
     """Test BloomFilter with an empty array."""
-    items = []
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    assert not bf.possibly_contains(b"apple"), f"BloomFilter failed to handle an empty array.\nseed: {SEED}"
+    create_relation = FakeRelation({"items": pyarrow.array([], type=pyarrow.string())})
+    bf = create_bloom_filter(create_relation, ["items"])
+    test_relation = FakeRelation({"items": pyarrow.array([b"apple"], type=pyarrow.string())})
+    assert not bf.possibly_contains_many(test_relation, ["items"]).any(), f"BloomFilter failed to handle an empty array.\nseed: {SEED}"
 
 def test_bloom_filter_special_characters():
     """Test BloomFilter with strings containing special characters."""
     items = ["apple!", "banana@", "cherry#"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.string()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle special characters.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_unicode_strings():
     """Test BloomFilter with Unicode strings."""
     items = ["🍎", "🍌", "🍒"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.string()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.string()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.string())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle Unicode strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_filter_unicode_binary():
-    """Test BloomFilter with Unicode strings."""
+    """Test BloomFilter with Unicode binary strings."""
     items = ["🍎", "🍌", "🍒"]
-    bf = create_bloom_filter(pyarrow.array(items, type=pyarrow.binary()))
-    matches = bf.possibly_contains_many(pyarrow.array(items, type=pyarrow.binary()))
+    relation = FakeRelation({"items": pyarrow.array(items, type=pyarrow.binary())})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
     assert all(matches), f"BloomFilter failed to handle Unicode strings.\nseed: {SEED}\n{matches}"
 
 def test_bloom_strings_and_binary():
@@ -257,8 +244,10 @@ def test_bloom_strings_and_binary():
     items = [random_string() for _ in range(NUM_ITEMS)]
     strings = pyarrow.array(items, type=pyarrow.string())
     binary = pyarrow.array(items, type=pyarrow.binary())
-    bf = create_bloom_filter(strings)
-    matches = bf.possibly_contains_many(binary)
+    string_relation = FakeRelation({"strings": strings})
+    binary_relation = FakeRelation({"binary": binary})
+    bf = create_bloom_filter(string_relation, ["strings"])
+    matches = bf.possibly_contains_many(binary_relation, ["binary"])
     assert sum(matches) == len(strings.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}"
 
 def test_bloom_binary_and_strings():
@@ -266,9 +255,68 @@ def test_bloom_binary_and_strings():
     items = [random_string() for _ in range(NUM_ITEMS)]
     strings = pyarrow.array(items, type=pyarrow.string())
     binary = pyarrow.array(items, type=pyarrow.binary())
-    bf = create_bloom_filter(binary)
-    matches = bf.possibly_contains_many(strings)
+    string_relation = FakeRelation({"strings": strings})
+    binary_relation = FakeRelation({"binary": binary})
+    bf = create_bloom_filter(binary_relation, ["binary"])
+    matches = bf.possibly_contains_many(string_relation, ["strings"])
     assert sum(matches) == len(binary.drop_null()), f"BloomFilter failed to find all items in bulk check.\nseed: {SEED}"
+
+def test_bloom_filter_add_individual_items():
+    # add an individual item, ensure it's not present before adding and tesing
+    bf = BloomFilter(100)
+    assert bf.possibly_contains(12) is False
+    bf.add(12)
+    assert bf.possibly_contains(12) is True
+
+def test_bloom_filter_add_many_individual_items():
+    bf = BloomFilter(10000)
+    for i in range(100):
+        digest = abs(hash(random_string()))
+        bf.add(digest)
+        assert bf.possibly_contains(digest) is True
+
+def test_bloom_filter_bulk_add_no_nulls_bulk_check():
+    """ Test bulk addition of items to the BloomFilter """
+    items = generate_seeded_byte_items(num_items=10, null_probability=0.5)
+    bulk = pyarrow.array(items)
+    relation = FakeRelation({"items": bulk})
+    bf = create_bloom_filter(relation.drop_null(), ["items"])
+    matches = bf.possibly_contains_many(relation, ["items"])
+    assert sum(matches) == len(bulk.drop_null()), f"BloomFilter failed to find all items in bulk check - {sum(matches)} != {len(bulk.drop_null())}.\nseed: {SEED}"
+
+def test_bloom_filter_bulk_add_bulk_check_no_nulls():
+    """ Test bulk addition of items to the BloomFilter """
+    items = generate_seeded_byte_items(num_items=10, null_probability=0.5)
+    bulk = pyarrow.array(items)
+    relation = FakeRelation({"items": bulk})
+    bf = create_bloom_filter(relation, ["items"])
+    matches = bf.possibly_contains_many(relation.drop_null(), ["items"])
+    assert sum(matches) == len(bulk.drop_null()), f"BloomFilter failed to find all items in bulk check - {sum(matches)} != {len(bulk.drop_null())}.\nseed: {SEED}"
+
+def test_bloom_filter_bulk_add_no_nulls_bulk_check_no_nulls():
+    """ Test bulk addition of items to the BloomFilter """
+    items = generate_seeded_byte_items(num_items=10, null_probability=0.5)
+    bulk = pyarrow.array(items)
+    relation = FakeRelation({"items": bulk})
+    bf = create_bloom_filter(relation.drop_null(), ["items"])
+    matches = bf.possibly_contains_many(relation.drop_null(), ["items"])
+    assert sum(matches) == len(bulk.drop_null()), f"BloomFilter failed to find all items in bulk check - {sum(matches)} != {len(bulk.drop_null())}.\nseed: {SEED}"
+
+def test_bloom_filter_false_positives():
+    """ Test bulk addition of items to the BloomFilter """
+    items = generate_seeded_byte_items(num_items=1000000, item_length=4)
+    bulk = pyarrow.array(items)
+    relation = FakeRelation({"items": bulk})
+    bf = create_bloom_filter(relation, ["items"])
+
+    TEST_SAMPLE_SIZE:int = 1000
+
+    tests = generate_seeded_byte_items(num_items=TEST_SAMPLE_SIZE, item_length=2, seed=SEED, null_probability=0.0)
+    test_relation = FakeRelation({"items": pyarrow.array(tests)})
+    hits = bf.possibly_contains_many(test_relation, ["items"])
+    # FPR should be about 5%
+    hit_count = hits.tolist().count(True)
+    assert hit_count < (TEST_SAMPLE_SIZE * 0.90), f"BloomFilter returned too many false positives.\nseed: {SEED}\nhits: {hit_count}"
 
 
 if __name__ == "__main__":  # pragma: no cover
