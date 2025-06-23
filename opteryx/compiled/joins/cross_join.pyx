@@ -12,7 +12,7 @@ numpy.import_array()
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 
-from libc.stdint cimport int32_t, int64_t, uint8_t, uintptr_t
+from libc.stdint cimport int32_t, int64_t, uint64_t, uint8_t, uintptr_t
 from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.object cimport PyObject_Hash
 
@@ -36,7 +36,7 @@ cpdef tuple build_rows_indices_and_column(object column):
     if row_count == 0:
         return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
 
-    # Parent offset buffer setup ----------------------------------------------
+    # Parent offset buffer setup
     offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
     total_size = offsets32[arr_offset + row_count] - offsets32[arr_offset]
 
@@ -46,7 +46,7 @@ cpdef tuple build_rows_indices_and_column(object column):
     indices = numpy.empty(total_size, dtype=numpy.int64)
     flat_data = numpy.empty(total_size, dtype=object)
 
-    # Child buffer setup ------------------------------------------------------
+    # Child buffer setup
     child_buffers = child_elements.buffers()
     child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
     child_data = <const char*><uintptr_t>(child_buffers[2].address)
@@ -147,7 +147,7 @@ cpdef tuple build_filtered_rows_indices_and_column(numpy.ndarray column_data, se
     cdef object array_i
     cdef numpy.ndarray flat_data
     cdef numpy.int64_t[::1] indices
-    cdef numpy.dtype element_dtype = None
+    cdef numpy.dtype element_dtype = numpy.dtype(object)
     cdef object value
 
     # Typed sets for different data types
@@ -159,9 +159,6 @@ cpdef tuple build_filtered_rows_indices_and_column(numpy.ndarray column_data, se
         if array_i is not None and array_i.size > 0:
             element_dtype = array_i.dtype
             break
-
-    if element_dtype is None:
-        element_dtype = numpy.object_
 
     # Initialize indices and flat_data arrays
     indices = numpy.empty(allocated_size, dtype=numpy.int64)
@@ -222,7 +219,7 @@ cpdef tuple list_distinct(numpy.ndarray values, numpy.int64_t[::1] indices, Flat
 
     for i in range(n):
         v = values[i]
-        hash_value = PyObject_Hash(v)
+        hash_value = <uint64_t>PyObject_Hash(v)
         if seen_hashes.insert(hash_value):
             new_values[j] = v
             new_indices[j] = indices[i]
