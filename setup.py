@@ -77,6 +77,7 @@ exec(vers)  # nosec
 RELEASE_CANDIDATE = _status == VersionStatus.RELEASE
 COMPILER_DIRECTIVES = {"language_level": "3"}
 COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
+COMPILER_DIRECTIVES["linetrace"] = not RELEASE_CANDIDATE
 
 print(f"Building Opteryx version: {__version__}")
 print(f"Status: {_status}", "(rc)" if RELEASE_CANDIDATE else "")
