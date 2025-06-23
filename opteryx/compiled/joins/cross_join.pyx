@@ -219,7 +219,7 @@ cpdef tuple list_distinct(numpy.ndarray values, numpy.int64_t[::1] indices, Flat
 
     for i in range(n):
         v = values[i]
-        hash_value = <uint64_t>PyObject_Hash(v)
+        hash_value = <uint64_t>(PyObject_Hash(v) & 0xFFFFFFFFFFFFFFFF)
         if seen_hashes.insert(hash_value):
             new_values[j] = v
             new_indices[j] = indices[i]
