@@ -126,7 +126,7 @@ cpdef tuple numpy_build_rows_indices_and_column(numpy.ndarray column_data):
     return (indices, flat_data)
 
 
-cpdef tuple build_filtered_rows_indices_and_column(numpy.ndarray column_data, set valid_values):
+cpdef tuple numpy_build_filtered_rows_indices_and_column(numpy.ndarray column_data, set valid_values):
     """
     Build row indices and flattened column data for matching values from a column of array-like elements.
 
@@ -205,14 +205,66 @@ cpdef tuple build_filtered_rows_indices_and_column(numpy.ndarray column_data, se
     return (indices, flat_data)
 
 
-cpdef tuple list_distinct(numpy.ndarray values, numpy.int64_t[::1] indices, FlatHashSet seen_hashes=None):
+cpdef tuple build_filtered_rows_indices_and_column(object column, set valid_values):
+    """
+    Arrow-native version of build_filtered_rows_indices_and_column.
+    Filters values from a ListArray column based on membership in `valid_values`.
+    Returns matching row indices and values.
+    """
+    cdef:
+        object child_elements = column.values
+        list buffers = column.buffers()
+        Py_ssize_t row_count = len(column)
+        Py_ssize_t arr_offset = column.offset
+        const int32_t* offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
+        Py_ssize_t i, j, k = 0, start, end
+        object value
+        Py_ssize_t allocated_size = row_count * 4
+        numpy.ndarray flat_data = numpy.empty(allocated_size, dtype=object)
+        numpy.ndarray indices = numpy.empty(allocated_size, dtype=numpy.int64)
+        int64_t[::1] indices_mv = indices
+        object[:] flat_mv = flat_data
+        list child_buffers = child_elements.buffers()
+        const int32_t* child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
+        const char* child_data = <const char*><uintptr_t>(child_buffers[2].address)
+        Py_ssize_t child_offset = child_elements.offset
+        Py_ssize_t str_start, str_end
+
+    for i in range(row_count):
+        if buffers[0] and not (<const uint8_t*><uintptr_t>(buffers[0].address))[i >> 3] & (1 << (i & 7)):
+            continue
+
+        start = offsets32[arr_offset + i]
+        end = offsets32[arr_offset + i + 1]
+        for j in range(start, end):
+            if child_buffers[0] and not (<const uint8_t*><uintptr_t>(child_buffers[0].address))[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7)):
+                continue
+            str_start = child_offsets32[child_offset + j]
+            str_end = child_offsets32[child_offset + j + 1]
+            value = PyUnicode_DecodeUTF8(child_data + str_start, str_end - str_start, "replace")
+            if value in valid_values:
+                if k >= allocated_size:
+                    allocated_size *= 2
+                    indices = numpy.resize(indices, allocated_size)
+                    flat_data = numpy.resize(flat_data, allocated_size)
+                    indices_mv = indices
+                    flat_mv = flat_data
+                flat_mv[k] = value
+                indices_mv[k] = i
+                k += 1
+
+    return indices_mv[:k], flat_mv[:k]
+
+
+cpdef tuple list_distinct(numpy.ndarray values, int64_t[::1] indices, FlatHashSet seen_hashes=None):
     cdef:
         Py_ssize_t i, j = 0
         Py_ssize_t n = values.shape[0]
-        int64_t hash_value
-        int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
+        uint64_t hash_value
+        object v
         numpy.dtype dtype = values.dtype
         numpy.ndarray new_values = numpy.empty(n, dtype=dtype)
+        int64_t[::1] new_indices = numpy.empty(n, dtype=numpy.int64)
 
     if seen_hashes is None:
         seen_hashes = FlatHashSet()
