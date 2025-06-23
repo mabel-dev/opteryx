@@ -16,4 +16,5 @@ jobs:
   code-form:
     uses: ./.github/workflows/code_form.yaml
 
-  
+  version-comment:
+    uses: ./.github/workflows/version_comment.yaml

@@ -1,0 +1,22 @@
+# GitHub Action that uses Black to reformat the Python code in an incoming pull request.
+# If all Python code in the pull request is compliant with Black then this Action does nothing.
+# Othewrwise, Black is run and its changes are committed back to the incoming pull request.
+# https://github.com/cclauss/autoblack
+
+name: blacken
+on:
+  workflow_call
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "👋 Thanks for your PR! The team will review it soon."
+            })
