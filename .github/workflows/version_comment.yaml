@@ -4,20 +4,35 @@
 # https://github.com/cclauss/autoblack
 
 name: version_comment
-# This GitHub Action comments on a pull request when it is opened or updated.
 on:
-  pull_request
+  pull_request:
+
 jobs:
   comment:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: get_version
+        run: |
+          LIBRARY="your_library_name"  # replace with actual directory
+          vers=$(python3 -c "globals_dict = {}; exec(open(f'$LIBRARY/__version__.py').read(), globals_dict); print(globals_dict.get('__version__', 'unknown'))")
+          echo "version=$vers" >> "$GITHUB_OUTPUT"
+
       - name: Comment on the PR
         uses: actions/github-script@v7
         with:
           script: |
+            const version = process.env.VERSION;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "👋 Thanks for your PR! The team will review it soon."
+              body: `📦 Library version: \`${version}\``
             })
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
