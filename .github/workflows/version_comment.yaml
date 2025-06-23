@@ -19,7 +19,7 @@ jobs:
       - name: Extract version
         id: get_version
         run: |
-          LIBRARY="your_library_name"  # replace with actual directory
+          LIBRARY="opteryx"
           vers=$(python3 -c "globals_dict = {}; exec(open(f'$LIBRARY/__version__.py').read(), globals_dict); print(globals_dict.get('__version__', 'unknown'))")
           echo "version=$vers" >> "$GITHUB_OUTPUT"
 
