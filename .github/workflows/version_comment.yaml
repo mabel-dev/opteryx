@@ -1,0 +1,33 @@
+name: version_comment
+on:
+  pull_request:
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: get_version
+        run: |
+          LIBRARY="opteryx"
+          vers=$(python3 -c "globals_dict = {}; exec(open(f'$LIBRARY/__version__.py').read(), globals_dict); print(globals_dict.get('__version__', 'unknown'))")
+          echo "version=$vers" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = process.env.VERSION;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📦 Opteryx build version: \`${version}\``
+            })
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
