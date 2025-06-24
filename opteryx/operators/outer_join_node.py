@@ -11,9 +11,6 @@ This is a SQL Query Execution Plan Node.
 PyArrow has LEFT/RIGHT/FULL OUTER JOIN implementations, but they error when the
 relations being joined contain STRUCT or ARRAY columns so we've written our own
 OUTER JOIN implementations.
-
-We also have our own INNER JOIN implementations, it's really just the less
-popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
 import time
@@ -24,6 +21,7 @@ import pyarrow
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import build_side_hash_map
 from opteryx.compiled.joins.inner_join import probe_side_hash_map
+from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable
 from opteryx.models import QueryProperties
@@ -32,66 +30,87 @@ from opteryx.utils.arrow import align_tables
 
 from . import JoinNode
 
+CHUNK_SIZE: int = 50_000
 
-def left_outer_join_matching_rows_part(
-    left_relation, right_relation, join_columns, hash_table, seen_rows
+
+def left_join(
+    left_relation,
+    right_relation,
+    left_columns: List[str],
+    right_columns: List[str],
+    filter_index,
+    left_hash,
 ):
     """
-    Perform part of the LEFT OUTER JOIN operation where we work with the matching rows.
+    Perform a LEFT OUTER JOIN using a prebuilt hash map and optional filter.
 
-    Parameters:
-        left_relation: The preprocessed left pyarrow.Table.
-        right_relation: The right pyarrow.Table to join.
-        join_columns: A list of column names to join on.
-        hash_table: The preprocessed hash table from the left table.
-
-    Returns:
-        A tuple containing lists of matching row indices from the left and right relations.
+    Yields:
+        pyarrow.Table chunks of the joined result.
     """
+
     left_indexes = IntBuffer()
     right_indexes = IntBuffer()
+    seen_left_rows = set()
 
-    right_hash = probe_side_hash_map(right_relation, join_columns)
+    if filter_index:
+        # We can just dispose of rows from the right relation that don't match
+        # our bloom filter
+        possibly_matching_rows = filter_index.possibly_contains_many(right_relation, right_columns)
+        right_relation = right_relation.filter(possibly_matching_rows)
+
+        # If there's no matching rows in the right relation, we can exit early
+        if right_relation.num_rows == 0:
+            # Short circuit: no matching right rows at all
+            for i in range(0, left_relation.num_rows, CHUNK_SIZE):
+                chunk = list(range(i, min(i + CHUNK_SIZE, left_relation.num_rows)))
+                yield align_tables(
+                    source_table=left_relation,
+                    append_table=right_relation.slice(0, 0),
+                    source_indices=chunk,
+                    append_indices=[None] * len(chunk),
+                )
+            return
+
+    # Build the hash table of the right relation
+    right_hash = probe_side_hash_map(right_relation, right_columns)
 
     for h, right_rows in right_hash.hash_table.items():
-        left_rows = hash_table.get(h)
-        if left_rows is None:
+        left_rows = left_hash.get(h)
+        if not left_rows:
             continue
         for l in left_rows:
+            seen_left_rows.add(l)
             left_indexes.extend([l] * len(right_rows))
             right_indexes.extend(right_rows)
 
-    numpy_left_indexes = left_indexes.to_numpy()
-    seen_rows.update(numpy_left_indexes)
-
-    return seen_rows, align_tables(
-        right_relation, left_relation, right_indexes.to_numpy(), numpy_left_indexes
-    )
-
-
-def left_outer_join_non_matching_rows_part(left_relation, right_relation, seen_rows):
-    """
-    Perform part of the LEFT OUTER JOIN operation where we work with the matching rows.
-    """
-    CHUNK_SIZE = 50_000
-
-    all_rows = set(range(left_relation.num_rows))
-    non_matching_rows = sorted(all_rows - seen_rows)
-    nones = [None] * CHUNK_SIZE
-
-    for i in range(0, len(non_matching_rows), CHUNK_SIZE):
-        chunk = non_matching_rows[i : i + CHUNK_SIZE]
+    # Yield matching rows
+    if left_indexes.size() > 0:
         yield align_tables(
-            source_table=left_relation,
-            append_table=right_relation,
-            source_indices=chunk,
-            append_indices=nones,
+            right_relation,
+            left_relation,
+            right_indexes.to_numpy(),
+            left_indexes.to_numpy(),
         )
 
+    # Emit unmatched left rows using null-filled right columns
+    all_left = set(range(left_relation.num_rows))
+    unmatched = sorted(all_left - seen_left_rows)
 
-def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
-    chunk_size = 1000
+    if unmatched:
+        unmatched_left = left_relation.take(pyarrow.array(unmatched))
+        # Create a right-side table with the same number of rows, all nulls
+        null_right = pyarrow.table(
+            [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
+            schema=right_relation.schema,
+        )
+        yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
 
+    return
+
+
+def full_join(
+    left_relation, right_relation, left_columns: List[str], right_columns: List[str], **kwargs
+):
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
@@ -115,15 +134,17 @@ def full_join(left_relation, right_relation, left_columns: List[str], right_colu
             right_indexes.append(i)
             left_indexes.append(None)
 
-    for i in range(0, len(left_indexes), chunk_size):
-        chunk_left_indexes = left_indexes[i : i + chunk_size]
-        chunk_right_indexes = right_indexes[i : i + chunk_size]
+    for i in range(0, len(left_indexes), CHUNK_SIZE):
+        chunk_left_indexes = left_indexes[i : i + CHUNK_SIZE]
+        chunk_right_indexes = right_indexes[i : i + CHUNK_SIZE]
 
         # Align this chunk and add the resulting table to our list
         yield align_tables(right_relation, left_relation, chunk_right_indexes, chunk_left_indexes)
 
 
-def right_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
+def right_join(
+    left_relation, right_relation, left_columns: List[str], right_columns: List[str], **kwargs
+):
     """
     Perform a RIGHT JOIN.
 
@@ -140,7 +161,6 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
     Yields:
         pyarrow.Table: A chunk of the result of the RIGHT JOIN operation.
     """
-    chunk_size = 1000
 
     hash_table = FlatHashMap()
     non_null_left_values = left_relation.select(left_columns).itercolumns()
@@ -149,7 +169,7 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
 
     # Iterate over the right_relation in chunks
 
-    for right_chunk in right_relation.to_batches(chunk_size):
+    for right_chunk in right_relation.to_batches(CHUNK_SIZE):
         left_indexes = []
         right_indexes = []
 
@@ -190,6 +210,8 @@ class OuterJoinNode(JoinNode):
         self.left_hash = None
         self.left_seen_rows = set()
 
+        self.filter_index = None
+
     @property
     def name(self):  # pragma: no cover
         return self.join_type
@@ -213,6 +235,14 @@ class OuterJoinNode(JoinNode):
                     start = time.monotonic_ns()
                     self.left_hash = build_side_hash_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
+
+                    if self.left_relation.num_rows < 16_000_001:
+                        start = time.monotonic_ns()
+                        self.filter_index = create_bloom_filter(
+                            self.left_relation, self.left_columns
+                        )
+                        self.statistics.time_build_bloom_filter += time.monotonic_ns() - start
+                        self.statistics.feature_bloom_filter += 1
             else:
                 if self.left_buffer_columns is None:
                     self.left_buffer_columns = morsel.schema.names
@@ -223,29 +253,6 @@ class OuterJoinNode(JoinNode):
             return
 
         if join_leg == "right":
-            if self.join_type == "left outer":
-                if morsel == EOS:
-                    yield from left_outer_join_non_matching_rows_part(
-                        left_relation=self.left_relation,
-                        right_relation=self.empty_right_relation,
-                        seen_rows=self.left_seen_rows,
-                    )
-                    yield EOS
-                    return
-
-                if self.empty_right_relation is None:
-                    self.empty_right_relation = morsel.slice(offset=0, length=0)
-
-                self.left_seen_rows, new_morsel = left_outer_join_matching_rows_part(
-                    left_relation=self.left_relation,
-                    right_relation=morsel,
-                    join_columns=self.right_columns,
-                    hash_table=self.left_hash,
-                    seen_rows=self.left_seen_rows,
-                )
-                yield new_morsel
-                return
-
             if morsel == EOS:
                 right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
                 self.right_buffer.clear()
@@ -257,6 +264,8 @@ class OuterJoinNode(JoinNode):
                     right_relation=right_relation,
                     left_columns=self.left_columns,
                     right_columns=self.right_columns,
+                    left_hash=self.left_hash,
+                    filter_index=self.filter_index,
                 )
                 yield EOS
 
@@ -265,4 +274,4 @@ class OuterJoinNode(JoinNode):
                 yield None
 
 
-providers = {"left outer": None, "full outer": full_join, "right outer": right_join}
+providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}
