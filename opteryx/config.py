@@ -192,6 +192,7 @@ PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 class Features:
     enable_two_part_aggregator = bool(get("FEATURE_ENABLE_TWO_PART_AGGREGATOR", False))
     disable_nested_loop_join = bool(get("FEATURE_DISABLE_NESTED_LOOP_JOIN", False))
+    force_nested_loop_join = bool(get("FEATURE_FORCE_NESTED_LOOP_JOIN", False))
 
 
 features = Features()
