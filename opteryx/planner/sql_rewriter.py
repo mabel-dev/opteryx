@@ -65,22 +65,25 @@ from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.utils import dates
 
 COLLECT_RELATION = {
-    r"FROM",
-    r"INNER\sJOIN",
+    r"ANALYZE\sTABLE",
+    r"ANTI\sJOIN",
+    r"CREATE\sTABLE",
     r"CROSS\sJOIN",
-    r"LEFT\sJOIN",
-    r"LEFT\sOUTER\sJOIN",
-    r"RIGHT\sJOIN",
-    r"RIGHT\sOUTER\sJOIN",
+    r"FROM",
     r"FULL\sJOIN",
     r"FULL\sOUTER\sJOIN",
-    r"RIGHT\sSEMI\sJOIN",
-    r"RIGHT\sANTI\sJOIN",
-    r"LEFT\sSEMI\sJOIN",
-    r"LEFT\sANTI\sJOIN",
+    r"INNER\sJOIN",
     r"JOIN",
-    r"CREATE\sTABLE",
-    r"ANALYZE\sTABLE",
+    r"LEFT\sANTI\sJOIN",
+    r"LEFT\sJOIN",
+    r"LEFT\sOUTER\sJOIN",
+    r"LEFT\sSEMI\sJOIN",
+    r"NATURAL\sJOIN",
+    r"RIGHT\sANTI\sJOIN",
+    r"RIGHT\sJOIN",
+    r"RIGHT\sOUTER\sJOIN",
+    r"RIGHT\sSEMI\sJOIN",
+    r"SEMI\sJOIN",
 }
 
 COLLECT_TEMPORAL = {r"FOR"}
@@ -111,6 +114,7 @@ FOR_DATE_CLAUSES = {
     r"DATES\sIN\s\w+",
     r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]",
     r"DATES\sSINCE\s\w+",
+    r"DATES\sIN\sLAST\s\d+\sDAYS",
 }
 
 FUNCTIONS_WITH_FROM_SYNTAX = {"EXTRACT", "SUBSTRING", "TRIM"}
@@ -189,6 +193,10 @@ def parse_range(fixed_range):  # pragma: no cover
         if parse_date(fixed_range):
             raise InvalidTemporalRangeFilterError(
                 f"`THIS_MONTH`, `LAST_MONTH` expected, got `{fixed_range}`"
+            )
+        if fixed_range == "LAST":
+            raise InvalidTemporalRangeFilterError(
+                "`LAST` is not a valid range. Did you mean 'FOR LAST count DAYS'?"
             )
         raise InvalidTemporalRangeFilterError(f"Unknown temporal range `{fixed_range}`")
 
@@ -400,6 +408,20 @@ def extract_temporal_filters(parts: str):  # pragma: no cover
                 raise InvalidTemporalRangeFilterError(
                     "Invalid temporal range, start of range is after end of range."
                 )
+
+        elif for_date_string.startswith("LAST "):
+            parts = shlex.split(for_date_string)
+            if len(parts) != 3 or parts[2] != "DAYS":
+                raise InvalidTemporalRangeFilterError(
+                    "Invalid temporal range, expected format `FOR LAST <number> DAYS`."
+                )
+            interval = int(parts[1])
+            end_date = datetime.datetime.utcnow().replace(
+                hour=23, minute=59, second=0, microsecond=0
+            )
+            start_date = (end_date - datetime.timedelta(interval)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
         elif for_date_string.startswith("DATES IN "):
             parts = shlex.split(for_date_string)

@@ -12,6 +12,7 @@ from freezegun import freeze_time
 from opteryx.planner.sql_rewriter import extract_temporal_filters
 from opteryx.planner.sql_rewriter import sql_parts
 from opteryx.utils.sql import clean_statement, remove_comments
+from opteryx.exceptions import InvalidTemporalRangeFilterError
 
 APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0) # UTC
 
@@ -20,6 +21,7 @@ THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microse
 TONIGHT = APOLLO_17_LAUNCH_DATE.replace(hour=23, minute=59, second=0, microsecond=0)
 NOWISH = APOLLO_17_LAUNCH_DATE.replace(minute=0, second=0, microsecond=0)
 YESTERDAY = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
+A_WEEK_AGO = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
 # fmt:on
 
 # fmt:off
@@ -122,6 +124,16 @@ STATEMENTS = [
         ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM -4)) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
         ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts", [("$astronauts", None, None)]),
         ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+
+        # explicit dates
+        ("SELECT * FROM $planets FOR 2020-06-01;", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
+        ("SELECT * FROM $planets FOR '2020-06-01';", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
+        ("SELECT * FROM $planets FOR \"2020-06-01\";", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
+        ("SELECT * FROM $planets FOR `2020-06-01`;", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
+
+        # DATES IN LAST 
+        ("SELECT * FROM $planets FOR LAST 7 DAYS;", [('$planets', A_WEEK_AGO, TONIGHT)]),
+        ("SELECT * FROM $planets FOR LAST 1 DAYS;", [('$planets', YESTERDAY, TONIGHT)]),
     ]
 # fmt:on
 
@@ -130,9 +142,7 @@ STATEMENTS = [
 def test_temporal_extraction(statement, filters):
     """
     Test an battery of statements
-
     """
-
     with freeze_time(APOLLO_17_LAUNCH_DATE):
         clean = clean_statement(remove_comments(statement))
         parts = sql_parts(clean)
@@ -140,11 +150,40 @@ def test_temporal_extraction(statement, filters):
 
     assert filters == extracted_filters, f"{filters} != {extracted_filters}"
 
+# fmt:off
+INVALID_STATEMENTS = [
+    "SELECT * FROM $planets FOR 01-JUN-2025",
+    "SELECT * FROM $planets FOR '01-JUN-2020'",
+    "SELECT * FROM $planets FOR `01-JUN-2020`",
+    "SELECT * FROM $planets FOR \"01-JUN-2020\"",
+    "SELECT * FROM $planets FOR 01/JUN/2025",
+    "SELECT * FROM $planets FOR '01/JUN'2020'",
+    "SELECT * FROM $planets FOR `01/JUN'2020`",
+    "SELECT * FROM $planets FOR \"01/JUN'2020\"",
+]
+# fmt:on
+
+@pytest.mark.parametrize("statement", INVALID_STATEMENTS)
+def test_temporal_extraction_errors(statement):
+    with freeze_time(APOLLO_17_LAUNCH_DATE):
+        clean = clean_statement(remove_comments(statement))
+        parts = sql_parts(clean)
+        
+        try:
+            extract_temporal_filters(parts)
+            assert False, f"Expected an error for statement: {statement}"
+        except InvalidTemporalRangeFilterError:
+            pass
 
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} TEMPORAL FILTER EXTRACTION TESTS")
     for statement, filters in STATEMENTS:
         print(statement)
         test_temporal_extraction(statement, filters)
+
+    print(f"RUNNING SECOND BATTERY OF {len(INVALID_STATEMENTS)} TEMPORAL FILTER EXTRACTION TESTS")
+    for statement in INVALID_STATEMENTS:
+        print(statement)
+        test_temporal_extraction_errors(statement)
 
     print("✅ okay")
