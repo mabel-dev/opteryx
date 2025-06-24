@@ -114,7 +114,7 @@ FOR_DATE_CLAUSES = {
     r"DATES\sIN\s\w+",
     r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]",
     r"DATES\sSINCE\s\w+",
-    r"DATES\sIN\sLAST\s\d+\sDAYS",
+    r"LAST\s\d+\sDAYS",
 }
 
 FUNCTIONS_WITH_FROM_SYNTAX = {"EXTRACT", "SUBSTRING", "TRIM"}
