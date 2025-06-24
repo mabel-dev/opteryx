@@ -98,7 +98,10 @@ def left_join(
 
     if unmatched:
         unmatched_left = left_relation.take(pyarrow.array(unmatched))
-        # Create a right-side table with the same number of rows, all nulls
+        # Create a right-side table with zero rows, we do this because
+        # we want arrow to do the heavy lifting of adding new columns to
+        # the left relation, we do not want to add rows to the left
+        # relation - arrow is faster at adding null columns that we can be.
         null_right = pyarrow.table(
             [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
             schema=right_relation.schema,
