@@ -26,48 +26,12 @@ from pyarrow import Table
 
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import build_side_hash_map
-from opteryx.compiled.joins.inner_join import probe_side_hash_map
+from opteryx.compiled.joins.inner_join import inner_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
-from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
 from . import JoinNode
-
-
-def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_columns, hash_table):
-    """
-    Perform an INNER JOIN using a preprocessed hash table from the left relation.
-
-    Parameters:
-        left_relation: The preprocessed left pyarrow.Table.
-        right_relation: The right pyarrow.Table to join.
-        join_columns: A list of column names to join on.
-        hash_table: The preprocessed hash table from the left table.
-
-    Returns:
-        A tuple containing lists of matching row indices from the left and right relations.
-    """
-    left_indexes = IntBuffer()
-    right_indexes = IntBuffer()
-
-    right_hash = probe_side_hash_map(right_relation, join_columns)
-    #    right_hash = build_side_hash_map(right_relation, join_columns)
-
-    for h, right_rows in right_hash.hash_table.items():
-        #    for key in right_hash.keys():
-        left_rows = hash_table.get(h)
-        #        left_rows = hash_table.get(key)
-        if left_rows is None:
-            continue
-        for l in left_rows:
-            #            right_rows = right_hash[key]
-            left_indexes.extend([l] * len(right_rows))
-            right_indexes.extend(right_rows)
-
-    return align_tables(
-        right_relation, left_relation, right_indexes.to_numpy(), left_indexes.to_numpy()
-    )
 
 
 class InnerJoinNode(JoinNode):
@@ -156,11 +120,8 @@ class InnerJoinNode(JoinNode):
                     self.statistics.rows_eliminated_by_bloom_filter += eliminated_rows
 
                 # do the join
-                new_morsel = inner_join_with_preprocessed_left_side(
-                    left_relation=self.left_relation,
-                    right_relation=morsel,
-                    join_columns=self.right_columns,
-                    hash_table=self.left_hash,
+                left_indicies, right_indicies = inner_join(
+                    morsel, self.right_columns, self.left_hash
                 )
 
-                yield new_morsel
+                yield align_tables(morsel, self.left_relation, right_indicies, left_indicies)

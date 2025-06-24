@@ -24,7 +24,7 @@ from opteryx.third_party.abseil.containers import FlatHashSet
 from . import JoinNode
 
 INTERNAL_BATCH_SIZE: int = 10000  # config
-MAX_JOIN_SIZE: int = 1000  # config
+MAX_JOIN_SIZE: int = 1_000_000  # config
 
 
 def _cartesian_product(*arrays):
@@ -44,15 +44,9 @@ def _cross_join(left_morsel, right):
     useful, but it does allow you to the theta joins (non-equi joins)
     """
 
-    def _chunker(seq_1, seq_2, size):
-        """
-        Chunk two equal length interables into size sized chunks
-
-        This returns a generator.
-        """
-        return (
-            (seq_1[pos : pos + size], seq_2[pos : pos + size]) for pos in range(0, len(seq_1), size)
-        )
+    def _chunker(seq_1, seq_2, size: int = INTERNAL_BATCH_SIZE):
+        for i in range(0, len(seq_1), size):
+            yield memoryview(seq_1)[i : i + size], memoryview(seq_2)[i : i + size]
 
     from opteryx.utils.arrow import align_tables
 
@@ -73,9 +67,11 @@ def _cross_join(left_morsel, right):
         left_align, right_align = _cartesian_product(left_array, right_array)
 
         # Further break down the result into manageable chunks of size MAX_JOIN_SIZE
-        for left_chunk, right_chunk in _chunker(left_align, right_align, MAX_JOIN_SIZE):
+        for left_chunk, right_chunk in _chunker(
+            left_align.flatten(), right_align.flatten(), MAX_JOIN_SIZE
+        ):
             # Align the tables using the specified chunks of row indices
-            table = align_tables(left_block, right, left_chunk.flatten(), right_chunk.flatten())
+            table = align_tables(left_block, right, left_chunk, right_chunk)
 
             # Yield the resulting table to the caller
             yield table

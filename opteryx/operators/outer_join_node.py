@@ -20,7 +20,7 @@ import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import build_side_hash_map
-from opteryx.compiled.joins.inner_join import probe_side_hash_map
+from opteryx.compiled.joins.outer_join import probe_side_hash_map
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable

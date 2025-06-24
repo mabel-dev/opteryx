@@ -24,6 +24,7 @@ from .optimization_strategy import OptimizerContext
 from .optimization_strategy import get_nodes_of_type_from_logical_plan
 
 DISABLE_NESTED_LOOP_JOIN: bool = features.disable_nested_loop_join
+FORCE_NESTED_LOOP_JOIN: bool = features.force_nested_loop_join
 
 
 class JoinOrderingStrategy(OptimizationStrategy):
@@ -47,12 +48,12 @@ class JoinOrderingStrategy(OptimizationStrategy):
                 self.statistics.optimization_inner_join_smallest_table_left += 1
                 context.optimized_plan[context.node_id] = node
 
-            # Tiny datasets benefit from nested loop joins (avoids building a hash table)
+            # Small datasets benefit from nested loop joins (avoids building a hash table)
             if (
                 not DISABLE_NESTED_LOOP_JOIN
                 and min(node.left_size, node.right_size) < 1000
                 and max(node.left_size, node.right_size) < 10000
-            ):
+            ) or FORCE_NESTED_LOOP_JOIN:
                 node.type = "nested_inner"
                 context.optimized_plan[context.node_id] = node
 
