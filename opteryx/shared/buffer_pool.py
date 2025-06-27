@@ -67,7 +67,7 @@ class _BufferPool:
 
         # Try to commit the value to the memory pool
         memory_pool_key = self._memory_pool.commit(value)
-        if memory_pool_key is None:
+        if memory_pool_key == -1:
             return None  # Return None if commit still fails after eviction
 
         # Update LRU cache with the new key and memory pool key if commit succeeds

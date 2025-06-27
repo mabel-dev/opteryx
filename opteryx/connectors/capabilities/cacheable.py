@@ -80,7 +80,7 @@ def async_read_thru_cache(func):
                 remote_cache.touch(key)  # help the remote cache track LRU
                 statistics.bufferpool_hits += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
-                while read_buffer_ref is None:  # pragma: no cover
+                while read_buffer_ref == -1:  # pragma: no cover
                     await asyncio.sleep(0.1)
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
@@ -95,7 +95,7 @@ def async_read_thru_cache(func):
                 statistics.remote_cache_hits += 1
                 system_statistics.remote_cache_reads += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
-                while read_buffer_ref is None:  # pragma: no cover
+                while read_buffer_ref == -1:  # pragma: no cover
                     await asyncio.sleep(0.1)
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore

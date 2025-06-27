@@ -30,7 +30,7 @@ async def stress_with_random_sized_data():
             size = random.randint(10, 100)
             data = bytes([random.randint(0, 255) for _ in range(size)])
             ref = await mp.commit(data)
-            if ref is not None:
+            if ref != -1:
                 refs[ref] = data
             else:
                 # Memory pool is likely full, start removing
