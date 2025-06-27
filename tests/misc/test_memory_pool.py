@@ -24,7 +24,7 @@ def test_commit_and_read():
 def test_commit_insufficient_space():
     mp = MemoryPool(size=10)
     ref = mp.commit(b"This is too long")
-    assert ref is None
+    assert ref == -1
 
 
 def test_commit_exact_space():
@@ -228,10 +228,10 @@ def test_pool_exhaustion_and_compaction():
     ref3 = mp.commit(b"123456")
 
     ref = mp.commit(b"123")
-    assert ref is None  # failed to commit
+    assert ref == -1  # failed to commit
     mp.release(ref1)
     ref = mp.commit(b"123456789")
-    assert ref is None  # failed to commit
+    assert ref == -1  # failed to commit
     ref4 = mp.commit(b"12345678")  # This should succeed because of compaction (L2)
     assert mp.l2_compaction > 0, mp.l2_compaction
 
@@ -260,7 +260,7 @@ def test_repeated_commits_and_releases():
     refs = []
     for _ in range(1000):
         ref = mp.commit(b"Data")
-        assert ref is not None
+        assert ref is not -1
         refs.append(ref)
     for ref in refs:
         mp.release(ref)
@@ -290,7 +290,7 @@ def test_stress_with_random_sized_data():
         size = random.randint(20, 50)  # Random data size between 20 and 200 bytes
         data = bytes(size)
         ref = mp.commit(data)
-        if ref is not None:
+        if ref != -1:
             refs.add(ref)
         #            saved_bytes += size
         #            used_counter += 1
@@ -330,7 +330,7 @@ def test_compaction_effectiveness():
     mp.release(ref1)
     # This should trigger a compaction
     ref4 = mp.commit(b"DDDDDDDD")
-    assert ref4 is not None, "Compaction failed to consolidate free memory effectively."
+    assert ref4 != -1, "Compaction failed to consolidate free memory effectively."
     mp.release(ref3)
     mp.release(ref4)
     assert mp.l1_compaction > 0, "Expected L1 compaction did not occur."
@@ -343,7 +343,7 @@ def test_repeated_zero_length_commits():
         # Commit a zero-length array many times.
         for _ in range(1000):
             ref = mp.commit(b"")  # Committing an empty byte string.
-            assert ref is not None, "Commit of zero-length data should not fail."
+            assert ref != -1, "Commit of zero-length data should not fail."
             refs.append(ref)
 
         # Check if each reference is unique which implies correct handling of zero-length data.
@@ -362,7 +362,7 @@ def test_rapid_commit_release():
     mp = MemoryPool(size=1000)
     for _ in range(1000):
         ref = mp.commit(b"Some data")
-        assert ref is not None, "Failed to commit data."
+        assert ref != 1, "Failed to commit data."
         mp.release(ref)
     # Verify memory integrity and state post rapid operations
     assert mp.available_space() == mp.size, "Memory pool did not return to full availability."
@@ -372,7 +372,7 @@ def test_commit_max_capacity():
     data = b"a" * 1000  # Assuming the pool size is 1000 bytes.
     mp = MemoryPool(size=1000)
     ref = mp.commit(data)
-    assert ref is not None, "Failed to commit data that exactly matches the pool capacity."
+    assert ref != -1, "Failed to commit data that exactly matches the pool capacity."
     mp.release(ref)
     assert mp.available_space() == mp.size, "Memory pool did not correctly free up space."
 
@@ -382,7 +382,7 @@ def test_sequential_commits_without_space():
     mp.commit(b"a" * 250)
     mp.commit(b"b" * 250)
     ref = mp.commit(b"Third commit should fail")
-    assert ref is None, "Memory pool erroneously allowed overcommitment."
+    assert ref == -1, "Memory pool erroneously allowed overcommitment."
 
 
 def test_stress_with_variable_data_sizes():
@@ -393,7 +393,7 @@ def test_stress_with_variable_data_sizes():
             size = random.randint(1, 200)  # Data size between 1 and 200 bytes.
             data = bytes(random.choices(range(256), k=size))
             ref = mp.commit(data)
-            if ref is not None:
+            if ref != -1:
                 refs.append(ref)
     finally:
         for ref in refs:
@@ -408,7 +408,7 @@ def test_zero_byte_commit_on_full_pool():
     mp.commit(b"x" * 500)
     # Try committing zero bytes
     ref = mp.commit(b"")
-    assert ref is not None, "Memory pool failed to handle zero-byte commit on a full pool."
+    assert ref != -1, "Memory pool failed to handle zero-byte commit on a full pool."
 
 
 def test_random_release_order():
@@ -434,7 +434,7 @@ def test_concurrent_access():
                 time.sleep(0.001)  # It's fast, add in a delay to the threads overlap
                 data = random_string().encode()  # unique per write
                 ref = memory_pool.commit(data)
-                if ref is not None:
+                if ref != -1:
                     read_data = memory_pool.read(ref, False)
                     assert read_data == data, "Data integrity check failed"
                     memory_pool.release(ref)

@@ -144,11 +144,6 @@ extensions = [
         extra_compile_args=C_COMPILE_FLAGS,
     ),
     Extension(
-        name="opteryx.compiled.functions.murmurhash3_32",
-        sources=["opteryx/compiled/functions/murmurhash3_32.pyx"],
-        extra_compile_args=CPP_COMPILE_FLAGS,
-    ),
-    Extension(
         name="opteryx.compiled.functions.levenstein",
         sources=["opteryx/compiled/functions/levenshtein.pyx"],
         extra_compile_args=C_COMPILE_FLAGS,

@@ -13,23 +13,24 @@ from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, 
 from threading import RLock
 from orso.tools import random_int
 from libcpp.vector cimport vector
+from libc.stdint cimport int64_t
 
 import os
 
-cdef long DEBUG_MODE = os.environ.get("OPTERYX_DEBUG", 0) != 0
+cdef int64_t DEBUG_MODE = os.environ.get("OPTERYX_DEBUG", 0) != 0
 
 cdef struct MemorySegment:
-    long start
-    long length
+    int64_t start
+    int64_t length
 
 cdef class MemoryPool:
     cdef:
         unsigned char* pool
-        public long size
+        public int64_t size
         public vector[MemorySegment] free_segments
-        public dict[long, MemorySegment] used_segments
+        public dict[int64_t, MemorySegment] used_segments
         public str name
-        public long commits, failed_commits, reads, read_locks, l1_compaction, l2_compaction, releases
+        public int64_t commits, failed_commits, reads, read_locks, l1_compaction, l2_compaction, releases
         object lock
 
     def __cinit__(self, long size, str name="Memory Pool"):
@@ -69,8 +70,8 @@ cdef class MemoryPool:
         if DEBUG_MODE:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
-    def _find_free_segment(self, long size) -> long:
-        cdef long i
+    cpdef int64_t _find_free_segment(self, int64_t size):
+        cdef int64_t i
         cdef MemorySegment segment
         for i in range(len(self.free_segments)):
             segment = self.free_segments[i]
@@ -79,7 +80,7 @@ cdef class MemoryPool:
         return -1
 
     def _level1_compaction(self):
-        cdef long n
+        cdef int64_t n
         cdef MemorySegment last_segment, segment
 
         self.l1_compaction += 1
@@ -122,11 +123,11 @@ cdef class MemoryPool:
         # Update free segment list
         self.free_segments = [MemorySegment(offset, self.size - offset)]
 
-    def commit(self, object data) -> long:
-        cdef long len_data
-        cdef long segment_index
+    def commit(self, object data) -> int64_t:
+        cdef int64_t len_data
+        cdef int64_t segment_index
         cdef MemorySegment segment
-        cdef long ref_id = random_int()
+        cdef int64_t ref_id = random_int()
         cdef Py_buffer view
         cdef char* raw_ptr
 
@@ -153,7 +154,7 @@ cdef class MemoryPool:
         total_free_space = sum(segment.length for segment in self.free_segments)
         if total_free_space < len_data:
             self.failed_commits += 1
-            return None
+            return -1
 
         with self.lock:
             segment_index = self._find_free_segment(len_data)
@@ -181,7 +182,7 @@ cdef class MemoryPool:
 
         return ref_id
 
-    def read(self, long ref_id, int zero_copy = 1):
+    cpdef read(self, int64_t ref_id, int zero_copy = 1):
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
 
@@ -197,7 +198,7 @@ cdef class MemoryPool:
 
         return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
-    def read_and_release(self, long ref_id, int zero_copy = 1):
+    cpdef read_and_release(self, int64_t ref_id, int zero_copy = 1):
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
         cdef char[:] raw_data
@@ -217,7 +218,7 @@ cdef class MemoryPool:
             else:
                 return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
-    def release(self, long ref_id):
+    cpdef release(self, int64_t ref_id):
         with self.lock:
             self.releases += 1
 
@@ -226,5 +227,5 @@ cdef class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             self.free_segments.push_back(segment)
 
-    def available_space(self) -> int:
+    def available_space(self) -> int64_t:
         return sum(segment.length for segment in self.free_segments)
