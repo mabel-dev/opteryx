@@ -34,35 +34,33 @@ cdef inline numpy.ndarray[int64_t, ndim=1] non_null_row_indices(object relation,
         const uint8_t* validity
         Py_ssize_t i, j, count = 0
         Py_ssize_t offset, length
-        uint8_t byte, bit
+        uint8_t bit
         numpy.ndarray[int64_t, ndim=1] indices = numpy.empty(num_rows, dtype=numpy.int64)
         int64_t[::1] indices_view = indices
 
     for column_name in column_names:
         column = relation.column(column_name)
+        offset = 0  # reset for each column
 
-        if column.null_count > 0:
-            offset = 0
-            for chunk in column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]:
-                bitmap_buffer = chunk.buffers()[0]
-                length = len(chunk)
+        for chunk in column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]:
+            length = len(chunk)
+            bitmap_buffer = chunk.buffers()[0]  # validity buffer
 
-                if bitmap_buffer is None:
-                    # No bitmap -> all values valid, nothing to update
-                    offset += length
-                    continue
-
-                validity = <const uint8_t*><uintptr_t>bitmap_buffer.address
-
-                if validity == NULL:
-                    raise RuntimeError(f"Null validity buffer for column '{column_name}'")
-
-                for j in range(length):
-                    byte = validity[j >> 3]
-                    bit = (byte >> (j & 7)) & 1
-                    combined_nulls[offset + j] &= bit
-
+            if bitmap_buffer is None:
+                # No validity buffer means all values are valid
                 offset += length
+                continue
+
+            validity = <const uint8_t*><uintptr_t>bitmap_buffer.address
+
+            if validity == NULL:
+                raise RuntimeError(f"Null validity buffer for column '{column_name}'")
+
+            for j in range(length):
+                bit = (validity[j >> 3] >> (j & 7)) & 1
+                combined_nulls[offset + j] &= bit
+
+            offset += length
 
     for i in range(num_rows):
         if combined_nulls[i]:
@@ -70,3 +68,7 @@ cdef inline numpy.ndarray[int64_t, ndim=1] non_null_row_indices(object relation,
             count += 1
 
     return numpy.array(indices_view[:count], copy=True)
+
+
+cpdef numpy.ndarray[int64_t, ndim=1] non_null_indices(object relation, list column_names):
+    return non_null_row_indices(relation, column_names)
