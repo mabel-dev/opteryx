@@ -185,11 +185,36 @@ def date_floor(dates, magnitude, units):  # [#325]
 
 
 def from_unixtimestamp(values):
-    return [datetime.datetime.fromtimestamp(i) for i in values]
+    return numpy.array(
+        [datetime.datetime.fromtimestamp(i, tz=datetime.timezone.utc) for i in values],
+        dtype="datetime64[s]",
+    )
 
 
-def unixtime(*args):
-    if isinstance(args[0], int):
-        now = datetime.datetime.utcnow().timestamp()
-        return numpy.full(args[0], now, numpy.int64)
-    return [numpy.nan if d != d else d.astype(numpy.int64) for d in args[0]]
+def unixtime(array):
+    """
+    Convert a NumPy or Arrow array of timestamps or ISO8601 strings to Unix time (seconds since epoch).
+    NaNs or nulls are converted to numpy.nan.
+    """
+    if isinstance(array, pyarrow.ChunkedArray):
+        array = array.combine_chunks().to_numpy(zero_copy_only=False)
+
+    if numpy.issubdtype(array.dtype, numpy.datetime64):
+        # Convert datetime64[ns] to seconds since epoch
+        return array.astype("datetime64[s]").astype(numpy.int64)
+
+    elif array.dtype.kind in {"U", "S", "O"}:
+        # Assume strings: parse to datetime and convert
+        def to_epoch(s):
+            if s is None or s != s:
+                return numpy.datetime64("NaT")
+            try:
+                dt = numpy.datetime64(s, "s")
+                return dt.astype(numpy.int64)
+            except Exception:
+                return numpy.datetime64("NaT")
+
+        return numpy.vectorize(to_epoch)(array)
+
+    else:
+        raise TypeError(f"Unsupported array type: {array.dtype}")
