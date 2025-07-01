@@ -66,45 +66,45 @@ STATEMENTS = [
     ("SELECT COUNT(*), MAX(numberOfMoons) FROM iceberg.planets;", 1),
 
     # Pushing past subqueries 
-    ("SELECT * FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches", 3),
-    ("SELECT DISTINCT Mission FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches", 1),
-    ("SELECT LL FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches", 1),
+    ("SELECT * FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches", 3),
+    ("SELECT DISTINCT Mission FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches", 1),
+    ("SELECT LL FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches", 1),
 
     # Basic projection pushdown cases
-    ("SELECT Company FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT Mission FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT LL FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT * FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 3),
+    ("SELECT Company FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT Mission FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT LL FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT * FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 3),
 
     # Projection pushdown with DISTINCT and ORDER BY
-    ("SELECT DISTINCT Company FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT DISTINCT Company FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches ORDER BY Company;", 1),
-    ("SELECT DISTINCT Mission FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT DISTINCT Company FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT DISTINCT Company FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches ORDER BY Company;", 1),
+    ("SELECT DISTINCT Mission FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
 
     # Testing functions on the projected columns
-    ("SELECT LOG2(LL) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT LEN(Company) > LL FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 2),
-    ("SELECT LEN(Mission) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT LOG2(LL) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT LENGTH(Company) > LL FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 2),
+    ("SELECT LENGTH(Mission) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
 
     # Test with WHERE clause that filters using different columns
-    ("SELECT LL FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches WHERE LEN(Company) < LL;", 2),
-    ("SELECT Mission FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches WHERE Company = 'SpaceX';", 1),
+    ("SELECT LL FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches WHERE LENGTH(Company) < LL;", 2),
+    ("SELECT Mission FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches WHERE Company = 'SpaceX';", 1),
 
     # Combining DISTINCT with functions and subqueries
-    ("SELECT DISTINCT LEN(Company) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT DISTINCT LENGTH(Company) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
 
     # Projection with multiple levels of subqueries
-    ("SELECT Company FROM (SELECT * FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS inner_query) AS outer_query;", 1),
-    ("SELECT LL FROM (SELECT * FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS inner_query) AS outer_query;", 1),
+    ("SELECT Company FROM (SELECT * FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS inner_query) AS outer_query;", 1),
+    ("SELECT LL FROM (SELECT * FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS inner_query) AS outer_query;", 1),
 
     # Testing aggregation functions
-    ("SELECT MAX(LL) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT COUNT(*), MAX(LL) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
-    ("SELECT AVG(LL) FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT MAX(LL) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT COUNT(*), MAX(LL) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
+    ("SELECT AVG(LL) FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches;", 1),
 
     # Case with ORDER BY clause but only selected columns should be read
-    ("SELECT LL FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches ORDER BY Mission;", 2),
-    ("SELECT Mission FROM (SELECT Company, Mission, LEN(Location) AS LL FROM iceberg.missions) AS launches ORDER BY LL;", 2),
+    ("SELECT LL FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches ORDER BY Mission;", 2),
+    ("SELECT Mission FROM (SELECT Company, Mission, LENGTH(Location) AS LL FROM iceberg.missions) AS launches ORDER BY LL;", 2),
 
 ]
 

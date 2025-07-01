@@ -612,7 +612,6 @@ id > /* 0 */ 1
         ("SELECT planetId FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT BOOLEAN(planetId - 3) FROM $satellites GROUP BY BOOLEAN(planetId - 3)", 2, 1, None),
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 1, None),
-        ("SELECT STR(planetId) FROM $satellites GROUP BY STR(planetId)", 7, 1, None),
         ("SELECT COUNT(*) FROM $satellites GROUP BY TIMESTAMP('2022-01-0' || VARCHAR(planetId))", 7, 1, None),
         ("SELECT DOUBLE(planetId) FROM $satellites GROUP BY DOUBLE(planetId)", 7, 1, None),
         ("SELECT INT(planetId) FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
@@ -634,7 +633,6 @@ id > /* 0 */ 1
         ("SELECT DOUBLE(planetId) AS VALUE FROM $satellites GROUP BY DOUBLE(planetId)", 7, 1, None),
         ("SELECT INT(planetId) AS VALUE FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
         ("SELECT INTEGER(planetId) AS VALUE FROM $satellites GROUP BY INTEGER(planetId)", 7, 1, None),
-        ("SELECT FLOAT(planetId) AS VALUE FROM $satellites GROUP BY FLOAT(planetId)", 7, 1, None),
         ("SELECT CAST(planetId AS BOOLEAN) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT CAST('2022-01-0' || VARCHAR(planetId) AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
@@ -833,14 +831,13 @@ id > /* 0 */ 1
         ("SELECT CURRENT_TIMESTAMP()", 1, 1, None),
         ("SELECT YEAR(birth_date), COUNT(*) FROM $astronauts GROUP BY YEAR(birth_date)", 54, 2, None),
         ("SELECT MONTH(birth_date), COUNT(*) FROM $astronauts GROUP BY MONTH(birth_date)", 12, 2, None),
+        ("SELECT YEAR(), MONTH(), DAY(), HOUR(), MINUTE(), SECOND() FROM $planets", 9, 6, None),
 
         ("SELECT DATE_FORMAT(birth_date, '%d-%Y') FROM $astronauts", 357, 1, None),
         ("SELECT DATE_FORMAT(birth_date, 'dddd') FROM $astronauts", 357, 1, None),
         ("SELECT DATE_FORMAT(death_date, '%Y') FROM $astronauts", 357, 1, None),
 
         ("SELECT count(*), VARCHAR(year) FROM $astronauts GROUP BY VARCHAR(year)", 21, 2, None),
-        ("SELECT count(*), STRING(year) FROM $astronauts GROUP BY STRING(year)", 21, 2, None),
-        ("SELECT count(*), STR(year) FROM $astronauts GROUP BY STR(year)", 21, 2, None),
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2, None),
 
         ("SELECT 1", 1, 1, None),
@@ -1038,7 +1035,6 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites FOR DATES IN PREVIOUS_MONTH ORDER BY planetId OFFSET 10", 167, 8, None),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8, None),
 
-        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS(missions, 'Apollo 8')", 3, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS(missions, 'Apollo 8')", 3, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, ('Apollo 8', 'Apollo 13'))", 5, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),

@@ -128,7 +128,7 @@ SELECT TRIM('    ABC   ');
 SELECT TRIM(name) FROM $planets;
 SELECT TRIM(LEADING ' ' FROM name) FROM $planets;
 
-SELECT HASH(name || str(id)) FROM $planets GROUP BY name, id;
+SELECT HASH(name || varchar(id)) FROM $planets GROUP BY name, id;
 
 # ANALYZE TABLE $planets;
 # ANALYZE TABLE $astronauts;
