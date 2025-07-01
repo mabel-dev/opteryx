@@ -296,7 +296,10 @@ def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
 
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
-            result_type, fixed_function_result = fixed_value_function(node.value, context)
+            result_type = None
+            fixed_function_result = None
+            if len(node.parameters) == 0:
+                result_type, fixed_function_result = fixed_value_function(node.value, context)
             if result_type:
                 # Some functions return constants, so return the constant
                 schema_column = ConstantColumn(

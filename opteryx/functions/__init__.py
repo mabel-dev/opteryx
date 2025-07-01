@@ -119,27 +119,16 @@ def cast_blob(arr):
 def fixed_value_function(function, context):
     from orso.types import OrsoTypes
 
-    if function not in {
-        "CONNECTION_ID",
-        "CURRENT_DATE",
-        "CURRENT_TIME",
-        "DATABASE",
-        "E",
-        "NOW",
-        "PHI",
-        "PI",
-        "TODAY",
-        "USER",
-        "UTC_TIMESTAMP",
-        "VERSION",
-        "YESTERDAY",
-    }:
-        return None, None
-
     if function in ("VERSION",):
         return OrsoTypes.VARCHAR, opteryx.__version__
-    if function in ("NOW", "CURRENT_TIME", "UTC_TIMESTAMP"):
+    if function in ("NOW", "UTC_TIMESTAMP"):
         return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at)
+    if function in ("CURRENT_TIME",):
+        # CURRENT_TIME is an alias for NOW, so we return the same value
+        return OrsoTypes.TIME, context.connection.connected_at.time()
+    if function in ("CURRENT_TIMESTAMP",):
+        # CURRENT_TIMESTAMP is an alias for NOW, so we return the same value
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at, "us")
     if function in ("CURRENT_DATE", "TODAY"):
         return OrsoTypes.DATE, numpy.datetime64(context.connection.connected_at.date())
     if function in ("YESTERDAY",):
@@ -160,6 +149,24 @@ def fixed_value_function(function, context):
     if function == "E":
         # eulers number
         return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
+    if function == "UTC_TIMESTAMP":
+        # UTC timestamp
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(datetime.datetime.utcnow(), "us")
+    if function == "UNIXTIME":
+        # We should only ever get here if the function is called without parameters
+        return OrsoTypes.INTEGER, context.connection.connected_at.timestamp()
+    if function == "YEAR":
+        return OrsoTypes.INTEGER, context.connection.connected_at.year
+    if function == "MONTH":
+        return OrsoTypes.INTEGER, context.connection.connected_at.month
+    if function == "DAY":
+        return OrsoTypes.INTEGER, context.connection.connected_at.day
+    if function == "HOUR":
+        return OrsoTypes.INTEGER, context.connection.connected_at.hour
+    if function == "MINUTE":
+        return OrsoTypes.INTEGER, context.connection.connected_at.minute
+    if function == "SECOND":
+        return OrsoTypes.INTEGER, context.connection.connected_at.second
     return None, None
 
 
@@ -206,10 +213,20 @@ def cast(_type):
 
         caster = OrsoTypes[_type].parse
 
-        sig = inspect.signature(caster)
-        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
-
-        kwargs = {param.name: arg for param, arg in zip(params, args)}
+        if _type == "DECIMAL":
+            # DECIMAL requires special handling for precision and scale
+            if len(args) == 2:
+                kwargs["precision"] = args[0]
+                kwargs["scale"] = args[1]
+            elif len(args) == 1:
+                kwargs["precision"] = args[0]
+                kwargs["scale"] = 0
+        elif _type in ("VARCHAR", "BLOB") and len(args) == 1:
+            # VARCHAR and BLOB can take a single argument for length
+            kwargs["length"] = args[0]
+        elif _type == "ARRAY" and len(args) == 1:
+            # ARRAY can take a single argument for the element type
+            kwargs["element_type"] = args[0]
 
         return [caster(i, **kwargs) for i in arr]
 
@@ -322,14 +339,14 @@ DEPRECATED_FUNCTIONS = {
     "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, removed 0.22.0
     "STRUCT": None,  # deprecated, removed 0.22.0,
     "NUMERIC": "DOUBLE",  # deprecated, removed 0.22.0
-    "LIST_CONTAINS": "ARRAY_COUNTAINS",  # deprecated, remove 0.24.0
-    "STR": "VARCHAR",  # deprecated, remove 0.24.0
-    "STRING": "VARCHAR",  # deprecated, remove 0.24.0
-    "FLOAT": "DOUBLE",  # deprecated, remove 0.24.0
-    "TRY_NUMERIC": "TRY_DOUBLE",  # deprecated, remove 0.24.0
-    "TRY_STRING": "TRY_VARCHAR",  # deprecated, remove 0.24.0
-    "TRY_STRUCT": None,  # deprecated, remove 0.24.0
-    "LEN": "LENGTH",  # deprecated, remove 0.24.0
+    "LIST_CONTAINS": "ARRAY_COUNTAINS",  # deprecated, removed 0.24.0
+    "STR": "VARCHAR",  # deprecated, removed 0.24.0
+    "STRING": "VARCHAR",  # deprecated, removed 0.24.0
+    "FLOAT": "DOUBLE",  # deprecated, removed 0.24.0
+    "TRY_NUMERIC": "TRY_DOUBLE",  # deprecated, removed 0.24.0
+    "TRY_STRING": "TRY_VARCHAR",  # deprecated, removed 0.24.0
+    "TRY_STRUCT": None,  # deprecated, removed 0.24.0
+    "LEN": "LENGTH",  # deprecated, removed 0.24.0
 }
 
 # fmt:off
@@ -357,22 +374,16 @@ FUNCTIONS = {
     "BOOLEAN": (lambda x: compute.cast(x, "bool"), "BOOLEAN", 1.0),
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
-    "FLOAT": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
     "VARCHAR": (cast("VARCHAR"), "VARCHAR", 1.0),
-    "STRING": (cast("VARCHAR"), "VARCHAR", 1.0),
-    "STR": (cast("VARCHAR"), "VARCHAR", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
     "BLOB": (cast("BLOB"), "BLOB", 1.0),
     "TRY_ARRAY": (other_functions.array_cast_safe, "VARIANT", 1.0),
     "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), "TIMESTAMP", 1.0),
     "TRY_BOOLEAN": (try_cast("BOOLEAN"), "BOOLEAN", 1.0),
-    "TRY_NUMERIC": (try_cast("DOUBLE"), "DOUBLE", 1.0),
     "TRY_VARCHAR": (try_cast("VARCHAR"), "VARCHAR", 1.0),
     "TRY_BLOB": (try_cast("BLOB"), "BLOB", 1.0),
-    "TRY_STRING": (try_cast("VARCHAR"), "VARCHAR", 1.0),
-    "TRY_STRUCT": (try_cast("STRUCT"), "STRUCT", 1.0),
     "TRY_INTEGER": (try_cast("INTEGER"), "INTEGER", 1.0),
     "TRY_DECIMAL": (try_cast("DECIMAL"), "DECIMAL", 1.0),
     "TRY_DOUBLE": (try_cast("DOUBLE"), "DOUBLE", 1.0),
@@ -383,7 +394,6 @@ FUNCTIONS = {
     "ASCII": (string_functions.to_ascii, "INTEGER", 1.0),
 
     # STRINGS
-    "LEN": (_iterate_single_parameter(get_len), "INTEGER", 1.0),  # LENGTH(str) -> int
     "LENGTH": (_iterate_single_parameter(get_len), "INTEGER", 1.0),  # LENGTH(str) -> int
     "UPPER": (compute.utf8_upper, "VARCHAR", 1.0),  # UPPER(str) -> str
     "LOWER": (compute.utf8_lower, "VARCHAR", 1.0),  # LOWER(str) -> str
@@ -428,7 +438,6 @@ FUNCTIONS = {
     # OTHER
     "GET": (_get, "VARIANT", 1.0),
     "GET_STRING": (_get_string, "VARCHAR", 1.0),
-    "LIST_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
@@ -474,10 +483,11 @@ FUNCTIONS = {
     "TIMEDIFF": (date_functions.time_diff, "INTEGER", 1.0),
     "DATEPART": (date_functions.date_part, "VARIANT", 1.0),
     "DATE_FORMAT": (date_functions.date_format, "VARCHAR", 1.0),
-    "CURRENT_TIME": (lambda x: None, "TIMESTAMP", 1.0),
+    "CURRENT_TIME": (lambda x: None, "TIME", 1.0),
+    "CURRENT_TIMESTAMP": (lambda x: None, "TIMESTAMP", 1.0),
     "UTC_TIMESTAMP": (lambda x: None, "INTEGER", 1.0),
     "NOW": (lambda x: None, "TIMESTAMP", 1.0),
-    "CURRENT_DATE": (lambda x: None, "TIMESTAMP", 1.0),
+    "CURRENT_DATE": (lambda x: None, "DATE", 1.0),
     "TODAY": (lambda x: None, "TIMESTAMP", 1.0),
     "YESTERDAY": (lambda x: None, "TIMESTAMP", 1.0),
     "YEAR": (compute.year, "INTEGER", 1.0),
