@@ -115,8 +115,8 @@ SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END FROM $planets;
 SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' ELSE 'Elsewhere' END FROM $planets;
 SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' END FROM $planets;
 
-SELECT * FROM $astronauts WHERE death_date > current_time - interval '50' YEAR;
-SELECT * FROM $astronauts WHERE birth_date < current_time + interval '50' YEAR;
+SELECT * FROM $astronauts WHERE death_date > current_timestamp - interval '50' YEAR;
+SELECT * FROM $astronauts WHERE birth_date < current_timestamp + interval '50' YEAR;
 
 SELECT LTRIM('   ABC');
 SELECT TRIM(LEADING '_' FROM '___ABC');
@@ -170,6 +170,7 @@ SELECT ST['prod'] FROM (SELECT '{"prod": 73}' AS ST FROM $planets) AS SB;
 SELECT VERSION();
 SELECT NOW();
 SELECT CURRENT_TIME;
+SELECT CURRENT_TIMESTAMP;
 SELECT UTC_TIMESTAMP()
 SELECT CURRENT_DATE;
 SELECT TODAY();

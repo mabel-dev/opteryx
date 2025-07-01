@@ -829,6 +829,8 @@ id > /* 0 */ 1
         ("SELECT CURRENT_DATE()", 1, 1, None),
         ("SELECT CURRENT_TIME", 1, 1, None),
         ("SELECT CURRENT_TIME()", 1, 1, None),
+        ("SELECT CURRENT_TIMESTAMP", 1, 1, None),
+        ("SELECT CURRENT_TIMESTAMP()", 1, 1, None),
         ("SELECT YEAR(birth_date), COUNT(*) FROM $astronauts GROUP BY YEAR(birth_date)", 54, 2, None),
         ("SELECT MONTH(birth_date), COUNT(*) FROM $astronauts GROUP BY MONTH(birth_date)", 12, 2, None),
 
@@ -1863,12 +1865,12 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites WHERE 8 + 3 > id;", 10, 8, None),
 
         # rewriting date functions has addition complexity
-        ("SELECT * FROM $missions WHERE Launched_at - INTERVAL '7' DAY < current_time;", 4503, 8, None),
-        ("SELECT * FROM $missions WHERE current_time > Launched_at - INTERVAL '7' DAY;", 4503, 8, None),
-        ("SELECT * FROM $missions WHERE INTERVAL '7' DAY < current_time - Launched_at;", 4503, 8, None),
-        ("SELECT * FROM $missions WHERE current_time - Launched_at > INTERVAL '7' DAY;", 4503, 8, None),
-        ("SELECT * FROM $missions WHERE Launched_at < current_time + INTERVAL '7' DAY;", 4503, 8, None),
-        ("SELECT * FROM $missions WHERE current_time > Launched_at + INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE Launched_at - INTERVAL '7' DAY < current_timestamp;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_timestamp > Launched_at - INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE INTERVAL '7' DAY < current_timestamp - Launched_at;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_timestamp - Launched_at > INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE Launched_at < current_timestamp + INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_timestamp > Launched_at + INTERVAL '7' DAY;", 4503, 8, None),
 
         ("SELECT ARRAY_AGG(id) FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(id) AS pids FROM $satellites GROUP BY planetId) AS sats", 7, 1, None),
@@ -1954,7 +1956,7 @@ id > /* 0 */ 1
         # Edge Case Testing Subscripts on Arrays with NULL Values
         ("SELECT name[0] FROM $planets WHERE id IS NULL", 0, 1, None),
         # Testing Intervals with Arithmetic Expressions
-        ("SELECT * FROM $planets WHERE TIMESTAMP '2024-10-01' + INTERVAL '2' DAY > CURRENT_TIME", 0, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2024-10-01' + INTERVAL '2' DAY > current_timestamp", 0, 20, None),
         # Edge Case with JSON-Like Filtering
         ("SELECT * FROM $astronauts WHERE birth_place->>'city' = 'New York'", 0, 19, None),
         # Ordering on Computed Columns with Aliases
@@ -2040,17 +2042,17 @@ id > /* 0 */ 1
         ("SELECT name FROM $planets WHERE name LIKE '%r%' AND NOT name LIKE '%e%'", 4, 1, None),
         ("SELECT COUNT(*), name FROM $planets WHERE name LIKE '%a%' OR name ILIKE '%o%' GROUP BY name HAVING COUNT(*) > 0", 5, 2, None),
 
-        ("SELECT max(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT max(current_timestamp), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max(1) FROM $satellites", 1, 1, None),
         ("SELECT max('a'), name FROM $satellites group by name", 177, 2, None),
         ("SELECT max('a') FROM $satellites", 1, 1, None),
-        ("SELECT min(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT min(current_timestamp), name FROM $satellites group by name", 177, 2, None),
         ("SELECT min(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT min(1) FROM $satellites", 1, 1, None),
         ("SELECT min('a'), name FROM $satellites group by name", 177, 2, None),
         ("SELECT min('a') FROM $satellites", 1, 1, None),
-        ("SELECT count(current_time), name FROM $satellites group by name", 177, 2, None),
+        ("SELECT count(current_timestamp), name FROM $satellites group by name", 177, 2, None),
         ("SELECT count(1), name FROM $satellites group by name", 177, 2, None),
         ("SELECT count(1) FROM $satellites", 1, 1, None),
         ("SELECT count('a'), name FROM $satellites group by name", 177, 2, None),
@@ -2276,8 +2278,8 @@ id > /* 0 */ 1
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH is not null", 9, 20, None),
         ("SELECT DATE '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
-        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
-        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_timestamp", 9, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH < current_timestamp", 9, 20, None),
         # 1380
         ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS PID USING(id)", 3, 20, None),
         ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS S USING(id)", 3, 20, None),

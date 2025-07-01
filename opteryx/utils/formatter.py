@@ -115,6 +115,7 @@ def format_sql(sql):  # pragma: no cover
         elif ((i + 1) < len(words) and words[i + 1] == "(") or word.upper() in (
             "ANY",
             "CURRENT_TIME",
+            "CURRENT_TIMESTAMP",
         ):
             formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
         elif word.upper() in (
@@ -151,6 +152,7 @@ def format_sql(sql):  # pragma: no cover
             "->>",
             "::",
             "@?",
+            "@>",
         ):
             formatted_sql += "\033[38;2;189;147;249m" + word.upper() + "\033[0m "
         elif word.replace(".", "", 1).lstrip("-").isdigit():

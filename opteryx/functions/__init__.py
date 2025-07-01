@@ -123,12 +123,14 @@ def fixed_value_function(function, context):
         "CONNECTION_ID",
         "CURRENT_DATE",
         "CURRENT_TIME",
+        "CURRENT_TIMESTAMP",
         "DATABASE",
         "E",
         "NOW",
         "PHI",
         "PI",
         "TODAY",
+        "UNIXTIME",
         "USER",
         "UTC_TIMESTAMP",
         "VERSION",
@@ -138,8 +140,14 @@ def fixed_value_function(function, context):
 
     if function in ("VERSION",):
         return OrsoTypes.VARCHAR, opteryx.__version__
-    if function in ("NOW", "CURRENT_TIME", "UTC_TIMESTAMP"):
+    if function in ("NOW", "UTC_TIMESTAMP"):
         return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at)
+    if function in ("CURRENT_TIME",):
+        # CURRENT_TIME is an alias for NOW, so we return the same value
+        return OrsoTypes.TIME, context.connection.connected_at.time()
+    if function in ("CURRENT_TIMESTAMP",):
+        # CURRENT_TIMESTAMP is an alias for NOW, so we return the same value
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at, "us")
     if function in ("CURRENT_DATE", "TODAY"):
         return OrsoTypes.DATE, numpy.datetime64(context.connection.connected_at.date())
     if function in ("YESTERDAY",):
@@ -160,6 +168,12 @@ def fixed_value_function(function, context):
     if function == "E":
         # eulers number
         return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
+    if function == "UTC_TIMESTAMP":
+        # UTC timestamp
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(datetime.datetime.utcnow(), "us")
+    if function == "UNIXTIME":
+        # We should only ever get here if the function is called without parameters
+        return OrsoTypes.INTEGER, context.connection.connected_at.timestamp()
     return None, None
 
 
@@ -206,10 +220,20 @@ def cast(_type):
 
         caster = OrsoTypes[_type].parse
 
-        sig = inspect.signature(caster)
-        params = list(sig.parameters.values())[1:]  # skip the first param (`value`)
-
-        kwargs = {param.name: arg for param, arg in zip(params, args)}
+        if _type == "DECIMAL":
+            # DECIMAL requires special handling for precision and scale
+            if len(args) == 2:
+                kwargs["precision"] = args[0]
+                kwargs["scale"] = args[1]
+            elif len(args) == 1:
+                kwargs["precision"] = args[0]
+                kwargs["scale"] = 0
+        elif _type in ("VARCHAR", "BLOB") and len(args) == 1:
+            # VARCHAR and BLOB can take a single argument for length
+            kwargs["length"] = args[0]
+        elif _type == "ARRAY" and len(args) == 1:
+            # ARRAY can take a single argument for the element type
+            kwargs["element_type"] = args[0]
 
         return [caster(i, **kwargs) for i in arr]
 
@@ -474,7 +498,8 @@ FUNCTIONS = {
     "TIMEDIFF": (date_functions.time_diff, "INTEGER", 1.0),
     "DATEPART": (date_functions.date_part, "VARIANT", 1.0),
     "DATE_FORMAT": (date_functions.date_format, "VARCHAR", 1.0),
-    "CURRENT_TIME": (lambda x: None, "TIMESTAMP", 1.0),
+    "CURRENT_TIME": (lambda x: None, "TIME", 1.0),
+    "CURRENT_TIMESTAMP": (lambda x: None, "TIMESTAMP", 1.0),
     "UTC_TIMESTAMP": (lambda x: None, "INTEGER", 1.0),
     "NOW": (lambda x: None, "TIMESTAMP", 1.0),
     "CURRENT_DATE": (lambda x: None, "TIMESTAMP", 1.0),

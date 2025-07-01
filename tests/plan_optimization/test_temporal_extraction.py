@@ -111,7 +111,7 @@ STATEMENTS = [
         # FROM in functions
         ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts", [("$astronauts", None, None)]),
         ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", [("$astronauts", None, None)]),
-        ("SELECT EXTRACT(YEAR FROM CURRENT_TIME)", []),
+        ("SELECT EXTRACT(YEAR FROM CURRENT_TIMESTAMP)", []),
         ("SELECT SUBSTRING('name' FROM 1 FOR 1)", []),
         ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
         ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
