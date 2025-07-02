@@ -339,7 +339,7 @@ DEPRECATED_FUNCTIONS = {
     "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, removed 0.22.0
     "STRUCT": None,  # deprecated, removed 0.22.0,
     "NUMERIC": "DOUBLE",  # deprecated, removed 0.22.0
-    "LIST_CONTAINS": "ARRAY_COUNTAINS",  # deprecated, removed 0.24.0
+    "LIST_CONTAINS": "ARRAY_CONTAINS",  # deprecated, removed 0.24.0
     "STR": "VARCHAR",  # deprecated, removed 0.24.0
     "STRING": "VARCHAR",  # deprecated, removed 0.24.0
     "FLOAT": "DOUBLE",  # deprecated, removed 0.24.0
