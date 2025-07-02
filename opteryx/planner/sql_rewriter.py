@@ -52,6 +52,7 @@ This supports the following syntaxes:
 - FOR DATES BETWEEN <timestamp> AND <timestamp>
 - FOR DATES IN <range>
 - FOR DATES SINCE <timestamp>
+- FOR LAST <number> DAYS
 
 """
 

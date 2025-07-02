@@ -16,12 +16,6 @@ from opteryx.third_party.abseil.containers cimport FlatHashSet
 from opteryx.compiled.structures.buffers cimport IntBuffer
 from opteryx.compiled.table_ops.hash_ops cimport process_column
 
-cdef:
-    int64_t NULL_HASH = <int64_t>0xBADF00D
-    int64_t EMPTY_HASH = <int64_t>0xBADC0FFEE
-    uint64_t SEED = <uint64_t>0x9e3779b97f4a7c15
-
-
 cpdef tuple distinct(table, FlatHashSet seen_hashes=None, list columns=None):
     """
     DISTINCT using xxhash and direct Arrow buffer access

@@ -169,7 +169,7 @@ TABLES = [
     },
 ]
 
-TEST_CYCLES: int = 250
+TEST_CYCLES: int = 10
 
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))

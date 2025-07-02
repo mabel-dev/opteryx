@@ -14,7 +14,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 
 
-def _decompose_aggregates(aggregates, projection):
+def decompose_aggregates(aggregates, projection):
     """
     decompose aggregates into parts:
     SUM(c + 2) => SUM(c) + COUNT(c) * 2

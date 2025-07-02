@@ -328,6 +328,11 @@ def humanize(arr):
                 return f"{format_number(rounded)} {label}"
         return format_number(value)
 
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(zero_copy_only=False)
+    if hasattr(arr, "tolist"):
+        arr = arr.tolist()
+
     return [humanize_number(value) for value in arr]
 
 

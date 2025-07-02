@@ -1511,6 +1511,8 @@ id > /* 0 */ 1
 
         ("SELECT SPLIT(name, ' ', 0) FROM $astronauts", None, None, InvalidFunctionParameterError),
         ("SELECT SPLIT(name, ' ', 1) FROM $astronauts", 357, 1, None),
+        ("SELECT SPLIT(name, ' ')[0] AS names FROM $astronauts", 357, 1, None),
+        ("SELECT SPLIT(name, ' ')[-1] AS names FROM $astronauts", 357, 1, None),
 
         ("SELECT * FROM FAKE(100, (Name, Name)) AS FK(nom, nim, nam)", 100, 2, None),
         ("SELECT * FROM FAKE(100, (Name, Name)) AS FK(nom)", 100, 2, None),

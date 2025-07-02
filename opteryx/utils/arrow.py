@@ -13,8 +13,9 @@ from typing import Optional
 from typing import Union
 
 import pyarrow
-
-INTERNAL_BATCH_SIZE = 500
+from pyarrow import Table
+from pyarrow import array
+from pyarrow import nulls
 
 
 def limit_records(
@@ -58,12 +59,6 @@ def limit_records(
 
     if not remaining_rows:
         return None
-
-
-def restore_null_columns(removed, table):
-    for column in removed:  # pragma: no cover
-        table = table.append_column(column, pyarrow.array([None] * table.num_rows))
-    return table
 
 
 def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
@@ -121,67 +116,43 @@ def align_tables(
     Returns:
         A pyarrow.Table with aligned columns and data.
     """
-    len_source_indices = len(source_indices)
-    len_append_indices = len(append_indices)
+    len_src = len(source_indices)
+    len_app = len(append_indices)
 
-    # If either source_indices or append_indices is empty, return an empty table with a combined schema
-    if len_source_indices == 0 or len_append_indices == 0:
-        combined_schema = pyarrow.schema(
-            [
-                *source_table.schema,
-                *[
-                    field
-                    for field in append_table.schema
-                    if field.name not in source_table.schema.names
-                ],
-            ]
-        )
-        empty_arrays = [pyarrow.array([]) for field in combined_schema]
-        return pyarrow.Table.from_arrays(empty_arrays, schema=combined_schema)
-
-    # Convert indices to PyArrow arrays for efficient null checking
-    if not isinstance(source_indices, pyarrow.Array):
-        source_indices = pyarrow.array(source_indices, type=pyarrow.int64())
-    if not isinstance(append_indices, pyarrow.Array):
-        append_indices = pyarrow.array(append_indices, type=pyarrow.int64())
-
-    # Check if all source_indices are nulls
-    if source_indices.null_count == len_source_indices:
-        null_columns = [
-            pyarrow.nulls(len_source_indices, type=field.type) for field in source_table.schema
+    if len_src == 0 or len_app == 0:
+        combined_fields = [
+            *source_table.schema,
+            *[f for f in append_table.schema if f.name not in source_table.schema.names],
         ]
-        aligned_table = pyarrow.Table.from_arrays(null_columns, schema=source_table.schema)
+        return Table.from_arrays(
+            [nulls(0, type=f.type) for f in combined_fields], schema=pyarrow.schema(combined_fields)
+        )
+
+    if not isinstance(source_indices, pyarrow.Array):
+        source_indices = array(source_indices, type=pyarrow.int64())
+    if not isinstance(append_indices, pyarrow.Array):
+        append_indices = array(append_indices, type=pyarrow.int64())
+
+    if source_indices.null_count == len_src:
+        src_cols = [nulls(len_src, type=f.type) for f in source_table.schema]
     else:
-        # Take rows from source_table based on source_indices
-        aligned_table = source_table.take(source_indices)
+        src_cols = [col.take(source_indices) for col in source_table.columns]
 
-    # Set of column names from source_table for quick lookup
-    source_column_names = set(source_table.column_names)
+    append_all_nulls = append_indices.null_count == len_app
+    source_names = set(source_table.schema.names)
 
-    # Check if all append_indices are nulls
-    append_is_all_nulls = append_indices.null_count == len_append_indices
-
-    new_columns = []
+    new_cols = []
     new_fields = []
 
-    # Collect all columns that need to be appended in one go
-    for column_name, column_field in zip(append_table.column_names, append_table.schema):
-        if column_name not in source_column_names:
-            if append_is_all_nulls:
-                # Create a column of nulls if all append indices are null
-                null_column = pyarrow.nulls(len(aligned_table), type=column_field.type)
-                new_columns.append(null_column)
+    for name, field in zip(append_table.schema.names, append_table.schema):
+        if name not in source_names:
+            if append_all_nulls:
+                col = nulls(len_src, type=field.type)
             else:
-                # Take the corresponding rows from append_table
-                column_data = append_table.column(column_name).take(append_indices)
-                new_columns.append(column_data)
-            new_fields.append(column_field)
+                col = append_table.column(name).take(append_indices)
+            new_cols.append(col)
+            new_fields.append(field)
 
-    # Combine original and new columns
-    aligned_columns = aligned_table.columns + new_columns
-    combined_schema = pyarrow.schema([*source_table.schema, *new_fields])
-
-    # Create the final aligned table with all columns at once
-    aligned_table = pyarrow.Table.from_arrays(aligned_columns, schema=combined_schema)
-
-    return aligned_table
+    return Table.from_arrays(
+        src_cols + new_cols, schema=pyarrow.schema(list(source_table.schema) + new_fields)
+    )
