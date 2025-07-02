@@ -13,6 +13,7 @@ class ConnectionState:
 
     def __init__(self):
         from orso.tools import random_int
+
         # We can't track connections across severless units so try to create one that'll
         # be unique for it's life
         self.connecton_id = random_int()
