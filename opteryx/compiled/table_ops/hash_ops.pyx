@@ -13,8 +13,6 @@ from cpython.object cimport PyObject_Hash
 from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
-from opteryx.third_party.abseil.containers cimport FlatHashSet
-from opteryx.compiled.structures.buffers cimport IntBuffer
 
 
 cdef:

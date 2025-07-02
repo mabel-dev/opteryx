@@ -5,7 +5,7 @@
 
 import asyncio
 import os
-import urllib.request # is used
+import urllib.request  # is used
 from typing import Dict
 from typing import List
 

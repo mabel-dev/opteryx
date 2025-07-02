@@ -10,7 +10,7 @@ import numpy
 cimport numpy
 numpy.import_array()
 
-from libc.stdint cimport int64_t, uint64_t
+from libc.stdint cimport uint64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
 from opteryx.compiled.structures.buffers cimport IntBuffer
