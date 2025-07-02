@@ -7,9 +7,6 @@
 # cython: boundscheck=False
 
 import pyarrow
-import numpy
-cimport numpy
-numpy.import_array()
 
 from libc.stdint cimport int32_t, int64_t, uint8_t, uint64_t, uintptr_t
 from cpython.object cimport PyObject_Hash
@@ -239,11 +236,10 @@ cdef void process_boolean_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
 
         if validity and not (validity[byte_index] & (1 << bit_in_byte)):
             hash_val = NULL_HASH
+        elif data and (data[byte_index] & (1 << bit_in_byte)):
+            hash_val = TRUE_HASH
         else:
-            if data and (data[byte_index] & (1 << bit_in_byte)):
-                hash_val = TRUE_HASH
-            else:
-                hash_val = FALSE_HASH
+            hash_val = FALSE_HASH
 
         update_row_hash(row_hashes, row_offset + i, hash_val)
         i += 1
@@ -280,7 +276,7 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
         update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
-cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) nogil noexcept:
+cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) noexcept nogil:
     """Combine column hashes using a stronger mixing function (MurmurHash3 finalizer)"""
     cdef uint64_t h = row_hashes[row_idx] ^ col_hash
 

@@ -54,7 +54,7 @@ def split(arr, delimiter=",", limit=None):
             raise InvalidFunctionParameterError(
                 "`SPLIT` limit parameter must be greater than zero."
             )
-    return compute.split_pattern(arr, pattern=delimiter, max_splits=limit)
+    return compute.split_pattern(arr, pattern=delimiter, max_splits=limit).to_numpy(zero_copy_only=False)
 
 
 def soundex(arr):

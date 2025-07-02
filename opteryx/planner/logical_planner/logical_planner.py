@@ -27,7 +27,7 @@ from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import logical_planner_builders
-from opteryx.planner.logical_planner.logical_planner_rewriter import _decompose_aggregates
+from opteryx.planner.logical_planner.logical_planner_rewriter import decompose_aggregates
 from opteryx.third_party.travers import Graph
 
 
@@ -286,7 +286,7 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
         raise SqlError("SELECT * cannot coexist with additional columns.")
 
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
-    _aggregates, _projection = _decompose_aggregates(_aggregates, _projection)
+    _aggregates, _projection = decompose_aggregates(_aggregates, _projection)
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))[0]
     if _groups is not None and _groups != []:
         if any(p.node_type == NodeType.WILDCARD for p in _projection):

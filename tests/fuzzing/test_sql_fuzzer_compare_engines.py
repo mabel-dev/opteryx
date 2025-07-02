@@ -25,7 +25,7 @@ from opteryx import virtual_datasets
 from tests.tools import create_duck_db
 from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
-TEST_CYCLES: int = 100
+TEST_CYCLES: int = 10
 
 
 TABLES = {

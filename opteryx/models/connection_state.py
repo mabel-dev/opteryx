@@ -3,8 +3,6 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-import utils
-
 
 class ConnectionState:
     """
@@ -14,9 +12,10 @@ class ConnectionState:
     """
 
     def __init__(self):
+        from orso.tools import random_int
         # We can't track connections across severless units so try to create one that'll
         # be unique for it's life
-        self.connecton_id = utils.random_int()
+        self.connecton_id = random_int()
         self.user = None
         self.database = None
 
