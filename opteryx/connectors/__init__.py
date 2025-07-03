@@ -130,7 +130,8 @@ def connector_factory(dataset, statistics, **config):
 
             return file_connector.FileConnector(dataset=dataset, statistics=statistics)
         # fall back to the default connector (local disk if not set)
-        connector = _storage_prefixes.get("_default", DiskConnector)
+        connector_entry = _storage_prefixes.get("_default", {})
+        connector = connector_entry.pop("connector", DiskConnector)
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
