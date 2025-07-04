@@ -4,6 +4,7 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 import asyncio
+import logging
 import os
 import urllib.request  # is used
 from typing import Dict
@@ -29,6 +30,9 @@ from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
 _storage_client = None
+
+# disable httpx logging to avoid cluttering the logs
+logging.getLogger("httpx").setLevel(logging.ERROR)
 
 
 def get_storage_credentials():
@@ -78,7 +82,7 @@ class GcpCloudStorageConnector(
 
     def __init__(self, credentials=None, **kwargs):
         try:
-            import requests
+            import httpx
             from google.auth.transport.requests import Request
         except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(err.name) from err
@@ -105,8 +109,14 @@ class GcpCloudStorageConnector(
         self.access_token = self.client_credentials.token
 
         # Create a HTTP connection session to reduce effort for each fetch
-        # synchronous only
-        self.session = requests.Session()
+        self.session = httpx.Client(
+            http2=True,
+            timeout=httpx.Timeout(30.0, connect=10.0),
+            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+            headers={
+                "Accept-Encoding": "gzip, br",
+            },
+        )
 
         # cache so we only fetch this once
         self.blob_list = {}
@@ -120,23 +130,17 @@ class GcpCloudStorageConnector(
         # 10% can be measured in seconds.
         bucket, _, _, _ = paths.get_parts(blob_name)
 
-        # Ensure the credentials are valid, refreshing them if necessary
-        if not self.client_credentials.valid:  # pragma: no cover
-            from google.auth.transport.requests import Request
-
-            request = Request()
-            self.client_credentials.refresh(request)
-            self.access_token = self.client_credentials.token
-
         if "kh" not in bucket:
             bucket = bucket.replace("va_data", "va-data")
             bucket = bucket.replace("data_", "data-")
         object_full_path = urllib.parse.quote(blob_name[(len(bucket) + 1) :], safe="")
 
-        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
+        url = f"https://storage.googleapis.com/{bucket}/{object_full_path}"
 
         response = self.session.get(
-            url, headers={"Authorization": f"Bearer {self.access_token}"}, timeout=30
+            url,
+            headers={"Authorization": f"Bearer {self.access_token}", "Accept-Encoding": "identity"},
+            timeout=30,
         )
         if response.status_code != 200:
             raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status_code}")
@@ -151,36 +155,34 @@ class GcpCloudStorageConnector(
         bucket, _, _, _ = paths.get_parts(blob_name)
         # DEBUG: print("READ   ", blob_name)
 
-        # Ensure the credentials are valid, refreshing them if necessary
-        if not self.client_credentials.valid:  # pragma: no cover
-            from google.auth.transport.requests import Request
-
-            request = Request()
-            self.client_credentials.refresh(request)
-            self.access_token = self.client_credentials.token
-
         if "kh" not in bucket:
             bucket = bucket.replace("va_data", "va-data")
             bucket = bucket.replace("data_", "data-")
 
         object_full_path = urllib.parse.quote(blob_name[(len(bucket) + 1) :], safe="")
 
-        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
+        url = f"https://storage.googleapis.com/{bucket}/{object_full_path}"
 
-        async with session.get(
-            url, headers={"Authorization": f"Bearer {self.access_token}"}, timeout=30
-        ) as response:
-            if response.status != 200:
-                raise Exception(f"Unable to read '{blob_name}' - {response.status_code}")
-            data = await response.read()
+        response = await session.get(
+            url,
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Accept-Encoding": "identity",
+            },
+            timeout=30,
+        )
+
+        if response.status_code != 200:
+            raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status_code}")
+        data = response.read()
+        ref = await pool.commit(data)
+        while ref is None:
+            statistics.stalls_writing_to_read_buffer += 1
+            system_statistics.cpu_wait_seconds += 0.1
+            await asyncio.sleep(0.1)
             ref = await pool.commit(data)
-            while ref is None:
-                statistics.stalls_writing_to_read_buffer += 1
-                system_statistics.cpu_wait_seconds += 0.1
-                await asyncio.sleep(0.1)
-                ref = await pool.commit(data)
-            statistics.bytes_read += len(data)
-            return ref
+        statistics.bytes_read += len(data)
+        return ref
 
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         # only fetch once per prefix (partition)
@@ -196,23 +198,19 @@ class GcpCloudStorageConnector(
 
         object_path = urllib.parse.quote(object_path, safe="")
         bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe
-        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name),nextPageToken"
+        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o"  # ?prefix={object_path}&maxResults=1000&details=false&fields=items(name),nextPageToken"
+        params = {
+            "prefix": object_path,
+            "maxResults": 1000,
+            "details": False,
+            "fields": "nextPageToken, items(name)",
+        }
 
-        # Ensure the credentials are valid, refreshing them if necessary
-        if not self.client_credentials.valid:  # pragma: no cover
-            from google.auth.transport.requests import Request
+        headers = {"Authorization": f"Bearer {self.access_token}", "Accept-Encoding": "gzip, br"}
 
-            request = Request()
-            self.client_credentials.refresh(request)
-            self.access_token = self.client_credentials.token
-
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-
-        params = None
         blob_names: List[str] = []
         while True:
             response = self.session.get(url, headers=headers, timeout=30, params=params)
-
             if response.status_code != 200:  # pragma: no cover
                 raise DatasetReadError(f"Error fetching blob list: {response.text}")
 
@@ -226,7 +224,7 @@ class GcpCloudStorageConnector(
             page_token = blob_data.get("nextPageToken")
             if not page_token:
                 break
-            params = {"pageToken": page_token}
+            params["pageToken"] = page_token
 
         self.blob_list[prefix] = blob_names
         return blob_names

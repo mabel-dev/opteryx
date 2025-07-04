@@ -18,7 +18,6 @@ import threading
 import time
 from typing import Generator
 
-import aiohttp
 import pyarrow
 import pyarrow.parquet
 from orso.schema import convert_orso_schema_to_arrow_schema
@@ -40,8 +39,15 @@ MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
 
 
 async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
+    import httpx
+
     semaphore = asyncio.Semaphore(CONCURRENT_READS)
-    session = aiohttp.ClientSession()
+    session = httpx.AsyncClient(
+        http2=True,
+        timeout=httpx.Timeout(30.0, connect=10.0),
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+        headers={"Accept-Encoding": "gzip, br"},
+    )
 
     async def fetch_and_process(blob_name):
         async with semaphore:
@@ -56,7 +62,7 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
 
     await asyncio.gather(*tasks)
     reply_queue.put(None)
-    await session.close()
+    await session.aclose()
 
 
 class AsyncReaderNode(ReaderNode):
