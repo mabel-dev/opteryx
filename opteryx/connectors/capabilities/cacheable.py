@@ -131,7 +131,7 @@ def async_read_thru_cache(func):
                 if evicted:  # pragma: no cover
                     # if we're evicting items we just put in the cache, stop
                     if evicted in my_keys:
-                        evictions_remaining = 0
+                        evictions_remaining = -1
                     else:
                         evictions_remaining -= 1
                     statistics.cache_evictions += 1
@@ -140,7 +140,7 @@ def async_read_thru_cache(func):
                 # If we read from the source, it's not in the remote cache
                 remote_cache.set(key, payload)
                 system_statistics.remote_cache_commits += 1
-            else:
+            elif len(payload) >= MAX_CACHEABLE_ITEM_SIZE:
                 statistics.cache_oversize += 1
 
     return wrapper
