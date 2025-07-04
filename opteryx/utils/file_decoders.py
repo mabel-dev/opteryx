@@ -371,26 +371,50 @@ def jsonl_decoder(
 
     from opteryx.third_party.tktech import csimdjson as simdjson
 
-    rows = []
-
     if not isinstance(buffer, bytes):
-        buffer = buffer.read()  # type: ignore
+        buffer = buffer.read()
 
-    for line in buffer.split(b"\n"):
+    parser = simdjson.Parser()
+    lines = buffer.split(b"\n")
+
+    # preallocate and reuse dicts
+    rows = []
+    keys_union = set()
+    nested_keys = set()
+
+    for line in lines:
         if not line:
             continue
-        dict_line = simdjson.Parser().parse(line)
-        rows.append(
-            {k: orjson.dumps(v) if isinstance(v, dict) else v for k, v in dict_line.items()}
-        )
+        record = parser.parse(line)
+
+        # keep track of all keys for schema padding
+        keys_union.update(record.keys())
+
+        # convert nested objects to string
+        row = {}
+        for k, v in record.items():
+            if isinstance(v, dict):
+                row[k] = orjson.dumps(v).decode("utf-8")
+                nested_keys.add(k)
+            else:
+                row[k] = v
+        rows.append(row)
+        record = None
+
+    # ensure all dicts have all keys to fix Arrow schema issue
+    missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
+    if missing_keys:
+        for row in rows:
+            for key in missing_keys:
+                row.setdefault(key, None)
 
     table = pyarrow.Table.from_pylist(rows)
 
-    schema = table.schema
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(schema)
+        return convert_arrow_schema_to_orso_schema(table.schema)
 
     full_shape = table.shape
+
     if selection:
         table = filter_records(selection, table)
     if projection:
