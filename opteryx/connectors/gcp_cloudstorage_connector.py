@@ -82,7 +82,8 @@ class GcpCloudStorageConnector(
 
     def __init__(self, credentials=None, **kwargs):
         try:
-            import httpx
+            import requests
+            from requests.adapters import HTTPAdapter
             from google.auth.transport.requests import Request
         except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(err.name) from err
@@ -109,14 +110,9 @@ class GcpCloudStorageConnector(
         self.access_token = self.client_credentials.token
 
         # Create a HTTP connection session to reduce effort for each fetch
-        self.session = httpx.Client(
-            http2=True,
-            timeout=httpx.Timeout(30.0, connect=10.0),
-            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-            headers={
-                "Accept-Encoding": "gzip, br",
-            },
-        )
+        self.session = requests.session()
+        adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100)
+        self.session.mount("https://", adapter)
 
         # cache so we only fetch this once
         self.blob_list = {}
@@ -172,9 +168,9 @@ class GcpCloudStorageConnector(
             timeout=30,
         )
 
-        if response.status_code != 200:
-            raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status_code}")
-        data = response.read()
+        if response.status != 200:
+            raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status}")
+        data = await response.read()
         ref = await pool.commit(data)
         while ref is None:
             statistics.stalls_writing_to_read_buffer += 1

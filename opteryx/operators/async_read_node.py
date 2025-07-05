@@ -39,13 +39,10 @@ MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
 
 
 async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
-    import httpx
+    import aiohttp
 
     semaphore = asyncio.Semaphore(CONCURRENT_READS)
-    session = httpx.AsyncClient(
-        http2=True,
-        timeout=httpx.Timeout(30.0, connect=10.0),
-        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+    session = aiohttp.ClientSession(
         headers={"Accept-Encoding": "gzip, br"},
     )
 
@@ -62,7 +59,7 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
 
     await asyncio.gather(*tasks)
     reply_queue.put(None)
-    await session.aclose()
+    await session.close()
 
 
 class AsyncReaderNode(ReaderNode):
