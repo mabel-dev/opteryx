@@ -35,7 +35,7 @@ cdef class MemoryPool:
         object lock
         int64_t next_ref_id
 
-    def __cinit__(self, int size, str name="Memory Pool"):
+    def __cinit__(self, int64_t size, str name="Memory Pool"):
         if size <= 0:
             raise ValueError("MemoryPool size must be a positive integer")
 
