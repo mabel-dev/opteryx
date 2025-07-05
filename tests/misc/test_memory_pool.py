@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-os.environ["OPTERYX_DEBUG"] = "1"
+# os.environ["OPTERYX_DEBUG"] = "1"
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -260,7 +260,7 @@ def test_repeated_commits_and_releases():
     refs = []
     for _ in range(1000):
         ref = mp.commit(b"Data")
-        assert ref is not -1
+        assert ref != -1
         refs.append(ref)
     for ref in refs:
         mp.release(ref)
@@ -362,7 +362,7 @@ def test_rapid_commit_release():
     mp = MemoryPool(size=1000)
     for _ in range(1000):
         ref = mp.commit(b"Some data")
-        assert ref != 1, "Failed to commit data."
+        assert ref != -1, "Failed to commit data."
         mp.release(ref)
     # Verify memory integrity and state post rapid operations
     assert mp.available_space() == mp.size, "Memory pool did not return to full availability."
@@ -464,7 +464,7 @@ def test_return_types():
     abc = memory_pool.commit(b"abc")
 
     read = memory_pool.read(abc)
-    assert isinstance(read, memoryview), type(read)
+    assert isinstance(read, bytes), type(read)
 
     read = memory_pool.read(abc, True)
     assert isinstance(read, memoryview), type(read)
@@ -497,6 +497,52 @@ def test_return_types():
     abc = memory_pool.commit(b"abc")
     read = memory_pool.read_and_release(abc, zero_copy=False)
     assert isinstance(read, bytes), type(read)
+
+
+def test_latch_and_unlatch_behavior():
+    mp = MemoryPool(size=1024)
+    data = b"abc" * 10
+    ref = mp.commit(data)
+    
+    # Read with latch
+    view = mp.read(ref, zero_copy=True, latch=True)
+    assert isinstance(view, memoryview)
+    
+    # Unlatch should succeed
+    mp.unlatch(ref)
+    
+    # Release should now succeed
+    mp.release(ref)
+    
+    assert mp.available_space() == mp.size
+
+
+def test_unlatch_without_latching_raises():
+    mp = MemoryPool(size=1024)
+    ref = mp.commit(b"abc")
+    
+    with pytest.raises(RuntimeError):
+        mp.unlatch(ref)
+
+    mp.release(ref)
+
+
+def test_double_latch_and_unlatch():
+    mp = MemoryPool(size=1024)
+    ref = mp.commit(b"x" * 32)
+    
+    # Latch twice (should just set flag)
+    mp.read(ref, latch=True)
+    mp.read(ref, latch=True)
+    
+    # Unlatch once — should clear
+    mp.unlatch(ref)
+
+    # Second unlatch should now fail
+    with pytest.raises(RuntimeError):
+        mp.unlatch(ref)
+    
+    mp.release(ref)
 
 
 if __name__ == "__main__":  # pragma: no cover

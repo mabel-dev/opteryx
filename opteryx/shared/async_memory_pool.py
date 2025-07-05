@@ -22,13 +22,13 @@ class AsyncMemoryPool:
         async with self.lock:
             return self.pool.commit(data)
 
-    async def read(self, ref_id: int) -> bytes:
+    async def read(self, ref_id: int, zero_copy=True, latch=True) -> bytes:
         """
         In an async environment, we much more certain the bytes will be overwritten
         if we don't materialize them so we always create a copy.
         """
         async with self.lock:
-            return self.pool.read(ref_id, zero_copy=False)
+            return self.pool.read(ref_id, zero_copy=zero_copy, latch=latch)
 
     async def release(self, ref_id: int):
         async with self.lock:

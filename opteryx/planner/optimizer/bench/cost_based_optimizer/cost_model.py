@@ -1,3 +1,4 @@
+# pragma: no cover
 from orso.types import OrsoTypes
 
 # Approximate of the time in seconds (3dp) to compare 1 million records

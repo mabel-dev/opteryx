@@ -1,3 +1,4 @@
+# pragma: no cover
 import decimal
 
 import pyarrow

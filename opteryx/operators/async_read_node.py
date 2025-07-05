@@ -157,15 +157,15 @@ class AsyncReaderNode(ReaderNode):
             try:
                 # the sync readers include the decode time as part of the read time
                 try:
-                    # This pool is being used by async processes in another thread, using
-                    # zero copy versions occassionally results in data getting corrupted
-                    # due to a read-after-free type error
+                    # zero copy reduces copy overhead, but we need to latch the segment
+                    # to ensure it is not overwritten while we are reading it.
                     start = time.monotonic_ns()
-                    blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
-                    self.statistics.bytes_read += len(blob_bytes)
+                    blob_memory_view = self.pool.read(reference, zero_copy=True, latch=True)
+                    self.statistics.bytes_read += len(blob_memory_view)
                     decoded = decoder(
-                        blob_bytes, projection=self.columns, selection=self.predicates
+                        blob_memory_view, projection=self.columns, selection=self.predicates
                     )
+                    self.pool.release(reference)  # release also unlatches the segment
                 except Exception as err:
                     from pyarrow import ArrowInvalid
 

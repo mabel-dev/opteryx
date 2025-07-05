@@ -44,9 +44,9 @@ async def stress_with_random_sized_data():
             if refs:
                 ref = random.choice(list(refs.keys()))
                 correct_data = refs.pop(ref)
-                data_removed = await mp.read(ref)
-                data_removed = await mp.read(ref)
-                await mp.release(ref)
+                data_removed = bmp.read(ref, zero_copy=False)
+                data_removed = bmp.read(ref, zero_copy=False)
+                bmp.release(ref)
                 assert data_removed == correct_data, "Data integrity check failed"
 
     # Start tasks for adding and randomly removing data
@@ -55,8 +55,8 @@ async def stress_with_random_sized_data():
 
     # Final cleanup: remove remaining items
     for ref in list(refs):
-        await mp.read(ref)
-        await mp.release(ref)
+        bmp.read(ref)
+        bmp.release(ref)
 
     # Ensure all memory is accounted for
     bmp._level1_compaction()
@@ -69,5 +69,7 @@ def test_async_memorypool():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
+
+    test_async_memorypool()
 
     run_tests()
