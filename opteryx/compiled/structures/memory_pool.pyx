@@ -11,9 +11,8 @@ from libc.string cimport memcpy
 from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, Py_buffer
 from threading import RLock
-from orso.tools import random_int
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, int8_t
 
 import os
 
@@ -22,6 +21,8 @@ cdef int64_t DEBUG_MODE = os.environ.get("OPTERYX_DEBUG", 0) != 0
 cdef struct MemorySegment:
     int64_t start
     int64_t length
+    int8_t latched
+
 
 cdef class MemoryPool:
     cdef:
@@ -32,13 +33,15 @@ cdef class MemoryPool:
         public str name
         public int64_t commits, failed_commits, reads, read_locks, l1_compaction, l2_compaction, releases
         object lock
+        int64_t next_ref_id
 
-    def __cinit__(self, long size, str name="Memory Pool"):
+    def __cinit__(self, int64_t size, str name="Memory Pool"):
         if size <= 0:
             raise ValueError("MemoryPool size must be a positive integer")
 
         self.size = size
         attempt_size = size
+        self.next_ref_id = 1
 
         while attempt_size > 0:
             self.pool = <unsigned char*>malloc(attempt_size * sizeof(unsigned char))
@@ -51,7 +54,7 @@ cdef class MemoryPool:
 
         self.size = attempt_size
         self.name = name
-        self.free_segments = [MemorySegment(0, self.size)]
+        self.free_segments = [MemorySegment(0, self.size, 0)]
         self.used_segments = {}
         self.lock = RLock()
 
@@ -80,6 +83,9 @@ cdef class MemoryPool:
         return -1
 
     def _level1_compaction(self):
+        """
+        Level 1 compaction combines adjacent empty segments only
+        """
         cdef int64_t n
         cdef MemorySegment last_segment, segment
 
@@ -96,7 +102,7 @@ cdef class MemoryPool:
             last_segment = new_free_segments[-1]
             if last_segment.start + last_segment.length == segment.start:
                 # If adjacent, merge by extending the last segment
-                new_free_segments[-1] = MemorySegment(last_segment.start, last_segment.length + segment.length)
+                new_free_segments[-1] = MemorySegment(last_segment.start, last_segment.length + segment.length, 0)
             else:
                 # If not adjacent, just add the segment to the new list
                 new_free_segments.append(segment)
@@ -114,26 +120,25 @@ cdef class MemoryPool:
         used_segments_sorted = sorted(self.used_segments.items(), key=lambda x: x[1]["start"])
 
         for segment_id, segment in used_segments_sorted:
-            if segment["start"] != offset:
+            if segment["latched"] == 0 and segment["start"] != offset:
                 memcpy(self.pool + offset, self.pool + <long>segment["start"], segment["length"])
                 segment["start"] = offset
                 self.used_segments[segment_id] = segment
             offset += segment["length"]
 
         # Update free segment list
-        self.free_segments = [MemorySegment(offset, self.size - offset)]
+        self.free_segments = [MemorySegment(offset, self.size - offset, 0)]
 
     def commit(self, object data) -> int64_t:
         cdef int64_t len_data
         cdef int64_t segment_index
         cdef MemorySegment segment
-        cdef int64_t ref_id = random_int()
+        cdef int64_t ref_id = self.next_ref_id
         cdef Py_buffer view
         cdef char* raw_ptr
 
-        # Resolve collisions
-        while ref_id in self.used_segments:
-            ref_id = random_int()
+        # increment for the next commit
+        self.next_ref_id += 1
 
         if isinstance(data, bytes):
             len_data = len(data)
@@ -147,7 +152,7 @@ cdef class MemoryPool:
                 raise TypeError("Unsupported data type for commit")
 
         if len_data == 0:
-            self.used_segments[ref_id] = MemorySegment(0, 0)
+            self.used_segments[ref_id] = MemorySegment(0, 0, 0)
             self.commits += 1
             return ref_id
 
@@ -170,10 +175,10 @@ cdef class MemoryPool:
             segment = self.free_segments[segment_index]
             self.free_segments.erase(self.free_segments.begin() + segment_index)
             if segment.length > len_data:
-                self.free_segments.push_back(MemorySegment(segment.start + len_data, segment.length - len_data))
+                self.free_segments.push_back(MemorySegment(segment.start + len_data, segment.length - len_data, 0))
 
             memcpy(self.pool + segment.start, raw_ptr, len_data)
-            self.used_segments[ref_id] = MemorySegment(segment.start, len_data)
+            self.used_segments[ref_id] = MemorySegment(segment.start, len_data, 0)
             self.commits += 1
 
         # Release PyBuffer if used
@@ -182,7 +187,7 @@ cdef class MemoryPool:
 
         return ref_id
 
-    cpdef read(self, int64_t ref_id, int zero_copy = 1):
+    cpdef read(self, int64_t ref_id, int zero_copy = 0, int latch = 0):
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
 
@@ -192,6 +197,9 @@ cdef class MemoryPool:
             raise ValueError("Invalid reference ID.")
 
         segment = self.used_segments[ref_id]
+
+        if latch != 0:
+            self.used_segments[ref_id]["latched"] = 1
 
         if zero_copy != 0:
             return memoryview(<char[:segment.length]>(char_ptr + segment.start))
@@ -217,6 +225,19 @@ cdef class MemoryPool:
                 return memoryview(raw_data)  # Create a memoryview from the raw data
             else:
                 return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
+
+    cpdef unlatch(self, int64_t ref_id):
+        """
+        Remove a latch from a segment
+        """
+        cdef MemorySegment segment
+
+        if ref_id not in self.used_segments:
+            raise ValueError(f"Invalid reference ID - {ref_id}.")
+        segment = self.used_segments[ref_id]
+        if segment.latched == 0:
+            raise RuntimeError(f"Segment {ref_id} was not latched.")
+        self.used_segments[ref_id]["latched"] = 0
 
     cpdef release(self, int64_t ref_id):
         with self.lock:

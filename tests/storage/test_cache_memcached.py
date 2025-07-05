@@ -55,7 +55,7 @@ def test_memcached_cache():
         cache.hits > 0
     ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
 
-    assert stats.get("remote_cache_hits", 0) >= stats["blobs_read"], str(stats)
+    assert stats.get("remote_cache_hits", 0) >= stats.get("blobs_read", 0), str(stats)
     assert stats.get("cache_misses", 0) == 0, stats
 
 @skip_if(is_arm() or is_windows() or is_mac())

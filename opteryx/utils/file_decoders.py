@@ -27,6 +27,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import RelationStatistics
 from opteryx.utils.arrow import post_read_projector
+from opteryx.utils.memory_view_stream import MemoryViewStream
 
 
 class ExtentionType(str, Enum):
@@ -91,13 +92,13 @@ def get_decoder(dataset: str) -> Callable:
         raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")
     file_decoder, file_type = KNOWN_EXTENSIONS[ext]
     if file_type != ExtentionType.DATA:  # pragma: no cover
-        raise UnsupportedFileTypeError(f"File is not a data file - {ext}")
+        return do_nothing
     return file_decoder
 
 
 def do_nothing(buffer: Union[memoryview, bytes], **kwargs):  # pragma: no cover
     """for when you need to look like you're doing something"""
-    return False
+    return None
 
 
 def filter_records(filters: Optional[list], table: pyarrow.Table) -> pyarrow.Table:
@@ -171,7 +172,9 @@ def zstd_decoder(
 
     import zstandard
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -199,7 +202,9 @@ def lzma_decoder(
 
     import lzma
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -239,7 +244,9 @@ def parquet_decoder(
         Tuple containing number of rows, number of columns, and the table or schema.
     """
     # Open the parquet file only once
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream = pyarrow.BufferReader(buffer)
     else:
         stream = pyarrow.input_stream(buffer)
@@ -335,7 +342,9 @@ def orc_decoder(
 
     import pyarrow.orc as orc
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -371,6 +380,8 @@ def jsonl_decoder(
 
     from opteryx.third_party.tktech import csimdjson as simdjson
 
+    if isinstance(buffer, memoryview):
+        buffer = MemoryViewStream(buffer)
     if not isinstance(buffer, bytes):
         buffer = buffer.read()
 
@@ -439,7 +450,9 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -511,7 +524,9 @@ def arrow_decoder(
 
     import pyarrow.feather as pf
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -557,7 +572,9 @@ def avro_decoder(
 
         raise MissingDependencyError("fastavro")
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -606,7 +623,9 @@ def ipc_decoder(
 
     from pyarrow import ipc
 
-    if isinstance(buffer, (memoryview, bytes)):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
         stream = buffer

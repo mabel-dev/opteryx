@@ -74,7 +74,7 @@ def async_read_thru_cache(func):
             my_keys.add(key)
 
             # try the buffer pool first
-            payload = buffer_pool.get(key, zero_copy=False)
+            payload = buffer_pool.get(key, zero_copy=True)
             if payload is not None:
                 source = SOURCE_BUFFER_POOL
                 remote_cache.touch(key)  # help the remote cache track LRU
@@ -136,7 +136,10 @@ def async_read_thru_cache(func):
                         evictions_remaining -= 1
                     statistics.cache_evictions += 1
 
-            if source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
+            if payload is None:
+                # If we didn't find the payload, we don't write it to the cache
+                pass
+            elif source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
                 # If we read from the source, it's not in the remote cache
                 remote_cache.set(key, payload)
                 system_statistics.remote_cache_commits += 1
