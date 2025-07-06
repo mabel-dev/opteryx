@@ -83,8 +83,8 @@ class GcpCloudStorageConnector(
     def __init__(self, credentials=None, **kwargs):
         try:
             import requests
-            from requests.adapters import HTTPAdapter
             from google.auth.transport.requests import Request
+            from requests.adapters import HTTPAdapter
         except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(err.name) from err
 
@@ -194,19 +194,16 @@ class GcpCloudStorageConnector(
 
         object_path = urllib.parse.quote(object_path, safe="")
         bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe
-        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o"  # ?prefix={object_path}&maxResults=1000&details=false&fields=items(name),nextPageToken"
-        params = {
-            "prefix": object_path,
-            "maxResults": 1000,
-            "details": False,
-            "fields": "nextPageToken, items(name)",
-        }
+        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name),nextPageToken"
+        params = {}
 
         headers = {"Authorization": f"Bearer {self.access_token}", "Accept-Encoding": "gzip, br"}
 
         blob_names: List[str] = []
         while True:
-            response = self.session.get(url, headers=headers, timeout=30, params=params)
+            response = self.session.get(
+                url, headers=headers, timeout=30, params=params
+            )  # print the URL being requested
             if response.status_code != 200:  # pragma: no cover
                 raise DatasetReadError(f"Error fetching blob list: {response.text}")
 
