@@ -36,14 +36,22 @@ class _BufferPool:
         self._memory_pool = MemoryPool(name="BufferPool", size=MAX_LOCAL_BUFFER_CAPACITY)
         self.size = self._memory_pool.size
 
-    def get(self, key: bytes, zero_copy: bool = True) -> Optional[bytes]:
+    def get(self, key: bytes, zero_copy: bool = True, latch: bool = True) -> Optional[bytes]:
         """
         Retrieve an item from the pool, return None if the item isn't found.
         """
         mp_key = self._lru.get(key)
         if mp_key is not None:
-            return self._memory_pool.read(mp_key, zero_copy=zero_copy)
+            return self._memory_pool.read(mp_key, zero_copy=zero_copy, latch=latch)
         return None
+
+    def unlatch(self, key: bytes):
+        """
+        Unlatch an item in the pool, allowing it to be moved if necessary.
+        """
+        mp_key = self._lru.get(key)
+        if mp_key is not None:
+            self._memory_pool.unlatch(mp_key)
 
     def set(self, key: bytes, value) -> Optional[str]:
         """

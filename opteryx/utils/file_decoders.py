@@ -343,7 +343,7 @@ def orc_decoder(
     import pyarrow.orc as orc
 
     if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
+        stream = pyarrow.BufferReader(buffer.obj)
     elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:

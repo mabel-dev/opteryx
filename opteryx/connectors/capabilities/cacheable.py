@@ -74,7 +74,7 @@ def async_read_thru_cache(func):
             my_keys.add(key)
 
             # try the buffer pool first
-            payload = buffer_pool.get(key, zero_copy=True)
+            payload = buffer_pool.get(key, zero_copy=True, latch=True)
             if payload is not None:
                 source = SOURCE_BUFFER_POOL
                 remote_cache.touch(key)  # help the remote cache track LRU
@@ -86,6 +86,7 @@ def async_read_thru_cache(func):
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
                     statistics.bytes_read += len(payload)
                     system_statistics.cpu_wait_seconds += 0.1
+                buffer_pool.unlatch(key)
                 return read_buffer_ref
 
             # try the remote cache next
