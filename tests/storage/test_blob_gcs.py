@@ -8,74 +8,80 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import GcpCloudStorageConnector
+from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.utils.formatter import format_sql
 
 # Define the test case structure
 TestCase = namedtuple("TestCase", "query expected_rowcount expected_columncount stats")
 
 # Example parameterization data using named tuples for clarity
-BUCKET_NAME = "opteryx"
 test_cases = [
     TestCase(
-        query=f"SELECT * FROM {BUCKET_NAME}.space_missions;",
+        query="SELECT * FROM opteryx.space_missions;",
         expected_rowcount=4630,
         expected_columncount=8,
         stats={},
     ),
     TestCase(
-        query=f"SELECT * FROM {BUCKET_NAME}.space_missions LIMIT 10;",
+        query="SELECT * FROM opteryx.space_missions LIMIT 10;",
         expected_rowcount=10,
         expected_columncount=8,
         stats={},
     ),
     TestCase(
-        query=f"SELECT kepid, kepoi_name FROM {BUCKET_NAME}.exoplanets ORDER BY kepid DESC LIMIT 5;",
+        query="SELECT kepid, kepoi_name FROM opteryx.exoplanets ORDER BY kepid DESC LIMIT 5;",
         expected_rowcount=5,
         expected_columncount=2,
         stats={},
     ),
     TestCase(
-        query=f"SELECT COUNT(*) AS Missions, Company FROM {BUCKET_NAME}.space_missions GROUP BY Company;",
+        query="SELECT COUNT(*) AS Missions, Company FROM opteryx.space_missions GROUP BY Company;",
         expected_rowcount=62,
         expected_columncount=2,
         stats={},
     ),
     TestCase(
-        query=f"SELECT Company FROM {BUCKET_NAME}.space_missions WHERE Rocket_Status = 'Active';",
+        query="SELECT Company FROM opteryx.space_missions WHERE Rocket_Status = 'Active';",
         expected_rowcount=1010,
         expected_columncount=1,
         stats={"columns_read": 1, "rows_read": 1010},
     ),
     TestCase(
-        query=f"SELECT name, kepler_name FROM {BUCKET_NAME}.exoplanets AS exoplanets INNER JOIN $planets AS planets ON rowid = id",
+        query="SELECT name, kepler_name FROM opteryx.exoplanets AS exoplanets INNER JOIN $planets AS planets ON rowid = id",
         expected_rowcount=9,
         expected_columncount=2,
         stats={},
     ),
     TestCase(
-        query=f"SELECT name, kepler_name FROM {BUCKET_NAME}.exoplanets AS exoplanets INNER JOIN $planets AS planets ON rowid = id LIMIT 5",
+        query="SELECT name, kepler_name FROM opteryx.exoplanets AS exoplanets INNER JOIN $planets AS planets ON rowid = id LIMIT 5",
         expected_rowcount=5,
         expected_columncount=2,
         stats={"columns_read": 4},
     ),
     TestCase(
-        query=f"SELECT COUNT(*) FROM {BUCKET_NAME}.many",
+        query="SELECT COUNT(*) FROM opteryx.many",
         expected_rowcount=1,
         expected_columncount=1,
         stats={"blobs_read": 1018, "rows_read": 9162}
     ),
     TestCase(
-        query=f"SELECT kepler_name FROM {BUCKET_NAME}.exoplanets AS exoplanets WHERE kepler_name = 'non-existant' ORDER BY kepler_name LIMIT 5",
+        query="SELECT kepler_name FROM opteryx.exoplanets AS exoplanets WHERE kepler_name = 'non-existant' ORDER BY kepler_name LIMIT 5",
         expected_rowcount=0,
+        expected_columncount=1,
+        stats={"columns_read": 1},
+    ),
+    TestCase(
+        query="SELECT count(distinct publishedDate) FROM mabel_data.RAW.NVD.CVE_LIST FOR LAST 3 DAYS",
+        expected_rowcount=1,
         expected_columncount=1,
         stats={"columns_read": 1},
     ),
 ]
 
-
 @pytest.mark.parametrize("test_case", test_cases)
 def test_gcs_storage(test_case):
-    opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
+    opteryx.register_store("opteryx", GcpCloudStorageConnector)
+    opteryx.register_store("mabel_data", GcpCloudStorageConnector, partition_scheme=MabelPartitionScheme)
 
     conn = opteryx.connect()
     cur = conn.cursor()
