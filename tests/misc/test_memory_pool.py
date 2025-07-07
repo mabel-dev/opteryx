@@ -179,23 +179,23 @@ def test_zero_copy_vs_copy_reads_and_release():
     # Reading segments with and without zero-copy, alternating read and read_and_release
     # read no zero copy, release zero copy
     r4_read_no_memcopy = bytes(mp.read(ref4, False))
-    r4_release_memcopy = bytes(mp.read_and_release(ref4, True))
+    r4_release_memcopy = bytes(mp.read_and_release(ref4))
 
     # read zero copy, release no zero copy
     r5_read_memcopy = bytes(mp.read(ref5, True))
-    r5_release_no_memcopy = bytes(mp.read_and_release(ref5, False))
+    r5_release_no_memcopy = bytes(mp.read_and_release(ref5))
 
     # read zero copy, release zero copy
     r6_read_memcopy = bytes(mp.read(ref6, True))
-    r6_release_memcopy = bytes(mp.read_and_release(ref6, True))
+    r6_release_memcopy = bytes(mp.read_and_release(ref6))
 
     # read no zero copy, release no zero copy
     r7_read_no_memcopy = bytes(mp.read(ref7, False))
-    r7_release_no_memcopy = bytes(mp.read_and_release(ref7, False))
+    r7_release_no_memcopy = bytes(mp.read_and_release(ref7))
 
     # read zero copy, release zero copy
     r8_read_memcopy = bytes(mp.read(ref8, True))
-    r8_release_memcopy = bytes(mp.read_and_release(ref8, True))
+    r8_release_memcopy = bytes(mp.read_and_release(ref8))
 
     assert (
         r4_read_no_memcopy == r4_release_memcopy == b"XYZ"
@@ -298,14 +298,14 @@ def test_stress_with_random_sized_data():
             selected = random.sample(list(refs), random.randint(1, len(refs) // 10))
             for ref in selected:
                 refs.discard(ref)
-                data = mp.read_and_release(ref, False)
+                data = mp.read_and_release(ref)
         #                saved_bytes -= len(data)
         #                used_counter -= 1
 
         #        assert len(mp.used_segments) == used_counter, f"\n{len(mp.used_segments)} != {used_counter}\n{saved_bytes}"
         #        assert saved_bytes + mp.available_space() == mp.size, _
         for ref in list(refs):
-            data = mp.read_and_release(ref, False)
+            data = mp.read_and_release(ref)
             #            saved_bytes -= len(data)
             #            used_counter -= 1
             refs.discard(ref)
@@ -480,22 +480,6 @@ def test_return_types():
 
     abc = memory_pool.commit(b"abc")
     read = memory_pool.read_and_release(abc)
-    assert isinstance(read, memoryview), type(read)
-
-    abc = memory_pool.commit(b"abc")
-    read = memory_pool.read_and_release(abc, True)
-    assert isinstance(read, memoryview), type(read)
-
-    abc = memory_pool.commit(b"abc")
-    read = memory_pool.read_and_release(abc, False)
-    assert isinstance(read, bytes), type(read)
-
-    abc = memory_pool.commit(b"abc")
-    read = memory_pool.read_and_release(abc, zero_copy=True)
-    assert isinstance(read, memoryview), type(read)
-
-    abc = memory_pool.commit(b"abc")
-    read = memory_pool.read_and_release(abc, zero_copy=False)
     assert isinstance(read, bytes), type(read)
 
 

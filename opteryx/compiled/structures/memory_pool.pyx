@@ -12,7 +12,7 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, Py_buffer
 from threading import RLock
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t, int8_t
+from libc.stdint cimport int64_t, uint8_t, int8_t
 
 import os
 
@@ -74,6 +74,9 @@ cdef class MemoryPool:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
     cpdef int64_t _find_free_segment(self, int64_t size):
+        """
+        Locate the first free segement larger than 'size'
+        """
         cdef int64_t i
         cdef MemorySegment segment
         for i in range(len(self.free_segments)):
@@ -111,7 +114,12 @@ cdef class MemoryPool:
 
     def _level2_compaction(self):
         """
-        Moves all used memory to the beginning and all free memory to the end.
+        Moves used memory to the beginning and free memory to the end.
+
+        This is our most aggressive compaction.
+
+        Note: This does not move latched segments, so we may still have fragmentation
+        after this process.
         """
         cdef long offset = 0
         self.l2_compaction += 1
@@ -188,6 +196,10 @@ cdef class MemoryPool:
         return ref_id
 
     cpdef read(self, int64_t ref_id, int zero_copy = 0, int latch = 0):
+        """
+        When we read we can perform a zero copy read, in multithread/
+        async uses, we use latches to mark a segment as "in-use"
+        """
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
 
@@ -206,10 +218,12 @@ cdef class MemoryPool:
 
         return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
-    cpdef read_and_release(self, int64_t ref_id, int zero_copy = 1):
+    cpdef read_and_release(self, int64_t ref_id):
+        """
+        Read and release (free) a segment, we can't zero copy and release
+        """
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
-        cdef char[:] raw_data
 
         with self.lock:
             self.reads += 1
@@ -220,11 +234,7 @@ cdef class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             self.free_segments.push_back(segment)
 
-            if zero_copy != 0:
-                raw_data = <char[:segment.length]> (char_ptr + segment.start)
-                return memoryview(raw_data)  # Create a memoryview from the raw data
-            else:
-                return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
+            return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
     cpdef unlatch(self, int64_t ref_id):
         """
@@ -240,6 +250,9 @@ cdef class MemoryPool:
         self.used_segments[ref_id]["latched"] = 0
 
     cpdef release(self, int64_t ref_id):
+        """
+        Free a segment
+        """
         with self.lock:
             self.releases += 1
 
