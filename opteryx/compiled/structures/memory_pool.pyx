@@ -144,7 +144,6 @@ cdef class MemoryPool:
         cdef int64_t ref_id = self.next_ref_id
         cdef Py_buffer view
         cdef char* raw_ptr
-        cdef uint8_t[::1] mv
 
         # increment for the next commit
         self.next_ref_id += 1
@@ -152,13 +151,6 @@ cdef class MemoryPool:
         if isinstance(data, bytes):
             len_data = len(data)
             raw_ptr = PyBytes_AsString(data)
-        elif isinstance(data, memoryview):
-            if not data.contiguous:
-                raise ValueError("Data must be contiguous")
-
-            mv = data
-            raw_ptr = <char*> &mv[0]
-            len_data = mv.shape[0]
         else:
             # Use PyBuffer API to support memoryview, numpy, or PyArrow arrays
             if PyObject_GetBuffer(data, &view, PyBUF_SIMPLE) == 0:
