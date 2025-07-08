@@ -12,7 +12,7 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, Py_buffer
 from threading import RLock
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t, uint8_t, int8_t
+from libc.stdint cimport int64_t, int8_t
 
 import os
 
@@ -73,7 +73,12 @@ cdef class MemoryPool:
         if DEBUG_MODE:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
-    cpdef int64_t _find_free_segment(self, int64_t size):
+    cdef inline void _set_latch(self, int64_t ref_id, int8_t state):
+        cdef MemorySegment segment = self.used_segments[ref_id]
+        segment.latched = state
+        self.used_segments[ref_id] = segment
+
+    cdef inline int64_t _find_free_segment(self, int64_t size):
         """
         Locate the first free segement larger than 'size'
         """
@@ -128,14 +133,29 @@ cdef class MemoryPool:
         used_segments_sorted = sorted(self.used_segments.items(), key=lambda x: x[1]["start"])
 
         for segment_id, segment in used_segments_sorted:
-            if segment["latched"] == 0 and segment["start"] != offset:
-                memcpy(self.pool + offset, self.pool + <long>segment["start"], segment["length"])
-                segment["start"] = offset
-                self.used_segments[segment_id] = segment
-            offset += segment["length"]
+            if segment["latched"] == 0:
+                if segment["start"] != offset:
+                    memcpy(self.pool + offset, self.pool + <long>segment["start"], segment["length"])
+                    segment["start"] = offset
+                    self.used_segments[segment_id] = segment
+                offset += segment["length"]
+            else:
+                # Latched segment is not moved, skip it,
+                # but make sure the offset accounts for it
+                offset = max(offset, segment["start"] + segment["length"])
 
-        # Update free segment list
-        self.free_segments = [MemorySegment(offset, self.size - offset, 0)]
+        # Now find gaps between the compacted list (which includes latched)
+        free_segments = []
+        current = 0
+        for segment_id, segment in sorted(self.used_segments.items(), key=lambda x: x[1]["start"]):
+            if segment["start"] > current:
+                free_segments.append(MemorySegment(current, segment["start"] - current, 0))
+            current = segment["start"] + segment["length"]
+
+        if current < self.size:
+            free_segments.append(MemorySegment(current, self.size - current, 0))
+
+        self.free_segments = free_segments
 
     def commit(self, object data) -> int64_t:
         cdef int64_t len_data
@@ -178,7 +198,7 @@ cdef class MemoryPool:
                     self._level2_compaction()
                     segment_index = self._find_free_segment(len_data)
                     if segment_index == -1:
-                        raise MemoryError("Unable to create segment in bufferpool")
+                        return -1
 
             segment = self.free_segments[segment_index]
             self.free_segments.erase(self.free_segments.begin() + segment_index)
@@ -211,7 +231,7 @@ cdef class MemoryPool:
         segment = self.used_segments[ref_id]
 
         if latch != 0:
-            self.used_segments[ref_id]["latched"] = 1
+            self._set_latch(ref_id, 1)
 
         if zero_copy != 0:
             return memoryview(<char[:segment.length]>(char_ptr + segment.start))
@@ -247,7 +267,7 @@ cdef class MemoryPool:
         segment = self.used_segments[ref_id]
         if segment.latched == 0:
             raise RuntimeError(f"Segment {ref_id} was not latched.")
-        self.used_segments[ref_id]["latched"] = 0
+        self._set_latch(ref_id, 0)
 
     cpdef release(self, int64_t ref_id):
         """

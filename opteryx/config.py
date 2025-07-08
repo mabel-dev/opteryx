@@ -40,6 +40,16 @@ def memory_allocation_calculation(allocation: Union[float, int]) -> int:
         raise ValueError("Invalid memory allocation value. Must be a positive number.")
 
 
+def system_gigabytes() -> int:
+    """
+    Get the total system memory in gigabytes.
+
+    Returns:
+        int: Total system memory in gigabytes.
+    """
+    return psutil.virtual_memory().total // (1024 * 1024 * 1024)
+
+
 def parse_yaml(yaml_str: str) -> dict:
     """
     Parse a simple YAML string into a dictionary.
@@ -159,7 +169,7 @@ MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LO
 MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
 """Read buffer pool size in either bytes or fraction of system memory."""
 
-CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
+CONCURRENT_READS: int = int(get("CONCURRENT_READS", max(system_gigabytes(), 2)))
 """Number of read workers per data source."""
 
 CONCURRENT_WORKERS: int = int(get("CONCURRENT_WORKERS", 2))

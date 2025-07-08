@@ -1,3 +1,29 @@
+"""
+Memory Pool Tests for Opteryx
+
+This module contains rigorous and stress-oriented unit tests for the MemoryPool
+component used in Opteryx. The MemoryPool is a manually managed, fixed-size memory
+buffer that supports in-place allocation, zero-copy reads, latching (locks) for
+concurrency control, and multiple compaction strategies.
+
+Tests cover:
+- Basic allocation and release functionality
+- Latching behavior and its protection against data movement
+- Data integrity guarantees across compaction cycles
+- Handling of fragmentation and overlapping memory regions
+- Stress scenarios with randomized operations and repeated compaction
+
+Because the MemoryPool is a foundational component, these tests are intentionally
+aggressive and exhaustive. They are designed to surface off-by-one errors,
+overlapping segment bugs, and state leakage across operations.
+
+If any test in this module fails, memory safety and correctness guarantees in Opteryx
+may be compromised.
+
+These tests assume a single-threaded environment, but simulate complex memory
+access patterns to mimic concurrent behavior where relevant.
+"""
+
 import os
 import random
 import sys
@@ -528,8 +554,378 @@ def test_double_latch_and_unlatch():
     
     mp.release(ref)
 
+def test_latching_sets_flag():
+    pool = MemoryPool(1000)
+    ref = pool.commit(b"test")
+    assert pool.used_segments[ref]["latched"] == 0
+
+    pool.read(ref, latch=1)
+    assert pool.used_segments[ref]["latched"] == 1
+
+    pool.unlatch(ref)
+    assert pool.used_segments[ref]["latched"] == 0
+
+
+def test_unlatch_without_latch_raises():
+    pool = MemoryPool(1000)
+    ref = pool.commit(b"hello")
+
+    with pytest.raises(RuntimeError):
+        pool.unlatch(ref)
+
+
+def test_double_unlatch_raises():
+    pool = MemoryPool(1000)
+    ref = pool.commit(b"data")
+    pool.read(ref, latch=1)
+    pool.unlatch(ref)
+
+    with pytest.raises(RuntimeError):
+        pool.unlatch(ref)
+
+
+def test_release_latched_segment_then_unlatch_is_invalid():
+    pool = MemoryPool(1000)
+    ref = pool.commit(b"segment")
+    pool.read(ref, latch=1)
+    pool.release(ref)
+
+    # Should not be able to unlatch a released segment
+    with pytest.raises(ValueError):
+        pool.unlatch(ref)
+
+
+def test_compaction_skips_latched_segment():
+    pool = MemoryPool(100)
+    ref1 = pool.commit(b"A" * 10)
+    ref2 = pool.commit(b"B" * 10)
+    ref3 = pool.commit(b"C" * 10)
+
+    # Latch ref2 so it can't be moved
+    pool.read(ref2, latch=1)
+
+    pool.release(ref1)
+    pool.release(ref3)
+    assert pool.used_segments[ref2]["latched"] == 1
+
+    # This should leave ref2 where it is
+    pool._level2_compaction()
+
+    # Sanity: ref2 is still valid and still latched
+    data = pool.read(ref2)
+    assert data == b"B" * 10
+    assert pool.used_segments[ref2]["latched"] == 1
+
+
+def test_aggressive_compaction_respects_latches():
+    pool = MemoryPool(1000)
+    refs = {}
+    data_map = {}
+    latched_refs = set()
+    released_refs = set()
+
+    # Allocate up to ~100 segments of random sizes (5–20 bytes)
+    for i in range(100):
+        size = random.randint(5, 20)
+        data = bytes([i % 256]) * size
+        ref = pool.commit(data)
+        if ref == -1:
+            break  # pool is full
+        refs[ref] = size
+        data_map[ref] = data
+
+    all_refs = list(refs.keys())
+
+    # Randomly latch about 1/3 of them
+    latched_refs = set(random.sample(all_refs, k=len(all_refs) // 3))
+    for ref in latched_refs:
+        pool.read(ref, latch=1)
+
+    # Randomly release another 1/3 (non-latched only)
+    unlatching_candidates = list(set(all_refs) - latched_refs)
+    released_refs = set(random.sample(unlatching_candidates, k=len(unlatching_candidates) // 2))
+    for ref in released_refs:
+        pool.release(ref)
+
+    # Record locations of latched segments
+    pre_compaction_positions = {
+        ref: pool.used_segments[ref]["start"] for ref in latched_refs if ref in pool.used_segments
+    }
+
+    # pre-check positions and data for latched segments
+    for ref in latched_refs:
+        assert ref in pool.used_segments, f"Latched ref {ref} was removed!"
+        seg = pool.used_segments[ref]
+        assert seg["latched"] == 1, f"Latched ref {ref} is no longer latched!"
+        assert seg["start"] == pre_compaction_positions[ref], (
+            f"Latched ref {ref} moved from {pre_compaction_positions[ref]} to {seg['start']}"
+        )
+        assert pool.read(ref) == data_map[ref], f"Data corruption on latched ref {ref}! {pool.read(ref)} != {data_map[ref]}"
+
+    # Run compaction
+    pool._level2_compaction()
+
+    # Re-check positions and data for latched segments
+    for ref in latched_refs:
+        assert ref in pool.used_segments, f"Latched ref {ref} was removed!"
+        seg = pool.used_segments[ref]
+        assert seg["latched"] == 1, f"Latched ref {ref} is no longer latched!"
+        assert seg["start"] == pre_compaction_positions[ref], (
+            f"Latched ref {ref} moved from {pre_compaction_positions[ref]} to {seg['start']}"
+        )
+        assert pool.read(ref) == data_map[ref], f"Data corruption on latched ref {ref}! {pool.read(ref)} != {data_map[ref]}"
+
+    # Ensure free segments do not overlap with any latched segments
+    for free_seg in pool.free_segments:
+        for ref in latched_refs:
+            used = pool.used_segments[ref]
+            f_start = free_seg["start"]
+            f_end = f_start + free_seg["length"]
+            u_start = used["start"]
+            u_end = u_start + used["length"]
+
+            assert f_end <= u_start or f_start >= u_end, (
+                f"Free segment ({f_start}-{f_end}) overlaps latched segment {ref} "
+                f"({u_start}-{u_end})"
+            )
+
+
+def test_latch_blocks_compaction_and_unlatch_allows_it():
+    pool = MemoryPool(100)
+    ref1 = pool.commit(b"A" * 10)
+    ref2 = pool.commit(b"B" * 10)
+    pool.read(ref1, latch=1)
+
+    pool.release(ref2)
+
+    old_start = pool.used_segments[ref1]["start"]
+    pool._level2_compaction()
+
+    # Should not move ref1
+    assert pool.used_segments[ref1]["start"] == old_start
+
+    # Now unlatch and compact again
+    pool.unlatch(ref1)
+    pool._level2_compaction()
+
+    # Should now move ref1 to 0
+    assert pool.used_segments[ref1]["start"] == 0
+
+
+def test_zero_copy_latch_flag():
+    pool = MemoryPool(100)
+    ref = pool.commit(b"quick brown fox")
+    mv = pool.read(ref, latch=1, zero_copy=1)
+    assert isinstance(mv, memoryview)
+    assert pool.used_segments[ref]["latched"] == 1
+
+
+def test_multiple_commits_and_random_latch_release():
+    pool = MemoryPool(1000)
+    refs = []
+
+    for i in range(10):
+        data = bytes([i]) * 50
+        ref = pool.commit(data)
+        refs.append(ref)
+
+    # Latch even refs
+    for ref in refs:
+        if ref % 2 == 0:
+            pool.read(ref, latch=1)
+
+    # Unlatch them again
+    for ref in refs:
+        if ref % 2 == 0:
+            pool.unlatch(ref)
+
+    # All segments should now be unlatched
+    assert all(pool.used_segments[ref]["latched"] == 0 for ref in refs if ref in pool.used_segments)
+
+
+def test_multiple_latches_block_compaction_selectively():
+    pool = MemoryPool(200)
+
+    refs = [
+        pool.commit(b"A" * 10),  # ref0
+        pool.commit(b"B" * 10),  # ref1
+        pool.commit(b"C" * 10),  # ref2
+        pool.commit(b"D" * 10),  # ref3
+        pool.commit(b"E" * 10),  # ref4
+    ]
+
+    pool.read(refs[1], latch=1)  # latch ref1
+    pool.read(refs[3], latch=1)  # latch ref3
+
+    pool.release(refs[0])
+    pool.release(refs[2])
+    pool.release(refs[4])
+
+    starts_before = {r: pool.used_segments[r]["start"] for r in refs if r in pool.used_segments}
+
+    pool._level2_compaction()
+
+    # latched refs should not move
+    assert pool.used_segments[refs[1]]["start"] == starts_before[refs[1]]
+    assert pool.used_segments[refs[3]]["start"] == starts_before[refs[3]]
+
+    # everything else should be gone or moved (released)
+    assert refs[0] not in pool.used_segments
+    assert refs[2] not in pool.used_segments
+    assert refs[4] not in pool.used_segments
+
+
+def test_latch_causes_persistent_fragmentation():
+    pool = MemoryPool(100)
+
+    ref1 = pool.commit(b"A" * 30)
+    ref2 = pool.commit(b"B" * 30)
+    ref3 = pool.commit(b"C" * 30)
+
+    pool.read(ref2, latch=1)
+    pool.release(ref1)
+    pool.release(ref3)
+
+    # Now, available space is 60 (30 + 30 + 10), but fragmented around latched ref2
+    assert pool.available_space() == 70
+    pool._level2_compaction()
+    # The fragmentation remains because ref2 is latched
+    # So no new allocation of 60 should not be possible
+    ref4 = pool.commit(b"X" * 60)
+    assert ref4 == -1  # Should fail to commit due to fragmentation
+
+    # Unlatch ref2 and try again
+    pool.unlatch(ref2)
+    pool._level2_compaction()
+    ref4 = pool.commit(b"X" * 60)
+    assert ref4 != -1, "Failed to allocate after unlatching and compaction"
+
+
+def test_staggered_latch_unlatch_compaction():
+    pool = MemoryPool(300)
+    refs = [pool.commit(bytes([i]) * 30) for i in range(6)]  # Fill the pool with 6 segments
+
+    # Latch alternating segments
+    for i, ref in enumerate(refs):
+        if i % 2 == 0:
+            pool.read(ref, latch=1)
+
+    # Release the others
+    for i, ref in enumerate(refs):
+        if i % 2 == 1:
+            pool.release(ref)
+
+    # Compaction shouldn't move latched segments
+    starts = {ref: pool.used_segments[ref]["start"] for ref in refs if ref in pool.used_segments}
+    pool._level2_compaction()
+
+    for ref in refs:
+        if ref in pool.used_segments and pool.used_segments[ref]["latched"] == 1:
+            assert pool.used_segments[ref]["start"] == starts[ref]
+
+    # Now unlatch all
+    for ref in refs:
+        if ref in pool.used_segments and pool.used_segments[ref]["latched"] == 1:
+            pool.unlatch(ref)
+
+    # Compaction should now move everything to front
+    pool._level2_compaction()
+    sorted_refs = sorted((r for r in refs if r in pool.used_segments), key=lambda r: pool.used_segments[r]["start"])
+    for i, ref in enumerate(sorted_refs):
+        assert pool.used_segments[ref]["start"] == i * 30
+
+
+def test_repeated_latch_compact_unlatch_cycles():
+    pool = MemoryPool(1000)
+    ref_data = {}
+    latched_refs = set()
+    released_refs = set()
+    ref_start_positions = {}
+
+    def validate_integrity():
+        # Check latched segment data is intact and position unchanged
+        for ref in latched_refs:
+            assert ref in pool.used_segments
+            seg = pool.used_segments[ref]
+            assert seg["latched"] == 1
+            assert seg["start"] == ref_start_positions[ref]
+            assert pool.read(ref) == ref_data[ref]
+
+        # Ensure free segments don’t overlap with latched
+        for fseg in pool.free_segments:
+            f_start = fseg["start"]
+            f_end = f_start + fseg["length"]
+            for ref in latched_refs:
+                if ref not in pool.used_segments:
+                    continue
+                useg = pool.used_segments[ref]
+                u_start = useg["start"]
+                u_end = u_start + useg["length"]
+                assert f_end <= u_start or f_start >= u_end, (
+                    f"Free {f_start}-{f_end} overlaps with latched {u_start}-{u_end}"
+                )
+
+    for phase in range(5):  # multiple compaction phases
+        # Phase 1: fill up with random segments
+        for _ in range(100):
+            size = random.randint(5, 20)
+            data = bytes([random.randint(0, 255)]) * size
+            ref = pool.commit(data)
+            if ref == -1:
+                break
+            ref_data[ref] = data
+
+        all_refs = [r for r in ref_data if r not in released_refs]
+
+        # Phase 2: randomly latch a third
+        new_latched = set(random.sample(all_refs, k=len(all_refs) // 3))
+        for ref in new_latched:
+            if ref not in latched_refs:
+                pool.read(ref, latch=1)
+                ref_start_positions[ref] = pool.used_segments[ref]["start"]
+        latched_refs.update(new_latched)
+
+        # Phase 3: randomly release a third of non-latched
+        candidates = list(set(all_refs) - latched_refs)
+        to_release = set(random.sample(candidates, k=len(candidates) // 3))
+        for ref in to_release:
+            pool.release(ref)
+            released_refs.add(ref)
+
+        # Phase 4: compact while some are latched
+        pool._level2_compaction()
+        validate_integrity()
+
+        # Phase 5: write more data to force fragmentation
+        for _ in range(25):
+            size = random.randint(5, 30)
+            data = bytes([random.randint(0, 255)]) * size
+            ref = pool.commit(data)
+            if ref != -1:
+                ref_data[ref] = data
+
+        # Phase 6: unlatch a few
+        if latched_refs:
+            to_unlatch = set(random.sample(list(latched_refs), k=max(1, len(latched_refs) // 4)))
+            for ref in to_unlatch:
+                pool.unlatch(ref)
+                latched_refs.remove(ref)
+
+        # Phase 7: final compaction
+        pool._level2_compaction()
+        validate_integrity()
+
+    # Sanity check: all remaining latched data is intact
+    for ref in latched_refs:
+        assert ref in pool.used_segments
+        assert pool.used_segments[ref]["latched"] == 1
+        assert pool.read(ref) == ref_data[ref]
+
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
+
+    test_aggressive_compaction_respects_latches()
+
 
     run_tests()
