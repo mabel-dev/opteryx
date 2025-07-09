@@ -366,7 +366,7 @@ class BinderVisitor:
         context.schemas["$derived"] = derived.schema()
 
         seen = set()
-        needs_qualifier = any(
+        needs_qualifier = len(context.schemas) > 2 or any(
             column.name in seen or seen.add(column.name) is not None  # type: ignore
             for schema in context.schemas.values()
             for column in schema.columns
@@ -415,6 +415,15 @@ class BinderVisitor:
         for column in (col for col in node.columns if col.node_type != NodeType.WILDCARD):
             new_col, _ = inner_binder(column, context)
             identities.append(new_col.schema_column.identity)
+
+        for select_column in (
+            col
+            for col in node.columns
+            if col.node_type == NodeType.WILDCARD and col.value is not None
+        ):
+            for column in context.schemas[select_column.value[0]].columns:
+                # new_col, _ = inner_binder(column, context)
+                identities.append(column.identity)
 
         columns = []
         for qualifier, schema in context.schemas.items():
