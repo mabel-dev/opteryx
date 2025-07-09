@@ -280,10 +280,19 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
 
     # groups
     _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
-    if len(_projection) > 1 and any(p.node_type == NodeType.WILDCARD for p in _projection):
+    if len(_projection) > 1 and any(
+        p.node_type == NodeType.WILDCARD for p in _projection if p.value is None
+    ):
         from opteryx.exceptions import SqlError
 
         raise SqlError("SELECT * cannot coexist with additional columns.")
+
+    if len(_projection) > 1 and any(p.node_type == NodeType.WILDCARD for p in _projection[1:]):
+        from opteryx.exceptions import SqlError
+
+        raise SqlError(
+            "Qualified wild cards (`table.*`) must be the first column when used with additional columns."
+        )
 
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _aggregates, _projection = decompose_aggregates(_aggregates, _projection)

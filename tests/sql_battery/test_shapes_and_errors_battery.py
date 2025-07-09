@@ -1137,6 +1137,11 @@ id > /* 0 */ 1
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, UnsupportedSyntaxError),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 177, 20, UnsupportedSyntaxError),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.name = P_2.name AND P_1.mass = P_2.mass", 9, 20, None),
+        ("SELECT $planets.*, $satellites.planetId FROM $planets INNER JOIN $satellites USING (id)", 9, 21, None),
+        ("SELECT $planets.*, $satellites.planetId FROM $planets INNER JOIN $satellites USING (id) ORDER BY $planets.id", 9, 21, None),
+        ("SELECT $planets.*, $satellites.planetId FROM $planets INNER JOIN $satellites USING (id) WHERE $planets.name LIKE '%r%'", 6, 21, None),
+        ("SELECT $planets.id, $satellites.* FROM $planets INNER JOIN $satellites USING (id)", 6, 21, SqlError),
+        ("SELECT $planets.*, $satellites.planetId FROM $planets INNER JOIN $satellites USING (id) WHERE $satellites.planetId = 4", 2, 21, None),
 
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
