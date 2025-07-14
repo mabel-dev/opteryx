@@ -19,7 +19,6 @@ import time
 from typing import Generator
 
 import pyarrow
-import pyarrow.parquet
 from orso.schema import convert_orso_schema_to_arrow_schema
 
 from opteryx import EOS
@@ -36,6 +35,7 @@ from .read_node import struct_to_jsonb
 
 CONCURRENT_READS = config.CONCURRENT_READS
 MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
+ZERO_COPY = config.features.enable_zero_copy_buffer_reads
 
 
 async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
@@ -157,11 +157,16 @@ class AsyncReaderNode(ReaderNode):
                     # zero copy reduces copy overhead, but we need to latch the segment
                     # to ensure it is not overwritten while we are reading it.
                     start = time.monotonic_ns()
-                    blob_memory_view = self.pool.read(reference, zero_copy=True, latch=True)
+                    blob_memory_view = self.pool.read(
+                        reference, zero_copy=ZERO_COPY, latch=ZERO_COPY
+                    )
                     self.statistics.bytes_read += len(blob_memory_view)
                     decoded = decoder(
                         blob_memory_view, projection=self.columns, selection=self.predicates
                     )
+                    if ZERO_COPY:
+                        # if we used zero copy, we need to release the latch
+                        self.pool.release(reference)
                     self.pool.release(reference)  # release also unlatches the segment
                 except Exception as err:
                     from pyarrow import ArrowInvalid
