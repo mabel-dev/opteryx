@@ -69,6 +69,17 @@ def test_skip_on_error():
     cache._consecutive_failures = 10
     assert cache.get(b"key") is None
 
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_redis_delete():
+    from opteryx.managers.cache import RedisCache
+
+    cache = RedisCache()
+    cache.delete(b"key")
+    cache.set(b"key", b"value")
+    assert cache.get(b"key") == b"value"
+    cache.delete(b"key")
+    assert cache.get(b"key") is None
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

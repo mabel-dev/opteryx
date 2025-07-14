@@ -32,6 +32,31 @@ class Cacheable:
     def read_blob(self, *, blob_name, **kwargs):
         pass
 
+    def purge_blob(self, blob_name: str):
+        """
+        Purge the blob from the cache.
+
+        This is used to remove blobs that are invalid or no longer needed.
+        """
+        from opteryx import get_cache_manager
+        from opteryx.shared import BufferPool
+
+        key = hex(hash_bytes(blob_name.encode())).encode()
+
+        try:
+            # Purge from the local buffer pool
+            buffer_pool = BufferPool()
+            buffer_pool.delete(key)
+
+            # Purge from the remote cache
+            cache_manager = get_cache_manager()
+            remote_cache = cache_manager.cache_backend
+            if remote_cache:
+                remote_cache.delete(key)
+        finally:
+            # best endeavours to remove the blob from the cache
+            return None
+
 
 def async_read_thru_cache(func):
     """

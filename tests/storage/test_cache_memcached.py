@@ -76,10 +76,19 @@ def test_memcache_stand_alone():
         if result:
             assert result == load, f"{result} != {load}"
 
+def test_memcache_delete():
+    cache = MemcachedCache()
+    cache.delete(b"key")
+    cache.set(b"key", b"value")
+    assert cache.get(b"key") == b"value"
+    cache.delete(b"key")
+    assert cache.get(b"key") is None
+
 
 def set_in_cache(cache: MemcachedCache, key: bytes, value: bytes):
     """Function to set a value in the cache."""
     cache.set(key, value)
+
 
 def get_from_cache(cache: MemcachedCache, key: bytes):
     """Function to get a value from the cache."""

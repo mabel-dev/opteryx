@@ -2,10 +2,11 @@
 # you may not use this file except in compliance with the License.
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
+
 """
 This is a Base class for KV Value Storage adapter.
 
-This is used by the metadata store and in-memory buffer cache.
+This is used by the in-memory buffer cache.
 """
 
 from typing import Iterable
@@ -35,11 +36,17 @@ class BaseKeyValueStore:
 
     def contains(self, keys: Iterable) -> Iterable:
         """
-        Overwrite this method to return a list of itmes which are in the cache from
+        Overwrite this method to return a list of items which are in the cache from
         a given list
         """
         # default to returning no matches
         return []
+
+    def delete(self, key: bytes) -> None:
+        """
+        Overwrite this method to delete a value from the cache.
+        """
+        pass
 
     def touch(self, key: bytes):
         return None
