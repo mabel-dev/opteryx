@@ -101,8 +101,9 @@ cdef class MemoryPool:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
     cdef inline void _set_latch(self, int64_t ref_id, int8_t state):
+        cdef MemorySegment segment
         with self.lock:
-            cdef MemorySegment segment = self.used_segments[ref_id]
+            segment = self.used_segments[ref_id]
             segment.latched = state
             self.used_segments[ref_id] = segment
 
