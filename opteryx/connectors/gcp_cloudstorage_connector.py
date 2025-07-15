@@ -31,9 +31,6 @@ from opteryx.utils.file_decoders import get_decoder
 OS_SEP = os.sep
 _storage_client = None
 
-# disable httpx logging to avoid cluttering the logs
-logging.getLogger("httpx").setLevel(logging.ERROR)
-
 
 def get_storage_credentials():
     global _storage_client

@@ -181,6 +181,8 @@ DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
 DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG_CONFIGURATION")
 """Data Catalog configuration, different catalogs have different config formats."""
 
+DISABLE_ZERO_COPY_BUFFER_READS = bool(get("DISABLE_ZERO_COPY_BUFFER_READS", False))
+"""Disable zero-copy reads from the buffer pool."""
 
 
 
@@ -200,10 +202,9 @@ PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 
 # FEATURE FLAGS
 class Features:
-    enable_two_part_aggregator = bool(get("FEATURE_ENABLE_TWO_PART_AGGREGATOR", False))
+    enable_native_aggregator = bool(get("FEATURE_ENABLE_NATIVE_AGGREGATOR", False))
     disable_nested_loop_join = bool(get("FEATURE_DISABLE_NESTED_LOOP_JOIN", False))
     force_nested_loop_join = bool(get("FEATURE_FORCE_NESTED_LOOP_JOIN", False))
-    enable_zero_copy_buffer_reads = bool(get("FEATURE_ENABLE_ZERO_COPY_BUFFER_READS", False))
 
 
 features = Features()

@@ -6,6 +6,33 @@
 # cython: wraparound=True
 # cython: boundscheck=False
 
+"""
+memory_pool.pyx
+
+A high-performance memory pool implementation using Cython for efficient memory management in Python applications.
+This module provides the `MemoryPool` class, which allocates a contiguous block of memory and manages it through
+segmentation, compaction, and thread-safe operations. It supports committing, reading, releasing, and compacting
+memory segments, with optional latching for concurrent access. Designed for use cases requiring fast, low-level
+memory operations, such as database engines or data processing pipelines.
+
+Features:
+- Memory allocation and deallocation using C-level malloc/free.
+- Segment management: commit, read, release, and unlatch.
+- Level 1 and Level 2 compaction to reduce fragmentation.
+- Thread safety via RLock.
+- Debug mode for detailed statistics and diagnostics.
+- Supports zero-copy reads and buffer-based commits for compatibility with numpy, memoryview, and PyArrow.
+
+Classes:
+- MemoryPool: Main class for managing the memory pool and its segments.
+
+Usage:
+    pool = MemoryPool(size)
+    ref_id = pool.commit(data)
+    bytes_data = pool.read(ref_id)
+    pool.release(ref_id)
+"""
+
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
@@ -74,9 +101,10 @@ cdef class MemoryPool:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
     cdef inline void _set_latch(self, int64_t ref_id, int8_t state):
-        cdef MemorySegment segment = self.used_segments[ref_id]
-        segment.latched = state
-        self.used_segments[ref_id] = segment
+        with self.lock:
+            cdef MemorySegment segment = self.used_segments[ref_id]
+            segment.latched = state
+            self.used_segments[ref_id] = segment
 
     cdef inline int64_t _find_free_segment(self, int64_t size):
         """
