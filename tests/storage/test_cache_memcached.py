@@ -40,6 +40,7 @@ def test_memcached_cache():
         cur = conn.cursor()
         time.sleep(0.01)
         cur.execute("SELECT count(*) FROM opteryx.ten_files;")
+        cur.fetchall()
 
     for i in range(10):
         # read the data again time, this should hit the cache
@@ -48,6 +49,7 @@ def test_memcached_cache():
 
         cur = conn.cursor()
         cur.execute("SELECT count(*) FROM opteryx.ten_files;")
+        cur.fetchall()
 
     stats = cur.stats
 
