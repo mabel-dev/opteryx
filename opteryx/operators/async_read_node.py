@@ -164,12 +164,13 @@ class AsyncReaderNode(ReaderNode):
                     decoded = decoder(
                         blob_memory_view, projection=self.columns, selection=self.predicates
                     )
-                    if ZERO_COPY:
-                        # if we used zero copy, we need to release the latch
-                        self.pool.release(reference)
                     self.pool.release(reference)  # release also unlatches the segment
                 except Exception as err:
                     from pyarrow import ArrowInvalid
+
+                    # purge the blob from the cache if it is invalid - we may end up fetching and discarding it
+                    if hasattr(reader, "purge_blob"):
+                        reader.purge_blob(blob_name)
 
                     if isinstance(err, ArrowInvalid) and "No match for" in str(err):
                         raise DataError(

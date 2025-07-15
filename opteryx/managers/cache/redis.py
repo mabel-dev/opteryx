@@ -104,6 +104,16 @@ class RedisCache(BaseKeyValueStore):
         else:
             self.skips += 1
 
+    def delete(self, key: bytes) -> None:
+        """
+        Delete an item from the cache.
+        """
+        try:
+            self._server.delete(key)
+        except Exception as err:
+            # DEBUG: print(f"Unable to 'delete' Redis cache {err}")
+            self.errors += 1
+
     def __del__(self):
         pass
         # DEBUG: print(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")

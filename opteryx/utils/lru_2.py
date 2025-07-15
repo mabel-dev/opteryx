@@ -102,6 +102,17 @@ class LRU2:
             return None, None  # No item was evicted
         return None
 
+    def delete(self, key: bytes):
+        """
+        Delete an item from the cache.
+        """
+        if key in self.slots:
+            self.slots.pop(key, None)
+            self.access_history.pop(key, None)
+            self.evictions += 1
+            return True
+        return False
+
     @property
     def keys(self):
         return list(self.slots.keys())

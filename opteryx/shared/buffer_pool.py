@@ -53,6 +53,15 @@ class _BufferPool:
         if mp_key is not None:
             self._memory_pool.unlatch(mp_key)
 
+    def delete(self, key: bytes):
+        """
+        Delete an item from the pool.
+        """
+        mp_key = self._lru.get(key)
+        if mp_key is not None:
+            self._memory_pool.release(mp_key)
+            self._lru.delete(key)
+
     def set(self, key: bytes, value) -> Optional[str]:
         """
         Attempt to save a value to the buffer pool. Check first if there is space to commit the value.

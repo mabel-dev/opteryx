@@ -144,6 +144,14 @@ class MemcachedCache(BaseKeyValueStore):
                 self.errors += 1
                 pass
 
+    def delete(self, key: bytes) -> None:
+        try:
+            self._server.delete(bytes(key))
+        except Exception as err:
+            # DEBUG: print(f"Unable to 'delete' Memcache cache {err}")
+            self.errors += 1
+            pass
+
     def __del__(self):
         pass
         # DEBUG: print(f"Memcached <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors} touches={self.touches}>")

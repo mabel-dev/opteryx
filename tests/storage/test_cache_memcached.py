@@ -76,10 +76,20 @@ def test_memcache_stand_alone():
         if result:
             assert result == load, f"{result} != {load}"
 
+@skip_if(is_arm() or is_windows() or is_mac())
+def test_memcache_delete():
+    cache = MemcachedCache()
+    cache.delete(b"delete")
+    cache.set(b"delete", b"value")
+    assert cache.get(b"delete") == b"value"
+    cache.delete(b"delete")
+    assert cache.get(b"delete") is None
+
 
 def set_in_cache(cache: MemcachedCache, key: bytes, value: bytes):
     """Function to set a value in the cache."""
     cache.set(key, value)
+
 
 def get_from_cache(cache: MemcachedCache, key: bytes):
     """Function to get a value from the cache."""

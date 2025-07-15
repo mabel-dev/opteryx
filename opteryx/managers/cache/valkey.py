@@ -105,6 +105,16 @@ class ValkeyCache(BaseKeyValueStore):
         else:
             self.skips += 1
 
+    def delete(self, key):
+        """
+        Delete an item from the cache.
+        """
+        try:
+            self._server.delete(key)
+        except Exception as err:
+            # DEBUG: print(f"Unable to 'delete' Valkey cache {err}")
+            self.errors += 1
+
     def __del__(self):
         pass
         # DEBUG: print(f"Valkey <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")
