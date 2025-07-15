@@ -4,7 +4,6 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 import asyncio
-import logging
 import os
 import urllib.request  # is used
 from typing import Dict

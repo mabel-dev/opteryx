@@ -105,7 +105,9 @@ class _BufferPool:
         Reset the buffer pool.
         If reset_stats is True, also reset the statistics.
         """
-        self._lru.reset(reset_stats=reset_stats)
+        self._lru = LRU2()
+        self._memory_pool = MemoryPool(name="BufferPool", size=MAX_LOCAL_BUFFER_CAPACITY)
+        self.size = self._memory_pool.size
 
 
 class BufferPool(_BufferPool):
