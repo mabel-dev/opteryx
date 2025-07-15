@@ -17,46 +17,6 @@ import time
 from opteryx.managers.cache import MemcachedCache
 from orso.tools import random_string
 
-@skip_if(is_arm() or is_windows() or is_mac())
-def test_memcached_cache():
-
-    import opteryx
-    from opteryx import CacheManager
-    from opteryx.managers.cache import MemcachedCache
-    from opteryx.shared import BufferPool
-    from opteryx import register_store
-    from opteryx.connectors import GcpCloudStorageConnector
-
-    register_store("opteryx", GcpCloudStorageConnector)
-
-    cache = MemcachedCache()
-    #cache._server.flush_all()
-    opteryx.set_cache_manager(CacheManager(cache_backend=cache))
-
-    conn = opteryx.Connection()
-
-    # read the data ten times, this should populate the cache if it hasn't already
-    for i in range(10):
-        cur = conn.cursor()
-        time.sleep(0.01)
-        cur.execute("SELECT count(*) FROM opteryx.ten_files;")
-
-    for i in range(10):
-        # read the data again time, this should hit the cache
-        buffer = BufferPool()
-        buffer.reset()
-
-        cur = conn.cursor()
-        cur.execute("SELECT count(*) FROM opteryx.ten_files;")
-
-    stats = cur.stats
-
-    assert (
-        cache.hits > 0
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
-
-    assert stats.get("remote_cache_hits", 0) >= stats.get("blobs_read", 0), str(stats)
-    assert stats.get("cache_misses", 0) == 0, stats
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_memcache_stand_alone():

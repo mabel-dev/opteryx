@@ -35,7 +35,9 @@ from .read_node import struct_to_jsonb
 
 CONCURRENT_READS = config.CONCURRENT_READS
 MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
-ZERO_COPY = config.features.enable_zero_copy_buffer_reads
+DISABLE_ZERO_COPY_BUFFER_READS = config.DISABLE_ZERO_COPY_BUFFER_READS
+
+ENABLE_ZERO_COPY = not DISABLE_ZERO_COPY_BUFFER_READS
 
 
 async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
@@ -158,7 +160,7 @@ class AsyncReaderNode(ReaderNode):
                     # to ensure it is not overwritten while we are reading it.
                     start = time.monotonic_ns()
                     blob_memory_view = self.pool.read(
-                        reference, zero_copy=ZERO_COPY, latch=ZERO_COPY
+                        reference, zero_copy=ENABLE_ZERO_COPY, latch=ENABLE_ZERO_COPY
                     )
                     self.statistics.bytes_read += len(blob_memory_view)
                     decoded = decoder(
