@@ -35,9 +35,10 @@ from .read_node import struct_to_jsonb
 
 CONCURRENT_READS = config.CONCURRENT_READS
 MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
-DISABLE_ZERO_COPY_BUFFER_READS = config.disable_zero_copy_buffer_reads
+DISABLE_ZERO_COPY_BUFFER_READS = config.DISABLE_ZERO_COPY_BUFFER_READS
 
 ENABLE_ZERO_COPY = not DISABLE_ZERO_COPY_BUFFER_READS
+
 
 async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
     import aiohttp
