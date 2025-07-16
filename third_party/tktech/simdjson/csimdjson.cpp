@@ -3,10 +3,16 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {
-        "depends": [],
+        "depends": [
+            "third_party/tktech/simdjson/simdjson.h",
+            "third_party/tktech/simdjson/util.h"
+        ],
         "extra_compile_args": [
             "-O3",
             "-std=c++17"
+        ],
+        "include_dirs": [
+            "third_party/tktech/simdjson"
         ],
         "language": "c++",
         "name": "opteryx.third_party.tktech.csimdjson",
@@ -3213,6 +3219,8 @@ static CYTHON_INLINE PyObject *__pyx_f_7opteryx_11third_party_6tktech_9csimdjson
 /* Module declarations from "cpython.mem" */
 
 /* Module declarations from "cpython.buffer" */
+
+/* Module declarations from "simdjson.csimdjson" */
 
 /* Module declarations from "opteryx.third_party.tktech.csimdjson" */
 static PyObject *__pyx_collections_abc_Sequence = 0;
@@ -27952,7 +27960,7 @@ __Pyx_RefNannySetupContext("PyInit_csimdjson", 0);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
   /* "third_party/tktech/simdjson/csimdjson.pyx":16
- * from opteryx.third_party.tktech.csimdjson cimport *  # noqa
+ * from simdjson.csimdjson cimport *  # noqa
  * 
  * MAXSIZE_BYTES = SIMDJSON_MAXSIZE_BYTES             # <<<<<<<<<<<<<<
  * PADDING = SIMDJSON_PADDING
