@@ -1,20 +1,18 @@
 import json
 from pathlib import Path
-from typing import (
-    AbstractSet,
-    Any,
-    Dict,
-    Final,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    ValuesView,
-    overload,
-)
+from typing import AbstractSet
+from typing import Any
+from typing import Dict
+from typing import Final
+from typing import Iterator
+from typing import List
+from typing import Mapping
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
+from typing import ValuesView
+from typing import overload
 
 try:
     from typing import Literal

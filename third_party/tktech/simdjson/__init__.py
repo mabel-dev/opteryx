@@ -2,13 +2,11 @@
 import json
 
 try:
-    from csimdjson import (
-        Parser,
-        Array,
-        Object,
-        MAXSIZE_BYTES,
-        PADDING
-    )
+    from csimdjson import MAXSIZE_BYTES
+    from csimdjson import PADDING
+    from csimdjson import Array
+    from csimdjson import Object
+    from csimdjson import Parser
 except ImportError:
     raise RuntimeError('Unable to import low-level simdjson bindings.')
 
