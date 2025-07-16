@@ -15,7 +15,7 @@ from tests.tools import is_pypy, is_windows
 
 # fmt:off
 STATEMENTS = [
-        # Two tests, one to test the file can be opened and read, one to test the
+        # Three tests, one to test the file can be opened and read, one to test the
         # values that have been read.
 
         # arrow (feather)
