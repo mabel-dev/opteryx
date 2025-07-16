@@ -36,6 +36,24 @@ from cpython.dict cimport PyDict_Copy
 from cpython cimport dict
 from uuid import uuid4
 
+
+cdef inline object _inner_copy(object obj):
+    cdef type obj_type = type(obj)
+
+    if obj_type in (int, float, str, bool, type(None)):
+        return obj
+    elif isinstance(obj, list):
+        return [ _inner_copy(i) for i in obj ]
+    elif isinstance(obj, tuple):
+        return tuple( _inner_copy(i) for i in obj )
+    elif isinstance(obj, dict):
+        return { k: _inner_copy(v) for k, v in obj.items() }
+    elif hasattr(obj, "copy"):
+        return obj.copy()
+    else:
+        return obj
+
+
 cdef class Node:
     cdef:
         dict _properties
@@ -116,29 +134,13 @@ cdef class Node:
             node_type_str = node_type_str[20:]
         return f"<Node type={node_type_str}>"
 
-    def copy(self) -> "Node":
-        """
-        Create an independent deep copy of the node.
-        This generates a new uuid for the copied node, making it a distinct entity.
-        """
-        def _inner_copy(obj):
-            """
-            Create a deep copy of the given object, handling collections and objects with custom copy methods.
-            """
-            obj_type = type(obj)
-            if obj_type in (list, tuple, set):
-                return obj_type(_inner_copy(item) for item in obj)
-            if obj_type == dict:
-                return {key: _inner_copy(value) for key, value in obj.items()}
-            if hasattr(obj, "copy"):
-                return obj.copy()
-            if hasattr(obj, "deepcopy"):
-                import copy
-                return copy.deepcopy(obj)
-            return obj
+    cpdef Node copy(self):
+        cdef Node new_node = Node(self.node_type)
+        cdef object key, value
 
-        # Create a new Node with the same node_type and a deep copy of _properties
-        new_node = Node(self.node_type, **{key: _inner_copy(value) for key, value in self._properties.items()})
+        for key, value in self._properties.items():
+            new_node._properties[key] = _inner_copy(value)
+
         new_node.uuid = self.uuid
         return new_node
 

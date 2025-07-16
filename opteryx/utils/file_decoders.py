@@ -376,8 +376,6 @@ def jsonl_decoder(
     if just_statistics:
         return None
 
-    import orjson
-
     from opteryx.third_party.tktech import csimdjson as simdjson
 
     if isinstance(buffer, memoryview):
@@ -391,7 +389,10 @@ def jsonl_decoder(
     # preallocate and reuse dicts
     rows = []
     keys_union = set()
-    nested_keys = set()
+
+    if projection:
+        # If projection is specified, we only need to ensure we keep the projected keys
+        keys_union = {c.value for c in projection}
 
     for line in lines:
         if not line:
@@ -399,16 +400,14 @@ def jsonl_decoder(
         record = parser.parse(line)
 
         # keep track of all keys for schema padding
-        keys_union.update(record.keys())
+        if not projection:
+            keys_union.update(record.keys())
 
         # convert nested objects to string
-        row = {}
-        for k, v in record.items():
-            if isinstance(v, dict):
-                row[k] = orjson.dumps(v).decode("utf-8")
-                nested_keys.add(k)
-            else:
-                row[k] = v
+        row = record.as_dict()
+        for key in keys_union:
+            if isinstance(row.get(key), dict):
+                row[key] = record[key].mini
         rows.append(row)
         record = None
 
