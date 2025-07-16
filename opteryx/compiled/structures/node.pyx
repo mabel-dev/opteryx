@@ -43,11 +43,11 @@ cdef inline object _inner_copy(object obj):
     if obj_type in (int, float, str, bool, type(None)):
         return obj
     elif isinstance(obj, list):
-        return [ _inner_copy(i) for i in obj ]
+        return [_inner_copy(i) for i in obj]
     elif isinstance(obj, tuple):
-        return tuple( _inner_copy(i) for i in obj )
+        return tuple(_inner_copy(i) for i in obj)
     elif isinstance(obj, dict):
-        return { k: _inner_copy(v) for k, v in obj.items() }
+        return {k: _inner_copy(v) for k, v in obj.items()}
     elif hasattr(obj, "copy"):
         return obj.copy()
     else:
