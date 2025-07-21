@@ -74,47 +74,37 @@ cpdef uint8_t[::1] list_anyop_eq(object literal, object column):
 
 cdef uint8_t[::1] _anyop_eq_string_chunk(object literal, object list_array):
     """
-    Chunk processor for List<Binary> or List<String>. Uses memcmp.
+    Chunk processor for List<Binary> or List<String>. Uses memcmp. Optimized for hot path.
     """
-    cdef literal_bytes
-
+    cdef bytes literal_bytes
     if isinstance(literal, bytes):
         literal_bytes = literal
     else:
         literal_bytes = literal.encode('utf-8')
 
-    cdef:
-        const char* literal_ptr = PyBytes_AsString(literal_bytes)
-        size_t literal_len = len(literal_bytes)
+    cdef const char* literal_ptr = PyBytes_AsString(literal_bytes)
+    cdef size_t literal_len = len(literal_bytes)
+    cdef list buffers = list_array.buffers()
+    cdef const uint8_t* outer_validity = NULL
+    cdef const int32_t* offsets = NULL
+    cdef Py_ssize_t arr_offset = list_array.offset
+    cdef Py_ssize_t row_count = len(list_array)
+    cdef Py_ssize_t offset_in_bits = arr_offset & 7
+    cdef Py_ssize_t offset_in_bytes = arr_offset >> 3
+    cdef object values_array = list_array.values
+    cdef list value_buffers = values_array.buffers()
+    cdef const uint8_t* inner_validity = NULL
+    cdef const int32_t* value_offsets = NULL
+    cdef const char* value_data = NULL
+    cdef Py_ssize_t i, j, val_start, val_end, val_len
+    cdef Py_ssize_t outer_start, outer_end
+    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
+    cdef uint8_t[::1] result_view = result
 
-        list buffers = list_array.buffers()
-        const uint8_t* outer_validity = NULL
-        const int32_t* offsets = NULL
-        Py_ssize_t arr_offset = list_array.offset
-        Py_ssize_t row_count = len(list_array)
-
-        Py_ssize_t offset_in_bits = arr_offset & 7
-        Py_ssize_t offset_in_bytes = arr_offset >> 3
-
-        object values_array = list_array.values
-        list value_buffers = values_array.buffers()
-        const uint8_t* inner_validity = NULL
-        const int32_t* value_offsets = NULL
-        const char* value_data = NULL
-
-        Py_ssize_t i, j, val_start, val_end, val_len
-        Py_ssize_t outer_start, outer_end
-
-        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
-        uint8_t[::1] result_view = result
-
-    # Outer array buffers (list<...>)
     if len(buffers) > 0 and buffers[0]:
         outer_validity = <const uint8_t*> <uintptr_t> buffers[0].address
     if len(buffers) > 1 and buffers[1]:
         offsets = <const int32_t*> <uintptr_t> buffers[1].address
-
-    # Inner value array buffers (flat binary/string values)
     if len(value_buffers) > 0 and value_buffers[0]:
         inner_validity = <const uint8_t*> <uintptr_t> value_buffers[0].address
     if len(value_buffers) > 1 and value_buffers[1]:
@@ -155,45 +145,37 @@ cdef uint8_t[::1] _anyop_eq_string_chunk(object literal, object list_array):
 
 cdef uint8_t[::1] _anyop_eq_primitive_chunk(object literal, object list_array):
     """
-    Compare each element in a List<Primitive> to `literal`, using raw buffer access.
+    Compare each element in a List<Primitive> to `literal`, using raw buffer access. Optimized for hot path.
     Returns a uint8 array where 1 = row contains match, 0 = no match/null.
     """
-    cdef:
-        list buffers = list_array.buffers()
-        const uint8_t* outer_validity = NULL
-        const int32_t* offsets = NULL
-        Py_ssize_t arr_offset = list_array.offset
-        Py_ssize_t row_count = len(list_array)
+    cdef list buffers = list_array.buffers()
+    cdef const uint8_t* outer_validity = NULL
+    cdef const int32_t* offsets = NULL
+    cdef Py_ssize_t arr_offset = list_array.offset
+    cdef Py_ssize_t row_count = len(list_array)
+    cdef Py_ssize_t offset_in_bits = arr_offset & 7
+    cdef Py_ssize_t offset_in_bytes = arr_offset >> 3
+    cdef object values_array = list_array.values
+    cdef list value_buffers = values_array.buffers()
+    cdef const uint8_t* inner_validity = NULL
+    cdef const char* data = NULL
+    cdef Py_ssize_t type_size = values_array.type.bit_width // 8
+    cdef Py_ssize_t i, j, outer_start, outer_end
+    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
+    cdef uint8_t[::1] result_view = result
 
-        Py_ssize_t offset_in_bits = arr_offset & 7
-        Py_ssize_t offset_in_bytes = arr_offset >> 3
-
-        object values_array = list_array.values
-        list value_buffers = values_array.buffers()
-        const uint8_t* inner_validity = NULL
-        const char* data = NULL
-
-        Py_ssize_t type_size = values_array.type.bit_width // 8
-        Py_ssize_t i, j, outer_start, outer_end
-        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
-        uint8_t[::1] result_view = result
-
-    # Outer array buffers
     if len(buffers) > 0 and buffers[0]:
         outer_validity = <const uint8_t*> <uintptr_t> buffers[0].address
     if len(buffers) > 1 and buffers[1]:
         offsets = <const int32_t*> <uintptr_t> buffers[1].address
-
-    # Inner value buffers
     if len(value_buffers) > 0 and value_buffers[0]:
         inner_validity = <const uint8_t*> <uintptr_t> value_buffers[0].address
     if len(value_buffers) > 1 and value_buffers[1]:
         data = <const char*> <uintptr_t> value_buffers[1].address
 
     # Convert Python literal to bytes
-    # We'll memcmp using literal_ptr
     literal_bytes = arrow_array([literal], type=values_array.type).to_numpy().tobytes()
-    literal_ptr = <const char*> literal_bytes
+    cdef const char* literal_ptr = <const char*> literal_bytes
 
     for i in range(row_count):
         if outer_validity is not NULL:
@@ -218,35 +200,29 @@ cdef uint8_t[::1] _anyop_eq_primitive_chunk(object literal, object list_array):
 
 cdef uint8_t[::1] _anyop_eq_boolean_chunk(object literal, object list_array):
     """
-    Compare each element in a List<Boolean> to `literal`.
+    Compare each element in a List<Boolean> to `literal`. Optimized for hot path.
     Returns a uint8 array where 1 = row contains match, 0 = no match/null.
     """
-    cdef:
-        list buffers = list_array.buffers()
-        const uint8_t* outer_validity = NULL
-        const int32_t* offsets = NULL
-        Py_ssize_t arr_offset = list_array.offset
-        Py_ssize_t row_count = len(list_array)
-
-        Py_ssize_t offset_in_bits = arr_offset & 7
-        Py_ssize_t offset_in_bytes = arr_offset >> 3
-
-        object values_array = list_array.values
-        list value_buffers = values_array.buffers()
-        const uint8_t* inner_validity = NULL
-        const uint8_t* inner_values = NULL
-
-        Py_ssize_t i, j, outer_start, outer_end, byte_index, bit_index
-        uint8_t literal_val = bool(literal)
-
-        numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
-        uint8_t[::1] result_view = result
+    cdef list buffers = list_array.buffers()
+    cdef const uint8_t* outer_validity = NULL
+    cdef const int32_t* offsets = NULL
+    cdef Py_ssize_t arr_offset = list_array.offset
+    cdef Py_ssize_t row_count = len(list_array)
+    cdef Py_ssize_t offset_in_bits = arr_offset & 7
+    cdef Py_ssize_t offset_in_bytes = arr_offset >> 3
+    cdef object values_array = list_array.values
+    cdef list value_buffers = values_array.buffers()
+    cdef const uint8_t* inner_validity = NULL
+    cdef const uint8_t* inner_values = NULL
+    cdef Py_ssize_t i, j, outer_start, outer_end, byte_index, bit_index
+    cdef uint8_t literal_val = bool(literal)
+    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(row_count, dtype=numpy.uint8)
+    cdef uint8_t[::1] result_view = result
 
     if len(buffers) > 0 and buffers[0]:
         outer_validity = <const uint8_t*> <uintptr_t> buffers[0].address
     if len(buffers) > 1 and buffers[1]:
         offsets = <const int32_t*> <uintptr_t> buffers[1].address
-
     if len(value_buffers) > 0 and value_buffers[0]:
         inner_validity = <const uint8_t*> <uintptr_t> value_buffers[0].address
     if len(value_buffers) > 1 and value_buffers[1]:

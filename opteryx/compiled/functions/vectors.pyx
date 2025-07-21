@@ -138,31 +138,19 @@ cdef dict irregular_lemmas = {
     b'wrote': b'write'
 }
 
-cdef inline uint16_t djb2_hash(char* byte_array, uint64_t length) nogil:
-    """
-    Hashes a byte array using the djb2 algorithm, designed to be called without
-    holding the Global Interpreter Lock (GIL).
-
-    Parameters:
-        byte_array: char*
-            The byte array to hash.
-        length: uint64_t
-            The length of the byte array.
-
-    Returns:
-        uint16_t: The hash value.
-    """
+cdef inline uint16_t djb2_hash(const unsigned char* byte_array, uint64_t length) nogil:
     cdef uint32_t hash_value = 5381
-    cdef uint32_t i = 0
+    cdef uint64_t i = 0
+
     for i in range(length):
         hash_value = ((hash_value << 5) + hash_value) + byte_array[i]
-    return <uint16_t>(hash_value & 0xFFFF)
+    return <uint16_t>(hash_value)
 
 
 def vectorize(list tokens):
     cdef numpy.ndarray[numpy.uint16_t, ndim=1] vector = numpy.zeros(VECTOR_SIZE, dtype=numpy.uint16)
-    cdef uint32_t hash_1
-    cdef uint32_t hash_2
+    cdef uint16_t hash_1
+    cdef uint16_t hash_2
     cdef bytes token_bytes
     cdef uint32_t token_size
 
@@ -182,18 +170,19 @@ def vectorize(list tokens):
     return vector
 
 
-def possible_match(list query_tokens, numpy.ndarray[numpy.uint16_t, ndim=1] vector):
-    cdef uint16_t hash_1
-    cdef uint16_t hash_2
+cdef inline bint possible_match(list query_tokens, numpy.uint16_t[:] vector):
+    cdef uint16_t hash_1, hash_2
     cdef bytes token_bytes
     cdef uint32_t token_size
-
+    cdef const unsigned char* token_ptr
+    cdef uint16_t mask = VECTOR_SIZE - 1
     for token_bytes in query_tokens:
         token_size = PyBytes_GET_SIZE(token_bytes)
         if token_size > 1:
-            hash_1 = djb2_hash(token_bytes, token_size)
-            hash_2 = <uint16_t>((hash_1 * GOLDEN_RATIO_APPROX)) & (VECTOR_SIZE - 1)
-            if vector[hash_1 & (VECTOR_SIZE - 1)] == 0 or vector[hash_2] == 0:
+            token_ptr = <const unsigned char*>token_bytes
+            hash_1 = djb2_hash(token_ptr, token_size)
+            hash_2 = <uint16_t>((hash_1 * GOLDEN_RATIO_APPROX)) & mask
+            if vector[hash_1 & mask] == 0 or vector[hash_2] == 0:
                 return False  # If either position is zero, the token cannot be present
     return True
 

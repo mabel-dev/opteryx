@@ -46,26 +46,30 @@ cdef inline uint32_t ip_to_int(const char* ip):
 def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
 
     # CIDR validation...
-    if '/' not in cidr or not 0 <= int(cidr.split('/')[1]) <= 32:
+    cdef int slash_idx = cidr.find('/')
+    if slash_idx == -1:
+        raise ValueError("Invalid CIDR notation")
+    cdef int mask_size = int(cidr[slash_idx+1:])
+    if mask_size < 0 or mask_size > 32:
         raise ValueError("Invalid CIDR notation")
 
-    cdef uint32_t base_ip, netmask, ip_int
-    cdef int mask_size
-    cdef str base_ip_str
-    cdef list cidr_parts = cidr.split('/')
-    cdef uint32_t arr_len = ip_addresses.shape[0]
+    cdef str base_ip_str = cidr[:slash_idx]
+    cdef uint32_t netmask = (0xFFFFFFFF << (32 - mask_size)) & 0xFFFFFFFF
+    cdef uint32_t base_ip = ip_to_int(PyUnicode_AsUTF8String(base_ip_str))
 
-    base_ip_str, mask_size = cidr_parts[0], int(cidr_parts[1])
-    netmask = (0xFFFFFFFF << (32 - mask_size)) & 0xFFFFFFFF
-
-    base_ip = ip_to_int(PyUnicode_AsUTF8String(base_ip_str))
-
+    cdef Py_ssize_t arr_len = ip_addresses.shape[0]
     cdef unsigned char[:] result = numpy.zeros(arr_len, dtype=numpy.bool_)
+
+    # Use memoryview for input if possible
+    cdef Py_ssize_t i
+    cdef object ip_address
+    cdef uint32_t ip_int
 
     for i in range(arr_len):
         ip_address = ip_addresses[i]
         if ip_address is not None:
-            ip_int = ip_to_int(PyUnicode_AsUTF8String(ip_address))
+            ip_bytes = PyUnicode_AsUTF8String(ip_address)
+            ip_int = ip_to_int(ip_bytes)
             result[i] = (ip_int & netmask) == base_ip
 
     return numpy.asarray(result, dtype=bool)

@@ -162,7 +162,7 @@ def async_read_thru_cache(func):
                         evictions_remaining -= 1
                     statistics.cache_evictions += 1
 
-            if payload is None:
+            if payload is None or isinstance(remote_cache, NullCache):
                 # If we didn't find the payload, we don't write it to the cache
                 pass
             elif source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
