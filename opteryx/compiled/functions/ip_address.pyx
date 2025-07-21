@@ -57,6 +57,8 @@ def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
     cdef uint32_t netmask = (0xFFFFFFFF << (32 - mask_size)) & 0xFFFFFFFF
     cdef uint32_t base_ip = ip_to_int(PyUnicode_AsUTF8String(base_ip_str))
 
+    cdef bytes ip_bytes
+
     cdef Py_ssize_t arr_len = ip_addresses.shape[0]
     cdef unsigned char[:] result = numpy.zeros(arr_len, dtype=numpy.bool_)
 
