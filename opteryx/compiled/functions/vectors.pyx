@@ -144,7 +144,7 @@ cdef inline uint16_t djb2_hash(const unsigned char* byte_array, uint64_t length)
 
     for i in range(length):
         hash_value = ((hash_value << 5) + hash_value) + byte_array[i]
-    return <uint16_t>(hash_value)
+    return <uint16_t>(hash_value & 0xFFFF)
 
 
 def vectorize(list tokens):
