@@ -14,7 +14,6 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
-
 cdef:
     uint64_t NULL_HASH = <uint64_t>0x4c3f95a36ab8ecca   # xxhash(null)
     uint64_t EMPTY_HASH = <uint64_t>0xab52d8afc1448992  # xxhash(empty)
@@ -25,11 +24,12 @@ cdef:
 
 cdef void process_column(object column, uint64_t[::1] row_hashes):
     """Process column using type-specific handlers"""
-    cdef:
-        Py_ssize_t row_offset = 0
-        object chunk
-
-    for chunk in column.chunks if isinstance(column, pyarrow.ChunkedArray) else [column]:
+    cdef Py_ssize_t row_offset = 0
+    cdef object chunk
+    cdef object dtype
+    cdef bint is_chunked = isinstance(column, pyarrow.ChunkedArray)
+    cdef list chunks = column.chunks if is_chunked else [column]
+    for chunk in chunks:
         dtype = chunk.type
         if pyarrow.types.is_string(dtype) or pyarrow.types.is_binary(dtype):
             process_string_chunk(chunk, row_hashes, row_offset)
@@ -41,28 +41,30 @@ cdef void process_column(object column, uint64_t[::1] row_hashes):
             process_boolean_chunk(chunk, row_hashes, row_offset)
         else:
             process_generic_chunk(chunk, row_hashes, row_offset)
-
         row_offset += len(chunk)
 
 
 cdef inline void compute_row_hashes(object table, list columns, uint64_t[::1] row_hashes):
-    row_hashes[:] = 0
+    cdef Py_ssize_t i, n
+    cdef object col_name
+    n = row_hashes.shape[0]
+    for i in range(n):
+        row_hashes[i] = 0
     for col_name in columns:
         process_column(table.column(col_name), row_hashes)
 
 
 # String Chunk Handler
 cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
-    cdef:
-        const uint8_t* validity
-        const int32_t* offsets
-        const char* data
-        Py_ssize_t i, row_count, buffer_length
-        Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
-        uint64_t hash_val
-        list buffers = chunk.buffers()
-        size_t str_len
-        int start, end
+    cdef const uint8_t* validity
+    cdef const int32_t* offsets
+    cdef const char* data
+    cdef Py_ssize_t i, row_count, buffer_length
+    cdef Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
+    cdef uint64_t hash_val
+    cdef list buffers = chunk.buffers()
+    cdef size_t str_len
+    cdef int start, end
 
     # Handle potential missing buffers
     validity = <uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
@@ -77,7 +79,6 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
     offset_in_bytes = arr_offset >> 3
 
     for i in range(row_count):
-
         # locate validity bit for this row
         byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
         bit_index = (offset_in_bits + i) & 7
@@ -103,39 +104,61 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
 
 # Primitive Numeric Handler (Int/Float)
 cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
-    cdef:
-        const uint8_t* validity
-        const uint8_t* data
-        Py_ssize_t i, length, item_size
-        Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
-        uint64_t hash_val
-        list buffers = chunk.buffers()
+    cdef const uint8_t* validity
+    cdef const uint8_t* data
+    cdef Py_ssize_t i
+    cdef Py_ssize_t length
+    cdef Py_ssize_t item_size
+    cdef Py_ssize_t arr_offset
+    cdef Py_ssize_t offset_in_bits
+    cdef Py_ssize_t offset_in_bytes
+    cdef Py_ssize_t bit_offset
+    cdef Py_ssize_t byte_index
+    cdef Py_ssize_t bit_index
+    cdef uint64_t hash_val
+    cdef list buffers = chunk.buffers()
+    cdef object validity_buf = buffers[0]
+    cdef object data_buf = buffers[1]
 
-    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
-    data = <uint8_t*><uintptr_t>(buffers[1].address)
+    validity = <const uint8_t*><uintptr_t>(validity_buf.address) if validity_buf else NULL
+    data = <const uint8_t*><uintptr_t>(data_buf.address)
     length = len(chunk)
     item_size = chunk.type.bit_width // 8
-    arr_offset = chunk.offset  # Account for non-zero offset in chunk
+    arr_offset = chunk.offset
 
-    # Calculate the byte and bit offset for validity
     offset_in_bits = arr_offset & 7
     offset_in_bytes = arr_offset >> 3
 
-    for i in range(length):
-        # Correctly locate validity bit for this row
-        byte_index = offset_in_bytes + ((offset_in_bits + i) >> 3)
-        bit_index = (offset_in_bits + i) & 7
-
-        # Check validity bit, considering chunk offset
-        if validity and not (validity[byte_index] & (1 << bit_index)):
-            hash_val = NULL_HASH
-        elif item_size == <uint64_t>8:
-            hash_val = (<uint64_t*>(data + ((arr_offset + i) * 8)))[0]
+    if validity is NULL:
+        if item_size == 8:
+            for i in range(length):
+                hash_val = (<uint64_t*>(data + ((arr_offset + i) << 3)))[0]
+                update_row_hash(row_hashes, row_offset + i, hash_val)
         else:
-            # Calculate the correct position in data buffer
-            hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
-
-        update_row_hash(row_hashes, row_offset + i, hash_val)
+            for i in range(length):
+                hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+                update_row_hash(row_hashes, row_offset + i, hash_val)
+    else:
+        if item_size == 8:
+            for i in range(length):
+                bit_offset = offset_in_bits + i
+                byte_index = offset_in_bytes + (bit_offset >> 3)
+                bit_index = bit_offset & 7
+                if not (validity[byte_index] & (1 << bit_index)):
+                    hash_val = NULL_HASH
+                else:
+                    hash_val = (<uint64_t*>(data + ((arr_offset + i) << 3)))[0]
+                update_row_hash(row_hashes, row_offset + i, hash_val)
+        else:
+            for i in range(length):
+                bit_offset = offset_in_bits + i
+                byte_index = offset_in_bytes + (bit_offset >> 3)
+                bit_index = bit_offset & 7
+                if not (validity[byte_index] & (1 << bit_index)):
+                    hash_val = NULL_HASH
+                else:
+                    hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+                update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
 # Composite Type Handler (List)
@@ -214,20 +237,19 @@ cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t 
 
 
 cdef void process_boolean_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
-    cdef:
-        const uint8_t* validity
-        const uint8_t* data
-        Py_ssize_t i = 0, length, arr_offset
-        Py_ssize_t bit_index, byte_index
-        uint64_t hash_val
-        list buffers = chunk.buffers()
+    cdef const uint8_t* validity
+    cdef const uint8_t* data
+    cdef Py_ssize_t i, length, arr_offset
+    cdef Py_ssize_t bit_index, byte_index, bit_in_byte
+    cdef uint64_t hash_val
+    cdef list buffers = chunk.buffers()
 
     validity = <const uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
     data = <const uint8_t*><uintptr_t>(buffers[1].address) if len(buffers) > 1 and buffers[1] else NULL
     length = len(chunk)
     arr_offset = chunk.offset
 
-    while i < length:
+    for i in range(length):
         bit_index = arr_offset + i
         byte_index = bit_index >> 3
         bit_in_byte = bit_index & 7
@@ -240,22 +262,24 @@ cdef void process_boolean_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
             hash_val = FALSE_HASH
 
         update_row_hash(row_hashes, row_offset + i, hash_val)
-        i += 1
 
 
 cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):
-    """Fallback handler for types without a specific buffer-aware handler"""
-    cdef:
-        const uint8_t* validity
-        Py_ssize_t i, length, arr_offset
-        uint64_t hash_val
-        list buffers = chunk.buffers()
-        Py_ssize_t bit_index, byte_index, bit_in_byte
+    """
+    Fallback handler for types without a specific buffer-aware handler.
+    This function requires the GIL because it calls Python APIs (PyObject_Hash, exception handling).
+    """
+    cdef const uint8_t* validity
+    cdef Py_ssize_t i, length, arr_offset
+    cdef uint64_t hash_val
+    cdef list buffers = chunk.buffers()
+    cdef Py_ssize_t bit_index, byte_index, bit_in_byte
 
     validity = <const uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
     length = len(chunk)
     arr_offset = chunk.offset
 
+    # This loop must run with the GIL held
     for i in range(length):
         bit_index = arr_offset + i
         byte_index = bit_index >> 3
@@ -275,18 +299,9 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
 
 
 cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) noexcept nogil:
-    """Combine column hashes using a stronger mixing function (MurmurHash3 finalizer)"""
-    cdef uint64_t h = row_hashes[row_idx] ^ col_hash
-
-    # Use uint64_t constants to ensure proper C-level handling
-    cdef uint64_t c1 = <uint64_t>0xff51afd7ed558ccd
-    cdef uint64_t c2 = <uint64_t>0xc4ceb9fe1a85ec53
-
-    # MurmurHash3 finalizer
-    h ^= h >> 33
-    h *= c1
-    h ^= h >> 33
-    h *= c2
-    h ^= h >> 33
-
+    """Combine column hashes using a stronger mixing function (xxhash finalizer)"""
+    cdef uint64_t h
+    h = row_hashes[row_idx]
+    h = (h ^ col_hash) * <uint64_t>0x9e3779b97f4a7c15
+    h ^= h >> 32
     row_hashes[row_idx] = h
