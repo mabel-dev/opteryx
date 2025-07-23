@@ -31,7 +31,8 @@ class Statistics:
             return cached_stats
 
         cached_stats = decoder(blob_bytes, just_statistics=True)
-        self.stats_cache.set(key, cached_stats)
+        if cached_stats is not None:
+            self.stats_cache.set(key, cached_stats)
         return cached_stats
 
     def prefilter_blobs(self, blob_names: list[str], query_statistics, selection) -> list[str]:
