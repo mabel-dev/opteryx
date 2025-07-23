@@ -66,12 +66,7 @@ class _StatsCache:
         self._lru.set(key, cached_stats)
         if self._lru.size > MAX_STATISTICS_CACHE_ITEMS:
             # If the cache size exceeds the limit, evict the least recently used item
-            evicted_key = self._lru.evict()
-            if evicted_key:
-                self.delete(evicted_key)
-
-        # Return the evicted key if an eviction occurred, otherwise return None
-        return evicted_key if "evicted_key" in locals() else None
+            self._lru.evict()
 
     @property
     def stats(self) -> tuple:
