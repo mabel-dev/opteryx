@@ -106,6 +106,12 @@ class AsyncReaderNode(ReaderNode):
             predicates=self.predicates,
         )
 
+        if self.predicates and hasattr(reader, "prefilter_blobs"):
+            # if we're capturing statistics, we can prefilter the blobs
+            blob_names = reader.prefilter_blobs(
+                blob_names=blob_names, query_statistics=self.statistics, selection=self.predicates
+            )
+
         if len(blob_names) == 0:
             # if we don't have any matching blobs, create an empty dataset
             from orso import DataFrame
@@ -166,6 +172,14 @@ class AsyncReaderNode(ReaderNode):
                     decoded = decoder(
                         blob_memory_view, projection=self.columns, selection=self.predicates
                     )
+
+                    # We read the statisics from the blob, we can use this for
+                    # prefiltering the files next time we read them.
+                    if hasattr(reader, "read_blob_statistics"):
+                        reader.read_blob_statistics(
+                            blob_name=blob_name, blob_bytes=blob_memory_view, decoder=decoder
+                        )
+
                     self.pool.release(reference)  # release also unlatches the segment
                 except Exception as err:
                     from pyarrow import ArrowInvalid
@@ -197,7 +211,7 @@ class AsyncReaderNode(ReaderNode):
 
                 yield morsel
             except Exception as err:
-                self.statistics.add_message(f"failed to read {blob_name}")
+                self.statistics.add_message(f"failed to read {blob_name} ({err.__type__.__name__})")
                 self.statistics.failed_reads += 1
                 import warnings
 

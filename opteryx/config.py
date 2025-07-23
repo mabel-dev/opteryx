@@ -169,6 +169,9 @@ MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LO
 MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
 """Read buffer pool size in either bytes or fraction of system memory."""
 
+MAX_STATISTICS_CACHE_ITEMS: int = get("MAX_STATISTICS_CACHE_ITEMS", 10_000)
+"""The number of .parquet files we cache the statistics for."""
+
 CONCURRENT_READS: int = int(get("CONCURRENT_READS", max(system_gigabytes(), 2)))
 """Number of read workers per data source."""
 
