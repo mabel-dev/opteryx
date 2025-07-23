@@ -1,8 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# See the License at http://www.apache.org/licenses/LICENSE-2.0
+# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
+
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+
+import orjson
 
 
 class RelationStatistics:
@@ -57,3 +64,31 @@ class RelationStatistics:
         if self.cardinality_estimate is None:
             self.cardinality_estimate = {}
         self.cardinality_estimate[column] = cardinality
+
+    def to_bytes(self) -> bytes:
+        """Serialize the RelationStatistics object to bytes using JSON."""
+        # Convert all attributes to a serializable dict
+        data = {
+            "record_count": self.record_count,
+            "record_count_estimate": self.record_count_estimate,
+            "null_count": self.null_count,
+            "lower_bounds": self.lower_bounds,
+            "upper_bounds": self.upper_bounds,
+            "cardinality_estimate": self.cardinality_estimate,
+            "raw_distribution_data": self.raw_distribution_data,
+        }
+        return orjson.dumps(data, default=str)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "RelationStatistics":
+        """Deserialize bytes to a RelationStatistics object using JSON."""
+        obj = cls()
+        loaded = orjson.loads(data)
+        obj.record_count = loaded.get("record_count", 0)
+        obj.record_count_estimate = loaded.get("record_count_estimate", 0)
+        obj.null_count = loaded.get("null_count", None)
+        obj.lower_bounds = loaded.get("lower_bounds", {})
+        obj.upper_bounds = loaded.get("upper_bounds", {})
+        obj.cardinality_estimate = loaded.get("cardinality_estimate", None)
+        obj.raw_distribution_data = loaded.get("raw_distribution_data", [])
+        return obj

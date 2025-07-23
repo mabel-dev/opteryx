@@ -48,6 +48,8 @@ class LRU2:
         self.evictions = 0
         self.inserts = 0
 
+        self.size = 0
+
     def __len__(self):
         return len(self.slots)
 
@@ -62,6 +64,8 @@ class LRU2:
 
     def set(self, key: bytes, value):
         self.inserts += 1
+        if key not in self.slots:
+            self.size += 1
         self.slots[key] = value
         self._update_access_history(key)
         return None
@@ -93,6 +97,7 @@ class LRU2:
                 continue
             value = self.slots.pop(oldest_key)
             self.access_history.pop(oldest_key)
+            self.size -= 1
             self.evictions += 1
             if details:  # pragma: no cover
                 return oldest_key, value
@@ -110,6 +115,7 @@ class LRU2:
             self.slots.pop(key, None)
             self.access_history.pop(key, None)
             self.evictions += 1
+            self.size -= 1
             return True
         return False
 

@@ -245,8 +245,11 @@ class GcpCloudStorageConnector(
                         selection=predicates,
                         just_schema=just_schema,
                     )
+                    stats = self.read_blob_statistics(
+                        blob_name=blob_name, blob_bytes=blob_bytes, decoder=decoder
+                    )
                     if len(blob_names) == 1:
-                        self.relation_statistics = decoder(blob_bytes, just_statistics=True)
+                        self.relation_statistics = stats
                 except Exception as err:
                     raise DatasetReadError(f"Unable to read file {blob_name} ({err})") from err
 
