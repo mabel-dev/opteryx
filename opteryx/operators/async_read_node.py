@@ -211,7 +211,7 @@ class AsyncReaderNode(ReaderNode):
 
                 yield morsel
             except Exception as err:
-                self.statistics.add_message(f"failed to read {blob_name} ({err.__type__.__name__})")
+                self.statistics.add_message(f"failed to read {blob_name} ({err.__class__.__name__})")
                 self.statistics.failed_reads += 1
                 import warnings
 
