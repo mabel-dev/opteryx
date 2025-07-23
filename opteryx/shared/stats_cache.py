@@ -48,7 +48,7 @@ class _StatsCache:
         """
         self._lru.delete(key)
 
-    def set(self, key: bytes, value: RelationStatistics) -> Optional[str]:
+    def set(self, key: bytes, value: RelationStatistics):
         """
         Store a statistics object in the cache, serializing it to bytes.
         If the cache exceeds the maximum allowed items, evict the least recently used item.
@@ -56,9 +56,6 @@ class _StatsCache:
         Args:
             key: The key associated with the statistics object.
             value: The statistics object to store (will be serialized).
-
-        Returns:
-            The key of the evicted item if eviction occurred, otherwise None.
         """
         cached_stats = value.to_bytes()
 

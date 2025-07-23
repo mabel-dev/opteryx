@@ -64,7 +64,8 @@ class LRU2:
 
     def set(self, key: bytes, value):
         self.inserts += 1
-        self.size += 1
+        if key not in self.slots:
+            self.size += 1
         self.slots[key] = value
         self._update_access_history(key)
         return None
