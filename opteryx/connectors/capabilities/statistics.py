@@ -44,7 +44,7 @@ class Statistics:
             self.stats_cache.set(key, cached_stats)
         return cached_stats
 
-    def prefilter_blobs(self, blob_names: list[str], query_statistics, selection) -> list[str]:
+    def prune_blobs(self, blob_names: list[str], query_statistics, selection) -> list[str]:
         new_blob_names = []
 
         for blob_name in blob_names:
