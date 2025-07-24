@@ -3,6 +3,9 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+import base64
+from collections.abc import Mapping
+from collections.abc import Sequence
 from typing import Any
 from typing import Dict
 from typing import List
@@ -10,6 +13,28 @@ from typing import Optional
 from typing import Tuple
 
 import orjson
+
+
+def encode_object(obj):
+    if isinstance(obj, bytes):
+        return {"__bytes__": base64.b64encode(obj).decode("utf-8")}
+    elif isinstance(obj, Mapping):
+        return {k: encode_object(v) for k, v in obj.items()}
+    elif isinstance(obj, Sequence) and not isinstance(obj, str):
+        return [encode_object(v) for v in obj]
+    else:
+        return obj
+
+
+def decode_object(obj):
+    if isinstance(obj, Mapping):
+        if "__bytes__" in obj and len(obj) == 1:
+            return base64.b64decode(obj["__bytes__"])
+        return {k: decode_object(v) for k, v in obj.items()}
+    elif isinstance(obj, Sequence) and not isinstance(obj, str):
+        return [decode_object(v) for v in obj]
+    else:
+        return obj
 
 
 class RelationStatistics:
@@ -77,18 +102,18 @@ class RelationStatistics:
             "cardinality_estimate": self.cardinality_estimate,
             "raw_distribution_data": self.raw_distribution_data,
         }
-        return orjson.dumps(data, default=str)
+        return orjson.dumps(encode_object(data))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "RelationStatistics":
         """Deserialize bytes to a RelationStatistics object using JSON."""
-        obj = cls()
-        loaded = orjson.loads(data)
+        obj = cls.__new__(cls)
+        loaded = decode_object(orjson.loads(data))
         obj.record_count = loaded.get("record_count", 0)
         obj.record_count_estimate = loaded.get("record_count_estimate", 0)
-        obj.null_count = loaded.get("null_count", None)
-        obj.lower_bounds = loaded.get("lower_bounds", {})
-        obj.upper_bounds = loaded.get("upper_bounds", {})
+        obj.null_count = loaded.get("null_count")
+        obj.lower_bounds = loaded.get("lower_bounds")
+        obj.upper_bounds = loaded.get("upper_bounds")
         obj.cardinality_estimate = loaded.get("cardinality_estimate", None)
         obj.raw_distribution_data = loaded.get("raw_distribution_data", [])
         return obj

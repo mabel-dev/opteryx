@@ -1,7 +1,11 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# See the License at http://www.apache.org/licenses/LICENSE-2.0
-# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
+# distutils: language = c++
+# cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=False
+# cython: boundscheck=False
 
 """
 LRU-K evicts the morsel whose K-th most recent access is furthest in the past. Note, the
@@ -30,13 +34,30 @@ If n+1 items are put into the cache in the same 'transaction', it acts like a FI
 the BufferPool implements limit to only evict up to 32 items per 'transaction'
 """
 
-import heapq
-import time
+import heapq as py_heapq
+
+from libc.stdint cimport int64_t
 from collections import defaultdict
+from time import monotonic_ns
 
+cdef class LRU_K:
 
-class LRU2:
-    def __init__(self, k=2):
+    __slots__ = ("k", "slots", "access_history", "removed", "heap",
+                 "hits", "misses", "evictions", "inserts", "size")
+
+    cdef public int64_t k
+    cdef dict slots
+    cdef object access_history
+    cdef set removed
+    cdef list heap
+
+    cdef int64_t hits
+    cdef int64_t misses
+    cdef int64_t evictions
+    cdef int64_t inserts
+    cdef public int64_t size
+
+    def __cinit__(self, int64_t k=2):
         self.k = k
         self.slots = {}
         self.access_history = defaultdict(list)
@@ -47,14 +68,13 @@ class LRU2:
         self.misses = 0
         self.evictions = 0
         self.inserts = 0
-
         self.size = 0
 
     def __len__(self):
         return len(self.slots)
 
-    def get(self, key: bytes):
-        value = self.slots.get(key)
+    def get(self, bytes key) -> Optional[bytes]:
+        cdef object value = self.slots.get(key)
         if value is not None:
             self.hits += 1
             self._update_access_history(key)
@@ -62,7 +82,7 @@ class LRU2:
             self.misses += 1
         return value
 
-    def set(self, key: bytes, value):
+    def set(self, bytes key, bytes value):
         self.inserts += 1
         if key not in self.slots:
             self.size += 1
@@ -70,47 +90,50 @@ class LRU2:
         self._update_access_history(key)
         return None
 
-    def _update_access_history(self, key: bytes):
-        access_time = time.monotonic_ns()
-        if len(self.access_history[key]) == self.k:
-            old_entry = self.access_history[key].pop(0)
+    cdef void _update_access_history(self, bytes key):
+        cdef int64_t access_time = monotonic_ns()
+        cdef list history = self.access_history[key]
+        if len(history) == self.k:
+            old_entry = history.pop(0)
             self.removed.add(old_entry)
-        self.access_history[key].append((access_time, key))
-        heapq.heappush(self.heap, (access_time, key))
+        history.append((access_time, key))
+        py_heapq.heappush(self.heap, (access_time, key))
 
-    def evict(self, details=False):
+    def evict(self, bint details=False):
+        cdef int64_t _oldest_access_time
+        cdef bytes oldest_key
+        cdef int64_t new_access_time
+        cdef tuple popped
         while self.heap:
-            oldest_access_time, oldest_key = heapq.heappop(self.heap)
-            if (oldest_access_time, oldest_key) in self.removed:
-                self.removed.remove((oldest_access_time, oldest_key))
+            popped = py_heapq.heappop(self.heap)
+            _oldest_access_time, oldest_key = popped
+            if popped in self.removed:
+                self.removed.remove(popped)
                 continue
 
             if len(self.access_history[oldest_key]) == 1:
                 # Synthetic access to give a grace period
-                new_access_time = time.monotonic_ns()
+                new_access_time = monotonic_ns()
                 self.access_history[oldest_key].append((new_access_time, oldest_key))
-                heapq.heappush(self.heap, (new_access_time, oldest_key))
+                py_heapq.heappush(self.heap, (new_access_time, oldest_key))
                 continue
 
-            # Evict the key with the oldest k-th access
             if oldest_key not in self.slots:
                 continue
+
             value = self.slots.pop(oldest_key)
             self.access_history.pop(oldest_key)
             self.size -= 1
             self.evictions += 1
-            if details:  # pragma: no cover
+            if details:
                 return oldest_key, value
             return oldest_key
 
-        if details:  # pragma: no cover
-            return None, None  # No item was evicted
+        if details:
+            return None, None
         return None
 
-    def delete(self, key: bytes):
-        """
-        Delete an item from the cache.
-        """
+    def delete(self, bytes key):
         if key in self.slots:
             self.slots.pop(key, None)
             self.access_history.pop(key, None)
@@ -127,11 +150,11 @@ class LRU2:
     def stats(self):
         return self.hits, self.misses, self.evictions, self.inserts
 
-    def reset(self, reset_stats=False):
-        self.slots = {}
+    def reset(self, bint reset_stats=False):
+        self.slots.clear()
         self.access_history.clear()
         self.removed.clear()
-        self.heap = []
+        self.heap.clear()
         if reset_stats:
             self.hits = 0
             self.misses = 0

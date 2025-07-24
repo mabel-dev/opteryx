@@ -18,9 +18,9 @@ The Buffer Pool is a global resource and used across all Connections and Cursors
 
 from typing import Optional
 
+from opteryx.compiled.structures.lru_k import LRU_K
 from opteryx.config import MAX_LOCAL_BUFFER_CAPACITY
 from opteryx.shared import MemoryPool
-from opteryx.utils.lru_2 import LRU2
 
 
 class _BufferPool:
@@ -32,7 +32,7 @@ class _BufferPool:
     slots = "_lru", "_memory_pool", "size"
 
     def __init__(self):
-        self._lru = LRU2()
+        self._lru = LRU_K(k=2)
         self._memory_pool = MemoryPool(name="BufferPool", size=MAX_LOCAL_BUFFER_CAPACITY)
         self.size = self._memory_pool.size
 
@@ -42,6 +42,7 @@ class _BufferPool:
         """
         mp_key = self._lru.get(key)
         if mp_key is not None:
+            mp_key = int.from_bytes(mp_key, "big")
             return self._memory_pool.read(mp_key, zero_copy=zero_copy, latch=latch)
         return None
 
@@ -51,6 +52,7 @@ class _BufferPool:
         """
         mp_key = self._lru.get(key)
         if mp_key is not None:
+            mp_key = int.from_bytes(mp_key, "big")
             self._memory_pool.unlatch(mp_key)
 
     def delete(self, key: bytes):
@@ -59,6 +61,7 @@ class _BufferPool:
         """
         mp_key = self._lru.get(key)
         if mp_key is not None:
+            mp_key = int.from_bytes(mp_key, "big")
             self._memory_pool.release(mp_key)
             self._lru.delete(key)
 
@@ -88,7 +91,7 @@ class _BufferPool:
             return None  # Return None if commit still fails after eviction
 
         # Update LRU cache with the new key and memory pool key if commit succeeds
-        self._lru.set(key, memory_pool_key)
+        self._lru.set(key, memory_pool_key.to_bytes(8, "big"))
 
         # Return the evicted key if an eviction occurred, otherwise return None
         return evicted_key if "evicted_key" in locals() else None
@@ -105,7 +108,7 @@ class _BufferPool:
         Reset the buffer pool.
         If reset_stats is True, also reset the statistics.
         """
-        self._lru = LRU2()
+        self._lru = LRU_K(k=2)
         self._memory_pool = MemoryPool(name="BufferPool", size=MAX_LOCAL_BUFFER_CAPACITY)
         self.size = self._memory_pool.size
 

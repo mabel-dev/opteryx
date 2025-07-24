@@ -15,6 +15,15 @@ from opteryx.models import RelationStatistics
 from opteryx.shared.stats_cache import StatsCache
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
 
+handlers = {
+    "Eq": lambda v, min_, max_: v < min_ or v > max_,
+    "NotEq": lambda v, min_, max_: min_ == max_ == v,
+    "Gt": lambda v, min_, max_: max_ <= v,
+    "GtEq": lambda v, min_, max_: max_ < v,
+    "Lt": lambda v, min_, max_: min_ >= v,
+    "LtEq": lambda v, min_, max_: min_ > v,
+}
+
 
 class Statistics:
     def __init__(self, statistics: dict, **kwargs):
@@ -37,72 +46,35 @@ class Statistics:
 
     def prefilter_blobs(self, blob_names: list[str], query_statistics, selection) -> list[str]:
         new_blob_names = []
+
         for blob_name in blob_names:
             key = hex(hash_bytes(blob_name.encode())).encode()
             cached_stats = self.stats_cache.get(key)
-            if cached_stats is None:
-                # we have no stats so we can't make a decision
-                new_blob_names.append(blob_name)
-                query_statistics.no_stats += 1
-                continue
 
             skip_blob = False
 
-            for condition in selection:
-                if condition.left.node_type != NodeType.IDENTIFIER:
-                    continue
-                if condition.right.node_type != NodeType.LITERAL:
-                    continue
+            # if we have no stats we can't make a decision
+            if cached_stats is not None:
+                valid_conditions = [
+                    cond
+                    for cond in selection
+                    if cond.value in handlers
+                    and cond.left.node_type == NodeType.IDENTIFIER
+                    and cond.right.node_type == NodeType.LITERAL
+                ]
 
-                column_name = condition.left.source_column
-                literal_value = condition.right.value
-                max_value = cached_stats.upper_bounds.get(column_name, None)
-                min_value = cached_stats.lower_bounds.get(column_name, None)
+                for condition in valid_conditions:
+                    column_name = condition.left.source_column
+                    literal_value = condition.right.value
+                    max_value = cached_stats.upper_bounds.get(column_name)
+                    min_value = cached_stats.lower_bounds.get(column_name)
 
-                if max_value is None or min_value is None:
-                    continue
-
-                if condition.value == "Eq":  # noqa: SIM102
-                    # value must be within [min, max]
-                    if literal_value < min_value or literal_value > max_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
-
-                elif condition.value == "NotEq":  # noqa: SIM102
-                    # only prune if min == max == literal (i.e., column only contains this value)
-                    if min_value == max_value == literal_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
-
-                elif condition.value == "Gt":  # noqa: SIM102
-                    # value must be less than max to potentially match
-                    if max_value <= literal_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
-
-                elif condition.value == "GtEq":  # noqa: SIM102
-                    # value must be less than or equal to max to potentially match
-                    if max_value < literal_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
-
-                elif condition.value == "Lt":  # noqa: SIM102
-                    # value must be greater than min to potentially match
-                    if min_value >= literal_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
-
-                elif condition.value == "LtEq":  # noqa: SIM102
-                    # value must be greater than or equal to min to potentially match
-                    if min_value > literal_value:
-                        query_statistics.blobs_pruned += 1
-                        skip_blob = True
-                        break
+                    if max_value is not None and min_value is not None:
+                        prune = handlers.get(condition.value)
+                        if prune and prune(literal_value, min_value, max_value):
+                            query_statistics.blobs_pruned += 1
+                            skip_blob = True
+                            break
 
             if not skip_blob:
                 new_blob_names.append(blob_name)

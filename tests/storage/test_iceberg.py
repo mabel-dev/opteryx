@@ -1,13 +1,7 @@
 """
-This module tests the ability to read from SQLite using the SQLConnector.
+This module tests the ability to read from Iceberg using the IcebergConnector.
 
-SQLite is used to rigorously test the SQLConnector due to its local file nature,
-which avoids contention with remote services. This allows for more intensive
-testing without the overhead of network latency or remote service limitations.
-
-Note: DuckDB also includes additional tests beyond the standard battery. However,
-due to DuckDB's unstable file format, it only covers a subset of the required use
-cases to save time, as loading it with numerous different tables can be time-consuming.
+This is extensively tested as Iceberg is expected to be a primary storage format for Opteryx.
 """
 
 import os
