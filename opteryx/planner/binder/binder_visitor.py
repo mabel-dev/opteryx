@@ -924,6 +924,7 @@ class BinderVisitor:
         from opteryx.connectors.capabilities import Partitionable
         from opteryx.connectors.capabilities import Statistics
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
+        from opteryx.connectors.capabilities.cacheable import read_thru_cache
         from opteryx.managers.permissions import can_read_table
 
         if node.alias in context.relations:
@@ -943,18 +944,15 @@ class BinderVisitor:
         if Partitionable in connector_capabilities:
             node.connector.start_date = node.start_date
             node.connector.end_date = node.end_date
-        if Cacheable in connector_capabilities:
+        if Cacheable in connector_capabilities and "NO_CACHE" not in (node.hints or []):
             # We add the caching mechanism here if the connector is Cacheable and
             # we've not disable caching
-            if "NO_CACHE" in (node.hints or []):
-                pass
-            if Asynchronous in connector_capabilities:
-                original_read_blob = node.connector.async_read_blob
-                node.connector.async_read_blob = async_read_thru_cache(original_read_blob)
-            else:
-                from opteryx.exceptions import InvalidInternalStateError
+            original_read_blob = node.connector.read_blob
+            node.connector.read_blob = read_thru_cache(original_read_blob)
 
-                raise InvalidInternalStateError("Connector is Cachable but not Async")
+            if Asynchronous in connector_capabilities:
+                original_async_read_blob = node.connector.async_read_blob
+                node.connector.async_read_blob = async_read_thru_cache(original_async_read_blob)
 
         node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)

@@ -162,6 +162,31 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
+
+
+#    Extension(
+#        name="opteryx.compiled.aggregations.aggregate",
+#        sources=["opteryx/compiled/aggregations/aggregate.pyx"],
+#        language="c++",
+#        include_dirs=include_dirs,
+#        extra_compile_args=CPP_COMPILE_FLAGS,
+#    ),
+#    Extension(
+#        name="opteryx.compiled.aggregations.agg_base",
+#        sources=["opteryx/compiled/aggregations/agg_base.pyx"],
+#        language="c++",
+#        include_dirs=include_dirs,
+#        extra_compile_args=CPP_COMPILE_FLAGS,
+#    ),
+#    Extension(
+#        name="opteryx.compiled.aggregations.agg_sum",
+#        sources=["opteryx/compiled/aggregations/agg_sum.pyx"],
+#        language="c++",
+#        include_dirs=include_dirs,
+#        extra_compile_args=CPP_COMPILE_FLAGS,
+#    ),
+
+
     Extension(
         name="opteryx.compiled.joins.cross_join",
         sources=["opteryx/compiled/joins/cross_join.pyx"],
@@ -213,6 +238,12 @@ extensions = [
         language="c++",
         define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         extra_compile_args=CPP_COMPILE_FLAGS + ["-Wall", "-shared"],
+    ),
+    Extension(
+        name="opteryx.compiled.structures.lru_k",
+        sources=["opteryx/compiled/structures/lru_k.pyx"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.structures.memory_pool",

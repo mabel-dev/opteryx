@@ -9,16 +9,20 @@ MinIo Reader - also works with AWS
 
 import asyncio
 import os
+from typing import Dict
 from typing import List
 
 import pyarrow
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
+from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
+from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
@@ -31,9 +35,30 @@ from opteryx.utils.file_decoders import get_decoder
 OS_SEP = os.sep
 
 
-class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
+class AwsS3Connector(
+    BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous, Statistics
+):
     __mode__ = "Blob"
     __type__ = "S3"
+
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": True,
+        "NotEq": True,
+        "Gt": True,
+        "GtEq": True,
+        "Lt": True,
+        "LtEq": True,
+    }
+
+    PUSHABLE_TYPES = {
+        OrsoTypes.BLOB,
+        OrsoTypes.BOOLEAN,
+        OrsoTypes.DOUBLE,
+        OrsoTypes.INTEGER,
+        OrsoTypes.VARCHAR,
+        OrsoTypes.TIMESTAMP,
+        OrsoTypes.DATE,
+    }
 
     def __init__(self, credentials=None, **kwargs):
         try:
@@ -44,7 +69,9 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
+        PredicatePushable.__init__(self, **kwargs)
         Asynchronous.__init__(self, **kwargs)
+        Statistics.__init__(self, **kwargs)
 
         # fmt:off
         end_point = kwargs.get("S3_END_POINT", os.environ.get("MINIO_END_POINT"))
@@ -89,6 +116,13 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 try:
                     decoded = decoder(blob_bytes, projection=columns, just_schema=just_schema)
+
+                    stats = self.read_blob_statistics(
+                        blob_name=blob_name, blob_bytes=blob_bytes, decoder=decoder
+                    )
+                    if len(blob_names) == 1:
+                        self.relation_statistics = stats
+
                 except Exception as err:
                     raise DataError(f"Unable to read file {blob_name} ({err})") from err
                 if not just_schema:

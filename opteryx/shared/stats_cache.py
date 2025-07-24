@@ -16,9 +16,9 @@ Eviction occurs when the item count exceeds the configured maximum.
 
 from typing import Optional
 
+from opteryx.compiled.structures.lru_k import LRU_K
 from opteryx.config import MAX_STATISTICS_CACHE_ITEMS
 from opteryx.models import RelationStatistics
-from opteryx.utils.lru_2 import LRU2
 
 
 class _StatsCache:
@@ -30,7 +30,7 @@ class _StatsCache:
     slots = "_lru"
 
     def __init__(self):
-        self._lru = LRU2()
+        self._lru = LRU_K(k=2)
 
     def get(self, key: bytes) -> Optional[RelationStatistics]:
         """

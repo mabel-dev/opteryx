@@ -105,7 +105,7 @@ def test_gcs_storage(test_case):
     conn.close()
 
 
-if __name__ == "__main__":  # pragma: no cover
+def main():
     """
     Running in the IDE we do some formatting - it's not functional but helps
     when reading the outputs.
@@ -170,3 +170,7 @@ if __name__ == "__main__":  # pragma: no cover
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
