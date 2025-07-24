@@ -6,6 +6,7 @@
 import base64
 from collections.abc import Mapping
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import Any
 from typing import Dict
 from typing import List
@@ -17,24 +18,26 @@ import orjson
 
 def encode_object(obj):
     if isinstance(obj, bytes):
-        return {"__bytes__": base64.b64encode(obj).decode("utf-8")}
-    elif isinstance(obj, Mapping):
+        return {"__bytes__": base64.b85encode(obj).decode("utf-8")}
+    if isinstance(obj, Decimal):
+        return {"__decimal__": str(obj)}
+    if isinstance(obj, Mapping):
         return {k: encode_object(v) for k, v in obj.items()}
-    elif isinstance(obj, Sequence) and not isinstance(obj, str):
+    if isinstance(obj, Sequence) and not isinstance(obj, str):
         return [encode_object(v) for v in obj]
-    else:
-        return obj
+    return obj
 
 
 def decode_object(obj):
     if isinstance(obj, Mapping):
         if "__bytes__" in obj and len(obj) == 1:
-            return base64.b64decode(obj["__bytes__"])
+            return base64.b85decode(obj["__bytes__"])
+        if "__decimal__" in obj and len(obj) == 1:
+            return Decimal(obj["__decimal__"])
         return {k: decode_object(v) for k, v in obj.items()}
-    elif isinstance(obj, Sequence) and not isinstance(obj, str):
+    if isinstance(obj, Sequence) and not isinstance(obj, str):
         return [decode_object(v) for v in obj]
-    else:
-        return obj
+    return obj
 
 
 class RelationStatistics:
