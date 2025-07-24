@@ -81,6 +81,7 @@ class _BufferPool:
         if not self._memory_pool.available_space() >= len(value):
             evicted_key, evicted_value = self._lru.evict(details=True)
             if evicted_key:
+                evicted_value = int.from_bytes(evicted_value, "big")
                 self._memory_pool.release(evicted_value)
             else:
                 return None  # Return None if no item could be evicted
