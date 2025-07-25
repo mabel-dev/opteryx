@@ -5,9 +5,11 @@
 
 import base64
 import decimal
+from base64 import b85decode as _b85decode
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
+from decimal import Decimal as _Decimal
 from typing import Any
 from typing import Dict
 from typing import List
@@ -18,23 +20,65 @@ import orjson
 
 
 def orjson_default(obj):
-    if isinstance(obj, decimal.Decimal):
+    if type(obj) is decimal.Decimal:
         return {"__decimal__": str(obj)}
-    if isinstance(obj, bytes):
+    if type(obj) is bytes:
         return {"__bytes__": base64.b85encode(obj).decode("utf-8")}
     raise TypeError(f"Type not serializable: {type(obj)}")
 
 
 def decode_object(obj):
-    if isinstance(obj, dict):
-        if set(obj) == {"__decimal__"}:
-            return decimal.Decimal(obj["__decimal__"])
-        if set(obj) == {"__bytes__"}:
-            return base64.b85decode(obj["__bytes__"])
-        return {k: decode_object(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [decode_object(v) for v in obj]
-    return obj
+    """
+    Decode an object that was encoded with orjson_default.
+
+    This is part of an optimization path to avoid loading files, so is written to be fast
+    over readability. It uses a stack to traverse the object structure and decode it in place.
+
+    Before this stack-based approach, the recursive version was the third slowest function
+    call in performance tests, so this is a significant improvement.
+    """
+    stack = [(None, None, obj)]  # (parent, key/index, child)
+    root = None
+
+    while stack:
+        parent, key, item = stack.pop()
+
+        t = type(item)
+
+        if t is dict:
+            if "__decimal__" in item:
+                val = _Decimal(item["__decimal__"])
+            elif "__bytes__" in item:
+                val = _b85decode(item["__bytes__"])
+            else:
+                val = {}
+                if parent is not None:
+                    parent[key] = val
+                else:
+                    root = val
+                for k in reversed(list(item.keys())):
+                    stack.append((val, k, item[k]))
+                continue
+
+        elif t is list:
+            val = [None] * len(item)
+            if parent is not None:
+                parent[key] = val
+            else:
+                root = val
+            for i in reversed(range(len(item))):
+                stack.append((val, i, item[i]))
+            continue
+
+        else:
+            val = item
+
+        if parent is not None:
+            parent[key] = val
+        else:
+            root = val
+
+    return root
 
 
 @dataclass

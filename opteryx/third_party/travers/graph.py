@@ -540,13 +540,14 @@ class Graph(object):
             Returns:
                 Any: The new, independent deep copy.
             """
-            if isinstance(obj, list):
+            obj_type = type(obj)
+            if obj_type is list:
                 return [_inner_copy(item) for item in obj]
-            if isinstance(obj, tuple):
+            if obj_type is tuple:
                 return tuple(_inner_copy(item) for item in obj)
-            if isinstance(obj, set):
+            if obj_type is set:
                 return {_inner_copy(item) for item in obj}
-            if isinstance(obj, dict):
+            if obj_type is dict:
                 return {key: _inner_copy(value) for key, value in obj.items()}
             if hasattr(obj, "copy"):
                 return obj.copy()

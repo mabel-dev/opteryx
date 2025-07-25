@@ -128,9 +128,9 @@ def align_tables(
             [nulls(0, type=f.type) for f in combined_fields], schema=pyarrow.schema(combined_fields)
         )
 
-    if not isinstance(source_indices, pyarrow.Array):
+    if type(source_indices) is not pyarrow.Array:
         source_indices = array(source_indices, type=pyarrow.int64())
-    if not isinstance(append_indices, pyarrow.Array):
+    if type(append_indices) is not pyarrow.Array:
         append_indices = array(append_indices, type=pyarrow.int64())
 
     if source_indices.null_count == len_src:

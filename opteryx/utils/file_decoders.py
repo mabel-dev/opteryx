@@ -244,9 +244,9 @@ def parquet_decoder(
         Tuple containing number of rows, number of columns, and the table or schema.
     """
     # Open the parquet file only once
-    if isinstance(buffer, memoryview):
+    if type(buffer) is memoryview:
         stream = MemoryViewStream(buffer)
-    elif isinstance(buffer, bytes):
+    elif type(buffer) is bytes:
         stream = pyarrow.BufferReader(buffer)
     else:
         stream = pyarrow.input_stream(buffer)

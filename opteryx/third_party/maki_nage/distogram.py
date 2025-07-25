@@ -57,9 +57,10 @@ class Distogram:  # pragma: no cover
         import orjson
 
         def handler(obj):
-            if isinstance(obj, numpy.integer):
+            obj_type = type(obj)
+            if obj_type is numpy.integer:
                 return int(obj)
-            if isinstance(obj, numpy.inexact):
+            if obj_type is numpy.inexact:
                 return float(obj)
             raise TypeError
 

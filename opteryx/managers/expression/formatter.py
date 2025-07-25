@@ -48,7 +48,7 @@ def format_expression(root, qualify: bool = False):
             root.right.current_name is not None
         )
 
-    if isinstance(root, list):
+    if type(root) is list:
         return [format_expression(item, qualify) for item in root]
 
     node_type = root.node_type
