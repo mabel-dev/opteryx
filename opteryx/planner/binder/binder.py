@@ -44,11 +44,11 @@ def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSche
     """
     merged_dict: Dict[str, RelationSchema] = {}
     for dic in schemas:
-        if not isinstance(dic, dict):
-            raise InvalidInternalStateError("Internal Error - merge_schemas expected dicts")
+        # DEBUG: if type(dic) is not dict:
+        # DEBUG:    raise InvalidInternalStateError("Internal Error - merge_schemas expected dicts")
         for key, value in dic.items():
             if key in merged_dict:
-                if isinstance(value, RelationSchema):
+                if type(value) is RelationSchema:
                     merged_dict[key] += value
                 else:
                     raise InvalidInternalStateError(

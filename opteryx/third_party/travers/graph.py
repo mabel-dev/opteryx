@@ -524,40 +524,35 @@ class Graph(object):
 
     def copy(self) -> "Graph":
         """
-        Intelligently make a copy of this Graph, handling situations where Deepcopy
-        does not work.
+        Intelligently make a copy of this Graph, avoiding __init__ and handling
+        deepcopy-resistant structures.
         """
         import copy
 
         def _inner_copy(obj: Any) -> Any:
-            """
-            Create an independent inner copy of the given object.
-
-            Parameters:
-                obj: Any
-                    The object to be deep copied.
-
-            Returns:
-                Any: The new, independent deep copy.
-            """
-            if isinstance(obj, list):
+            obj_type = type(obj)
+            if obj_type is list:
                 return [_inner_copy(item) for item in obj]
-            if isinstance(obj, tuple):
+            if obj_type is tuple:
                 return tuple(_inner_copy(item) for item in obj)
-            if isinstance(obj, set):
+            if obj_type is set:
                 return {_inner_copy(item) for item in obj}
-            if isinstance(obj, dict):
+            if obj_type is dict:
                 return {key: _inner_copy(value) for key, value in obj.items()}
             if hasattr(obj, "copy"):
                 return obj.copy()
             try:
                 return copy.deepcopy(obj)
-            except:
+            except Exception:
                 return obj
 
-        graph = Graph()
+        # Create a new instance without invoking __init__
+        graph = self.__class__.__new__(self.__class__)
+
+        # Manually assign attributes
         graph._nodes = _inner_copy(self._nodes)
         graph._edges = self.copy_edges()
+        graph._cached_edges = None
 
         return graph
 

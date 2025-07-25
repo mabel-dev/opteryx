@@ -10,14 +10,14 @@ from opteryx.planner.sql_rewriter import sql_parts
 # Define the test cases as a list of (input, expected_output) tuples
 # fmt:off
 test_cases = [
-    ("This is a test string with r'abc' and R\"def\".", "This is a test string with BASE85_DECODE('VPaz') and BASE85_DECODE('WMyU')."),
-    ("r'123' should become BASE85_DECODE('F)}j')", "BASE85_DECODE('F)}j') should become BASE85_DECODE('F)}j')"),
-    ('R"xyz" should become BASE85_DECODE(\'czJp\')', 'BASE85_DECODE(\'czJp\') should become BASE85_DECODE(\'czJp\')'),
-    ("Mix of r'one' and R\"two\"", "Mix of BASE85_DECODE('Z*FA') and BASE85_DECODE('ba!t')"),
+    ("This is a test string with r'abc' and R\"def\".", "This is a test string with BASE64_DECODE('YWJj') and BASE64_DECODE('ZGVm')."),
+    ("r'123' should become BASE64_DECODE('F)}j')", "BASE64_DECODE('MTIz') should become BASE64_DECODE('F)}j')"),
+    ('R"xyz" should become BASE64_DECODE(\'czJp\')', 'BASE64_DECODE(\'eHl6\') should become BASE64_DECODE(\'czJp\')'),
+    ("Mix of r'one' and R\"two\"", "Mix of BASE64_DECODE('b25l') and BASE64_DECODE('dHdv')"),
     ("No prefixed strings here.", "No prefixed strings here."),
-    ("R'' and r\"\" should be handled.", "BASE85_DECODE('') and BASE85_DECODE('') should be handled."),
-    ("I am escaping r'\\1' and R'\\1'", "I am escaping BASE85_DECODE('Trm') and BASE85_DECODE('Trm')"),
-    ("I am also escaping r'\1' and r'\1'", "I am also escaping BASE85_DECODE('0R') and BASE85_DECODE('0R')"),
+    ("R'' and r\"\" should be handled.", "BASE64_DECODE('') and BASE64_DECODE('') should be handled."),
+    ("I am escaping r'\\1' and R'\\1'", "I am escaping BASE64_DECODE('XDE=') and BASE64_DECODE('XDE=')"),
+    ("I am also escaping r'\1' and r'\1'", "I am also escaping BASE64_DECODE('AQ==') and BASE64_DECODE('AQ==')"),
 ]
 # fmt:on
 

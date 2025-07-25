@@ -43,7 +43,7 @@ class _QueryStatistics:
         Return statistics as a dictionary
         """
         import opteryx
-        
+
         stats_dict = dict(self._stats)
         for k, v in stats_dict.items():
             # times are recorded in ns but reported in seconds

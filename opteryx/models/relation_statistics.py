@@ -3,11 +3,11 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-import base64
 import decimal
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
+from decimal import Decimal as _Decimal
 from typing import Any
 from typing import Dict
 from typing import List
@@ -15,25 +15,33 @@ from typing import Optional
 from typing import Tuple
 
 import orjson
+import pybase64 as base64
 
 
 def orjson_default(obj):
-    if isinstance(obj, decimal.Decimal):
+    if type(obj) is decimal.Decimal:
         return {"__decimal__": str(obj)}
-    if isinstance(obj, bytes):
-        return {"__bytes__": base64.b85encode(obj).decode("utf-8")}
+    if type(obj) is bytes:
+        return {"__bytes__": base64.b64encode(obj).decode("utf-8")}
     raise TypeError(f"Type not serializable: {type(obj)}")
 
 
 def decode_object(obj):
-    if isinstance(obj, dict):
-        if set(obj) == {"__decimal__"}:
-            return decimal.Decimal(obj["__decimal__"])
-        if set(obj) == {"__bytes__"}:
-            return base64.b85decode(obj["__bytes__"])
-        return {k: decode_object(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [decode_object(v) for v in obj]
+    _decode = decode_object
+    t = type(obj)
+
+    if t is dict:
+        if "__decimal__" in obj:
+            return _Decimal(obj["__decimal__"])
+        if "__bytes__" in obj:
+            return base64.b64decode(obj["__bytes__"])
+        return {k: _decode(v) for k, v in obj.items()}
+
+    if t is list:
+        for i, v in enumerate(obj):
+            obj[i] = _decode(v)
+        return obj
+
     return obj
 
 

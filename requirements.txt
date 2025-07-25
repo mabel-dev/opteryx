@@ -4,4 +4,5 @@ orjson
 orso>=0.0.204
 psutil
 pyarrow>=20.0.0
+pybase64
 requests
