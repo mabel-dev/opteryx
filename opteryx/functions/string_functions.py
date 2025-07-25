@@ -135,7 +135,7 @@ def get_sha512(item):
 
 def get_base64_encode(item):
     """calculate BASE64 encoding of a string"""
-    import base64
+    import pybase64 as base64
 
     if item is None:
         return None
@@ -147,7 +147,7 @@ def get_base64_encode(item):
 
 def get_base64_decode(item):
     """calculate BASE64 encoding of a string"""
-    import base64
+    import pybase64 as base64
 
     if item is None:
         return None

@@ -15,6 +15,7 @@ It actually is a table, with one row and one column.
 import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.models import RelationStatistics
@@ -22,6 +23,7 @@ from opteryx.models import RelationStatistics
 __all__ = ("read", "schema")
 
 
+@single_item_cache
 def read(*args) -> pyarrow.Table:
     # Create a PyArrow table with one column and one row
     arrow_schema = pyarrow.schema([pyarrow.field("$column", pyarrow.int64())])

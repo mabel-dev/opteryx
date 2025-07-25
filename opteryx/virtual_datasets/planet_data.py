@@ -30,6 +30,7 @@ import decimal
 import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.models import RelationStatistics
@@ -37,6 +38,7 @@ from opteryx.models import RelationStatistics
 __all__ = ("read", "schema")
 
 
+@single_item_cache
 def read(end_date=None, *args) -> pyarrow.Table:
     # fmt:off
     # Define the data

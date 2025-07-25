@@ -3,9 +3,7 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-import base64
 import decimal
-from base64 import b85decode as _b85decode
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
@@ -17,68 +15,34 @@ from typing import Optional
 from typing import Tuple
 
 import orjson
+import pybase64 as base64
 
 
 def orjson_default(obj):
     if type(obj) is decimal.Decimal:
         return {"__decimal__": str(obj)}
     if type(obj) is bytes:
-        return {"__bytes__": base64.b85encode(obj).decode("utf-8")}
+        return {"__bytes__": base64.b64encode(obj).decode("utf-8")}
     raise TypeError(f"Type not serializable: {type(obj)}")
 
 
 def decode_object(obj):
-    """
-    Decode an object that was encoded with orjson_default.
+    _decode = decode_object
+    t = type(obj)
 
-    This is part of an optimization path to avoid loading files, so is written to be fast
-    over readability. It uses a stack to traverse the object structure and decode it in place.
+    if t is dict:
+        if "__decimal__" in obj:
+            return _Decimal(obj["__decimal__"])
+        if "__bytes__" in obj:
+            return base64.b64decode(obj["__bytes__"])
+        return {k: _decode(v) for k, v in obj.items()}
 
-    Before this stack-based approach, the recursive version was the third slowest function
-    call in performance tests, so this is a significant improvement.
-    """
-    stack = [(None, None, obj)]  # (parent, key/index, child)
-    root = None
+    if t is list:
+        for i, v in enumerate(obj):
+            obj[i] = _decode(v)
+        return obj
 
-    while stack:
-        parent, key, item = stack.pop()
-
-        t = type(item)
-
-        if t is dict:
-            if "__decimal__" in item:
-                val = _Decimal(item["__decimal__"])
-            elif "__bytes__" in item:
-                val = _b85decode(item["__bytes__"])
-            else:
-                val = {}
-                if parent is not None:
-                    parent[key] = val
-                else:
-                    root = val
-                for k in reversed(list(item.keys())):
-                    stack.append((val, k, item[k]))
-                continue
-
-        elif t is list:
-            val = [None] * len(item)
-            if parent is not None:
-                parent[key] = val
-            else:
-                root = val
-            for i in reversed(range(len(item))):
-                stack.append((val, i, item[i]))
-            continue
-
-        else:
-            val = item
-
-        if parent is not None:
-            parent[key] = val
-        else:
-            root = val
-
-    return root
+    return obj
 
 
 @dataclass
