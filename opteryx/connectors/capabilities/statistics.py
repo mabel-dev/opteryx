@@ -3,11 +3,11 @@
 # See the License at http://www.apache.org/licenses/LICENSE-2.0
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
-
 from typing import Any
 from typing import Dict
 from typing import Optional
 
+import numpy
 from orso.schema import RelationSchema
 
 from opteryx.managers.expression import NodeType
@@ -66,6 +66,8 @@ class Statistics:
                 for condition in valid_conditions:
                     column_name = condition.left.source_column
                     literal_value = condition.right.value
+                    if type(literal_value) is numpy.datetime64:
+                        literal_value = str(literal_value.astype("M8[ms]"))
                     max_value = cached_stats.upper_bounds.get(column_name)
                     min_value = cached_stats.lower_bounds.get(column_name)
 
