@@ -15,12 +15,14 @@ from typing import List
 
 import pyarrow
 from orso.schema import RelationSchema
+from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
@@ -46,59 +48,7 @@ else:
     mmap_config["access"] = mmap.ACCESS_READ
 
 
-def read_blob(
-    *, blob_name: str, decoder, statistics, just_schema=False, projection=None, selection=None
-):
-    """
-    Read a blob (binary large object) from disk using memory-mapped file access.
-
-    This method uses low-level file reading with memory-mapped files to
-    improve performance. It reads the entire file into memory and then
-    decodes it using the provided decoder function.
-
-    Parameters:
-        blob_name (str):
-            The name of the blob file to read.
-        decoder (callable):
-            A function to decode the memory-mapped file content.
-        just_schema (bool, optional):
-            If True, only the schema of the data is returned. Defaults to False.
-        projection (list, optional):
-            A list of fields to project. Defaults to None.
-        selection (dict, optional):
-            A dictionary of selection criteria. Defaults to None.
-        **kwargs:
-            Additional keyword arguments.
-
-    Returns:
-        The decoded blob content.
-
-    Raises:
-        FileNotFoundError:
-            If the blob file does not exist.
-        OSError:
-            If an I/O error occurs while reading the file.
-    """
-    try:
-        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
-        if hasattr(os, "posix_fadvise"):
-            os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
-        size = os.fstat(file_descriptor).st_size
-        _map = mmap.mmap(file_descriptor, length=size, **mmap_config)
-        result = decoder(
-            _map,
-            just_schema=just_schema,
-            projection=projection,
-            selection=selection,
-            use_threads=True,
-        )
-        statistics.bytes_read += size
-        return result
-    finally:
-        os.close(file_descriptor)
-
-
-class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable):
+class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
     """
     Connector for reading datasets from files on local storage.
     """
@@ -137,6 +87,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         Partitionable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
+        Statistics.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
@@ -144,6 +95,66 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         self.rows_seen = 0
         self.blobs_seen = 0
 
+    def read_blob(
+        self, *, blob_name: str, decoder, just_schema=False, projection=None, selection=None
+    ):
+        """
+        Read a blob (binary large object) from disk using memory-mapped file access.
+
+        This method uses low-level file reading with memory-mapped files to
+        improve performance. It reads the entire file into memory and then
+        decodes it using the provided decoder function.
+
+        Parameters:
+            blob_name (str):
+                The name of the blob file to read.
+            decoder (callable):
+                A function to decode the memory-mapped file content.
+            just_schema (bool, optional):
+                If True, only the schema of the data is returned. Defaults to False.
+            projection (list, optional):
+                A list of fields to project. Defaults to None.
+            selection (dict, optional):
+                A dictionary of selection criteria. Defaults to None.
+            **kwargs:
+                Additional keyword arguments.
+
+        Returns:
+            The decoded blob content.
+
+        Raises:
+            FileNotFoundError:
+                If the blob file does not exist.
+            OSError:
+                If an I/O error occurs while reading the file.
+        """
+        try:
+            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+            if hasattr(os, "posix_fadvise"):
+                os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
+            size = os.fstat(file_descriptor).st_size
+            _map = mmap.mmap(file_descriptor, length=size, **mmap_config)
+            result = decoder(
+                _map,
+                just_schema=just_schema,
+                projection=projection,
+                selection=selection,
+                use_threads=True,
+            )
+            self.statistics.bytes_read += size
+
+            if not just_schema:
+                stats = self.read_blob_statistics(
+                    blob_name=blob_name, blob_bytes=_map, decoder=decoder
+                )
+                if self.relation_statistics is None:
+                    self.relation_statistics = stats
+
+            return result
+        finally:
+            os.close(file_descriptor)
+
+    @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         """
         List all blob files in the given directory path.
@@ -190,15 +201,19 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             prefix=self.dataset,
         )
 
+        if predicates is not None:
+            blob_names = self.prune_blobs(
+                blob_names=blob_names, query_statistics=self.statistics, selection=predicates
+            )
+
         remaining_rows = limit if limit is not None else float("inf")
 
         for blob_name in blob_names:
             decoder = get_decoder(blob_name)
             try:
                 if not just_schema:
-                    num_rows, _, decoded = read_blob(
+                    num_rows, _, decoded = self.read_blob(
                         blob_name=blob_name,
-                        statistics=self.statistics,
                         decoder=decoder,
                         just_schema=False,
                         projection=columns,
@@ -219,9 +234,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                     if remaining_rows <= 0:
                         break
                 else:
-                    schema = read_blob(
+                    schema = self.read_blob(
                         blob_name=blob_name,
-                        statistics=self.statistics,
                         decoder=decoder,
                         just_schema=True,
                     )
