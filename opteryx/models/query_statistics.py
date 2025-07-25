@@ -42,6 +42,8 @@ class _QueryStatistics:
         """
         Return statistics as a dictionary
         """
+        import opteryx
+        
         stats_dict = dict(self._stats)
         for k, v in stats_dict.items():
             # times are recorded in ns but reported in seconds
@@ -53,6 +55,7 @@ class _QueryStatistics:
         # sort the keys in the dictionary
         stats_dict = {key: stats_dict[key] for key in sorted(stats_dict)}
         # put messages and executed_plan at the end
+        stats_dict["version"] = opteryx.__version__
         stats_dict["messages"] = stats_dict.pop("messages", [])
         stats_dict["executed_plan"] = stats_dict.pop("executed_plan", None)
         return stats_dict
