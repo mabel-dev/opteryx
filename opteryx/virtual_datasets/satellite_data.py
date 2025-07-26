@@ -69,8 +69,9 @@ def statistics() -> RelationStatistics:
 
     # fmt:off
     stats.record_count = 177
-    stats.lower_bounds = {'id': 1, 'planetId': 3, 'name': 'Adrastea', 'gm': -0.0, 'radius': 0.3, 'density': 0.34, 'magnitude': -12.74, 'albedo': 0.04}
-    stats.upper_bounds = {'id': 177, 'planetId': 9, 'name': 'Ymir', 'gm': 9887.834, 'radius': 2631.2, 'density': 3.528, 'magnitude': 27.0, 'albedo': 1.67}
-    stats.null_count = {'id': 0, 'planetId': 0, 'name': 0, 'gm': 0, 'radius': 0, 'density': 0, 'magnitude': 0, 'albedo': 0}
+    stats.lower_bounds = {b'id': 1, b'radius': 0, b'planetId': 3, b'name': 4712016873010783585, b'magnitude': -13, b'gm': 0, b'albedo': 0, b'density': 0}
+    stats.upper_bounds = {b'id': 177, b'radius': 2631, b'planetId': 9, b'name': 6443922580184236032, b'magnitude': 27, b'gm': 9888, b'albedo': 2, b'density': 4}
+    stats.null_count = {b'id': 0, b'planetId': 0, b'name': 0, b'gm': 0, b'radius': 0, b'density': 0, b'magnitude': 0, b'albedo': 0}
+
     # fmt:on
     return stats

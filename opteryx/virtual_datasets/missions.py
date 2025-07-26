@@ -66,12 +66,40 @@ def schema():
 
 
 def statistics() -> RelationStatistics:
+    from opteryx.compiled.structures.relation_statistics import to_int
+
     stats = RelationStatistics()
 
-    # fmt:off
     stats.record_count = 4630
-    stats.lower_bounds = {'Company': 'AEB', 'Location': 'Blue Origin Launch Site, West Texas, Texas, USA', 'Price': 2.5, 'Lauched_at': datetime.datetime(1957, 10, 4, 19, 28), 'Rocket': 'ASLV', 'Rocket_Status': 'Active', 'Mission': '-TJS_6.00', 'Mission_Status': 'Failure'}
-    stats.upper_bounds = {'Company': 'i-Space', 'Location': 'Xichang Satellite Launch Center, China', 'Price': 450.0, 'Lauched_at': datetime.datetime(2022, 7, 29, 13, 28), 'Rocket': 'Zoljanah', 'Rocket_Status': 'Retired', 'Mission': 'iPStar-1', 'Mission_Status': 'Success'}
-    stats.null_count = {'Company': 0, 'Location': 0, 'Price': 3380, 'Lauched_at': 127, 'Rocket': 0, 'Rocket_Status': 0, 'Mission': 0, 'Mission_Status': 0}
-    # fmt:on
+    stats.lower_bounds = {
+        b"Company": to_int("AEB"),
+        b"Location": to_int("Blue Origin Launch Site, West Texas, Texas, USA"),
+        b"Price": to_int(2.5),
+        b"Lauched_at": to_int(datetime.datetime(1957, 10, 4, 19, 28)),
+        b"Rocket": to_int("ASLV"),
+        b"Rocket_Status": to_int("Active"),
+        b"Mission": to_int("-TJS_6.00"),
+        b"Mission_Status": to_int("Failure"),
+    }
+    stats.upper_bounds = {
+        b"Company": to_int("i-Space"),
+        b"Location": to_int("Xichang Satellite Launch Center, China"),
+        b"Price": to_int(450.0),
+        b"Lauched_at": to_int(datetime.datetime(2022, 7, 29, 13, 28)),
+        b"Rocket": to_int("Zoljanah"),
+        b"Rocket_Status": to_int("Retired"),
+        b"Mission": to_int("iPStar-1"),
+        b"Mission_Status": to_int("Success"),
+    }
+    stats.null_count = {
+        b"Company": 0,
+        b"Location": 0,
+        b"Price": 3380,
+        b"Lauched_at": 127,
+        b"Rocket": 0,
+        b"Rocket_Status": 0,
+        b"Mission": 0,
+        b"Mission_Status": 0,
+    }
+
     return stats

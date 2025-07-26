@@ -4,13 +4,13 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 from opteryx.compiled.structures.node import Node
+from opteryx.compiled.structures.relation_statistics import RelationStatistics
 from opteryx.models.connection_context import ConnectionContext
 from opteryx.models.logical_column import LogicalColumn
 from opteryx.models.non_tabular_result import NonTabularResult
 from opteryx.models.physical_plan import PhysicalPlan
 from opteryx.models.query_properties import QueryProperties
 from opteryx.models.query_statistics import QueryStatistics
-from opteryx.models.relation_statistics import RelationStatistics
 
 __all__ = (
     "ConnectionContext",

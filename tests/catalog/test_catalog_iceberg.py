@@ -10,6 +10,7 @@ from tests.tools import set_up_iceberg
 import opteryx
 from opteryx.connectors import DiskConnector
 from opteryx.connectors import IcebergConnector
+from opteryx.compiled.structures.relation_statistics import to_int
 
 
 # this is how we get the raw list of files for the scan
@@ -38,7 +39,7 @@ def test_iceberg_get_schema():
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_statistics_manual():
 
-    from opteryx.models.relation_statistics import RelationStatistics
+    from opteryx.models import RelationStatistics
 
     catalog = set_up_iceberg()
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
@@ -73,16 +74,16 @@ def test_iceberg_get_statistics_manual():
             stats.update_upper(column_names[k], IcebergConnector.decode_iceberg_value(v, column_types[k]))
 
     assert stats.record_count == 100000
-    assert stats.lower_bounds["followers"] == 0
-    assert stats.upper_bounds["followers"] == 8266250
-    assert stats.lower_bounds["user_name"] == ""
-    assert stats.upper_bounds["user_name"] == "🫖🔫"
-    assert stats.lower_bounds["tweet_id"] == 1346604539013705728
-    assert stats.upper_bounds["tweet_id"] == 1346615999009755142
-    assert stats.lower_bounds["text"] == "!! PLEASE STOP A"
-    assert stats.upper_bounds["text"] == "🪶Cultural approq"
-    assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
-    assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
+    assert stats.lower_bounds[b"followers"] == 0
+    assert stats.upper_bounds[b"followers"] == 8266250
+    assert stats.lower_bounds[b"user_name"] == to_int("")
+    assert stats.upper_bounds[b"user_name"] == to_int("🫖🔫")
+    assert stats.lower_bounds[b"tweet_id"] == to_int(1346604539013705728)
+    assert stats.upper_bounds[b"tweet_id"] == to_int(1346615999009755142)
+    assert stats.lower_bounds[b"text"] == to_int("!! PLEASE STOP A")
+    assert stats.upper_bounds[b"text"] == to_int("🪶Cultural approq")
+    assert stats.lower_bounds[b"timestamp"] == to_int("2021-01-05T23:48")
+    assert stats.upper_bounds[b"timestamp"] == to_int("2021-01-06T00:35")
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_connector():
@@ -106,16 +107,16 @@ def test_iceberg_get_stats_tweets():
     stats = connector.relation_statistics
 
     assert stats.record_count == 100000
-    assert stats.lower_bounds["followers"] == 0
-    assert stats.upper_bounds["followers"] == 8266250
-    assert stats.lower_bounds["user_name"] == ""
-    assert stats.upper_bounds["user_name"] == "🫖🔫"
-    assert stats.lower_bounds["tweet_id"] == 1346604539013705728
-    assert stats.upper_bounds["tweet_id"] == 1346615999009755142
-    assert stats.lower_bounds["text"] == "!! PLEASE STOP A"
-    assert stats.upper_bounds["text"] == "🪶Cultural approq"
-    assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
-    assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
+    assert stats.lower_bounds[b"followers"] == 0
+    assert stats.upper_bounds[b"followers"] == 8266250
+    assert stats.lower_bounds[b"user_name"] == to_int("")
+    assert stats.upper_bounds[b"user_name"] == to_int("🫖🔫")
+    assert stats.lower_bounds[b"tweet_id"] == to_int(1346604539013705728)
+    assert stats.upper_bounds[b"tweet_id"] == to_int(1346615999009755142)
+    assert stats.lower_bounds[b"text"] == to_int("!! PLEASE STOP A")
+    assert stats.upper_bounds[b"text"] == to_int("🪶Cultural approq")
+    assert stats.lower_bounds[b"timestamp"] == to_int("2021-01-05T23:48")
+    assert stats.upper_bounds[b"timestamp"] == to_int("2021-01-06T00:35")
     
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_stats_missions():
@@ -130,16 +131,16 @@ def test_iceberg_get_stats_missions():
     stats = connector.relation_statistics
 
     assert stats.record_count == 100000
-    assert stats.lower_bounds["followers"] == 0
-    assert stats.upper_bounds["followers"] == 8266250
-    assert stats.lower_bounds["user_name"] == ""
-    assert stats.upper_bounds["user_name"] == "🫖🔫"
-    assert stats.lower_bounds["tweet_id"] == 1346604539013705728
-    assert stats.upper_bounds["tweet_id"] == 1346615999009755142
-    assert stats.lower_bounds["text"] == "!! PLEASE STOP A"
-    assert stats.upper_bounds["text"] == "🪶Cultural approq"
-    assert stats.lower_bounds["timestamp"] == "2021-01-05T23:48"
-    assert stats.upper_bounds["timestamp"] == "2021-01-06T00:35"
+    assert stats.lower_bounds[b"followers"] == 0
+    assert stats.upper_bounds[b"followers"] == 8266250
+    assert stats.lower_bounds[b"user_name"] == to_int("")
+    assert stats.upper_bounds[b"user_name"] == to_int("🫖🔫")
+    assert stats.lower_bounds[b"tweet_id"] == to_int(1346604539013705728)
+    assert stats.upper_bounds[b"tweet_id"] == to_int(1346615999009755142)
+    assert stats.lower_bounds[b"text"] == to_int("!! PLEASE STOP A")
+    assert stats.upper_bounds[b"text"] == to_int("🪶Cultural approq")
+    assert stats.lower_bounds[b"timestamp"] == to_int("2021-01-05T23:48")
+    assert stats.upper_bounds[b"timestamp"] == to_int("2021-01-06T00:35")
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_stats_remote():
@@ -165,18 +166,18 @@ def test_iceberg_get_stats_remote():
     stats = connector.relation_statistics
 
     assert stats.record_count == 9
-    assert stats.lower_bounds["id"] == 1, stats.lower_bounds["id"]
-    assert stats.upper_bounds["id"] == 9, stats.upper_bounds["id"]
-    assert stats.lower_bounds["name"] == "Earth", stats.lower_bounds["name"]
-    assert stats.upper_bounds["name"] == "Venus", stats.upper_bounds["name"]
-    assert stats.lower_bounds["mass"] == 0.0146, stats.lower_bounds["mass"]
-    assert stats.upper_bounds["mass"] == 1898.0, stats.upper_bounds["mass"]
-    assert stats.lower_bounds["diameter"] == 2370, stats.lower_bounds["diameter"]
-    assert stats.upper_bounds["diameter"] == 142984, stats.upper_bounds["diameter"]
-    assert stats.lower_bounds["gravity"] == Decimal("0.7"), stats.lower_bounds["gravity"]
-    assert stats.upper_bounds["gravity"] == Decimal("23.1"), stats.upper_bounds["gravity"]
-    assert stats.lower_bounds["surfacePressure"] == 0.0, stats.lower_bounds["surfacePressure"]
-    assert stats.upper_bounds["surfacePressure"] == 92.0, stats.upper_bounds["surfacePressure"]
+    assert stats.lower_bounds[b"id"] == 1, stats.lower_bounds[b"id"]
+    assert stats.upper_bounds[b"id"] == 9, stats.upper_bounds[b"id"]
+    assert stats.lower_bounds[b"name"] == to_int("Earth"), stats.lower_bounds[b"name"]
+    assert stats.upper_bounds[b"name"] == to_int("Venus"), stats.upper_bounds[b"name"]
+    assert stats.lower_bounds[b"mass"] == to_int(0.0146), stats.lower_bounds[b"mass"]
+    assert stats.upper_bounds[b"mass"] == to_int(1898.0), stats.upper_bounds[b"mass"]
+    assert stats.lower_bounds[b"diameter"] == 2370, stats.lower_bounds[b"diameter"]
+    assert stats.upper_bounds[b"diameter"] == 142984, stats.upper_bounds[b"diameter"]
+    assert stats.lower_bounds[b"gravity"] == to_int(Decimal("0.7")), stats.lower_bounds[b"gravity"]
+    assert stats.upper_bounds[b"gravity"] == to_int(Decimal("23.1")), stats.upper_bounds[b"gravity"]
+    assert stats.lower_bounds[b"surfacePressure"] == to_int(0.0), stats.lower_bounds[b"surfacePressure"]
+    assert stats.upper_bounds[b"surfacePressure"] == to_int(92.0), stats.upper_bounds[b"surfacePressure"]
 
 
 @skip_if(is_arm() or is_windows() or is_mac())

@@ -85,48 +85,49 @@ def schema():
 def statistics() -> RelationStatistics:
     import datetime
 
+    from opteryx.compiled.structures.relation_statistics import to_int
+
     stats = RelationStatistics()
 
-    stats.num_rows = 357
+    stats.record_count = 357
 
-    stats.lower_bounds["name"] = "Alan B. Shepard Jr."
-    stats.lower_bounds["year"] = 1959
-    stats.lower_bounds["group"] = 1
-    stats.lower_bounds["status"] = "Active"
-    stats.lower_bounds["birth_date"] = datetime.date(1921, 7, 18)
-    stats.lower_bounds["gender"] = "Female"
-    stats.lower_bounds["undergraduate_major"] = "Accounting"
-    stats.lower_bounds["graduate_major"] = "Aeronautical & Astronautical Engineering"
-    stats.lower_bounds["military_rank"] = "Brigadier General"
-    stats.lower_bounds["military_branch"] = "US Air Force"
-    stats.lower_bounds["space_flights"] = 0
-    stats.lower_bounds["space_flight_hours"] = 0
-    stats.lower_bounds["space_walks"] = 0
-    stats.lower_bounds["space_walks_hours"] = 0.0
-    stats.lower_bounds["missions"] = "Apollo 1"
-    stats.lower_bounds["death_date"] = datetime.date(1, 4, 23)
-    stats.lower_bounds["death_mission"] = "Apollo 1"
+    stats.lower_bounds[b"name"] = to_int("Alan B. Shepard Jr.")
+    stats.lower_bounds[b"year"] = 1959
+    stats.lower_bounds[b"group"] = 1
+    stats.lower_bounds[b"status"] = to_int("Active")
+    stats.lower_bounds[b"birth_date"] = to_int(datetime.date(1921, 7, 18))
+    stats.lower_bounds[b"gender"] = to_int("Female")
+    stats.lower_bounds[b"undergraduate_major"] = to_int("Accounting")
+    stats.lower_bounds[b"graduate_major"] = to_int("Aeronautical & Astronautical Engineering")
+    stats.lower_bounds[b"military_rank"] = to_int("Brigadier General")
+    stats.lower_bounds[b"military_branch"] = to_int("US Air Force")
+    stats.lower_bounds[b"space_flights"] = 0
+    stats.lower_bounds[b"space_flight_hours"] = 0
+    stats.lower_bounds[b"space_walks"] = 0
+    stats.lower_bounds[b"space_walks_hours"] = to_int(0.0)
+    stats.lower_bounds[b"missions"] = to_int("Apollo 1")
+    stats.lower_bounds[b"death_date"] = to_int(datetime.date(1, 4, 23))
+    stats.lower_bounds[b"death_mission"] = to_int("Apollo 1")
 
-    stats.upper_bounds["name"] = "Yvonne D. Cagle"
-    stats.upper_bounds["year"] = 2009
-    stats.upper_bounds["group"] = 20
-    stats.upper_bounds["status"] = "Retired"
-    stats.upper_bounds["birth_date"] = datetime.date(1978, 10, 14)
-    stats.upper_bounds["gender"] = "Male"
-    stats.upper_bounds["alma_mater"] = "Youngstown State University"
-    stats.upper_bounds["undergraduate_major"] = "Zoology"
-    stats.upper_bounds["graduate_major"] = "Veterinary Medicine; Public Administration"
-    stats.upper_bounds["military_rank"] = "Vice Admiral"
-    stats.upper_bounds["military_branch"] = "US Navy (Retired)"
-    stats.upper_bounds["space_flights"] = 7
-    stats.upper_bounds["space_flight_hours"] = 12818
-    stats.upper_bounds["space_walks"] = 10
-    stats.upper_bounds["space_walks_hours"] = 67.0
-    stats.upper_bounds["missions"] = "Skylab 4"
-    stats.upper_bounds["death_date"] = datetime.date(2012, 8, 26)
-    stats.upper_bounds["death_mission"] = "STS-107 (Columbia)"
+    stats.upper_bounds[b"name"] = to_int("Yvonne D. Cagle")
+    stats.upper_bounds[b"year"] = 2009
+    stats.upper_bounds[b"group"] = 20
+    stats.upper_bounds[b"status"] = to_int("Retired")
+    stats.upper_bounds[b"birth_date"] = to_int(datetime.date(1978, 10, 14))
+    stats.upper_bounds[b"gender"] = to_int("Male")
+    stats.upper_bounds[b"alma_mater"] = to_int("Youngstown State University")
+    stats.upper_bounds[b"undergraduate_major"] = to_int("Zoology")
+    stats.upper_bounds[b"graduate_major"] = to_int("Veterinary Medicine; Public Administration")
+    stats.upper_bounds[b"military_rank"] = to_int("Vice Admiral")
+    stats.upper_bounds[b"military_branch"] = to_int("US Navy (Retired)")
+    stats.upper_bounds[b"space_flights"] = 7
+    stats.upper_bounds[b"space_flight_hours"] = 12818
+    stats.upper_bounds[b"space_walks"] = 10
+    stats.upper_bounds[b"space_walks_hours"] = to_int(67.0)
+    stats.upper_bounds[b"missions"] = to_int("Skylab 4")
+    stats.upper_bounds[b"death_date"] = to_int(datetime.date(2012, 8, 26))
+    stats.upper_bounds[b"death_mission"] = to_int("STS-107 (Columbia)")
 
-    stats.null_count = {}
     stats.null_count["year"] = 27
     stats.null_count["group"] = 27
     stats.null_count["undergraduate_major"] = 22

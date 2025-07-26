@@ -262,24 +262,32 @@ def parquet_decoder(
     if just_statistics:
         if statistics is None:
             statistics = RelationStatistics()
-        statistics.record_count += parquet_file.metadata.num_rows
-        # Initialize statistics for each column
-        for column in parquet_file.schema_arrow.names:
-            # Iterate over each row group to gather statistics
-            for row_group_index in range(parquet_file.metadata.num_row_groups):
-                column_index = parquet_file.schema_arrow.get_field_index(column)
-                column_chunk = parquet_file.metadata.row_group(row_group_index).column(column_index)
 
-                if column_chunk.statistics is not None:
-                    min_value = column_chunk.statistics.min
+        metadata = parquet_file.metadata
+        schema = parquet_file.schema_arrow
+        num_row_groups = metadata.num_row_groups
+        statistics.record_count += metadata.num_rows
+
+        for column in schema.names:
+            column_index = schema.get_field_index(column)
+
+            for rg_index in range(num_row_groups):
+                column_chunk = metadata.row_group(rg_index).column(column_index)
+
+                stats = column_chunk.statistics
+                if stats is not None:
+                    min_value = stats.min
                     if min_value is not None:
                         statistics.update_lower(column, min_value)
-                    max_value = column_chunk.statistics.max
+
+                    max_value = stats.max
                     if max_value is not None:
                         statistics.update_upper(column, max_value)
-                    null_count = column_chunk.statistics.null_count
-                    if null_count is not None:
+
+                    null_count = stats.null_count
+                    if null_count:
                         statistics.add_null(column, null_count)
+
         return statistics
 
     # we need to work out if we have a selection which may force us

@@ -9,7 +9,9 @@ from typing import Optional
 
 import numpy
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
+from opteryx.compiled.structures.relation_statistics import to_int
 from opteryx.managers.expression import NodeType
 from opteryx.models import RelationStatistics
 from opteryx.shared.stats_cache import StatsCache
@@ -18,10 +20,10 @@ from opteryx.third_party.cyan4973.xxhash import hash_bytes
 handlers = {
     "Eq": lambda v, min_, max_: v < min_ or v > max_,
     "NotEq": lambda v, min_, max_: min_ == max_ == v,
-    "Gt": lambda v, min_, max_: max_ <= v,
-    "GtEq": lambda v, min_, max_: max_ < v,
-    "Lt": lambda v, min_, max_: min_ >= v,
-    "LtEq": lambda v, min_, max_: min_ > v,
+    "Gt": lambda v, min_, max_: max_ < v,
+    "GtEq": lambda v, min_, max_: max_ <= v,
+    "Lt": lambda v, min_, max_: min_ > v,
+    "LtEq": lambda v, min_, max_: min_ >= v,
 }
 
 
@@ -61,13 +63,18 @@ class Statistics:
                     if cond.value in handlers
                     and cond.left.node_type == NodeType.IDENTIFIER
                     and cond.right.node_type == NodeType.LITERAL
+                    and cond.left.schema_column.type
+                    not in (OrsoTypes.DATE, OrsoTypes.TIME, OrsoTypes.TIMESTAMP)
                 ]
 
                 for condition in valid_conditions:
-                    column_name = condition.left.source_column
+                    column_name = condition.left.source_column.encode()
                     literal_value = condition.right.value
                     if type(literal_value) is numpy.datetime64:
                         literal_value = str(literal_value.astype("M8[ms]"))
+                    if hasattr(literal_value, "item"):
+                        literal_value = literal_value.item()
+                    literal_value = to_int(literal_value)
                     max_value = cached_stats.upper_bounds.get(column_name)
                     min_value = cached_stats.lower_bounds.get(column_name)
 
