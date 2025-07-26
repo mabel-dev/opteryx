@@ -270,7 +270,7 @@ def parquet_decoder(
 
         for column in schema.names:
             column_index = schema.get_field_index(column)
-            
+
             for rg_index in range(num_row_groups):
                 column_chunk = metadata.row_group(rg_index).column(column_index)
 
