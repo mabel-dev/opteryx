@@ -4,6 +4,7 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 import re
+from functools import lru_cache
 from typing import List
 from typing import Set
 from typing import Tuple
@@ -216,6 +217,11 @@ def convert_using_to_on(
     return conditions[0]
 
 
+@lru_cache(maxsize=128)
+def node_type_to_method_name(node_type: str) -> str:
+    return f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
+
+
 class BinderVisitor:
     """
     The BinderVisitor visits each node in the query plan and adds catalogue information
@@ -242,13 +248,13 @@ class BinderVisitor:
             The node and context after binding.
         """
         node_type = node.node_type.name  # type:ignore
-        visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
+        visit_method_name = node_type_to_method_name(node_type)
         visit_method = getattr(self, visit_method_name, None)
         if visit_method is None:
             # DEBUG: print(f"BinderVisitor: No method found for {visit_method_name}")
             return node, context
 
-        return_node, return_context = visit_method(node.copy(), context.copy())
+        return_node, return_context = visit_method(node, context)
 
         # DEBUG: from opteryx.exceptions import InvalidInternalStateError
         # DEBUG:
