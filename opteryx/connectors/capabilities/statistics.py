@@ -10,6 +10,7 @@ from typing import Optional
 import numpy
 from orso.schema import RelationSchema
 
+from opteryx.compiled.structures.relation_statistics import to_int
 from opteryx.managers.expression import NodeType
 from opteryx.models import RelationStatistics
 from opteryx.shared.stats_cache import StatsCache
@@ -64,10 +65,13 @@ class Statistics:
                 ]
 
                 for condition in valid_conditions:
-                    column_name = condition.left.source_column
+                    column_name = condition.left.source_column.encode()
                     literal_value = condition.right.value
                     if type(literal_value) is numpy.datetime64:
                         literal_value = str(literal_value.astype("M8[ms]"))
+                    if hasattr(literal_value, "item"):
+                        literal_value = literal_value.item()
+                    literal_value = to_int(literal_value)
                     max_value = cached_stats.upper_bounds.get(column_name)
                     min_value = cached_stats.lower_bounds.get(column_name)
 

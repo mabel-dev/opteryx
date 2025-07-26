@@ -10,6 +10,7 @@ given as a folder on local disk
 
 import mmap
 import os
+import time
 from typing import Dict
 from typing import List
 
@@ -202,9 +203,11 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         )
 
         if predicates is not None:
+            start = time.monotonic_ns()
             blob_names = self.prune_blobs(
                 blob_names=blob_names, query_statistics=self.statistics, selection=predicates
             )
+            self.statistics.time_pruning_blobs += time.monotonic_ns() - start
 
         remaining_rows = limit if limit is not None else float("inf")
 

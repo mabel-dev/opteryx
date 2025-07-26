@@ -38,7 +38,7 @@ def test_iceberg_get_schema():
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_get_statistics_manual():
 
-    from opteryx.models.relation_statistics import RelationStatistics
+    from opteryx.models import RelationStatistics
 
     catalog = set_up_iceberg()
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)

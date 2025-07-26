@@ -252,6 +252,12 @@ extensions = [
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
+        name="opteryx.compiled.structures.relation_statistics",
+        sources=["opteryx/compiled/structures/relation_statistics.pyx"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+    Extension(
         name="opteryx.compiled.structures.node",
         sources=["opteryx/compiled/structures/node.pyx"],
         extra_compile_args=C_COMPILE_FLAGS,
