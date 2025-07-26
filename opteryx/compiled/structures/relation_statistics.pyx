@@ -7,11 +7,7 @@
 # cython: wraparound=True
 # cython: boundscheck=False
 
-import decimal
-import pybase64 as base64
-
 from libc.stdint cimport int64_t, uint64_t
-from cpython.list cimport PyList_Size
 from libc.math cimport isnan
 from libcpp.unordered_map cimport unordered_map
 from cython.operator cimport dereference, preincrement
@@ -35,27 +31,6 @@ cdef inline int64_t map_get(unordered_map[string, int64_t]& m, string key, int64
     if it != m.end():
         return m[key]
     return default_val
-
-cdef object _orjson_default(obj):
-    objtype = type(obj)
-    if objtype == decimal.Decimal:
-        return {"__decimal__": str(obj)}
-    if objtype == bytes:
-        return {"__bytes__": base64.b64encode(obj).decode("utf-8")}
-    return str(obj)
-
-cdef object _decode_object(object obj):
-    cdef Py_ssize_t i, sz
-    if isinstance(obj, dict):
-        if "__decimal__" in obj:
-            return decimal.Decimal(obj["__decimal__"])
-        if "__bytes__" in obj:
-            return base64.b64decode(obj["__bytes__"])
-        return {k: _decode_object(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        sz = PyList_Size(obj)
-        return [_decode_object(<object>PyList_GET_ITEM(obj, i)) for i in range(sz)]
-    return obj
 
 cdef inline int64_t _ensure_64bit_range(int64_t val):
     if val < MIN_SIGNED_64BIT:
