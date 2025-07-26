@@ -9,6 +9,7 @@ from typing import Optional
 
 import numpy
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 from opteryx.compiled.structures.relation_statistics import to_int
 from opteryx.managers.expression import NodeType
@@ -19,10 +20,10 @@ from opteryx.third_party.cyan4973.xxhash import hash_bytes
 handlers = {
     "Eq": lambda v, min_, max_: v < min_ or v > max_,
     "NotEq": lambda v, min_, max_: min_ == max_ == v,
-    "Gt": lambda v, min_, max_: max_ <= v,
-    "GtEq": lambda v, min_, max_: max_ < v,
-    "Lt": lambda v, min_, max_: min_ >= v,
-    "LtEq": lambda v, min_, max_: min_ > v,
+    "Gt": lambda v, min_, max_: max_ < v,
+    "GtEq": lambda v, min_, max_: max_ <= v,
+    "Lt": lambda v, min_, max_: min_ > v,
+    "LtEq": lambda v, min_, max_: min_ >= v,
 }
 
 
@@ -62,6 +63,8 @@ class Statistics:
                     if cond.value in handlers
                     and cond.left.node_type == NodeType.IDENTIFIER
                     and cond.right.node_type == NodeType.LITERAL
+                    and cond.left.schema_column.type
+                    not in (OrsoTypes.DATE, OrsoTypes.TIME, OrsoTypes.TIMESTAMP)
                 ]
 
                 for condition in valid_conditions:
