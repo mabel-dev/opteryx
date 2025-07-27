@@ -14,6 +14,27 @@ from pyarrow import compute
 
 from opteryx.compiled import list_ops
 
+# Operators where null compression isn't safe
+skip_compression_ops = {
+    "InList",
+    "NotInList",
+    "AnyOpEq",
+    "AnyOpNotEq",
+    "AnyOpGt",
+    "AnyOpGtEq",
+    "AnyOpLt",
+    "AnyOpLtEq",
+    "AnyOpLike",
+    "AnyOpNotLike",
+    "AnyOpILike",
+    "AnyOpNotILike",
+    "AnyOpRLike",
+    "AnyOpNotRLike",
+    "AllOpEq",
+    "AllOpNotEq",
+    "AtArrow",
+}
+
 
 def filter_operations(left_arr, left_type, operator, right_arr, right_type):
     """
@@ -23,9 +44,9 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
     if being used for display use as is, if being used for filtering, none is false.
     """
     if len(left_arr) == 0 or len(right_arr) == 0:
-        return numpy.array([], dtype=bool)
+        return numpy.empty(0, dtype=bool)
 
-    # INTEGERS and DECIMALS don't play nicely so we cast the INTS to DECIMALS
+    # INTEGERS and DECIMALS don't play nicely so we cast the INTS to DOUBLES
     if left_type == OrsoTypes.DECIMAL and right_type == OrsoTypes.INTEGER:
         right_arr = compute.cast(right_arr, pyarrow.float64())
         right_type = OrsoTypes.DOUBLE
@@ -33,29 +54,11 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
         left_arr = compute.cast(left_arr, pyarrow.float64())
         left_type = OrsoTypes.DOUBLE
 
+    morsel_size = len(left_arr)
     compressed = False
 
-    if operator not in (
-        "InList",
-        "NotInList",
-        "AnyOpEq",
-        "AnyOpNotEq",
-        "AnyOpGt",
-        "AnyOpGtEq",
-        "AnyOpLt",
-        "AnyOpLtEq",
-        "AnyOpLike",
-        "AnyOpNotLike",
-        "AnyOpILike",
-        "AnyOpNotILike",
-        "AnyOpRLike",
-        "AnyOpNotRLike",
-        "AllOpEq",
-        "AllOpNotEq",
-        "AtArrow",
-    ):  # and right_type != OrsoTypes.NULL:
+    if operator not in skip_compression_ops:
         # compressing ARRAY columns is VERY SLOW
-        morsel_size = len(left_arr)
 
         # compute null positions
         left_null_positions = compute.is_null(left_arr, nan_is_null=True)
@@ -66,40 +69,32 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
             null_positions = numpy.logical_or(left_null_positions, right_null_positions)
         # if the right side is a scalar and is null, we can just return all nulls
         elif len(right_arr) == 1 and right_arr[0] is None:
-            return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
+            return pyarrow.nulls(morsel_size, type=pyarrow.bool_())
         # if the right side is a scalar and is not null, we can just use the left nulls
         else:
             null_positions = left_null_positions.to_numpy(False)
 
         # Early exit if all values are null
         if null_positions.all():
-            return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
+            return pyarrow.nulls(morsel_size, type=pyarrow.bool_())
 
-        if null_positions.any() and isinstance(left_arr, numpy.ndarray):
+        if null_positions.any():
             # if we have nulls and both columns are numpy arrays, we can speed things
             # up by removing the nulls from the calculations, we add the rows back in
             # later
             valid_positions = ~null_positions
-            left_arr = left_arr.compress(valid_positions)
             compressed = True
-            if len(right_arr) > 1 and isinstance(right_arr, numpy.ndarray):
-                right_arr = right_arr.compress(valid_positions)
-            elif len(right_arr) > 1 and isinstance(
-                right_arr, (pyarrow.Array, pyarrow.ChunkedArray)
-            ):
-                right_arr = compute.filter(right_arr, valid_positions)
 
-        # similarly, if we're working with pyarrow arrays we can remove nulls
-        if null_positions.any() and isinstance(left_arr, (pyarrow.Array, pyarrow.ChunkedArray)):
-            valid_positions = ~null_positions
-            left_arr = compute.filter(left_arr, valid_positions)
-            compressed = True
-            if len(right_arr) > 1 and isinstance(right_arr, numpy.ndarray):
-                right_arr = right_arr.compress(valid_positions)
-            elif len(right_arr) > 1 and isinstance(
-                right_arr, (pyarrow.Array, pyarrow.ChunkedArray)
-            ):
-                right_arr = compute.filter(right_arr, valid_positions)
+            if isinstance(left_arr, numpy.ndarray):
+                left_arr = left_arr.compress(valid_positions)
+            else:
+                left_arr = compute.filter(left_arr, valid_positions)
+
+            if len(right_arr) > 1:
+                if isinstance(right_arr, numpy.ndarray):
+                    right_arr = right_arr.compress(valid_positions)
+                else:
+                    right_arr = compute.filter(right_arr, valid_positions)
 
     if (
         OrsoTypes.TIMESTAMP in (left_type, right_type) or OrsoTypes.DATE in (left_type, right_type)
@@ -130,12 +125,10 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
         results_mask = _inner_filter_operations(left_arr, operator, right_arr)
 
     if compressed:
-        # fill the result set
-        results = numpy.array([None] * morsel_size, dtype=object)
-        numpy.place(results, valid_positions, results_mask)
-
         # build tri-state response, PyArrow supports tristate, numpy does not
-        return pyarrow.array(results, type=pyarrow.bool_())
+        full_result = numpy.full(morsel_size, None, dtype=object)
+        numpy.place(full_result, valid_positions, results_mask)
+        return pyarrow.array(full_result, type=pyarrow.bool_())
 
     return results_mask
 

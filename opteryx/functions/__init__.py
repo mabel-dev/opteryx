@@ -519,14 +519,18 @@ def apply_function(function: str = None, *parameters):
 
         for parameter in parameters:
             # compute null positions
+            if parameter.dtype.kind == "f":
+                parameter_nulls_positions = compute.is_null(parameter, nan_is_null=True)
+            else:
+                parameter_nulls_positions = compute.is_null(parameter)
             null_positions = numpy.logical_or(
                 null_positions,
-                compute.is_null(parameter, nan_is_null=True),
+                parameter_nulls_positions,
             )
 
         # Early exit if all values are null
         if null_positions.all():
-            return numpy.array([None] * morsel_size)
+            return numpy.full(morsel_size, None, dtype=object)
 
         if null_positions.any():
             # if we have nulls and the value array is a numpy arrays, we can speed things
@@ -545,7 +549,7 @@ def apply_function(function: str = None, *parameters):
 
     if compressed:
         # fill the result set
-        results = numpy.array([None] * morsel_size, dtype=object)
+        results = numpy.full(morsel_size, None, dtype=object)
         numpy.place(results, valid_positions, interim_results)
         return results
 

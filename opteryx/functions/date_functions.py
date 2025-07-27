@@ -17,46 +17,36 @@ from opteryx.utils.dates import parse_iso
 
 def convert_int64_array_to_pyarrow_datetime(values: numpy.ndarray) -> pyarrow.Array:
     """
-    Convert an array of int64 timestamps to a PyArrow TimestampArray based on their range.
-
-    Parameters:
-        values: numpy.ndarray
-            An array of integer values representing timestamps.
-
-    Returns:
-        PyArrow Array
-            The converted timestamps in PyArrow compatible format.
+    Convert a NumPy int64 array to PyArrow TimestampArray, inferring time unit.
     """
-    if hasattr(values, "to_numpy"):
-        values = values.to_numpy()
     if not isinstance(values, numpy.ndarray):
-        raise InvalidInternalStateError("Cannot convert non numpy Int64 array to timestamps.")
+        raise InvalidInternalStateError("Expected a NumPy int64 array.")
 
     if not numpy.issubdtype(values.dtype, numpy.integer):
-        raise ValueError("Cannot convert non-integer column to a timestamp.")
+        raise ValueError("Cannot convert non-integer array to a timestamp.")
 
-    # Determine the range of the values to infer timestamp precision
-    min_value = numpy.min(values)
-    max_value = numpy.max(values)
+    min_value = values.min()
+    max_value = values.max()
 
-    # Convert based on inferred precision
-    if min_value < 1e6:  # likely days
-        timestamps = values.astype("datetime64[D]")
-        return pyarrow.array(timestamps)
-    if 1e9 <= min_value < 1e10 and 1e9 <= max_value < 1e10:  # Likely seconds
-        timestamps = values.astype("datetime64[s]")
-        return pyarrow.array(timestamps)
-    if 1e12 <= min_value < 1e13 and 1e12 <= max_value < 1e13:  # Likely milliseconds
-        timestamps = values.astype("datetime64[ms]")
-        return pyarrow.array(timestamps)
-    if 1e15 <= min_value < 1e16 and 1e15 <= max_value < 1e16:  # Likely microseconds
-        timestamps = values.astype("datetime64[us]")
-        return pyarrow.array(timestamps)
-    if min_value >= 1e18 and max_value >= 1e18:  # Likely nanoseconds
-        timestamps = values.astype("datetime64[ns]")
-        return pyarrow.array(timestamps)
-    else:
-        raise ValueError("Unable to determine the timestamp precision for the provided values.")
+    # Range dispatch table: (low, high, datetime unit)
+    RANGES = [
+        (1e0, 1e6, "D"),
+        (1e9, 1e10, "s"),
+        (1e12, 1e13, "ms"),
+        (1e15, 1e16, "us"),
+        (1e18, 1e19, "ns"),
+    ]
+
+    for low, high, unit in RANGES:
+        if low <= min_value < high and low <= max_value < high:
+            try:
+                return pyarrow.array(values.astype(f"datetime64[{unit}]"))
+            except Exception as e:
+                raise ValueError(f"Failed to cast to datetime64[{unit}]: {e}")
+
+    raise ValueError(
+        f"Unable to determine timestamp precision for values in range [{min_value}, {max_value}]"
+    )
 
 
 def date_part(part, arr):
