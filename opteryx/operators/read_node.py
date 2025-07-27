@@ -43,10 +43,10 @@ def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
         # Check if the column is a STRUCT
         if pyarrow.types.is_struct(field.type):
             # Convert each row in the STRUCT column to a JSON string
-            json_strings = [
-                orjson.dumps(row.as_py()) if row.is_valid else None for row in table.column(i)
-            ]
-            json_array = pyarrow.array(json_strings, type=pyarrow.binary())
+            json_array = pyarrow.array(
+                [None if row is None else orjson.dumps(row) for row in table.column(i).to_pylist()],
+                type=pyarrow.binary(),
+            )
 
             # Drop the original STRUCT column
             table = table.drop_columns(field.name)
@@ -62,13 +62,13 @@ def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
 
             # Convert each list element
             converted_data = []
-            for item in list_array:
+            for item in list_array.to_pylist():
                 if item is None:
                     converted_data.append(None)
                 else:
                     # Each item is a list of structs
                     converted_list = []
-                    for struct in item.as_py():
+                    for struct in item:
                         if struct is None:
                             converted_list.append(None)
                         else:
@@ -98,20 +98,20 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
     # rename columns for internal use
     target_column_names = []
     # columns in the data but not in the schema, droppable
-    droppable_columns = []
+    droppable_columns = set()
 
     # Find which columns to drop and which columns we already have
     for i, column in enumerate(morsel.column_names):
         column_name = schema.find_column(column)
         if column_name is None:
-            droppable_columns.append(i)
+            droppable_columns.add(i)
         else:
             target_column_names.append(str(column_name))
 
     # Remove from the end otherwise we'll remove the wrong columns after we've removed one
-    droppable_columns.reverse()
-    for droppable in droppable_columns:
-        morsel = morsel.remove_column(droppable)
+    if droppable_columns:
+        keep_indices = [i for i in range(len(morsel.columns)) if i not in droppable_columns]
+        morsel = morsel.select(keep_indices)
 
     # remane columns to the internal names (identities)
     morsel = morsel.rename_columns(target_column_names)
@@ -119,7 +119,7 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
     # add columns we don't have, populate with nulls but try to get the correct type
     for column in schema.columns:
         if column.identity not in target_column_names:
-            null_column = pyarrow.array([None] * morsel.num_rows, type=column.arrow_field.type)
+            null_column = pyarrow.nulls(morsel.num_rows, type=column.arrow_field.type)
             field = pyarrow.field(name=column.identity, type=column.arrow_field.type)
             morsel = morsel.append_column(field, null_column)
 

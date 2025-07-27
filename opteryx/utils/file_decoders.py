@@ -87,10 +87,10 @@ def convert_arrow_schema_to_orso_schema(
 
 def get_decoder(dataset: str) -> Callable:
     """helper routine to get the decoder for a given file"""
-    ext = dataset.split(".")[-1].lower()
-    if ext not in KNOWN_EXTENSIONS:  # pragma: no cover
-        raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")
-    file_decoder, file_type = KNOWN_EXTENSIONS[ext]
+    ext = dataset.rpartition(".")[2].lower()
+    file_decoder, file_type = KNOWN_EXTENSIONS.get(ext, (None, None))
+    if file_type is None:
+        raise UnsupportedFileTypeError(f"Unsupported file type: {ext}")
     if file_type != ExtentionType.DATA:  # pragma: no cover
         return do_nothing
     return file_decoder
@@ -387,12 +387,12 @@ def jsonl_decoder(
     from opteryx.third_party.tktech import csimdjson as simdjson
 
     if isinstance(buffer, memoryview):
-        buffer = MemoryViewStream(buffer)
+        # If it's a memoryview, we need to convert it to bytes
+        buffer = buffer.tobytes()
     if not isinstance(buffer, bytes):
         buffer = buffer.read()
 
     parser = simdjson.Parser()
-    lines = buffer.split(b"\n")
 
     # preallocate and reuse dicts
     rows = []
@@ -402,17 +402,27 @@ def jsonl_decoder(
         # If projection is specified, we only need to ensure we keep the projected keys
         keys_union = {c.value for c in projection}
 
-    for line in lines:
+    start = 0
+    end = len(buffer)
+
+    while start < end:
+        newline = buffer.find(b"\n", start)
+        if newline == -1:
+            newline = end
+        line = buffer[start:newline]
+        start = newline + 1
+
         if not line:
             continue
-        record = parser.parse(line)
 
-        # keep track of all keys for schema padding
-        if not projection:
-            keys_union.update(record.keys())
+        record = parser.parse(line)
 
         # convert nested objects to string
         row = record.as_dict()
+        # keep track of all keys for schema padding
+        if not projection:
+            keys_union.update(row.keys())
+
         for key in keys_union:
             if isinstance(row.get(key), dict):
                 row[key] = record[key].mini
