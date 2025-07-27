@@ -32,7 +32,7 @@ cdef inline int64_t map_get(unordered_map[string, int64_t]& m, string key, int64
         return m[key]
     return default_val
 
-cdef inline int64_t _ensure_64bit_range(int64_t val):
+cdef inline int64_t _ensure_64bit_range(object val):
     if val < MIN_SIGNED_64BIT:
         return MIN_SIGNED_64BIT
     if val > MAX_SIGNED_64BIT:

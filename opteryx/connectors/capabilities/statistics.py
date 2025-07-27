@@ -65,6 +65,8 @@ class Statistics:
                     and cond.right.node_type == NodeType.LITERAL
                     and cond.left.schema_column.type
                     not in (OrsoTypes.DATE, OrsoTypes.TIME, OrsoTypes.TIMESTAMP)
+                    and cond.right.schema_column.type
+                    not in (OrsoTypes.DATE, OrsoTypes.TIME, OrsoTypes.TIMESTAMP)
                 ]
 
                 for condition in valid_conditions:
