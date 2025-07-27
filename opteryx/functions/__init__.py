@@ -22,6 +22,7 @@ from pyarrow import compute
 import opteryx
 from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
+from opteryx.compiled.list_ops.list_length import list_length
 from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -260,19 +261,6 @@ def _iterate_double_parameter(func):
     return _inner
 
 
-def get_len(obj):
-    """len, but nullsafe"""
-    if hasattr(obj, "__len__"):
-        return len(obj)
-    if hasattr(obj, "length"):  # Some Arrow scalar types have .length property
-        return obj.length
-    if hasattr(obj, "nbytes"):  # NumPy scalar types have .nbytes
-        return obj.nbytes
-    if hasattr(obj, "as_py") and isinstance(obj.as_py(), (bytes, str)):  # PyArrow string scalar
-        return len(obj.as_py())
-    return None
-
-
 def _coalesce(*arrays):
     """
     Element-wise coalesce function for multiple numpy arrays.
@@ -394,7 +382,7 @@ FUNCTIONS = {
     "ASCII": (string_functions.to_ascii, "INTEGER", 1.0),
 
     # STRINGS
-    "LENGTH": (_iterate_single_parameter(get_len), "INTEGER", 1.0),  # LENGTH(str) -> int
+    "LENGTH": (list_length, "INTEGER", 1.0),  # LENGTH(str) -> int
     "UPPER": (compute.utf8_upper, "VARCHAR", 1.0),  # UPPER(str) -> str
     "LOWER": (compute.utf8_lower, "VARCHAR", 1.0),  # LOWER(str) -> str
     "LEFT": (string_functions.string_slicer_left, "VARCHAR", 1.0),
