@@ -5,6 +5,7 @@ and has been extensively modified for Opteryx.
 """
 
 import re
+from contextlib import suppress
 
 import numpy
 import pyarrow
@@ -147,7 +148,7 @@ def _inner_filter_operations(arr, operator, value):
     """
     if not operator.startswith(("AnyOp", "AllOp")) and len(value) == 1:
         value = value[0]
-        if hasattr(value, "item"):
+        with suppress(AttributeError):
             value = value.item()
         if isinstance(value, (tuple, list)):
             value = pyarrow.array(value)
@@ -165,24 +166,24 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
-        if hasattr(value, "to_pylist"):
+        with suppress(AttributeError):
             value = value.to_pylist()
-        if hasattr(value, "to_numpy"):
+        with suppress(AttributeError):
             value = value.to_numpy(zero_copy_only=False)
         values = set(value)
-        if hasattr(arr, "to_numpy"):
+        with suppress(AttributeError):
             arr = arr.to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
             return list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
             return list_ops.list_in_list.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
-        if hasattr(value, "to_pylist"):
+        with suppress(AttributeError):
             value = value.to_pylist()
-        if hasattr(value, "to_numpy"):
+        with suppress(AttributeError):
             value = value.to_numpy(zero_copy_only=False)
         values = set(value)
-        if hasattr(arr, "to_numpy"):
+        with suppress(AttributeError):
             arr = arr.to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
             matches = list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
