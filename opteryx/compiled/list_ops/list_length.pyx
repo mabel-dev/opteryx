@@ -22,7 +22,6 @@ cpdef numpy.ndarray[numpy.uint32_t, ndim=1] list_length(object array):
     cdef object val
     cdef uint32_t i
     cdef numpy.ndarray[numpy.int32_t, ndim=1] offsets
-    cdef int32_t[::1] offsets_view
 
     # PyArrow fast path (uses offsets buffer)
     if isinstance(array, (pyarrow.Array, pyarrow.ChunkedArray, pyarrow.lib.StringArray)):
@@ -34,7 +33,6 @@ cpdef numpy.ndarray[numpy.uint32_t, ndim=1] list_length(object array):
         try:
             offsets_buffer = array.buffers()[1]
             offsets = numpy.frombuffer(offsets_buffer, dtype=numpy.int32, count=n + 1)
-            offsets_view = offsets
             return (offsets[1:] - offsets[:-1]).astype(numpy.uint32)
         except Exception:
             pass  # fallback if offsets unavailable
