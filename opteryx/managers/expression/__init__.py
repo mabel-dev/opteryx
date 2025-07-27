@@ -90,23 +90,27 @@ LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
 }
 
 
-def evaluate_dnf(expressions: List[Node], table: Table):
+def evaluate_dnf(expressions: List[Node], table: Table) -> numpy.ndarray:
     num_rows = table.num_rows
     true_indices = numpy.arange(num_rows)
     working_table = table
 
-    for predicate in expressions:
+    for i, predicate in enumerate(expressions):
         result = evaluate(predicate, working_table)
-        result_bool = numpy.asarray(result, dtype=numpy.bool_)
+
+        if isinstance(result, pyarrow.Array):
+            result_bool = result.to_numpy(zero_copy_only=False).astype(bool, copy=False)
+        else:
+            result_bool = numpy.asarray(result, dtype=bool)
 
         if not result_bool.any():
             return numpy.zeros(num_rows, dtype=bool)
 
-        # Filter the current true_indices based on the predicate result
         true_indices = true_indices[result_bool]
-        working_table = table.take(true_indices)
 
-    # Create the final boolean array with original size
+        if i < len(expressions) - 1:
+            working_table = table.take(true_indices)
+
     final_result = numpy.zeros(num_rows, dtype=bool)
     final_result[true_indices] = True
     return final_result
@@ -216,7 +220,7 @@ def _inner_evaluate(root: Node, table: Table):
         literal_type = root.type
         if literal_type == OrsoTypes.ARRAY:
             # creating ARRAY columns is expensive, so we don't create one full length
-            return numpy.array([root.value], dtype=numpy.ndarray)
+            return numpy.array([root.value], dtype=object)
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.str_)
         if literal_type == OrsoTypes.BLOB:
@@ -268,7 +272,7 @@ def _inner_evaluate(root: Node, table: Table):
         if node_type == NodeType.EVALUATED:
             if root.schema_column.identity not in table.column_names:
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
-            return table[root.schema_column.identity].to_numpy()
+            return table[root.schema_column.identity].to_numpy(zero_copy_only=False)
         if node_type == NodeType.COMPARISON_OPERATOR:
             right = None
             left = None
@@ -307,7 +311,7 @@ def _inner_evaluate(root: Node, table: Table):
             )
             return result
         if node_type == NodeType.WILDCARD:
-            numpy.full(table.num_rows, "*", dtype=numpy.str_)
+            return numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
             sub = root.value.execute()
@@ -387,44 +391,48 @@ def evaluate_and_append(expressions, table: Table):
     are duplicated, this is most common when performing many joins on the same table.
     """
     prioritized_expressions = prioritize_evaluation(expressions)
+    existing_cols = set(table.column_names)
 
     for statement in prioritized_expressions:
-        if statement.schema_column.identity in table.column_names:
+        identity = statement.schema_column.identity
+        if identity in existing_cols:
             continue
 
-        if should_evaluate(statement):
-            if table.num_rows > 0:
-                new_column = evaluate_statement(statement, table)
-            else:
-                # we make all unknown fields to object type
-                new_column = numpy.array([], dtype=statement.schema_column.type.numpy_dtype)
-                new_column = pyarrow.array(new_column)
+        if not should_evaluate(statement):
+            continue
 
-            if isinstance(new_column, pyarrow.ChunkedArray):
-                new_column = new_column.combine_chunks()
+        if table.num_rows > 0:
+            new_column = evaluate_statement(statement, table)
+        else:
+            # we make all unknown fields to object type
+            new_column = pyarrow.array([], type=statement.schema_column.arrow_field.type)
 
-            # if we know the intended type of the result column, cast it
-            field = statement.schema_column.identity
-            if statement.schema_column.type not in (
-                0,
-                OrsoTypes._MISSING_TYPE,
-                OrsoTypes.INTERVAL,
-            ):
-                field = pyarrow.field(
-                    name=statement.schema_column.identity,
-                    type=statement.schema_column.arrow_field.type,
-                )
-                try:
-                    if isinstance(new_column, pyarrow.Array):
-                        new_column = new_column.cast(field.type)
-                    else:
-                        new_column = pyarrow.array(new_column[0], type=field.type)
-                except pyarrow.lib.ArrowInvalid as e:
-                    raise IncorrectTypeError(
-                        f"Unable to cast '{statement.schema_column.name}' to {field.type}"
-                    ) from e
+        if isinstance(new_column, pyarrow.ChunkedArray):
+            new_column = new_column.combine_chunks()
 
-            table = table.append_column(field, new_column)
+        # if we know the intended type of the result column, cast it
+        field = statement.schema_column.identity
+        if statement.schema_column.type not in (
+            0,
+            OrsoTypes._MISSING_TYPE,
+            OrsoTypes.INTERVAL,
+        ):
+            field = pyarrow.field(
+                name=identity,
+                type=statement.schema_column.arrow_field.type,
+            )
+            try:
+                if isinstance(new_column, pyarrow.Array):
+                    new_column = new_column.cast(field.type)
+                else:
+                    new_column = pyarrow.array(new_column[0], type=field.type)
+            except pyarrow.lib.ArrowInvalid as e:
+                raise IncorrectTypeError(
+                    f"Unable to cast '{statement.schema_column.name}' to {field.type}"
+                ) from e
+
+        table = table.append_column(field, new_column)
+        existing_cols.add(identity)
 
     return table
 

@@ -147,25 +147,22 @@ def binary_operations(
         and right_type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP)
     ):
         # substracting dates results in an INTERVAL (months, seconds)
-        arr = operation(left, right)
-        if arr.dtype.name == "timedelta64[D]":
-            return pyarrow.array(
-                [
-                    None if v == -9223372036854775808 else (0, v * 86400)
-                    for v in arr.astype(numpy.int64)
-                ]
-            )
-        arr = arr.astype("timedelta64[s]").astype(numpy.int64)
-        return pyarrow.array([(0, v) for v in arr.astype(numpy.int64)])
+        arr = OPERATOR_FUNCTION_MAP["Minus"](left, right)
+        arr64 = arr.astype(numpy.int64)
 
-    elif operator == "BitwiseOr":
-        if OrsoTypes.VARCHAR in (left_type, right_type):
-            return _ip_containment(left, right)
+        # Arrow represents nulls as INT64_MIN
+        null_mask = arr64 == numpy.iinfo(numpy.int64).min
+        if arr.dtype.name == "timedelta64[D]":
+            result = [(None if is_null else (0, v * 86400)) for v, is_null in zip(arr64, null_mask)]
+        else:
+            result = [(0, v) for v in arr64]
+        return pyarrow.array(result)
+
+    elif operator == "BitwiseOr" and OrsoTypes.VARCHAR in (left_type, right_type):
+        return _ip_containment(left, right)
 
     elif operator == "StringConcat":
-        empty = numpy.full(len(left), "")
-        joined = compute.binary_join_element_wise(left, right, empty)
-        return joined
+        return compute.binary_join_element_wise(left, right, "")
 
     return operation(left, right)
 

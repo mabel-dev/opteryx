@@ -12,7 +12,7 @@ numpy.import_array()
 
 import pyarrow
 
-from libc.stdint cimport int32_t, uint32_t
+from libc.stdint cimport uint32_t
 
 cpdef numpy.ndarray[numpy.uint32_t, ndim=1] list_length(object array):
 
