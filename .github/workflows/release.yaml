@@ -63,7 +63,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python package dependencies
-        run: python -m pip install --upgrade cython==3.1.2 wheel numpy setuptools_rust pyarrow
+        run: python -m pip install --upgrade cython==3.1.2 wheel numpy setuptools_rust
 
       - name: Install Rust aarch64-apple-darwin target
         run: rustup target add aarch64-apple-darwin
@@ -128,7 +128,7 @@ jobs:
         uses: actions/checkout@v4.1.7
 
       - name: Install Python package dependencies
-        run: python -m pip install --upgrade cython==3.1.2 wheel numpy setuptools_rust
+        run: python -m pip install --upgrade cython==3.1.2 wheel numpy setuptools_rust pyarrow
 
       - name: Create source dist
         run: python setup.py sdist
@@ -233,3 +233,5 @@ jobs:
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
