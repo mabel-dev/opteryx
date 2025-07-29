@@ -19,6 +19,12 @@ def convert_int64_array_to_pyarrow_datetime(values: numpy.ndarray) -> pyarrow.Ar
     """
     Convert a NumPy int64 array to PyArrow TimestampArray, inferring time unit.
     """
+    if isinstance(values, pyarrow.ChunkedArray):
+        values = values.combine_chunks()
+
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(zero_copy_only=False)
+
     if not isinstance(values, numpy.ndarray):
         raise InvalidInternalStateError("Expected a NumPy int64 array.")
 
