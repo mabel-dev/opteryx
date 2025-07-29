@@ -47,7 +47,7 @@ class FilterNode(BasePlanNode):
         return "Filter"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
-        if morsel == EOS:
+        if morsel is EOS:
             yield EOS
             return
 
@@ -55,22 +55,19 @@ class FilterNode(BasePlanNode):
             yield morsel
             return
 
+        # Only evaluate expressions if necessary
         if self.function_evaluations:
             morsel = evaluate_and_append(self.function_evaluations, morsel)
 
         mask = evaluate(self.filter, morsel)
 
-        if not isinstance(mask, pyarrow.lib.BooleanArray):
-            try:
-                mask = pyarrow.array(mask, type=pyarrow.bool_())
-            except Exception as err:  # nosec
-                raise SqlError(
-                    f"Unable to filter on expression '{format_expression(self.filter)} {err}'."
-                )
-        mask = numpy.nonzero(mask)[0]
+        # Ensure mask is a BooleanArray
+        if not isinstance(mask, pyarrow.BooleanArray):
+            mask = pyarrow.array(mask, type=pyarrow.bool_())
 
-        # if there's no matching rows, don't return anything
-        if mask.size > 0 and not numpy.all(mask is None):
-            yield morsel.take(pyarrow.array(mask))
+        indices = numpy.nonzero(mask)[0]
+
+        if indices.size > 0:
+            yield morsel.take(pyarrow.array(indices))
         else:
             yield morsel.slice(0, 0)
