@@ -3,7 +3,7 @@
 # cython: cdivision=True
 # cython: initializedcheck=False
 # cython: infer_types=True
-# cython: wraparound=False
+# cython: wraparound=True
 # cython: boundscheck=False
 
 import numpy
