@@ -150,10 +150,11 @@ def main():
             start = time.monotonic_ns()
             result = opteryx.query_to_arrow(sql)
             print(
-                (time.monotonic_ns() - start) / 1e9,
+                f"{(time.monotonic_ns() - start) / 1e9:.3f}",
                 flush=True,
                 end=("," if (i + 1) < args.cycles else "]\n"),
             )
+            sys.stdout.flush()
         return
 
     start = time.monotonic_ns()
