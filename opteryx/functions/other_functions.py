@@ -73,12 +73,12 @@ def search(array, item, ignore_case: Optional[List[bool]] = None):
 
         if ignore_case[0]:
             results_mask = numpy.asarray(
-                list_ops.list_substring.list_substring_case_insensitive(array, str(item)),
+                list_ops.list_in_string.list_in_string_case_insensitive(array, str(item)),
                 dtype=numpy.bool_,
             )
         else:
             results_mask = numpy.asarray(
-                list_ops.list_substring.list_substring(array, str(item)), dtype=numpy.bool_
+                list_ops.list_in_string.list_in_string(array, str(item)), dtype=numpy.bool_
             )
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're

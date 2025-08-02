@@ -64,9 +64,10 @@ cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, c
     """
     cdef unsigned char skip[256]
     cdef size_t i
+    cdef size_t tail_index
 
     if needlelen == 0:
-        return -1  # No valid search possible
+        return 0  # No valid search possible
 
     if haystacklen < needlelen:
         return 0  # Needle is longer than haystack
@@ -87,7 +88,8 @@ cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, c
             return 1  # Match found
 
         # Update i based on skip table, ensuring no out-of-bounds access
-        i += skip[<unsigned char>haystack[min(i + needlelen - 1, haystacklen - 1)]]
+        tail_index = i + needlelen - 1
+        i += skip[<unsigned char>haystack[tail_index]]
 
     return 0  # No match found
 
@@ -103,7 +105,7 @@ cdef inline uint8_t[::1] _substring_in_single_array(object arrow_array, str need
         uint8_t[::1] result_view = result
 
         bytes needle_bytes = needle.encode('utf-8')
-        char *c_pattern = PyBytes_AsString(needle_bytes)
+        const char *c_pattern = PyBytes_AsString(needle_bytes)
         size_t pattern_length = len(needle_bytes)
 
         # Arrow buffer pointers
@@ -113,13 +115,13 @@ cdef inline uint8_t[::1] _substring_in_single_array(object arrow_array, str need
         const char* data = NULL
 
         # Arrow indexing
-        Py_ssize_t arr_offset = arrow_array.offset
-        Py_ssize_t offset_in_bits = arr_offset & 7
-        Py_ssize_t offset_in_bytes = arr_offset >> 3
+        size_t arr_offset = arrow_array.offset
+        size_t offset_in_bits = arr_offset & 7
+        size_t offset_in_bytes = arr_offset >> 3
 
         # For loop variables
-        Py_ssize_t i, byte_index, bit_index
-        Py_ssize_t start, end, length
+        size_t i, byte_index, bit_index
+        size_t start, end, length
         int index
 
     # Get raw pointers from buffers (if they exist)
@@ -166,12 +168,12 @@ cdef inline uint8_t[::1] _substring_in_single_array(object arrow_array, str need
             <size_t>(length - index),
             c_pattern,
             pattern_length
-        ):
+        ) == 1:
             result_view[i] = 1
 
     return result_view
 
-cpdef uint8_t[::1] list_substring(object column, str needle):
+cpdef uint8_t[::1] list_in_string(object column, str needle):
     """
     Search for `needle` within every row of an Arrow column (StringArray, BinaryArray,
     or ChunkedArray of those). Returns a NumPy array (dtype=uint8) with 1 for matches,
@@ -345,7 +347,7 @@ cdef inline uint8_t[::1] _substring_in_single_array_case_insensitive(object arro
     return result_view
 
 
-cpdef uint8_t[::1] list_substring_case_insensitive(object column, str needle):
+cpdef uint8_t[::1] list_in_string_case_insensitive(object column, str needle):
     """
     Perform a case-insensitive substring search on an Arrow column, which may be
     a single Array or a ChunkedArray of strings/binaries. Returns a NumPy uint8

@@ -226,8 +226,6 @@ cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t 
 
                     # Combine each element's hash with a simple mix
                     hash_val = cy_xxhash3_64(<const void*>data_ptr, data_size) ^ hash_val
-
-                    # Optionally apply SplitMix64 finalizer (commented out for now)
                     hash_val = (hash_val ^ (hash_val >> 30)) * c1
                     hash_val = (hash_val ^ (hash_val >> 27)) * c2
                     hash_val = hash_val ^ (hash_val >> 31)
@@ -299,7 +297,9 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
 
 
 cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, uint64_t col_hash) noexcept nogil:
-    """Combine column hashes using a stronger mixing function (xxhash finalizer)"""
+    """
+    Combine column hashes using a mixing function (xxhash finalizer)
+    """
     cdef uint64_t h
     h = row_hashes[row_idx]
     h = (h ^ col_hash) * <uint64_t>0x9e3779b97f4a7c15
