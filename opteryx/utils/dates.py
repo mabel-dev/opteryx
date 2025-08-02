@@ -111,14 +111,17 @@ def parse_iso(value):
     #
     # If the last character is a Z, we ignore it.
     # If we can't parse as a date we return None rather than error
+
+    from opteryx.compiled.functions.timestamp import parse_iso as c_parse_iso
+
     try:
         input_type = type(value)
 
-        if input_type == str and value.isdigit():
+        if input_type is str and value.isdigit():
             value = int(value)
             input_type = int
 
-        if input_type == numpy.datetime64:
+        if input_type is numpy.datetime64:
             # this can create dates rather than datetimes, so don't return yet
             value = value.astype(datetime.datetime)
             input_type = type(value)
@@ -130,60 +133,16 @@ def parse_iso(value):
                 tzinfo=None
             )
 
-        if input_type == datetime.datetime:
+        if input_type is datetime.datetime:
             return value.replace(microsecond=0)
-        if input_type == datetime.date:
+        if input_type is datetime.date:
             return datetime.datetime.combine(value, datetime.time.min)
 
-        # if we're here, we're doing string parsing
-        if input_type == str and 10 <= len(value) <= 33:
-            if value[-1] == "Z":
-                value = value[:-1]
-            if "+" in value:
-                value = value.split("+")[0]
-                if not 10 <= len(value) <= 28:
-                    return None
-            val_len = len(value)
-            if value[4] != "-" or value[7] != "-":
-                return None
-            if val_len == 10:
-                # YYYY-MM-DD
-                return datetime.datetime(
-                    *map(int, [value[:4], value[5:7], value[8:10]])  # type:ignore
-                )
-            if val_len >= 16:
-                if value[10] not in ("T", " ") and value[13] != ":":
-                    return None
-                if val_len >= 19 and value[16] == ":":
-                    # YYYY-MM-DD HH:MM:SS
-                    return datetime.datetime(
-                        *map(  # type:ignore
-                            int,
-                            [
-                                value[:4],  # YYYY
-                                value[5:7],  # MM
-                                value[8:10],  # DD
-                                value[11:13],  # HH
-                                value[14:16],  # MM
-                                value[17:19],  # SS
-                            ],
-                        )
-                    )
-                if val_len == 16:
-                    # YYYY-MM-DD HH:MM
-                    return datetime.datetime(
-                        *map(  # type:ignore
-                            int,
-                            [
-                                value[:4],
-                                value[5:7],
-                                value[8:10],
-                                value[11:13],
-                                value[14:16],
-                            ],
-                        )
-                    )
-        return None
+        if isinstance(value, str):
+            value = value.encode("utf-8")
+
+        return c_parse_iso(value)
+
     except (ValueError, TypeError):
         return None
 
