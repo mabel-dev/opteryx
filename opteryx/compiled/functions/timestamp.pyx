@@ -195,6 +195,13 @@ cpdef int64_t parse_iso_timestamp(bytes bts):
         raise ValueError("Second must be between 0 and 59")
 
     cdef time_t epoch = timegm(&t)
+
+    if epoch == -1:
+        # negative dates aren't handled properly
+        dt = datetime.datetime(year, month, day, hour, minute, second)
+        delta = dt - datetime.datetime(1970, 1, 1)
+        return int(delta.total_seconds()) * 1_000_000
+
     cdef int64_t result = <int64_t>epoch * MICROS_PER_SEC + micros
     result -= offset_sign * (offset_hour * MICROS_PER_HOUR + offset_min * MICROS_PER_MIN)
     return result
