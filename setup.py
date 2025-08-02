@@ -132,6 +132,16 @@ extensions = [
         extra_compile_args=CPP_COMPILE_FLAGS
     ),
     Extension(
+        name='opteryx.third_party.ulfjack.ryu',
+        sources=[
+            "opteryx/compiled/third_party/ryu.pyx",
+            "third_party/ulfjack/ryu/d2fixed.c",
+            ],
+        include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
+        extra_compile_args=C_COMPILE_FLAGS,
+        extra_link_args=["-Lthird_party/ulfjack/ryu"],
+    ),
+    Extension(
         name="opteryx.compiled.functions.functions",
         sources=["opteryx/compiled/functions/functions.pyx"],
         include_dirs=include_dirs,

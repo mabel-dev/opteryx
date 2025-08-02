@@ -30,6 +30,8 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
+from opteryx.third_party.ulfjack.ryu import format_double_array_ascii
+from opteryx.third_party.ulfjack.ryu import format_double_array_bytes
 from opteryx.utils import dates
 
 
@@ -80,7 +82,7 @@ def _get(array, key):
     if isinstance(first_element, (list, str, pyarrow.ListScalar, bytes, numpy.ndarray)):
         from opteryx.compiled.list_ops.list_get_element import list_get_element
 
-        return list_get_element(array, key)
+        return list_get_element(array, index)
 
     raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
 
@@ -234,6 +236,34 @@ def cast(_type):
     return _inner
 
 
+def cast_to_varchar(arr, *args):
+    if arr.dtype == numpy.float64:
+        # If the array is a float64, we can use the fast format_double_array_strings
+        return format_double_array_ascii(arr)
+    else:
+        caster = OrsoTypes.VARCHAR.parse
+        kwargs = {}
+        if len(args) == 1:
+            # If a length is provided, we can use it
+            kwargs["length"] = int(args[0])
+        # If the array is an int64, we can convert it to strings directly
+        return [caster(i, **kwargs) if i is not None else None for i in arr]
+
+
+def cast_to_blob(arr, *args):
+    if arr.dtype == numpy.float64:
+        # If the array is a float64, we can use the fast format_double_array_strings
+        return format_double_array_bytes(arr)
+    else:
+        caster = OrsoTypes.BLOB.parse
+        kwargs = {}
+        if len(args) == 1:
+            # If a length is provided, we can use it
+            kwargs["length"] = int(args[0])
+        # If the array is an int64, we can convert it to strings directly
+        return [caster(i, **kwargs) if i is not None else None for i in arr]
+
+
 def _iterate_single_parameter(func):
     def _inner(array):
         return pyarrow.array(list(map(func, array)))
@@ -363,10 +393,10 @@ FUNCTIONS = {
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
     "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
     "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
-    "VARCHAR": (cast("VARCHAR"), "VARCHAR", 1.0),
+    "VARCHAR": (cast_to_varchar, "VARCHAR", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
-    "BLOB": (cast("BLOB"), "BLOB", 1.0),
+    "BLOB": (cast_to_blob, "BLOB", 1.0),
     "TRY_ARRAY": (other_functions.array_cast_safe, "VARIANT", 1.0),
     "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), "TIMESTAMP", 1.0),
     "TRY_BOOLEAN": (try_cast("BOOLEAN"), "BOOLEAN", 1.0),
