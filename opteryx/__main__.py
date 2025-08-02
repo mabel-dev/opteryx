@@ -48,7 +48,13 @@ def print_dots(stop_event):
             print(".", end="", flush=True)
             time.sleep(0.5)
         if not stop_event.is_set():
-            print("\r   \r", end="", flush=True)
+            print(".", end="", flush=True)
+            time.sleep(0.5)
+        if not stop_event.is_set():
+            print(".", end="", flush=True)
+            time.sleep(0.5)
+        if not stop_event.is_set():
+            print("\r     \r", end="", flush=True)
             time.sleep(0.5)
 
 
@@ -117,7 +123,7 @@ def main():
                 result.materialize()
                 stop_event.set()
                 duration = time.monotonic_ns() - start
-                print("\r   \r", end="", flush=True)
+                print("\r     \r", end="", flush=True)
                 print(
                     result.display(
                         limit=-1,
@@ -188,11 +194,9 @@ def main():
 
             csv.write_csv(table, args.output)
         elif ext == "jsonl":
-            import orjson
-
             with open(args.output, mode="wb") as file:
                 for row in result:
-                    file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
+                    file.write(row.as_json + b"\n")
         elif ext == "md":
             with open(args.output, mode="w") as file:
                 file.write(result.markdown(limit=-1))
