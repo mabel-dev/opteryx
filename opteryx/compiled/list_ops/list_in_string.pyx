@@ -19,7 +19,7 @@ cimport numpy
 numpy.import_array()
 
 from cpython.bytes cimport PyBytes_AsString
-from libc.stdint cimport int32_t, uint8_t, int8_t, uintptr_t
+from libc.stdint cimport int32_t, uint8_t, uintptr_t
 import platform
 
 
