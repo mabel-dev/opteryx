@@ -28,18 +28,20 @@ cpdef numpy.ndarray list_get_element(numpy.ndarray[object, ndim=1] array, int ke
 
     # Check if the array is empty
     if n == 0:
-        return numpy.array([], dtype=object)
+        return numpy.empty(0, dtype=object)
 
     # Preallocate result array with the appropriate type
     cdef numpy.ndarray result = numpy.empty(n, dtype=object)
+    cdef object[:] result_view = result
+    cdef object sub_array
+    cdef Py_ssize_t i = 0
 
     # Iterate over the array using memory views for efficient access
-    cdef Py_ssize_t i = 0
     for i in range(n):
-        sub_array = array[i]
+        sub_array = <object>array[i]
         if sub_array is not None and len(sub_array) > key:
-            result[i] = sub_array[key]
+            result_view[i] = sub_array[key]
         else:
-            result[i] = None
+            result_view[i] = None
 
     return result
