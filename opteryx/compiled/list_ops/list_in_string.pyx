@@ -64,7 +64,7 @@ cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen, c
     """
     cdef unsigned char skip[256]
     cdef size_t i
-    cdef size_t tail_index = i + needlelen - 1
+    cdef size_t tail_index
 
     if needlelen == 0:
         return 0  # No valid search possible
