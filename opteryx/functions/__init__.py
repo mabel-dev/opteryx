@@ -237,6 +237,8 @@ def cast(_type):
 
 
 def cast_to_varchar(arr, *args):
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_ascii(arr)
@@ -251,6 +253,8 @@ def cast_to_varchar(arr, *args):
 
 
 def cast_to_blob(arr, *args):
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_bytes(arr)
