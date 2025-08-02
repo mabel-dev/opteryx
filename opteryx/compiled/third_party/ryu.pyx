@@ -14,6 +14,20 @@ from libc.stdint cimport uint32_t
 cdef extern from "ryu.h":
     int d2fixed_buffered_n(double d, uint32_t precision, char* result)
 
+cdef char ZERO = 48  # or ord('0')
+cdef char DOT = 46   # or ord('.')
+
+cdef inline int trim_trailing_zeros(char* buf, int length) nogil:
+    cdef int i = length - 1
+    # Strip trailing zeros
+    while i > 0 and buf[i] == ZERO:
+        i -= 1
+    # Ensure there's at least one digit after the decimal
+    if buf[i] == DOT:
+        i += 1
+        buf[i] = ZERO
+    return i + 1  # New length
+
 cpdef numpy.ndarray[object] format_double_array_bytes(numpy.ndarray[numpy.float64_t, ndim=1] arr, uint32_t precision=6):
     """
     Convert a NumPy array of float64s to a NumPy object array of bytes.
@@ -27,7 +41,7 @@ cpdef numpy.ndarray[object] format_double_array_bytes(numpy.ndarray[numpy.float6
 
     for i in range(n):
         length = d2fixed_buffered_n(arr[i], precision, buf)
-        # Inline formatting instead of calling format_double()
+        length = trim_trailing_zeros(buf, length)
         result_view[i] = (<bytes>buf[:length])
 
     return result
@@ -45,6 +59,7 @@ cpdef numpy.ndarray[object] format_double_array_ascii(numpy.ndarray[numpy.float6
 
     for i in range(n):
         length = d2fixed_buffered_n(arr[i], precision, buf)
+        length = trim_trailing_zeros(buf, length)
         result_view[i] = (<bytes>buf[:length]).decode("ascii")
 
     return result

@@ -159,6 +159,11 @@ extensions = [
         extra_compile_args=C_COMPILE_FLAGS,
     ),
     Extension(
+        name="opteryx.compiled.functions.timestamp",
+        sources=["opteryx/compiled/functions/timestamp.pyx"],
+        extra_compile_args=C_COMPILE_FLAGS,
+    ),
+    Extension(
         name="opteryx.compiled.functions.vectors",
         sources=["opteryx/compiled/functions/vectors.pyx"],
         include_dirs=include_dirs,
