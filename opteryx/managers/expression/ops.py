@@ -185,20 +185,20 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value)
-        return numpy.asarray(list_ops.list_in_string.list_substring(arr, needle), dtype=bool)
+        return numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value)
-        matches = numpy.asarray(list_ops.list_in_string.list_substring(arr, needle), dtype=bool)
+        matches = numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value)
         return numpy.asarray(
-            list_ops.list_in_string.list_substring_case_insensitive(arr, needle), dtype=bool
+            list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
         )
     if operator == "NotIInStr":
         needle = str(value)
         matches = numpy.asarray(
-            list_ops.list_in_string.list_substring_case_insensitive(arr, needle), dtype=bool
+            list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
         )
         return numpy.invert(matches)
     if operator == "Like":

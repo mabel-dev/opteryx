@@ -173,7 +173,7 @@ cdef inline uint8_t[::1] _substring_in_single_array(object arrow_array, str need
 
     return result_view
 
-cpdef uint8_t[::1] list_substring(object column, str needle):
+cpdef uint8_t[::1] list_in_string(object column, str needle):
     """
     Search for `needle` within every row of an Arrow column (StringArray, BinaryArray,
     or ChunkedArray of those). Returns a NumPy array (dtype=uint8) with 1 for matches,
@@ -347,7 +347,7 @@ cdef inline uint8_t[::1] _substring_in_single_array_case_insensitive(object arro
     return result_view
 
 
-cpdef uint8_t[::1] list_substring_case_insensitive(object column, str needle):
+cpdef uint8_t[::1] list_in_string_case_insensitive(object column, str needle):
     """
     Perform a case-insensitive substring search on an Arrow column, which may be
     a single Array or a ChunkedArray of strings/binaries. Returns a NumPy uint8
