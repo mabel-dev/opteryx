@@ -11,6 +11,7 @@ cimport numpy
 numpy.import_array()
 
 from opteryx.third_party.abseil.containers cimport FlatHashSet
+from opteryx.third_party.fastfloat.fast_float cimport c_parse_fast_float as parse_fast_float
 
 from libc.stdint cimport int32_t, int64_t, uint64_t, uint8_t, uintptr_t
 from cpython.unicode cimport PyUnicode_DecodeUTF8
@@ -168,7 +169,7 @@ cpdef tuple numpy_build_filtered_rows_indices_and_column(numpy.ndarray column_da
     if numpy.issubdtype(element_dtype, numpy.integer):
         valid_values_typed = set([int(v) for v in valid_values])
     elif numpy.issubdtype(element_dtype, numpy.floating):
-        valid_values_typed = set([float(v) for v in valid_values])
+        valid_values_typed = set([parse_fast_float(v) for v in valid_values])
     elif numpy.issubdtype(element_dtype, numpy.str_):
         valid_values_typed = set([unicode(v) for v in valid_values])
     else:

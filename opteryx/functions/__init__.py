@@ -242,14 +242,14 @@ def cast_to_varchar(arr, *args):
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_ascii(arr)
-    else:
-        caster = OrsoTypes.VARCHAR.parse
-        kwargs = {}
-        if len(args) == 1:
-            # If a length is provided, we can use it
-            kwargs["length"] = int(args[0])
-        # If the array is an int64, we can convert it to strings directly
-        return [caster(i, **kwargs) if i is not None else None for i in arr]
+
+    caster = OrsoTypes.VARCHAR.parse
+    kwargs = {}
+    if len(args) == 1:
+        # If a length is provided, we can use it
+        kwargs["length"] = int(args[0])
+    # If the array is an int64, we can convert it to strings directly
+    return [caster(i, **kwargs) if i is not None else None for i in arr]
 
 
 def cast_to_blob(arr, *args):
@@ -258,14 +258,42 @@ def cast_to_blob(arr, *args):
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_bytes(arr)
-    else:
-        caster = OrsoTypes.BLOB.parse
-        kwargs = {}
-        if len(args) == 1:
-            # If a length is provided, we can use it
-            kwargs["length"] = int(args[0])
-        # If the array is an int64, we can convert it to strings directly
-        return [caster(i, **kwargs) if i is not None else None for i in arr]
+
+    caster = OrsoTypes.BLOB.parse
+    kwargs = {}
+    if len(args) == 1:
+        # If a length is provided, we can use it
+        kwargs["length"] = int(args[0])
+    # If the array is an int64, we can convert it to strings directly
+    return [caster(i, **kwargs) if i is not None else None for i in arr]
+
+
+def cast_to_double(arr, *args):
+    """
+    Casts an array to double precision floating point numbers.
+    If the array is already of type double, it returns the array as is.
+    If the array is a string, it attempts to parse each string to a double.
+    If the array is an integer, it converts each integer to a double.
+    """
+    from opteryx.third_party.fastfloat.fast_float import parse_ascii_array_to_double
+    from opteryx.third_party.fastfloat.fast_float import parse_byte_array_to_double
+
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
+    if arr.dtype == numpy.float64:
+        return arr
+    if arr.dtype == numpy.int64:
+        return arr.astype(numpy.float64)
+    if numpy.issubdtype(arr.dtype, numpy.object_):
+        if isinstance(arr[0], str):
+            return parse_ascii_array_to_double(arr)
+        elif isinstance(arr[0], bytes):
+            return parse_byte_array_to_double(arr)
+    if numpy.issubdtype(arr.dtype, numpy.str_):
+        return parse_ascii_array_to_double(arr.astype(object))
+
+    caster = OrsoTypes.DOUBLE.parse
+    return [caster(i) if i is not None else None for i in arr]
 
 
 def _iterate_single_parameter(func):
@@ -395,7 +423,7 @@ FUNCTIONS = {
     "TIMESTAMP": (lambda x: compute.cast(x, pyarrow.timestamp("us")), "TIMESTAMP", 1.0),
     "BOOLEAN": (lambda x: compute.cast(x, "bool"), "BOOLEAN", 1.0),
     "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
-    "DOUBLE": (lambda x: compute.cast(x, "float64"), "DOUBLE", 1.0),
+    "DOUBLE": (cast_to_double, "DOUBLE", 1.0),
     "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
     "VARCHAR": (cast_to_varchar, "VARCHAR", 1.0),
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
