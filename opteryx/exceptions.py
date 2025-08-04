@@ -255,7 +255,13 @@ class InvalidTemporalRangeFilterError(SqlError):
 
 class FunctionExecutionError(SqlError):
     """Exception raised for function execution errors."""
-
+    def __init__(self, message: Optional[str] = None, function: Optional[str] = None):
+        self.function = function
+        if not message and function is not None:
+            message = f"Function '{function}' call failed."
+        if message and function is not None:
+            message = f"{message} - Function: '{function}'"
+        super().__init__(message)
 
 class InvalidFunctionParameterError(FunctionExecutionError):
     """Exception raised for invalid function parameters."""
