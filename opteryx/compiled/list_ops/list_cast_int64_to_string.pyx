@@ -36,7 +36,7 @@ cdef inline char* int64_to_str_ptr(int64_t value, char* buf) nogil:
     return buf + i
 
 
-cpdef numpy.ndarray list_cast_int64_to_string(const int64_t[:] arr):
+cpdef numpy.ndarray list_cast_int64_to_bytes(const int64_t[:] arr):
     cdef Py_ssize_t i, n = arr.shape[0]
     cdef char buf[21]
     cdef char* ptr

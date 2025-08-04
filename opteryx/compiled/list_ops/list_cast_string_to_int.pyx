@@ -61,7 +61,7 @@ cpdef numpy.ndarray list_cast_bytes_to_int(numpy.ndarray[object, ndim=1] arr):
         sign = 1
 
         j = 0
-        if length > 0 and c_str[0] == 45:  # - 
+        if length > 0 and c_str[0] == 45:  # -
             sign = -1
             j = 1
 

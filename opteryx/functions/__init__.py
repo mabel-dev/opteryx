@@ -243,11 +243,11 @@ def cast_to_varchar(arr, *args):
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_ascii(arr)
     if arr.dtype == numpy.int64:
-        from opteryx.compiled.list_ops.list_cast_int64_to_bytes import list_cast_int64_to_ascii
+        from opteryx.compiled.list_ops.list_cast_int64_to_string import list_cast_int64_to_ascii
 
         return list_cast_int64_to_ascii(arr)
     if arr.dtype == numpy.uint64:
-        from opteryx.compiled.list_ops.list_cast_uint64_to_bytes import list_cast_uint64_to_ascii
+        from opteryx.compiled.list_ops.list_cast_uint64_to_string import list_cast_uint64_to_ascii
 
         return list_cast_uint64_to_ascii(arr)
 
@@ -269,11 +269,11 @@ def cast_to_blob(arr, *args):
 
         return format_double_array_bytes(arr)
     if arr.dtype == numpy.int64:
-        from opteryx.compiled.list_ops.list_cast_int64_to_bytes import list_cast_int64_to_bytes
+        from opteryx.compiled.list_ops.list_cast_int64_to_string import list_cast_int64_to_bytes
 
         return list_cast_int64_to_bytes(arr)
     if arr.dtype == numpy.uint64:
-        from opteryx.compiled.list_ops.list_cast_uint64_to_bytes import list_cast_uint64_to_bytes
+        from opteryx.compiled.list_ops.list_cast_uint64_to_string import list_cast_uint64_to_bytes
 
         return list_cast_uint64_to_bytes(arr)
 
@@ -313,8 +313,8 @@ def cast_to_double(arr, *args):
     caster = OrsoTypes.DOUBLE.parse
     return [caster(i) if i is not None else None for i in arr]
 
-def cast_to_int(arr, *args):
 
+def cast_to_int(arr, *args):
     from opteryx.compiled.list_ops.list_cast_string_to_int import list_cast_ascii_to_int
     from opteryx.compiled.list_ops.list_cast_string_to_int import list_cast_bytes_to_int
 
@@ -330,6 +330,7 @@ def cast_to_int(arr, *args):
 
     caster = OrsoTypes.INTEGER.parse
     return [caster(i) if i is not None else None for i in arr]
+
 
 def _iterate_single_parameter(func):
     def _inner(array):
