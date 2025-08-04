@@ -313,6 +313,23 @@ def cast_to_double(arr, *args):
     caster = OrsoTypes.DOUBLE.parse
     return [caster(i) if i is not None else None for i in arr]
 
+def cast_to_int(arr, *args):
+
+    from opteryx.compiled.list_ops.list_cast_string_to_int import list_cast_ascii_to_int
+    from opteryx.compiled.list_ops.list_cast_string_to_int import list_cast_bytes_to_int
+
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
+    if numpy.issubdtype(arr.dtype, numpy.object_):
+        if isinstance(arr[0], str):
+            return list_cast_ascii_to_int(arr)
+        elif isinstance(arr[0], bytes):
+            return list_cast_bytes_to_int(arr)
+    if numpy.issubdtype(arr.dtype, numpy.str_):
+        return list_cast_ascii_to_int(arr.astype(object))
+
+    caster = OrsoTypes.INTEGER.parse
+    return [caster(i) if i is not None else None for i in arr]
 
 def _iterate_single_parameter(func):
     def _inner(array):
@@ -440,7 +457,7 @@ FUNCTIONS = {
     "ARRAY": (other_functions.array_cast, "VARIANT", 1.0),
     "TIMESTAMP": (lambda x: compute.cast(x, pyarrow.timestamp("us")), "TIMESTAMP", 1.0),
     "BOOLEAN": (lambda x: compute.cast(x, "bool"), "BOOLEAN", 1.0),
-    "INTEGER": (lambda x: compute.cast(x, "int64", safe=False), "INTEGER", 1.0),
+    "INTEGER": (cast_to_int, "INTEGER", 1.0),
     "DOUBLE": (cast_to_double, "DOUBLE", 1.0),
     "DECIMAL": (cast("DECIMAL"), "DECIMAL", 1.0),
     "VARCHAR": (cast_to_varchar, "VARCHAR", 1.0),
@@ -625,7 +642,7 @@ def apply_function(function: str = None, *parameters):
     except FunctionExecutionError as e:
         raise e
     except Exception as e:
-        raise FunctionExecutionError(e) from e
+        raise FunctionExecutionError(message=e, function=function) from e
 
     if compressed:
         # fill the result set

@@ -392,6 +392,13 @@ def jsonl_decoder(
     if not isinstance(buffer, bytes):
         buffer = buffer.read()
 
+    # If it's COUNT(*), we don't need to create a full dataset
+    # We have a handler later to sum up the $COUNT(*) column
+    if projection == [] and selection == [] and not just_schema and not just_statistics:
+        num_rows = buffer.count(b"\n")
+        table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
+        return (num_rows, 0, table)
+
     parser = simdjson.Parser()
 
     # preallocate and reuse dicts
