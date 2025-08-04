@@ -127,7 +127,8 @@ extensions = [
             "opteryx/compiled/third_party/fast_float.pyx",
             ],
         include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
-        extra_compile_args=C_COMPILE_FLAGS,
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
         extra_link_args=["-Lthird_party/fastfloat/fast_float"],
     ),
     Extension(
