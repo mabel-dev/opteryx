@@ -30,8 +30,6 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
-from opteryx.third_party.ulfjack.ryu import format_double_array_ascii
-from opteryx.third_party.ulfjack.ryu import format_double_array_bytes
 from opteryx.utils import dates
 
 
@@ -237,11 +235,21 @@ def cast(_type):
 
 
 def cast_to_varchar(arr, *args):
+    from opteryx.third_party.ulfjack.ryu import format_double_array_ascii
+
     if hasattr(arr, "to_numpy"):
         arr = arr.to_numpy(False)
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_ascii(arr)
+    if arr.dtype == numpy.int64:
+        from opteryx.compiled.list_ops.list_cast_int64_to_bytes import list_cast_int64_to_ascii
+
+        return list_cast_int64_to_ascii(arr)
+    if arr.dtype == numpy.uint64:
+        from opteryx.compiled.list_ops.list_cast_uint64_to_bytes import list_cast_uint64_to_ascii
+
+        return list_cast_uint64_to_ascii(arr)
 
     caster = OrsoTypes.VARCHAR.parse
     kwargs = {}
@@ -257,7 +265,17 @@ def cast_to_blob(arr, *args):
         arr = arr.to_numpy(False)
     if arr.dtype == numpy.float64:
         # If the array is a float64, we can use the fast format_double_array_strings
+        from opteryx.third_party.ulfjack.ryu import format_double_array_bytes
+
         return format_double_array_bytes(arr)
+    if arr.dtype == numpy.int64:
+        from opteryx.compiled.list_ops.list_cast_int64_to_bytes import list_cast_int64_to_bytes
+
+        return list_cast_int64_to_bytes(arr)
+    if arr.dtype == numpy.uint64:
+        from opteryx.compiled.list_ops.list_cast_uint64_to_bytes import list_cast_uint64_to_bytes
+
+        return list_cast_uint64_to_bytes(arr)
 
     caster = OrsoTypes.BLOB.parse
     kwargs = {}
