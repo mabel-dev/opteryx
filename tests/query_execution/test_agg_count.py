@@ -28,7 +28,7 @@ def test_count_star_non_parquet():
     cur = opteryx.query("SELECT COUNT(*) FROM testdata.flat.ten_files;")
     stats = cur.stats
     assert stats["columns_read"] <= 1, stats["columns_read"]
-    assert stats["rows_read"] == 250, stats["rows_read"]
+    assert stats["rows_read"] == 10, stats["rows_read"]
     assert stats["rows_seen"] == 250, stats["rows_seen"]
     assert cur.fetchone()[0] == 250
 
