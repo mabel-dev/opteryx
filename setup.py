@@ -122,6 +122,16 @@ extensions = [
         extra_link_args=["-Lthird_party/cyan4973"],
     ),
     Extension(
+        name='opteryx.third_party.fastfloat.fast_float',
+        sources=[
+            "opteryx/compiled/third_party/fast_float.pyx",
+            ],
+        include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+        extra_link_args=["-Lthird_party/fastfloat/fast_float"],
+    ),
+    Extension(
         name='opteryx.third_party.tktech.csimdjson',
         sources=[
             "third_party/tktech/simdjson/simdjson.cpp",
@@ -206,7 +216,10 @@ extensions = [
         name="opteryx.compiled.joins.cross_join",
         sources=["opteryx/compiled/joins/cross_join.pyx"],
         language="c++",
-        include_dirs=include_dirs + ["third_party/abseil"],
+        include_dirs=include_dirs + [
+            "third_party/abseil", 
+            "third_party/fastfloat/fast_float"
+        ],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
