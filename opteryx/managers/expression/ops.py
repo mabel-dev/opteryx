@@ -109,7 +109,7 @@ def filter_operations(left_arr, left_type, operator, right_arr, right_type):
             right_type = OrsoTypes.TIMESTAMP
 
     if OrsoTypes.INTERVAL in (left_type, right_type):
-        from opteryx.custom_types.intervals import INTERVAL_KERNELS
+        from opteryx.datatypes.intervals import INTERVAL_KERNELS
 
         function = INTERVAL_KERNELS.get((left_type, right_type, operator))
         if function is None:

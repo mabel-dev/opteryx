@@ -327,6 +327,9 @@ def cast_to_int(arr, *args):
             return list_cast_bytes_to_int(arr)
     if numpy.issubdtype(arr.dtype, numpy.str_):
         return list_cast_ascii_to_int(arr.astype(object))
+    if numpy.issubdtype(arr.dtype, numpy.datetime64):
+        arr = arr.astype("M8[us]")  # microseconds
+        return arr.astype(numpy.int64)
 
     caster = OrsoTypes.INTEGER.parse
     return [caster(i) if i is not None else None for i in arr]

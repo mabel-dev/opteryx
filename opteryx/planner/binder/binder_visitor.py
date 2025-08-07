@@ -306,6 +306,10 @@ class BinderVisitor:
             )
             node.aggregates = list(tmp_aggregates)
 
+        for agg in node.aggregates:
+            if agg.condition:
+                agg.condition, context = inner_binder(agg.condition, context)
+
         # We're going to trim down the schemas to just the columns used in the GROUP BY.
         # 1) the easy one - the columns explictly in the GROUP BY
         columns_to_keep = set()

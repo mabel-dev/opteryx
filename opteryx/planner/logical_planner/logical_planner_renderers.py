@@ -4,6 +4,7 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 
+from platform import node
 from typing import Callable
 
 from opteryx.managers.expression import format_expression
@@ -32,7 +33,17 @@ def render_filter(node: LogicalPlanNode) -> str:
 
 @register_render(LogicalPlanStepType.Aggregate)
 def render_aggregate(node: LogicalPlanNode) -> str:
-    return f"AGGREGATE [{', '.join(format_expression(col) for col in node.aggregates)}]"
+    response = "AGGREGATE ["
+    for col in node.aggregates:
+        if col.condition:
+            response += (
+                f"{format_expression(col)} FILTER (WHERE {format_expression(col.condition)})"
+            )
+        else:
+            response += format_expression(col)
+        response += ", "
+    response = response.rstrip(", ") + "]"
+    return response
 
 
 @register_render(LogicalPlanStepType.AggregateAndGroup)
