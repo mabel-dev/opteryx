@@ -51,8 +51,8 @@ class JoinOrderingStrategy(OptimizationStrategy):
             # Small datasets benefit from nested loop joins (avoids building a hash table)
             if (
                 not DISABLE_NESTED_LOOP_JOIN
-                and min(node.left_size, node.right_size) < 1000
-                and max(node.left_size, node.right_size) < 10000
+                and min(node.left_size, node.right_size) < 1_000
+                and max(node.left_size, node.right_size) < 100_000
             ) or FORCE_NESTED_LOOP_JOIN:
                 node.type = "nested_inner"
                 context.optimized_plan[context.node_id] = node

@@ -1571,7 +1571,7 @@ id > /* 0 */ 1
         ("SELECT awesomeness_factor FROM $planets;", None, None, ColumnNotFoundError),
         ("SELECT * FROM $planets WHERE awesomeness_factor > 'Mega';", None, None, ColumnNotFoundError),
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
-        ("SELECT ARRAY_AGG(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
+        ("SELECT ARRAY_AGG(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, UnsupportedSyntaxError),
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions", None, None, SqlError),
         # Invalid temporal ranges

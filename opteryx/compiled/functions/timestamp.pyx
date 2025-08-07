@@ -90,6 +90,7 @@ cdef inline ParsedDateTime _parse_iso_parts(bytes bts):
     out.offset_hour = 0
     out.offset_minute = 0
 
+    # fewer than 10, more than 26 and the first separators not '-'
     if n < 10 or n > 26 or s[4] != 45 or s[7] != 45:
         raise ValueError("Invalid ISO timestamp")
 
@@ -148,6 +149,10 @@ cdef inline ParsedDateTime _parse_iso_parts(bytes bts):
     return out
 
 cpdef int64_t parse_iso_timestamp(bytes bts):
+    """
+    Parse a ISO format timestamp string to microseconds after the
+    linux epoch (including negative values)
+    """
     cdef ParsedDateTime p = _parse_iso_parts(bts)
     cdef tm t
     memset(&t, 0, sizeof(tm))
