@@ -223,7 +223,27 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
             args.append(element_key)
         data_type = "ARRAY"
     else:
-        raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
+        if data_type in ("String", "Char", "Text", "Nvarchar"):
+            raise SqlError(
+                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'VARCHAR'?"
+            )
+        if data_type in ("Float", "Numeric", "Real"):
+            raise SqlError(
+                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'DOUBLE'?"
+            )
+        if data_type in ("Binary", "Raw", "VarBinary"):
+            raise SqlError(
+                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'BLOB'?"
+            )
+        if data_type in ("Int", "SmallInt", "TinyInt", "BigInt", "BYTE"):
+            raise SqlError(
+                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'INTEGER'?"
+            )
+        if data_type in ("Bool", "Bit"):
+            raise SqlError(
+                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'BOOLEAN'?"
+            )
+        raise SqlError(f"Unsupported type for CAST - '{data_type}'.")
 
     if kind in {"TryCast", "SafeCast"}:
         data_type = "TRY_" + data_type
@@ -305,7 +325,7 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
     limit = None
     duplicate_treatment = None
     null_treatment = None
-    filters = None
+    filter_condition = None
     args = []
 
     if branch["args"] != "None":
@@ -325,12 +345,24 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
 
         duplicate_treatment = branch["args"]["List"].get("duplicate_treatment")
         null_treatment = branch["args"].get("null_treatment")
-        filters = branch["args"].get("filters")
+        filter_condition = branch.get("filter")
 
     if functions.is_function(func):
         node_type = NodeType.FUNCTION
+        if filter_condition is not None:
+            raise UnsupportedSyntaxError("Filters are not supported with function calls.")
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
+        if filter_condition is not None:
+            if func != "COUNT":
+                raise UnsupportedSyntaxError(
+                    f"Filters are not supported with aggregate function '{func}'."
+                )
+            if duplicate_treatment == "Distinct":
+                raise UnsupportedSyntaxError(
+                    "Filters are not supported with aggregate function 'COUNT' with DISTINCT."
+                )
+            filter_condition = build(filter_condition)
     else:  # pragma: no cover
         from opteryx.exceptions import FunctionNotFoundError
         from opteryx.functions import DEPRECATED_FUNCTIONS
@@ -362,7 +394,7 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
         alias=alias,
         duplicate_treatment=duplicate_treatment,
         null_treatment=null_treatment,
-        filters=filters,
+        condition=filter_condition,
         order=order_by,
         limit=limit,
     )

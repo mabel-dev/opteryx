@@ -60,6 +60,11 @@ impl Dialect for OpteryxDialect {
         true
     }
 
+    // SELECT COUNT(*) FILTER (WHERE ID < 4)
+    fn supports_filter_during_aggregation(&self) -> bool {
+        true
+    }
+
     fn parse_infix(
         &self,
         parser: &mut sqlparser::parser::Parser,

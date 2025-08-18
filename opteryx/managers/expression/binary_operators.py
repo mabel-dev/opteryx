@@ -129,7 +129,7 @@ def binary_operations(
         raise NotImplementedError(f"Operator `{operator}` is not implemented!")
 
     if OrsoTypes.INTERVAL in (left_type, right_type):
-        from opteryx.custom_types.intervals import INTERVAL_KERNELS
+        from opteryx.datatypes.intervals import INTERVAL_KERNELS
 
         function = INTERVAL_KERNELS.get((left_type, right_type, operator))
         if function is None:

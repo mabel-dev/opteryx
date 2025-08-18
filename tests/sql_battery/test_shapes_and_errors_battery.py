@@ -1551,11 +1551,11 @@ id > /* 0 */ 1
 
         # bespoke casters
         ("SELECT * FROM $satellites WHERE CAST(CAST(id AS VARCHAR) AS INTEGER) == id", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE CAST(CAST(id AS VARCHAR) AS INTEGER) == id", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE CAST(CAST(id * -1 AS BLOB) AS INTEGER) == id * -1", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE CAST(CAST(id AS BLOB) AS INTEGER) == id", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE CAST(CAST(id * -1 AS VARCHAR) AS INTEGER) == id * -1", 177, 8, None),
         ("SELECT * FROM $satellites WHERE CAST(CAST(id * -1 AS BLOB) AS INTEGER) == id * -1", 177, 8, None),
         ("SELECT * FROM $satellites WHERE CAST(CAST(gm AS VARCHAR) AS DOUBLE) == gm", 177, 8, None),
-        ("SELECT * FROM $satellites WHERE CAST(CAST(gm AS VARCHAR) AS DOUBLE) == gm", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE CAST(CAST(gm AS BLOB) AS DOUBLE) == gm", 177, 8, None),
 
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
@@ -1571,7 +1571,7 @@ id > /* 0 */ 1
         ("SELECT awesomeness_factor FROM $planets;", None, None, ColumnNotFoundError),
         ("SELECT * FROM $planets WHERE awesomeness_factor > 'Mega';", None, None, ColumnNotFoundError),
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
-        ("SELECT ARRAY_AGG(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
+        ("SELECT ARRAY_AGG(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, UnsupportedSyntaxError),
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions", None, None, SqlError),
         # Invalid temporal ranges
