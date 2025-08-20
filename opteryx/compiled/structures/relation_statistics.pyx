@@ -224,3 +224,6 @@ cdef class RelationStatistics:
         read_map(buf, &offset, inst.upper_bounds)
         read_map(buf, &offset, inst.cardinality_estimate)
         return inst
+
+    def __deepcopy__(self, memo):
+        return self

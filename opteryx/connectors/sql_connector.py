@@ -25,6 +25,7 @@ from orso.tools import random_string
 from orso.types import PYTHON_TO_ORSO_MAP
 from orso.types import OrsoTypes
 
+from opteryx.compiled.structures.relation_statistics import RelationStatistics
 from opteryx.config import OPTERYX_DEBUG
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
@@ -32,6 +33,7 @@ from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -53,7 +55,7 @@ def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
     return f":{name}", parameters
 
 
-class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
+class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
     __mode__ = "Sql"
     __type__ = "SQL"
 
@@ -91,6 +93,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
         BaseConnector.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
+        Statistics.__init__(self, **kwargs)
 
         try:
             from sqlalchemy import MetaData
@@ -224,6 +227,67 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
 
         # DEBUG: print(f"time spent converting: {convert_time/1e9}s")
 
+    def collect_relation_stats(self) -> RelationStatistics:
+        from sqlalchemy import inspect
+        from sqlalchemy.sql import text
+
+        stats = RelationStatistics()
+        dialect = self._engine.dialect.name.lower()
+
+        if dialect == "postgresql":
+            row_est = self._engine.execute(
+                text("SELECT reltuples::BIGINT FROM pg_class WHERE relname = :t"),
+                {"t": self.dataset},
+            ).scalar()
+            stats.record_count_estimate = int(row_est)
+
+            pg_stats = self._engine.execute(
+                text("""
+                SELECT attname, n_distinct, null_frac, histogram_bounds
+                FROM pg_stats
+                WHERE tablename = :t
+            """),
+                {"t": self.dataset},
+            ).fetchall()
+
+            for row in pg_stats:
+                col = row["attname"]
+                stats.cardinality_estimate[col] = (
+                    int(row["n_distinct"]) if row["n_distinct"] > 0 else 0
+                )
+                stats.null_count[col] = int(row["null_frac"] * row_est)
+                bounds = row["histogram_bounds"]
+                if bounds and isinstance(bounds, list) and len(bounds) >= 2:
+                    stats.lower_bounds[col] = bounds[0]
+                    stats.upper_bounds[col] = bounds[-1]
+
+        elif dialect in {"duckdb", "sqlite", "mysql"}:
+            # fallback: query full stats for small/embedded engines
+            columns = inspect(self._engine).get_columns(self.dataset)
+            numeric_cols = [
+                col["name"]
+                for col in columns
+                if str(col["type"]).lower()
+                in {"integer", "bigint", "float", "real", "numeric", "double"}
+            ]
+
+            # Build dynamic query
+            parts = ["COUNT(*) AS count"]
+            for col in numeric_cols:
+                parts.extend([f"MIN({col}) AS min_{col}", f"MAX({col}) AS max_{col}"])
+            q = f"SELECT {', '.join(parts)} FROM {self.dataset}"
+            with self._engine.connect() as conn:
+                # DEBUG: print("READ STATS\n", str(q))
+                result = conn.execute(text(q)).fetchone()._asdict()
+
+            stats.record_count = result["count"]
+            stats.record_count_estimate = result["count"]
+            for col in numeric_cols:
+                stats.lower_bounds[col] = result[f"min_{col}"]
+                stats.upper_bounds[col] = result[f"max_{col}"]
+
+        return stats
+
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
 
@@ -288,5 +352,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable):
                     # DEBUG: print("SCHEMA:", self.schema)
             except Exception as err:
                 raise DatasetReadError(f"Unable to read dataset '{self.dataset}'.") from err
+
+        self.schema.relation_statistics = self.collect_relation_stats()
 
         return self.schema
