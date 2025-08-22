@@ -14,7 +14,7 @@ filtering step. We use cost estimates based on the data type to determine
 a good order to execute the filters.
 
 NOTE: This currently doesn't account for a few very important things which
-means this may create an order that is slower than the order that would have 
+means this may create an order that is slower than the order that would have
 been run if this strategy didn't run.
 
 - The selectivity of the filter
