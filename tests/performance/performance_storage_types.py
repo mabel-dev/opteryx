@@ -21,18 +21,20 @@ Best of three runs, lower is better
 500 cycles  jsonl_zstd      23.5 seconds    ████
 
 (results on M2 Mac)
-500 cycles  parquet_zstd    2.63 seconds
-500 cycles  parquet_snappy  2.78 seconds
-500 cycles  parquet_lz4     2.89 seconds
-500 cycles  ipc             5.67 seconds  ** new
+500 cycles  parquet_zstd    1.23 seconds
+500 cycles  parquet_snappy  1.09 seconds
+500 cycles  parquet_lz4     1.14 seconds
+500 cycles  ipc             1.58 seconds
 500 cycles  arrow_lz4       11.1 seconds
-500 cycles  ipc_zstd        12.4 seconds  ** new
+500 cycles  ipc_zstd        10.2 seconds
 500 cycles  orc_snappy      13.8 seconds
 500 cycles  arrow           15.4 seconds
 500 cycles  orc_zstd        15.4 seconds
-500 cycles  ipc_lz4         17.0 seconds  ** new
+500 cycles  ipc_lz4         10.2 seconds
 500 cycles  jsonl           35.2 seconds
 500 cycles  jsonl_zstd      43.8 seconds
+500 cycles  avro            171 seconds
+500 cycles  vortex          17.5 seconds 
 
 
 """
@@ -63,8 +65,8 @@ FORMATS = (
 #    "arrow",
 #    "arrow_lz4",
 #    "jsonl",
-    "orc",
-    "orc_snappy",
+#    "orc",
+#    "orc_snappy",
     "parquet",
     "parquet_snappy",
     "parquet_lz4",
@@ -72,7 +74,8 @@ FORMATS = (
     "ipc",  # no compression
     "ipc_lz4",
     "ipc_zstd",
-    "avro",
+#    "avro",
+    "vortex"
 )
 
 

@@ -347,9 +347,10 @@ class Cursor(DataFrame):
                 raise InconsistentSchemaError(
                     "Unable to resolve different schemas, most likely related to a STRUCT column."
                 ) from err
-            raise InconsistentSchemaError(
-                "Unable to resolve different schemas, this may be due to uncoercible column types."
-            ) from err
+
+            from opteryx.exceptions import DataError
+
+            raise DataError(f"Unable to build result dataset ({err})") from err
 
     @property
     def stats(self) -> Dict[str, Any]:

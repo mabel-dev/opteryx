@@ -721,6 +721,31 @@ def excel_decoder(
     return *shape, table
 
 
+def convert_string_view(field: pyarrow.Field) -> pyarrow.Field:
+    """
+    Recursively replace string_view (type id 39) with string in a pyarrow Field.
+    """
+    field_type = field.type
+
+    if field_type.id == pyarrow.string_view().id:
+        return pyarrow.field(field.name, pyarrow.string(), nullable=field.nullable)
+
+    elif pyarrow.types.is_list(field_type) or pyarrow.types.is_large_list(field_type):
+        converted_value_field = convert_string_view(pyarrow.field("item", field_type.value_type))
+        if pyarrow.types.is_list(field_type):
+            new_type = pyarrow.list_(converted_value_field.type)
+        else:
+            new_type = pyarrow.large_list(converted_value_field.type)
+        return pyarrow.field(field.name, new_type, nullable=field.nullable)
+
+    elif pyarrow.types.is_struct(field_type):
+        new_fields = [convert_string_view(subfield) for subfield in field_type]
+        new_type = pyarrow.struct(new_fields)
+        return pyarrow.field(field.name, new_type, nullable=field.nullable)
+
+    return field
+
+
 def vortex_decoder(
     buffer: Union[memoryview, bytes, BinaryIO],
     *,
@@ -736,25 +761,28 @@ def vortex_decoder(
         from opteryx.exceptions import MissingDependencyError
 
         raise MissingDependencyError("vortex-data")
+
+    import os
     import tempfile
 
     if just_statistics:
         return None
 
-    if isinstance(buffer, memoryview):
-        # If it's a memoryview, we need to convert it to bytes
-        buffer = buffer.tobytes()
-    if not isinstance(buffer, bytes):
-        buffer = buffer.read()
-
     # Current version of vortex appears to not be able to read streams
-    with tempfile.NamedTemporaryFile(suffix=".vortex") as f:
+    # this is painfully slow, don't do this.
+    with tempfile.NamedTemporaryFile(suffix=".vortex", delete=False) as f:
         f.write(buffer)
         f.flush()
-        table = vortex.open(f.name)
+        tmp_name = f.name
+    try:
+        table = vortex.open(tmp_name)
+    finally:
+        os.remove(tmp_name)
 
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(table.dtype.to_arrow_schema())
+        arrow_schema = table.to_arrow().schema
+        orso_schema = convert_arrow_schema_to_orso_schema(arrow_schema)
+        return orso_schema
 
     # If it's COUNT(*), we don't need to create a full dataset
     # We have a handler later to sum up the $COUNT(*) column
@@ -763,11 +791,23 @@ def vortex_decoder(
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
         return (num_rows, 0, table)
 
-    table = table.to_arrow(projection=[c.value for c in projection] if projection else None)
+    # we currently aren't pushing filters into vortex so we need to read the columns we're filtering by
+    projection_set = set(p.source_column for p in projection or [])
+    filter_columns = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
+    selected_columns = list(projection_set.union(filter_columns))
+
+    # convert to pyarrow table
+    table = table.to_arrow(projection=selected_columns).read_all()
     shape = table.shape
+
+    # string views aren't properly supported - only ever seen them in vortex files
+    new_schema = pyarrow.schema([convert_string_view(field) for field in table.schema])
+    table = table.cast(new_schema)
 
     if selection:
         table = filter_records(selection, table)
+    if projection:
+        table = post_read_projector(table, projection)
 
     return *shape, table
 
