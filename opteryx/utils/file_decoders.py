@@ -720,6 +720,56 @@ def excel_decoder(
 
     return *shape, table
 
+def vortex_decoder(
+    buffer: Union[memoryview, bytes, BinaryIO],
+    *,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
+    just_schema: bool = False,
+    just_statistics: bool = False,
+    **kwargs,
+) -> Tuple[int, int, pyarrow.Table]:
+    
+    try:
+        import vortex
+    except ImportError:
+        from opteryx.exceptions import MissingDependencyError
+        raise MissingDependencyError("vortex-data")
+    import tempfile
+
+    if just_statistics:
+        return None
+
+    if isinstance(buffer, memoryview):
+        # If it's a memoryview, we need to convert it to bytes
+        buffer = buffer.tobytes()
+    if not isinstance(buffer, bytes):
+        buffer = buffer.read()
+
+    # Current version of vortex appears to not be able to read streams
+    with tempfile.NamedTemporaryFile(suffix=".vortex") as f:
+        f.write(buffer)
+        f.flush()
+        table = vortex.open(f.name)
+
+    if just_schema:
+        return convert_arrow_schema_to_orso_schema(table.dtype.to_arrow_schema())
+    
+    # If it's COUNT(*), we don't need to create a full dataset
+    # We have a handler later to sum up the $COUNT(*) column
+    if projection == [] and selection == [] and not just_schema and not just_statistics:
+        num_rows = len(table)
+        table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
+        return (num_rows, 0, table)
+
+    table = table.to_arrow(projection=[c.value for c in projection] if projection else None)
+    shape = table.shape
+
+    if selection:
+        table = filter_records(selection, table)
+
+    return *shape, table
+
 
 # for types we know about, set up how we handle them
 KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
@@ -737,6 +787,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "psv": (psv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
     "lzma": (lzma_decoder, ExtentionType.DATA),  # jsonl/lzma
+    "vortex": (vortex_decoder, ExtentionType.DATA),
     "xlsx": (excel_decoder, ExtentionType.DATA),  # jsonl/lzma
 }
 
