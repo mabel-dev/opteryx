@@ -135,26 +135,26 @@ def get_sha512(item):
 
 def get_base64_encode(item):
     """calculate BASE64 encoding of a string"""
-    import pybase64 as base64
+    from opteryx.third_party.alantsd import base64
 
     if item is None:
         return None
 
     if not isinstance(item, bytes):
         item = str(item).encode()
-    return base64.b64encode(item).decode("UTF8")
+    return base64.encode(item).decode("UTF8")
 
 
 def get_base64_decode(item):
     """calculate BASE64 encoding of a string"""
-    import pybase64 as base64
+    from opteryx.third_party.alantsd import base64
 
     if item is None:
         return None
 
     if not isinstance(item, bytes):
         item = str(item).encode()
-    return base64.b64decode(item).decode("UTF8")
+    return base64.decode(item).decode("UTF8")
 
 
 def get_base85_encode(item):

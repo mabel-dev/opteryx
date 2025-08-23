@@ -161,9 +161,9 @@ def sql_parts(string):
             elif part[0] in ("r", "R"):
                 # We take the raw string and encode it, pass it into the
                 # plan as the encoded string and let the engine decode it
-                from pybase64 import b64encode
+                from opteryx.third_party.alantsd import base64
 
-                encoded_part = b64encode(part[2:-1].encode()).decode()
+                encoded_part = base64.encode(part[2:-1].encode()).decode()
                 parts.append(f"BASE64_DECODE('{encoded_part}')")
             else:
                 parts.append(part)
