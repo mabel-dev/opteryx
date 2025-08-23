@@ -720,6 +720,7 @@ def excel_decoder(
 
     return *shape, table
 
+
 def vortex_decoder(
     buffer: Union[memoryview, bytes, BinaryIO],
     *,
@@ -729,11 +730,11 @@ def vortex_decoder(
     just_statistics: bool = False,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
-    
     try:
         import vortex
     except ImportError:
         from opteryx.exceptions import MissingDependencyError
+
         raise MissingDependencyError("vortex-data")
     import tempfile
 
@@ -754,7 +755,7 @@ def vortex_decoder(
 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(table.dtype.to_arrow_schema())
-    
+
     # If it's COUNT(*), we don't need to create a full dataset
     # We have a handler later to sum up the $COUNT(*) column
     if projection == [] and selection == [] and not just_schema and not just_statistics:
