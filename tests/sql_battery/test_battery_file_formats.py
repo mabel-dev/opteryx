@@ -87,6 +87,9 @@ STATEMENTS = [
         ("SELECT * FROM testdata.flat.formats.psv", 586, 16, False),
         ("SELECT L_SHIPINSTRUCT, L_LINESTATUS FROM testdata.flat.formats.psv WHERE L_SHIPMODE ILIKE '%O%'", 90, 2, False),
         ("SELECT COUNT(*) FROM 'testdata/flat/formats/psv'", 1, 1, False),
+
+        # Vortext Files (fails due to a schema error?)
+        #("SELECT * FROM testdata.flat.formats.vortex", 586, 16, False),
     ]
 # fmt:on
 
