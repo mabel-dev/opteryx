@@ -46,14 +46,6 @@ static void init_base64_map(void) {
 }
 #define DIGIT(x) digittobin_map[(unsigned char)(x)]
 
-static char digittobin(unsigned char index)
-{
-	if(122 < index || index < 43)
-	{
-		return 64;
-	}
-	return digittobin_map[index - 43];
-}
 /* Convert a base64 null-terminated string to binary format.*/
 void* b64tobin(void* restrict dest, char const* restrict src) {
     unsigned char* out = dest;
