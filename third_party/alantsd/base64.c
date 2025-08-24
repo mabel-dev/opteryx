@@ -6,6 +6,7 @@
   SPDX-License-Identifier: MIT
   Copyright (c) 2016-2018 Rafa Garcia <rafagarcia77@gmail.com>.
   Copyright (c) 2018-2020 Alan Tong <alantsd@hotmail.com>.
+  Copyright (c) 2025 Justin Joyce <justin.joyce@joocer.com>.
 
   Permission is hereby  granted, free of charge, to any  person obtaining a copy
   of this software and associated  documentation files (the "Software"), to deal
