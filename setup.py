@@ -25,8 +25,10 @@ from setuptools_rust import RustExtension
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
+
 def is_win():  # pragma: no cover
     return platform.system().lower() == "windows"
+
 
 LIBRARY = "opteryx"
 CPP_COMPILE_FLAGS = ["-O3"]
@@ -35,7 +37,7 @@ if is_mac():
     CPP_COMPILE_FLAGS += ["-std=c++17"]
 elif is_win():
     CPP_COMPILE_FLAGS += ["/std:c++17"]
-else:    
+else:
     CPP_COMPILE_FLAGS += ["-std=c++17", "-march=native", "-fvisibility=default"]
     C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
 
@@ -43,19 +45,20 @@ else:
 include_dirs = [numpy.get_include(), "src/cpp", "src/c"]
 
 # Get the C++ include directory
-includedir = get_config_var('INCLUDEDIR')
+includedir = get_config_var("INCLUDEDIR")
 if includedir:
-    include_dirs.append(os.path.join(includedir, 'c++', 'v1'))
+    include_dirs.append(os.path.join(includedir, "c++", "v1"))
 
 # Get the Python include directory
-includepy = get_config_var('INCLUDEPY')
+includepy = get_config_var("INCLUDEPY")
 if includepy:
     include_dirs.append(includepy)
 
 # Check if paths exist
 include_dirs = [p for p in include_dirs if os.path.exists(p)]
 
-print("Include paths:", include_dirs)
+print("\033[38;2;255;85;85mInclude paths:\033[0m", include_dirs)
+
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
@@ -79,8 +82,8 @@ COMPILER_DIRECTIVES = {"language_level": "3"}
 COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
 COMPILER_DIRECTIVES["linetrace"] = not RELEASE_CANDIDATE
 
-print(f"Building Opteryx version: {__version__}")
-print(f"Status: {_status}", "(rc)" if RELEASE_CANDIDATE else "")
+print(f"\033[38;2;255;85;85mBuilding Opteryx version:\033[0m {__version__}")
+print(f"\033[38;2;255;85;85mStatus:\033[0m {_status}", "(rc)" if RELEASE_CANDIDATE else "")
 
 with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
@@ -98,55 +101,65 @@ extensions = [
         sources=[
             "opteryx/compiled/third_party/abseil_containers.pyx",
             "third_party/abseil/absl/hash/internal/hash.cc",
-            "third_party/abseil/absl/hash/internal/city.cc", 
+            "third_party/abseil/absl/hash/internal/city.cc",
             "third_party/abseil/absl/container/internal/raw_hash_set.cc",
             "third_party/abseil/absl/hash/internal/low_level_hash.cc",
             "third_party/abseil/absl/base/internal/raw_logging.cc",
             "third_party/abseil/absl/base/internal/strerror.cc",
             "third_party/abseil/absl/base/internal/sysinfo.cc",
             "third_party/abseil/absl/base/internal/spinlock_wait.cc",
-            ],
+        ],
         include_dirs=include_dirs + ["third_party/abseil"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
         extra_link_args=["-Lthird_party/abseil"],
     ),
     Extension(
+        name="opteryx.third_party.alantsd.base64",
+        sources=[
+            "opteryx/compiled/third_party/base64.pyx", 
+            "third_party/alantsd/base64.c"
+        ],
+        include_dirs=include_dirs + ["third_party/alantsd"],
+        extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],
+        extra_link_args=["-Lthird_party/alantsd"],
+    ),
+    Extension(
         name="opteryx.third_party.cyan4973.xxhash",
         sources=[
-            "opteryx/compiled/third_party/xxhash.pyx",
+            "opteryx/compiled/third_party/xxhash.pyx", 
             "third_party/cyan4973/xxhash.c"
-            ],
+        ],
         include_dirs=include_dirs + ["third_party/cyan4973"],
         extra_compile_args=C_COMPILE_FLAGS,
         extra_link_args=["-Lthird_party/cyan4973"],
     ),
     Extension(
-        name='opteryx.third_party.fastfloat.fast_float',
+        name="opteryx.third_party.fastfloat.fast_float",
         sources=[
             "opteryx/compiled/third_party/fast_float.pyx",
-            ],
+        ],
         include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
         extra_link_args=["-Lthird_party/fastfloat/fast_float"],
     ),
     Extension(
-        name='opteryx.third_party.tktech.csimdjson',
+        name="opteryx.third_party.tktech.csimdjson",
         sources=[
             "third_party/tktech/simdjson/simdjson.cpp",
             "third_party/tktech/simdjson/util.cpp",
             "third_party/tktech/simdjson/csimdjson.pyx",
-            ],
+        ],
         language="c++",
-        extra_compile_args=CPP_COMPILE_FLAGS
+        extra_compile_args=CPP_COMPILE_FLAGS,
     ),
     Extension(
-        name='opteryx.third_party.ulfjack.ryu',
+        name="opteryx.third_party.ulfjack.ryu",
         sources=[
             "opteryx/compiled/third_party/ryu.pyx",
             "third_party/ulfjack/ryu/d2fixed.c",
-            ],
+        ],
         include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
         extra_compile_args=C_COMPILE_FLAGS,
         extra_link_args=["-Lthird_party/ulfjack/ryu"],
@@ -187,37 +200,33 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
-
-
-#    Extension(
-#        name="opteryx.compiled.aggregations.aggregate",
-#        sources=["opteryx/compiled/aggregations/aggregate.pyx"],
-#        language="c++",
-#        include_dirs=include_dirs,
-#        extra_compile_args=CPP_COMPILE_FLAGS,
-#    ),
-#    Extension(
-#        name="opteryx.compiled.aggregations.agg_base",
-#        sources=["opteryx/compiled/aggregations/agg_base.pyx"],
-#        language="c++",
-#        include_dirs=include_dirs,
-#        extra_compile_args=CPP_COMPILE_FLAGS,
-#    ),
-#    Extension(
-#        name="opteryx.compiled.aggregations.agg_sum",
-#        sources=["opteryx/compiled/aggregations/agg_sum.pyx"],
-#        language="c++",
-#        include_dirs=include_dirs,
-#        extra_compile_args=CPP_COMPILE_FLAGS,
-#    ),
-
-
+    #    Extension(
+    #        name="opteryx.compiled.aggregations.aggregate",
+    #        sources=["opteryx/compiled/aggregations/aggregate.pyx"],
+    #        language="c++",
+    #        include_dirs=include_dirs,
+    #        extra_compile_args=CPP_COMPILE_FLAGS,
+    #    ),
+    #    Extension(
+    #        name="opteryx.compiled.aggregations.agg_base",
+    #        sources=["opteryx/compiled/aggregations/agg_base.pyx"],
+    #        language="c++",
+    #        include_dirs=include_dirs,
+    #        extra_compile_args=CPP_COMPILE_FLAGS,
+    #    ),
+    #    Extension(
+    #        name="opteryx.compiled.aggregations.agg_sum",
+    #        sources=["opteryx/compiled/aggregations/agg_sum.pyx"],
+    #        language="c++",
+    #        include_dirs=include_dirs,
+    #        extra_compile_args=CPP_COMPILE_FLAGS,
+    #    ),
     Extension(
         name="opteryx.compiled.joins.cross_join",
         sources=["opteryx/compiled/joins/cross_join.pyx"],
         language="c++",
         include_dirs=include_dirs + [
-            "third_party/abseil", 
+            "third_party/abseil",
             "third_party/fastfloat/fast_float"
         ],
         extra_compile_args=CPP_COMPILE_FLAGS,
@@ -331,18 +340,22 @@ for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
     if is_win():
         cython_file = cython_file.replace("\\", "/")
     module_name = cython_file.replace("/", ".").replace(".pyx", "")
-    print(f"Processing file: {cython_file}, module name: {module_name}")
+    print(f"\033[38;2;189;147;249mProcessing file:\033[0m {cython_file}")
     extensions.append(
-            Extension(
-                name=module_name,
-                sources=[
-                    cython_file,
-                    "src/cpp/simd_search.cpp"
-                    ],
-                language="c++",
-                include_dirs=include_dirs + ["third_party/abseil"],
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
+        Extension(
+            name=module_name,
+            sources=[
+                cython_file,
+                "src/cpp/simd_search.cpp"
+            ],
+            language="c++",
+            include_dirs=include_dirs + [
+                "third_party/abseil",
+                "third_party/apache",
+                "opteryx/third_party/apache"
+            ],
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
     )
 
 

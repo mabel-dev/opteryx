@@ -71,7 +71,7 @@ test_cases = [
         stats={"columns_read": 1},
     ),
     TestCase(
-        query="SELECT count(distinct publishedDate) FROM mabel_data.RAW.NVD.CVE_LIST FOR LAST 3 DAYS",
+        query="SELECT count(distinct publishedDate) FROM mabel_data.RAW.NVD.CVE_LIST FOR '2025-08-20'",
         expected_rowcount=1,
         expected_columncount=1,
         stats={"columns_read": 1},
