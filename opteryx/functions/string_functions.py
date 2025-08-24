@@ -133,28 +133,26 @@ def get_sha512(item):
     return hashlib.sha512(str(item).encode()).hexdigest()
 
 
-def get_base64_encode(item):
+def base64_encode(arr):
     """calculate BASE64 encoding of a string"""
-    from opteryx.third_party.alantsd import base64
+    from opteryx.third_party.alantsd.base64 import encode
 
-    if item is None:
-        return None
+    if isinstance(arr, numpy.ndarray):
+        arr = arr.astype(object)
+        arr = [item.encode("utf-8") if isinstance(item, str) else item for item in arr]
 
-    if not isinstance(item, bytes):
-        item = str(item).encode()
-    return base64.encode(item).decode("UTF8")
+    return [encode(item) for item in arr]
 
 
-def get_base64_decode(item):
+def base64_decode(arr):
     """calculate BASE64 encoding of a string"""
-    from opteryx.third_party.alantsd import base64
+    from opteryx.third_party.alantsd.base64 import decode
 
-    if item is None:
-        return None
+    if isinstance(arr, numpy.ndarray):
+        arr = arr.astype(object)
+        arr = [item.encode("utf-8") if isinstance(item, str) else item for item in arr]
 
-    if not isinstance(item, bytes):
-        item = str(item).encode()
-    return base64.decode(item).decode("UTF8")
+    return [decode(item) for item in arr]
 
 
 def get_base85_encode(item):
