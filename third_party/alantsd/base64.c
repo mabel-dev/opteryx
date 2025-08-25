@@ -75,76 +75,77 @@ void* b64tobin(void* restrict dest, char const* restrict src) {
     return out;
 }
 
+// when we know the length of the string we can avoid looking for NULL terminator
+void* b64tobin_len(void* restrict dest, const char* restrict src, size_t len) {
+    unsigned char* out = dest;
+    const unsigned char* in = (const unsigned char*)src;
+
+    if (len % 4 != 0) return NULL;  // base64 must be multiple of 4
+
+    size_t i = 0;
+    while (i < len) {
+        unsigned char a = DIGIT(in[i]);
+        unsigned char b = DIGIT(in[i + 1]);
+        unsigned char c = DIGIT(in[i + 2]);
+        unsigned char d = DIGIT(in[i + 3]);
+
+        if ((a | b) > 63) break;
+
+        *out++ = (a << 2) | (b >> 4);
+
+        if (c == terminator) break;
+        if (c > 63) return NULL;
+
+        *out++ = (b << 4) | (c >> 2);
+
+        if (d == terminator) break;
+        if (d > 63) return NULL;
+
+        *out++ = (c << 6) | d;
+        i += 4;
+    }
+
+    return out;
+}
+
+
 /** Lookup table that converts a integer to base64 digit. */
 static char const bintodigit[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                  "abcdefghijklmnopqrstuvwxyz"
                                  "0123456789"
                                  "+/";
 
-/** Get the first base 64 digit of a block of 4.
-  * @param a The first byte of the source block of 3.
-  * @return A base 64 digit. */
-static int get0( int a ) {
-    int const index = a >> 2u;
-    return bintodigit[ index ];
-}
-
-/** Get the second base 64 digit of a block of 4.
-  * @param a The first byte of the source block of 3.
-  * @param b The second byte of the source block of 3.
-  * @return A base 64 digit. */
-static int get1( int a, int b ) {
-    int const indexA = ( a & 3 ) << 4u;
-    int const indexB = b >> 4u;
-    int const index  = indexA | indexB;
-    return bintodigit[ index ];
-}
-
-/** Get the third base 64 digit of a block of 4.
-  * @param b The second byte of the source block of 3.
-  * @param c The third byte of the source block of 3.
-  * @return A base 64 digit. */
-static unsigned int get2( unsigned int b, unsigned int c ) {
-    int const indexB = ( b & 15 ) << 2u;
-    int const indexC = c >> 6u;
-    int const index  = indexB | indexC;
-    return bintodigit[ index ];
-}
-
-/** Get the fourth base 64 digit of a block of 4.
-  * @param c The third byte of the source block of 3.
-  * @return A base 64 digit. */
-static int get3( int c ) {
-    int const index = c & 0x3f;
-    return bintodigit[ index ];
-}
-
 /* Convert a binary memory block in a base64 null-terminated string. */
 char* bintob64( char* dest, void const* src, size_t size ) {
-    typedef struct { unsigned char a; unsigned char b; unsigned char c; } block_t;
-    block_t const* block = (block_t*)src;
-    for( ; size >= sizeof( block_t ); size -= sizeof( block_t ), ++block ) {
-        *dest++ = get0( block->a );
-        *dest++ = get1( block->a, block->b );
-        *dest++ = get2( block->b, block->c );
-        *dest++ = get3( block->c );
+    const unsigned char* in = (const unsigned char*)src;
+    size_t i = 0;
+
+    while (i + 3 <= size) {
+        unsigned char a = in[i++];
+        unsigned char b = in[i++];
+        unsigned char c = in[i++];
+
+        *dest++ = bintodigit[a >> 2];
+        *dest++ = bintodigit[((a & 0x03) << 4) | (b >> 4)];
+        *dest++ = bintodigit[((b & 0x0F) << 2) | (c >> 6)];
+        *dest++ = bintodigit[c & 0x3F];
     }
 
-    if ( !size ) goto final;
-
-    *dest++ = get0( block->a );
-    if ( !--size ) {
-        *dest++ = get1( block->a, 0 );
+    if (size - i == 1) {
+        unsigned char a = in[i++];
+        *dest++ = bintodigit[a >> 2];
+        *dest++ = bintodigit[(a & 0x03) << 4];
         *dest++ = '=';
         *dest++ = '=';
-        goto final;
+    } else if (size - i == 2) {
+        unsigned char a = in[i++];
+        unsigned char b = in[i++];
+        *dest++ = bintodigit[a >> 2];
+        *dest++ = bintodigit[((a & 0x03) << 4) | (b >> 4)];
+        *dest++ = bintodigit[(b & 0x0F) << 2];
+        *dest++ = '=';
     }
 
-    *dest++ = get1( block->a, block->b );
-    *dest++ = get2( block->b, 0 );
-    *dest++ = '=';
-
-  final:
     *dest = '\0';
     return dest;
 }
