@@ -9,3 +9,4 @@
 cdef extern from "base64.h":
     void* b64tobin(void* dest, const char* src)
     char* bintob64(char* dest, const void* src, size_t size)
+    void* b64tobin_len(void* dest, const char* src, size_t len)

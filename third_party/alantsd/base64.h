@@ -64,6 +64,14 @@ char* bintob64( char* dest, void const* src, size_t size );
 void* b64tobin( void* dest, char const* src );
 
 /** Convert a base64 string to binary format.
+  * @param dest Destination memory block.
+  * @param src Source base64 string.
+  * @param len Length of the base64 string.
+  * @return If success a pointer to the next byte in memory block.
+  *         Null if string has a bad format.  */
+void* b64tobin_len(void* restrict dest, const char* restrict src, size_t len);
+
+/** Convert a base64 string to binary format.
   * @param p Source base64 string and destination memory block.
   * @return If success a pointer to the next byte in memory block.
   *         Null if string has a bad format.  */

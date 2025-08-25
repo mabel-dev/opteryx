@@ -9,7 +9,7 @@
 from libc.stdlib cimport malloc, free
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
-from opteryx.third_party.alantsd.base64 cimport b64tobin, bintob64
+from opteryx.third_party.alantsd.base64 cimport b64tobin_len, bintob64
 
 cdef inline size_t calc_encoded_size(size_t length):
     """Base64-encoded output length (without newlines)."""
@@ -19,9 +19,11 @@ cdef inline size_t calc_decoded_size(size_t length):
     """Worst-case decoded output size (since we skip padding in-place)."""
     return (length // 4) * 3
 
+
 cpdef bytes encode(bytes data):
     """
-    Base64-encode bytes to a bytes object (null-terminated internally).
+    Base64-encode a bytes object using bintob64 from C.
+    Returns: encoded bytes (not null-terminated).
     """
     cdef size_t in_len = len(data)
     cdef size_t out_len = calc_encoded_size(in_len)
@@ -39,28 +41,18 @@ cpdef bytes encode(bytes data):
 
 
 cpdef bytes decode(bytes data):
-    """
-    Base64-decode bytes to a bytes object.
-    """
     cdef size_t in_len = len(data)
-    cdef size_t out_len = calc_decoded_size(in_len)
+    cdef size_t out_len = (in_len // 4) * 3  # may be smaller depending on padding
 
-    cdef char* outbuf = <char*>malloc(out_len)
-    if outbuf == NULL:
-        raise MemoryError()
+    result = PyBytes_FromStringAndSize(NULL, out_len)
+    cdef char* outbuf = PyBytes_AsString(result)
+    cdef const char* inbuf = PyBytes_AsString(data)
 
-    cdef const char* input_ptr = PyBytes_AsString(data)
-    cdef char* end_ptr = <char*>b64tobin(outbuf, input_ptr)
+    cdef char* end_ptr = <char*>b64tobin_len(outbuf, inbuf, in_len)
+    if end_ptr == NULL or end_ptr < outbuf or end_ptr > outbuf + out_len:
+        return b""
 
-    if end_ptr is NULL or end_ptr < outbuf or end_ptr > outbuf + out_len:
-        free(outbuf)
-        raise ValueError("Invalid base64 input")
-
-    cdef Py_ssize_t written = end_ptr - outbuf
-
-    result = PyBytes_FromStringAndSize(outbuf, written)
-    free(outbuf)
-    return result
+    return result[:end_ptr - outbuf]
 
 
 # Cython-callable versions
