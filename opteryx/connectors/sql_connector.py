@@ -235,20 +235,21 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         dialect = self._engine.dialect.name.lower()
 
         if dialect == "postgresql":
-            row_est = self._engine.execute(
-                text("SELECT reltuples::BIGINT FROM pg_class WHERE relname = :t"),
-                {"t": self.dataset},
-            ).scalar()
-            stats.record_count_estimate = int(row_est)
+            with self._engine.connect() as conn:
+                row_est = conn.execute(
+                    text("SELECT reltuples::BIGINT FROM pg_class WHERE relname = :t"),
+                    {"t": self.dataset},
+                ).scalar()
+                stats.record_count_estimate = int(row_est)
 
-            pg_stats = self._engine.execute(
-                text("""
-                SELECT attname, n_distinct, null_frac, histogram_bounds
-                FROM pg_stats
-                WHERE tablename = :t
-            """),
-                {"t": self.dataset},
-            ).fetchall()
+                pg_stats = conn.execute(
+                    text("""
+                    SELECT attname, n_distinct, null_frac, histogram_bounds
+                    FROM pg_stats
+                    WHERE tablename = :t
+                """),
+                    {"t": self.dataset},
+                ).fetchall()
 
             for row in pg_stats:
                 col = row["attname"]
