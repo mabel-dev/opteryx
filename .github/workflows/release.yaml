@@ -121,7 +121,7 @@ jobs:
           path: dist
 
   upload:
-    needs: [build-manylinux, build-macos, build-windows]
+    needs: [build-manylinux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -203,33 +203,33 @@ jobs:
           path: dist-macos-3.13
       - run: mv -v dist-macos-3.13/* dist/
 
-      - name: Stage win 3.9
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: dist-win-3.9
-          path: dist-win-3.9
-      - run: mv -v dist-win-3.9/* dist/
+#      - name: Stage win 3.9
+#        uses: actions/download-artifact@v4.1.7
+#        with:
+#          name: dist-win-3.9
+#          path: dist-win-3.9
+#      - run: mv -v dist-win-3.9/* dist/
 
-      - name: Stage win 3.10
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: dist-win-3.10
-          path: dist-win-3.10
-      - run: mv -v dist-win-3.10/* dist/
+#      - name: Stage win 3.10
+#        uses: actions/download-artifact@v4.1.7
+#        with:
+#          name: dist-win-3.10
+#          path: dist-win-3.10
+#      - run: mv -v dist-win-3.10/* dist/
 
-      - name: Stage win 3.11
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: dist-win-3.11
-          path: dist-win-3.11
-      - run: mv -v dist-win-3.11/* dist/
+#      - name: Stage win 3.11
+#        uses: actions/download-artifact@v4.1.7
+#        with:
+#          name: dist-win-3.11
+#          path: dist-win-3.11
+#      - run: mv -v dist-win-3.11/* dist/
 
-      - name: Stage win 3.12
-        uses: actions/download-artifact@v4.1.7
-        with:
-          name: dist-win-3.12
-          path: dist-win-3.12
-      - run: mv -v dist-win-3.12/* dist/
+#      - name: Stage win 3.12
+#        uses: actions/download-artifact@v4.1.7
+#        with:
+#          name: dist-win-3.12
+#          path: dist-win-3.12
+#      - run: mv -v dist-win-3.12/* dist/
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
