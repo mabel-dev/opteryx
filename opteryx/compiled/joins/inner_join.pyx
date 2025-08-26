@@ -19,46 +19,57 @@ from opteryx.compiled.table_ops.null_avoidant_ops cimport non_null_row_indices
 
 
 cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap left_hash_table):
-
+    """
+    Perform an inner join between a right-hand relation and a pre-built left-side hash table.
+    This function uses precomputed hashes and avoids null rows for optimal speed.
+    """
     cdef IntBuffer left_indexes = IntBuffer()
     cdef IntBuffer right_indexes = IntBuffer()
     cdef int64_t num_rows = right_relation.num_rows
-    cdef int64_t[::1] non_null_indices
+    cdef int64_t[::1] non_null_indices = non_null_row_indices(right_relation, join_columns)
     cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
+    cdef int64_t i, row_idx
+    cdef uint64_t hash_val
+    cdef size_t match_count
+    cdef int j
 
-    # Compute hashes once for right_relation
+    # Precompute hashes for right relation
     compute_row_hashes(right_relation, join_columns, row_hashes)
-    non_null_indices = non_null_row_indices(right_relation, join_columns)
 
-    # For each right row
     for i in range(non_null_indices.shape[0]):
         row_idx = non_null_indices[i]
         hash_val = row_hashes[row_idx]
 
-        # Probe left side hash table
+        # Probe the left-side hash table
         left_matches = left_hash_table.get(hash_val)
-        if left_matches.size() == 0:
+        match_count = left_matches.size()
+        if match_count == 0:
             continue
-        for j in range(left_matches.size()):
+
+        for j in range(match_count):
             left_indexes.append(left_matches[j])
             right_indexes.append(row_idx)
 
+    # Return matched row indices from both sides
     return left_indexes.to_numpy(), right_indexes.to_numpy()
 
 
 cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
+    """
+    Builds a hash map from non-null rows of the given relation using the specified join columns.
+    Used to support hash-based joins.
+    """
     cdef FlatHashMap ht = FlatHashMap()
     cdef int64_t num_rows = relation.num_rows
-    cdef int64_t[::1] non_null_indices
+    cdef int64_t[::1] non_null_indices = non_null_row_indices(relation, join_columns)
     cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
-    cdef Py_ssize_t i
-
-    non_null_indices = non_null_row_indices(relation, join_columns)
+    cdef int64_t i, row_idx
 
     compute_row_hashes(relation, join_columns, row_hashes)
 
     for i in range(non_null_indices.shape[0]):
-        ht.insert(row_hashes[non_null_indices[i]], non_null_indices[i])
+        row_idx = non_null_indices[i]
+        ht.insert(row_hashes[row_idx], row_idx)
 
     return ht
 

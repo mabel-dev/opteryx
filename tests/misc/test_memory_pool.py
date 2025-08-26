@@ -79,20 +79,6 @@ def test_release_invalid_ref():
         mp.release(999)
 
 
-def test_read_and_release():
-    mp = MemoryPool(size=100)
-    ref = mp.commit(b"Temporary")
-    mp.read_and_release(ref)
-    with pytest.raises(ValueError):
-        mp.read(ref)
-
-
-def test_read_and_release_invalid_ref():
-    mp = MemoryPool(size=100)
-    with pytest.raises(ValueError):
-        mp.read_and_release(999)
-
-
 def test_compaction():
     mp = MemoryPool(size=100)
     ref1 = mp.commit(b"First")
@@ -180,73 +166,6 @@ def test_zero_copy_vs_copy_reads():
     assert r8_memcopy == r8_no_memcopy == b"uvwxyz", f"{r8_memcopy} / {r8_no_memcopy} / uvwxyz"
 
 
-def test_zero_copy_vs_copy_reads_and_release():
-    mp = MemoryPool(size=30)
-
-    # Initial commits
-    ref1 = mp.commit(b"12345")
-    ref2 = mp.commit(b"abcde")
-    ref3 = mp.commit(b"ABCDE")
-
-    # Release one segment to create free space
-    mp.release(ref1)
-
-    # Commit more data to fill the pool
-    ref4 = mp.commit(b"XYZ")
-    ref5 = mp.commit(b"7890")
-
-    # Additional activity
-    ref6 = mp.commit(b"LMNOP")
-    mp.release(ref3)
-    ref7 = mp.commit(b"qrst")
-    mp.release(ref2)
-    ref8 = mp.commit(b"uvwxyz")
-
-    # Reading segments with and without zero-copy, alternating read and read_and_release
-    # read no zero copy, release zero copy
-    r4_read_no_memcopy = bytes(mp.read(ref4, False))
-    r4_release_memcopy = bytes(mp.read_and_release(ref4))
-
-    # read zero copy, release no zero copy
-    r5_read_memcopy = bytes(mp.read(ref5, True))
-    r5_release_no_memcopy = bytes(mp.read_and_release(ref5))
-
-    # read zero copy, release zero copy
-    r6_read_memcopy = bytes(mp.read(ref6, True))
-    r6_release_memcopy = bytes(mp.read_and_release(ref6))
-
-    # read no zero copy, release no zero copy
-    r7_read_no_memcopy = bytes(mp.read(ref7, False))
-    r7_release_no_memcopy = bytes(mp.read_and_release(ref7))
-
-    # read zero copy, release zero copy
-    r8_read_memcopy = bytes(mp.read(ref8, True))
-    r8_release_memcopy = bytes(mp.read_and_release(ref8))
-
-    assert (
-        r4_read_no_memcopy == r4_release_memcopy == b"XYZ"
-    ), f"{r4_read_no_memcopy} / {r4_release_memcopy} / XYZ"
-    assert (
-        r5_read_memcopy == r5_release_no_memcopy == b"7890"
-    ), f"{r5_read_memcopy} / {r5_release_no_memcopy} / 7890"
-    assert (
-        r6_read_memcopy == r6_release_memcopy == b"LMNOP"
-    ), f"{r6_read_memcopy} / {r6_release_memcopy} / LMNOP"
-    assert (
-        r7_read_no_memcopy == r7_release_no_memcopy == b"qrst"
-    ), f"{r7_read_no_memcopy} / {r7_release_no_memcopy} / qrst"
-    assert (
-        r8_read_memcopy == r8_release_memcopy == b"uvwxyz"
-    ), f"{r8_read_memcopy} / {r8_release_memcopy} / uvwxyz"
-
-    # Ensure that the segments are released and available for new commits
-    ref9 = mp.commit(b"newdata")
-    r9_memcopy = bytes(mp.read(ref9, True))
-    r9_no_memcopy = mp.read(ref9, False)
-
-    assert r9_memcopy == r9_no_memcopy == b"newdata", f"{r9_memcopy} / {r9_no_memcopy} / newdata"
-
-
 def test_pool_exhaustion_and_compaction():
     mp = MemoryPool(size=20)
     ref1 = mp.commit(b"123456")
@@ -324,14 +243,16 @@ def test_stress_with_random_sized_data():
             selected = random.sample(list(refs), random.randint(1, len(refs) // 10))
             for ref in selected:
                 refs.discard(ref)
-                data = mp.read_and_release(ref)
+                data = mp.read(ref)
+                mp.release(ref)
         #                saved_bytes -= len(data)
         #                used_counter -= 1
 
         #        assert len(mp.used_segments) == used_counter, f"\n{len(mp.used_segments)} != {used_counter}\n{saved_bytes}"
         #        assert saved_bytes + mp.available_space() == mp.size, _
         for ref in list(refs):
-            data = mp.read_and_release(ref)
+            data = mp.read(ref)
+            mp.release(ref)
             #            saved_bytes -= len(data)
             #            used_counter -= 1
             refs.discard(ref)
@@ -505,7 +426,8 @@ def test_return_types():
     assert isinstance(read, bytes), type(read)
 
     abc = memory_pool.commit(b"abc")
-    read = memory_pool.read_and_release(abc)
+    read = memory_pool.read(abc)
+    memory_pool.release(abc)  # in case read_and_release fails
     assert isinstance(read, bytes), type(read)
 
 
@@ -527,6 +449,40 @@ def test_latch_and_unlatch_behavior():
     assert mp.available_space() == mp.size
 
 
+def test_latch_counting():
+    mp = MemoryPool(size=1024)
+
+    ref = mp.commit(b"abc")
+
+    assert mp.used_segments[ref]["latches"] == 0
+
+    mp.read(ref, latch=1)
+    assert mp.used_segments[ref]["latches"] == 1
+
+    mp.unlatch(ref)
+    assert mp.used_segments[ref]["latches"] == 0
+
+    mp.read(ref, latch=True)
+    mp.read(ref, latch=True)
+    mp.read(ref, latch=True)
+    assert mp.used_segments[ref]["latches"] == 3
+
+    mp.unlatch(ref)
+    assert mp.used_segments[ref]["latches"] == 2
+
+    mp.read(ref)
+    assert mp.used_segments[ref]["latches"] == 2
+    mp.read(ref, latch=True)
+    assert mp.used_segments[ref]["latches"] == 3
+
+    mp.unlatch(ref)
+    assert mp.used_segments[ref]["latches"] == 2
+    mp.unlatch(ref)
+    assert mp.used_segments[ref]["latches"] == 1
+    mp.unlatch(ref)
+    assert mp.used_segments[ref]["latches"] == 0
+
+
 def test_unlatch_without_latching_raises():
     mp = MemoryPool(size=1024)
     ref = mp.commit(b"abc")
@@ -545,10 +501,13 @@ def test_double_latch_and_unlatch():
     mp.read(ref, latch=True)
     mp.read(ref, latch=True)
     
-    # Unlatch once — should clear
+    # Unlatch once - no problem
     mp.unlatch(ref)
 
-    # Second unlatch should now fail
+    # Unlatch twice - no problem
+    mp.unlatch(ref)
+
+    # Third unlatch should now fail
     with pytest.raises(RuntimeError):
         mp.unlatch(ref)
     
@@ -557,13 +516,13 @@ def test_double_latch_and_unlatch():
 def test_latching_sets_flag():
     pool = MemoryPool(1000)
     ref = pool.commit(b"test")
-    assert pool.used_segments[ref]["latched"] == 0
+    assert pool.used_segments[ref]["latches"] == 0
 
     pool.read(ref, latch=1)
-    assert pool.used_segments[ref]["latched"] == 1
+    assert pool.used_segments[ref]["latches"] == 1
 
     pool.unlatch(ref)
-    assert pool.used_segments[ref]["latched"] == 0
+    assert pool.used_segments[ref]["latches"] == 0
 
 
 def test_unlatch_without_latch_raises():
@@ -606,7 +565,7 @@ def test_compaction_skips_latched_segment():
 
     pool.release(ref1)
     pool.release(ref3)
-    assert pool.used_segments[ref2]["latched"] == 1
+    assert pool.used_segments[ref2]["latches"] == 1
 
     # This should leave ref2 where it is
     pool._level2_compaction()
@@ -614,7 +573,7 @@ def test_compaction_skips_latched_segment():
     # Sanity: ref2 is still valid and still latched
     data = pool.read(ref2)
     assert data == b"B" * 10
-    assert pool.used_segments[ref2]["latched"] == 1
+    assert pool.used_segments[ref2]["latches"] == 1
 
 
 def test_aggressive_compaction_respects_latches():
@@ -656,7 +615,7 @@ def test_aggressive_compaction_respects_latches():
     for ref in latched_refs:
         assert ref in pool.used_segments, f"Latched ref {ref} was removed!"
         seg = pool.used_segments[ref]
-        assert seg["latched"] == 1, f"Latched ref {ref} is no longer latched!"
+        assert seg["latches"] == 1, f"Latched ref {ref} is no longer latched!"
         assert seg["start"] == pre_compaction_positions[ref], (
             f"Latched ref {ref} moved from {pre_compaction_positions[ref]} to {seg['start']}"
         )
@@ -669,7 +628,7 @@ def test_aggressive_compaction_respects_latches():
     for ref in latched_refs:
         assert ref in pool.used_segments, f"Latched ref {ref} was removed!"
         seg = pool.used_segments[ref]
-        assert seg["latched"] == 1, f"Latched ref {ref} is no longer latched!"
+        assert seg["latches"] == 1, f"Latched ref {ref} is no longer latched!"
         assert seg["start"] == pre_compaction_positions[ref], (
             f"Latched ref {ref} moved from {pre_compaction_positions[ref]} to {seg['start']}"
         )
@@ -717,7 +676,7 @@ def test_zero_copy_latch_flag():
     ref = pool.commit(b"quick brown fox")
     mv = pool.read(ref, latch=1, zero_copy=1)
     assert isinstance(mv, memoryview)
-    assert pool.used_segments[ref]["latched"] == 1
+    assert pool.used_segments[ref]["latches"] == 1
 
 
 def test_multiple_commits_and_random_latch_release():
@@ -740,7 +699,7 @@ def test_multiple_commits_and_random_latch_release():
             pool.unlatch(ref)
 
     # All segments should now be unlatched
-    assert all(pool.used_segments[ref]["latched"] == 0 for ref in refs if ref in pool.used_segments)
+    assert all(pool.used_segments[ref]["latches"] == 0 for ref in refs if ref in pool.used_segments)
 
 
 def test_multiple_latches_block_compaction_selectively():
@@ -820,12 +779,12 @@ def test_staggered_latch_unlatch_compaction():
     pool._level2_compaction()
 
     for ref in refs:
-        if ref in pool.used_segments and pool.used_segments[ref]["latched"] == 1:
+        if ref in pool.used_segments and pool.used_segments[ref]["latches"] == 1:
             assert pool.used_segments[ref]["start"] == starts[ref]
 
     # Now unlatch all
     for ref in refs:
-        if ref in pool.used_segments and pool.used_segments[ref]["latched"] == 1:
+        if ref in pool.used_segments and pool.used_segments[ref]["latches"] == 1:
             pool.unlatch(ref)
 
     # Compaction should now move everything to front
@@ -847,7 +806,7 @@ def test_repeated_latch_compact_unlatch_cycles():
         for ref in latched_refs:
             assert ref in pool.used_segments
             seg = pool.used_segments[ref]
-            assert seg["latched"] == 1
+            assert seg["latches"] == 1
             assert seg["start"] == ref_start_positions[ref]
             assert pool.read(ref) == ref_data[ref]
 
@@ -918,14 +877,13 @@ def test_repeated_latch_compact_unlatch_cycles():
     # Sanity check: all remaining latched data is intact
     for ref in latched_refs:
         assert ref in pool.used_segments
-        assert pool.used_segments[ref]["latched"] == 1
+        assert pool.used_segments[ref]["latches"] == 1
         assert pool.read(ref) == ref_data[ref]
 
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_aggressive_compaction_respects_latches()
-
+    test_latch_counting()
 
     run_tests()
