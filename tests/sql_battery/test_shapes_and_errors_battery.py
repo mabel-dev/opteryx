@@ -2506,6 +2506,9 @@ id > /* 0 */ 1
         ("SELECT name FROM (SELECT name, UNIXTIME('1970-01-01'::DATE) AS ts FROM $planets) AS A WHERE ts = 0;", 9, 1, None),
         ("SELECT name FROM $astronauts WHERE UNIXTIME(birth_date) = UNIXTIME('1961-11-05'::DATE);", 2, 1, None),
         ("SELECT name FROM $planets WHERE '2020-01-01T00:00:00'::TIMESTAMP = FROM_UNIXTIME(1577836800);", 9, 1, None),
+        # 2754
+        ("SELECT name FROM $astronauts WHERE CONCAT(missions) ILIKE '%Apo%'", 34, 1, None),
+        ("SELECT name FROM $astronauts WHERE CONCAT(missions) LIKE '%Apo%'", 34, 1, None),
 
 ]
 # fmt:on

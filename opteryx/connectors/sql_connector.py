@@ -240,7 +240,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     text("SELECT reltuples::BIGINT FROM pg_class WHERE relname = :t"),
                     {"t": self.dataset},
                 ).scalar()
-                stats.record_count_estimate = int(row_est)
+                if row_est is not None:
+                    stats.record_count_estimate = int(row_est)
 
                 pg_stats = conn.execute(
                     text("""

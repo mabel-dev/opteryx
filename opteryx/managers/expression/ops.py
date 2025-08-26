@@ -185,18 +185,22 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value)
+        arr = pyarrow.array(arr)
         return numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value)
+        arr = pyarrow.array(arr)
         matches = numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value)
+        arr = pyarrow.array(arr)
         return numpy.asarray(
             list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
         )
     if operator == "NotIInStr":
         needle = str(value)
+        arr = pyarrow.array(arr)
         matches = numpy.asarray(
             list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
         )
@@ -217,20 +221,28 @@ def _inner_filter_operations(arr, operator, value):
         matches = compute.match_substring_regex(arr, value)  # [#325]
         return numpy.invert(matches)
     if operator == "AnyOpEq":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_eq.list_anyop_eq(literal=arr[0], column=value)
     if operator == "AnyOpNotEq":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_neq.list_anyop_neq(literal=arr[0], column=value)
     if operator == "AnyOpGt":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_gt.list_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_lt.list_anyop_lt(arr[0], value)
     if operator == "AnyOpGtEq":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_gte.list_anyop_gte(arr[0], value)
     if operator == "AnyOpLtEq":
+        value = pyarrow.array(value)
         return list_ops.list_anyop_lte.list_anyop_lte(arr[0], value)
     if operator == "AllOpEq":
+        value = pyarrow.array(value)
         return list_ops.list_allop_eq.list_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
+        value = pyarrow.array(value)
         return list_ops.list_allop_neq.list_allop_neq(arr[0], value)
 
     if operator == "AnyOpILike":
