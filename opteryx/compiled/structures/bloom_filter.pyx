@@ -119,16 +119,15 @@ cdef class BloomFilter:
         Return a boolean array indicating whether each row in `relation` might be in the Bloom filter.
         Null-containing rows are considered not present (False).
         """
-        cdef:
-            Py_ssize_t num_rows = relation.num_rows
-            numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=numpy.bool)
-            uint8_t[::1] result_view = result
-            int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
-            Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
-            numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint64)
-            uint64_t[::1] row_hashes = row_hashes_np
-            Py_ssize_t i
-            int64_t row_id
+        cdef Py_ssize_t num_rows = relation.num_rows
+        cdef numpy.ndarray[numpy.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=numpy.bool)
+        cdef uint8_t[::1] result_view = result
+        cdef int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
+        cdef Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
+        cdef numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint64)
+        cdef uint64_t[::1] row_hashes = row_hashes_np
+        cdef Py_ssize_t i
+        cdef int64_t row_id
 
         if num_valid_rows == 0:
             return result
