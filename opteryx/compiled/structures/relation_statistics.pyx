@@ -7,21 +7,21 @@
 # cython: wraparound=True
 # cython: boundscheck=False
 
-from libc.stdint cimport int64_t, uint64_t
+from libc.stdint cimport uint8_t, int64_t, uint64_t
 from libc.math cimport isnan
 from libcpp.unordered_map cimport unordered_map
 from cython.operator cimport dereference, preincrement
 from libcpp.string cimport string
 from libc.string cimport memcpy, memset
 from cpython.bytes cimport PyBytes_AsStringAndSize
+from cpython.unicode cimport PyUnicode_AsUTF8AndSize, PyUnicode_Check
 
 import datetime
 from decimal import Decimal
 
-cdef int64_t NULL_FLAG = (-1 << 63)
-cdef int64_t MIN_SIGNED_64BIT = (-1 << 63)
-cdef int64_t MAX_SIGNED_64BIT = (1 << 63) - 1
-
+cdef int64_t NULL_FLAG = -(1 << 63)              # -9223372036854775808
+cdef int64_t MIN_SIGNED_64BIT = NULL_FLAG + 1    # -9223372036854775807
+cdef int64_t MAX_SIGNED_64BIT = (1 << 63) - 1    # 09223372036854775807
 
 cdef inline bint map_contains(unordered_map[string, int64_t]& m, string key):
     return m.find(key) != m.end()
@@ -40,24 +40,22 @@ cdef inline int64_t _ensure_64bit_range(object val):
     return val
 
 cdef inline int64_t decode_signed_big_endian_bytes(const char* buf):
-    cdef int64_t result = 0
+    cdef uint64_t result = 0
     cdef int i
     for i in range(8):
-        result = (result << 8) | (<unsigned char>buf[i])
-    if result & (1 << 63):
-        result -= (<uint64_t>1 << 63) * 2
-    return result
+        result = (result << 8) | <uint8_t>buf[i]
+    return <int64_t>result
 
 cpdef int64_t to_int(object value):
     """
     Convert a value to a signed 64-bit int for order-preserving comparisons.
-    Returns -9223372036854775808 to 9223372036854775807 or raises ValueError.
+    Returns MIN_SIGNED_64BIT to MAX_SIGNED_64BIT or raises ValueError.
     """
     cdef int64_t result
     cdef type value_type = type(value)
 
-    cdef bytes encoded
     cdef char* raw
+    cdef const char* _raw
     cdef Py_ssize_t length
     cdef char buf[8]
 
@@ -70,7 +68,7 @@ cpdef int64_t to_int(object value):
         if value == float("-inf"):
             return MIN_SIGNED_64BIT
         if isnan(value):
-            raise ValueError("NaN cannot be converted to int")
+            return NULL_FLAG
         return _ensure_64bit_range(<int64_t>round(value))
 
     if value_type == datetime.datetime:
@@ -89,19 +87,24 @@ cpdef int64_t to_int(object value):
         return _ensure_64bit_range(<int64_t>round(value))
 
     if value_type == str:
-        encoded = value[:8].encode("utf-8")
-        length = len(encoded)
-        PyBytes_AsStringAndSize(encoded, &raw, &length)
+        # Keep the first byte as 0 to ensure the order of the 64bit int
+        # is preserved by creating negative numbers
         memset(buf, 0, 8)
-        memcpy(buf, raw, min(length, 8))
+
+        if PyUnicode_Check(value):
+            _raw = PyUnicode_AsUTF8AndSize(value, &length)
+            memcpy(&buf[1], _raw, min(length, 7))
+        else:
+            PyBytes_AsStringAndSize(value, &raw, &length)
+            memcpy(&buf[1], raw, min(length, 7))
+
         return _ensure_64bit_range(decode_signed_big_endian_bytes(buf))
 
     if value_type == bytes:
-        value = value[:8]
-        if PyBytes_AsStringAndSize(value, &raw, &length) < 0:
-            raise ValueError("Invalid bytes")
+        # Keep the first byte as 0 to ensure order is preserved
         memset(buf, 0, 8)
-        memcpy(buf, raw, min(length, 8))
+        PyBytes_AsStringAndSize(value, &raw, &length)
+        memcpy(&buf[1], raw, min(length, 7))
         return _ensure_64bit_range(decode_signed_big_endian_bytes(buf))
 
     return NULL_FLAG

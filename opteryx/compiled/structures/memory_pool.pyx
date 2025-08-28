@@ -102,10 +102,10 @@ cdef class MemoryPool:
 
     cdef inline void _update_latch(self, int64_t ref_id, int8_t delta):
         cdef MemorySegment segment
-        with self.lock:
-            segment = <MemorySegment>self.used_segments[ref_id]
-            segment.latches += delta
-            self.used_segments[ref_id] = segment
+
+        segment = <MemorySegment>self.used_segments[ref_id]
+        segment.latches += delta
+        self.used_segments[ref_id] = segment
 
     cdef inline int64_t _find_free_segment(self, int64_t size):
         """
@@ -253,20 +253,21 @@ cdef class MemoryPool:
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
 
-        if ref_id not in self.used_segments:
-            raise ValueError("Invalid reference ID.")
+        with self.lock:
+            if ref_id not in self.used_segments:
+                raise ValueError("Invalid reference ID.")
 
-        self.reads += 1
-        segment = <MemorySegment>self.used_segments[ref_id]
+            self.reads += 1
+            segment = <MemorySegment>self.used_segments[ref_id]
 
-        # optionally apply a latch
-        if latch != 0:
-            self._update_latch(ref_id, 1)
+            # optionally apply a latch
+            if latch != 0:
+                self._update_latch(ref_id, 1)
 
-        if zero_copy != 0:
-            return memoryview(<char[:segment.length]>(char_ptr + segment.start))
+            if zero_copy != 0:
+                return memoryview(<char[:segment.length]>(char_ptr + segment.start))
 
-        return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
+            return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
     cpdef unlatch(self, int64_t ref_id):
         """
