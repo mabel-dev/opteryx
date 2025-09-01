@@ -373,7 +373,6 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # clear the derived schema
         context.schemas.pop("$derived", None)
-        context.schemas["$derived"] = derived.schema()
 
         seen = set()
         needs_qualifier = len(context.schemas) > 2 or any(
@@ -381,6 +380,9 @@ class BinderVisitor:
             for schema in context.schemas.values()
             for column in schema.columns
         )
+
+        # add an empty derived schema (do it after we counted the schemas in the projection)
+        context.schemas["$derived"] = derived.schema()
 
         def name_column(qualifier, column):
             for projection_column in node.columns:
