@@ -359,8 +359,6 @@ class Cursor(DataFrame):
         """
         if self._statistics.end_time == 0:  # pragma: no cover
             self._statistics.end_time = time.time_ns()
-        self._statistics.result_row_count = self.rowcount or 0
-        self._statistics.result_column_count = self.columncount or 0
         return self._statistics.as_dict()
 
     @property
