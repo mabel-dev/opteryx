@@ -162,8 +162,8 @@ class Cursor(DataFrame):
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
 
+        start = time.time_ns()
         try:
-            start = time.time_ns()
             plan = query_planner(
                 operation=operation,
                 parameters=params,
@@ -172,21 +172,19 @@ class Cursor(DataFrame):
                 qid=self.id,
                 statistics=self._statistics,
             )
-            self._statistics.time_planning += time.time_ns() - start
         except RuntimeError as err:  # pragma: no cover
             raise SqlError(f"Error Executing SQL Statement ({err})") from err
+        finally:
+            self._statistics.time_planning += time.time_ns() - start
 
         results = execute(plan, statistics=self._statistics)
-        start = time.time_ns()
-
         system_statistics.queries_executed += 1
 
         if results is not None:
             # we can't update tuples directly
-            self._connection.context.history[-1] = tuple(
-                True if i == 1 else value
-                for i, value in enumerate(self._connection.context.history[-1])
-            )
+            entry = list(self._connection.context.history[-1])
+            entry[1] = True
+            self._connection.context.history[-1] = tuple(entry)
             return results
 
     def _execute_statements(
@@ -208,6 +206,9 @@ class Cursor(DataFrame):
             Results of the query execution, if any.
         """
         self._statistics.start_time = time.time_ns()
+
+        if hasattr(operation, "decode"):
+            operation = operation.decode()
 
         operation = sql.remove_comments(operation)
         operation = sql.clean_statement(operation)
@@ -248,8 +249,6 @@ class Cursor(DataFrame):
             params: Iterable, optional
                 Parameters for the SQL operation, defaults to None.
         """
-        if hasattr(operation, "decode"):
-            operation = operation.decode()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = results
@@ -314,8 +313,6 @@ class Cursor(DataFrame):
         Returns:
             The query results in Arrow table format.
         """
-        if hasattr(operation, "decode"):
-            operation = operation.decode()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = results
