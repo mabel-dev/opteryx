@@ -15,11 +15,11 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 cdef:
-    uint64_t NULL_HASH = <uint64_t>0x4c3f95a36ab8ecca   # xxhash(null)
-    uint64_t EMPTY_HASH = <uint64_t>0xab52d8afc1448992  # xxhash(empty)
-    uint64_t TRUE_HASH = <uint64_t>0x4f112caa54efa882   # xxhash(true)
-    uint64_t FALSE_HASH = <uint64_t>0xc2fd8b2343f83ce7  # xxhash(false)
-    uint64_t SEED = <uint64_t>0x9e3779b97f4a7c15
+    uint64_t NULL_HASH = <uint64_t>0x4c3f95a36ab8eccaU   # xxhash(null)
+    uint64_t EMPTY_HASH = <uint64_t>0xab52d8afc1448992U  # xxhash(empty)
+    uint64_t TRUE_HASH = <uint64_t>0x4f112caa54efa882U   # xxhash(true)
+    uint64_t FALSE_HASH = <uint64_t>0xc2fd8b2343f83ce7U  # xxhash(false)
+    uint64_t SEED = <uint64_t>0x9e3779b97f4a7c15U
 
 
 cdef void process_column(object column, uint64_t[::1] row_hashes):
@@ -177,8 +177,8 @@ cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t 
         object child_array, sublist
         uint64_t hash_val
         list buffers = chunk.buffers()
-        uint64_t c1 = <uint64_t>0xbf58476d1ce4e5b9
-        uint64_t c2 = <uint64_t>0x94d049bb133111eb
+        uint64_t c1 = <uint64_t>0xbf58476d1ce4e5b9U
+        uint64_t c2 = <uint64_t>0x94d049bb133111ebU
         cdef char* data_ptr
 
     # Obtain addresses of validity bitmap and offsets buffer
@@ -288,7 +288,7 @@ cdef void process_generic_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize
         else:
             # Fall back to Python object hashing
             try:
-                hash_val = <uint64_t>PyObject_Hash(chunk[i]) & 0xFFFFFFFFFFFFFFFF
+                hash_val = <uint64_t>PyObject_Hash(chunk[i]) & 0xFFFFFFFFFFFFFFFFU
             except Exception:
                 # Defensive fallback if object is unhashable or throws
                 hash_val = EMPTY_HASH
@@ -302,6 +302,6 @@ cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, u
     """
     cdef uint64_t h
     h = row_hashes[row_idx]
-    h = (h ^ col_hash) * <uint64_t>0x9e3779b97f4a7c15
+    h = (h ^ col_hash) * <uint64_t>0x9e3779b97f4a7c15U
     h ^= h >> 32
     row_hashes[row_idx] = h
