@@ -8,7 +8,7 @@
 # cython: boundscheck=False
 
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint64_t
 from libcpp.pair cimport pair
 
 
@@ -20,12 +20,12 @@ cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
         void clear()
 
 cdef class FlatHashMap:
-    #cdef flat_hash_map[int64_t, vector[int64_t]] _map
+    #cdef flat_hash_map[uint64_t, vector[int64_t]] _map
 
     def __cinit__(self):
-        self._map = flat_hash_map[int64_t, vector[int64_t], IdentityHash]()
+        self._map = flat_hash_map[uint64_t, vector[int64_t], IdentityHash]()
 
-    cpdef insert(self, key: int64_t, value: int64_t):
+    cpdef insert(self, key: uint64_t, value: int64_t):
         self._map[key].push_back(value)
 
     cpdef size_t size(self):
@@ -34,7 +34,7 @@ cdef class FlatHashMap:
     cpdef clear(self):
         self._map.clear()
 
-    cpdef vector[int64_t] get(self, int64_t key):
+    cpdef vector[int64_t] get(self, uint64_t key):
         return self._map[key]
 
 cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
@@ -46,22 +46,22 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
         void reserve(int64_t value)
 
 cdef class FlatHashSet:
-    #cdef flat_hash_set[int64_t, IdentityHash] _set
+    #cdef flat_hash_set[uint64_t, IdentityHash] _set
 
     def __cinit__(self):
-        self._set = flat_hash_set[int64_t, IdentityHash]()
+        self._set = flat_hash_set[uint64_t, IdentityHash]()
         self._set.reserve(1024)
 
-    cdef inline bint insert(self, value: int64_t):
+    cdef inline bint insert(self, value: uint64_t):
         return self._set.insert(value).second
 
-    cdef inline void just_insert(self, value: int64_t):
+    cdef inline void just_insert(self, value: uint64_t):
         self._set.insert(value)
 
     cdef inline size_t size(self):
         return self._set.size()
 
-    cdef inline bint contains(self, int64_t value):
+    cdef inline bint contains(self, uint64_t value):
         return self._set.contains(value)
 
     cpdef size_t items(self):
