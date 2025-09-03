@@ -5,7 +5,7 @@
 # cython: overflowcheck=False
 # cython: lintrule=ignore
 
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint64_t
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
 
@@ -14,13 +14,13 @@ from libcpp.vector cimport vector
 cdef extern from *:
     """
     struct IdentityHash {
-        inline size_t operator()(int64_t value) const {
+        inline size_t operator()(uint64_t value) const {
             return value;  // Identity function
         }
     };
     """
     cdef cppclass IdentityHash:
-        size_t operator()(int64_t value) const
+        size_t operator()(uint64_t value) const
 
 
 cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
@@ -31,12 +31,12 @@ cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
         void clear()
 
 cdef class FlatHashMap:
-    cdef flat_hash_map[int64_t, vector[int64_t], IdentityHash] _map
+    cdef flat_hash_map[uint64_t, vector[int64_t], IdentityHash] _map
 
-    cpdef insert(self, int64_t key, int64_t value)
+    cpdef insert(self, uint64_t key, int64_t value)
     cpdef size_t size(self)
     cpdef clear(self)
-    cpdef vector[int64_t] get(self, int64_t key)
+    cpdef vector[int64_t] get(self, uint64_t key)
 
 cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
     cdef cppclass flat_hash_set[T, HashFunc]:
@@ -47,10 +47,10 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
         void reserve(int64_t value)
 
 cdef class FlatHashSet:
-    cdef flat_hash_set[int64_t, IdentityHash] _set
+    cdef flat_hash_set[uint64_t, IdentityHash] _set
 
-    cdef inline bint insert(self, int64_t value)
-    cdef inline void just_insert(self, int64_t value)
+    cdef inline bint insert(self, uint64_t value)
+    cdef inline void just_insert(self, uint64_t value)
     cdef inline size_t size(self)
-    cdef inline bint contains(self, int64_t value)
+    cdef inline bint contains(self, uint64_t value)
     cpdef size_t items(self)
