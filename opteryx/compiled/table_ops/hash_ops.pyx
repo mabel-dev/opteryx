@@ -11,6 +11,7 @@ import pyarrow
 from libc.stdint cimport int32_t, int64_t, uint8_t, uint64_t, uintptr_t
 from cpython.object cimport PyObject_Hash
 from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
+import array
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
@@ -305,3 +306,13 @@ cdef inline void update_row_hash(uint64_t[::1] row_hashes, Py_ssize_t row_idx, u
     h = (h ^ col_hash) * <uint64_t>0x9e3779b97f4a7c15U
     h ^= h >> 32
     row_hashes[row_idx] = h
+
+cpdef uint64_t[::1] compute_hashes(object table, list columns):
+    """
+    Python wrapper for compute_row_hashes that returns an array.array of uint64.
+    """
+    cdef Py_ssize_t n = table.num_rows
+    cdef object hashes_array = array.array("Q", [0] * n)  # 'Q' is for unsigned long long (uint64)
+    cdef uint64_t[::1] mv = hashes_array  # memoryview over array.array
+    compute_row_hashes(table, columns, mv)
+    return hashes_array
