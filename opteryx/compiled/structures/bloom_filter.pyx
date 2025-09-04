@@ -36,7 +36,7 @@ is the limit of what we think we should speculatively build.
 from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint8_t
 
-from opteryx.compiled.table_ops.hash_ops cimport compute_row_hashes
+from opteryx.compiled.table_ops.hash_ops_32 cimport compute_row_hashes
 from opteryx.compiled.table_ops.null_avoidant_ops cimport non_null_row_indices
 
 import numpy
@@ -89,29 +89,26 @@ cdef class BloomFilter:
         if self.bit_array:
             free(self.bit_array)
 
-    cdef inline void _add(self, const uint64_t item):
-        cdef uint32_t h1, h2
+    cdef inline void _add(self, const uint32_t item) noexcept nogil:
+        cdef:
+            uint32_t h1 = item & (self.bit_array_size - 1)
+            uint32_t h2 = (item * 2654435769U) & (self.bit_array_size - 1)
 
-        h1 = item & (self.bit_array_size - 1)
-        # Apply the golden ratio to the item and use a mask to keep within the
-        # size of the bit array.
-        h2 = (item * 2654435769U) & (self.bit_array_size - 1)
         self.bit_array[h1 >> 3] |= 1 << (h1 & 7)
         self.bit_array[h2 >> 3] |= 1 << (h2 & 7)
 
-    cpdef void add(self, const uint64_t item):
+    cpdef void add(self, const uint32_t item):
         self._add(item)
 
-    cdef inline bint _possibly_contains(self, const uint64_t item):
-        """Check if the item might be in the set"""
-        cdef uint32_t h1, h2
+    cdef inline bint _possibly_contains(self, const uint32_t item) noexcept nogil:
+        cdef:
+            uint32_t h1 = item & (self.bit_array_size - 1)
+            uint32_t h2 = (item * 2654435769U) & (self.bit_array_size - 1)
+            uint8_t b1 = self.bit_array[h1 >> 3]
+            uint8_t b2 = self.bit_array[h2 >> 3]
+        return ((b1 >> (h1 & 7)) & 1) and ((b2 >> (h2 & 7)) & 1)
 
-        h1 = item & (self.bit_array_size - 1)
-        h2 = (item * 2654435769U) & (self.bit_array_size - 1)
-        return (((self.bit_array[h1 >> 3] >> (h1 & 7)) & 1) != 0) and \
-               (((self.bit_array[h2 >> 3] >> (h2 & 7)) & 1) != 0)
-
-    cpdef bint possibly_contains(self, const uint64_t item):
+    cpdef bint possibly_contains(self, const uint32_t item):
         return self._possibly_contains(item)
 
     cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, object relation, list columns):
@@ -124,8 +121,8 @@ cdef class BloomFilter:
         cdef uint8_t[::1] result_view = result
         cdef int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
         cdef Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
-        cdef numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint64)
-        cdef uint64_t[::1] row_hashes = row_hashes_np
+        cdef numpy.ndarray[numpy.uint32_t, ndim=1] row_hashes_np = numpy.zeros(num_rows, dtype=numpy.uint32)
+        cdef uint32_t[::1] row_hashes = row_hashes_np
         cdef Py_ssize_t i
         cdef int64_t row_id
 
@@ -150,8 +147,8 @@ cpdef BloomFilter create_bloom_filter(object relation, list columns):
         Py_ssize_t num_rows = relation.num_rows
         int64_t[::1] valid_row_ids = non_null_row_indices(relation, columns)
         Py_ssize_t num_valid_rows = valid_row_ids.shape[0]
-        numpy.ndarray[numpy.uint64_t, ndim=1] row_hashes_np = numpy.empty(num_rows, dtype=numpy.uint64)
-        uint64_t[::1] row_hashes = row_hashes_np
+        numpy.ndarray[numpy.uint32_t, ndim=1] row_hashes_np = numpy.empty(num_rows, dtype=numpy.uint32)
+        uint32_t[::1] row_hashes = row_hashes_np
         Py_ssize_t i
         BloomFilter bf = BloomFilter(num_valid_rows)
 

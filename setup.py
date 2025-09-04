@@ -145,6 +145,17 @@ extensions = [
         extra_link_args=["-Lthird_party/fastfloat/fast_float"],
     ),
     Extension(
+        name="opteryx.third_party.gxhash",
+        sources=[
+            "opteryx/compiled/third_party/gxhash.pyx",
+            "third_party/gxhash/src/gxhash.cc",
+        ],
+        include_dirs=["third_party/gxhash/src"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+        extra_link_args=["-Lthird_party/gxhash"],
+    ),
+    Extension(
         name="opteryx.third_party.tktech.csimdjson",
         sources=[
             "third_party/tktech/simdjson/simdjson.cpp",
@@ -261,7 +272,10 @@ extensions = [
     ),
     Extension(
         name="opteryx.compiled.structures.bloom_filter",
-        sources=["opteryx/compiled/structures/bloom_filter.pyx"],
+        sources=[
+            "opteryx/compiled/structures/bloom_filter.pyx",
+            "third_party/gxhash/src/gxhash.cc",
+        ],
         include_dirs=include_dirs,
         extra_compile_args=C_COMPILE_FLAGS,
     ),
@@ -310,6 +324,13 @@ extensions = [
         name="opteryx.compiled.table_ops.hash_ops",
         sources=["opteryx/compiled/table_ops/hash_ops.pyx"],
         include_dirs=include_dirs + ["third_party/abseil"],
+        language="c++",
+        extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+    Extension(
+        name="opteryx.compiled.table_ops.hash_ops_32",
+        sources=["opteryx/compiled/table_ops/hash_ops_32.pyx"],
+        include_dirs=include_dirs + ["third_party/abseil", "third_party/gxhash/src"],
         language="c++",
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),

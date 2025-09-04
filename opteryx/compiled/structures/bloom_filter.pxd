@@ -15,11 +15,11 @@ cdef class BloomFilter:
     cdef uint32_t bit_array_size
     cdef uint32_t byte_array_size
 
-    cdef inline void _add(self, const uint64_t item)
-    cdef inline bint _possibly_contains(self, const uint64_t item)
+    cdef inline void _add(self, const uint32_t item) noexcept nogil
+    cdef inline bint _possibly_contains(self, const uint32_t item) noexcept nogil
     cpdef numpy.ndarray[numpy.npy_bool, ndim=1] possibly_contains_many(self, object relation, list columns)
 
-    cpdef void add(self, const uint64_t item)
-    cpdef bint possibly_contains(self, const uint64_t item)
+    cpdef void add(self, const uint32_t item)
+    cpdef bint possibly_contains(self, const uint32_t item)
 
 cpdef BloomFilter create_bloom_filter(object relation, list columns)
