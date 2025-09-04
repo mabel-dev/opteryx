@@ -98,7 +98,7 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
                 hash_val = EMPTY_HASH
             else:
                 # Hash the string using xxhash3_64
-                hash_val = <int64_t>cy_xxhash3_64(data + start, str_len)
+                hash_val = <uint64_t>cy_xxhash3_64(data + start, str_len)
 
         update_row_hash(row_hashes, row_offset + i, hash_val)
 
