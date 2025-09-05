@@ -53,7 +53,7 @@ PERMISSIONS = {
     "SetRole",  # not supported
     "SetTimeZone",  # not supported
     "SetTransaction",  # not supported
-    "SetVariable",
+    "Set",
     "ShowCollation",  # not supported
     "ShowColumns",
     "ShowCreate",

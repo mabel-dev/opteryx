@@ -8,7 +8,7 @@
 
 import pyarrow
 
-from libc.stdint cimport int32_t, int64_t, uint8_t, uint64_t, uintptr_t
+from libc.stdint cimport int32_t, uint8_t, uint64_t, uintptr_t
 from cpython.object cimport PyObject_Hash
 from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
 import array

@@ -883,22 +883,24 @@ def plan_query(statement: dict) -> LogicalPlan:
             plan.add_edge(head_nid, step_id)
 
         # limit/offset
-        _limit = root_node.get("limit")
-        _offset = root_node.get("offset")
-        if _offset:
-            _offset = _offset.get("value")
-        if _limit or _offset:
-            limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
-            limit_step.limit = (
-                None if _limit is None else logical_planner_builders.build(_limit).value
-            )
-            limit_step.offset = (
-                None if _offset is None else logical_planner_builders.build(_offset).value
-            )
-            head_nid, step_id = step_id, random_string()
-            plan.add_node(step_id, limit_step)
-            if head_nid is not None:
-                plan.add_edge(head_nid, step_id)
+        if root_node.get("limit_clause"):
+            _limit = root_node["limit_clause"].get("LimitOffset", {}).get("limit")
+            _offset = root_node["limit_clause"].get("LimitOffset", {}).get("offset")
+
+            if _offset:
+                _offset = _offset.get("value")
+            if _limit or _offset:
+                limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
+                limit_step.limit = (
+                    None if _limit is None else logical_planner_builders.build(_limit).value
+                )
+                limit_step.offset = (
+                    None if _offset is None else logical_planner_builders.build(_offset).value
+                )
+                head_nid, step_id = step_id, random_string()
+                plan.add_node(step_id, limit_step)
+                if head_nid is not None:
+                    plan.add_edge(head_nid, step_id)
 
         # add the exit node
         exit_node = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
@@ -923,8 +925,9 @@ def plan_query(statement: dict) -> LogicalPlan:
         return plan
 
     # we do some minor AST rewriting
-    root_node["body"]["limit"] = root_node.get("limit", None)
-    root_node["body"]["offset"] = (root_node.get("offset") or {}).get("value")
+    if root_node.get("limit_clause"):
+        root_node["body"]["limit"] = root_node["limit_clause"].get("LimitOffset", {}).get("limit")
+        root_node["body"]["offset"] = root_node["limit_clause"].get("LimitOffset", {}).get("offset")
     root_node["body"]["order_by"] = root_node.get("order_by", None)
 
     planned_query = inner_query_planner(root_node["body"])
@@ -936,12 +939,13 @@ def plan_query(statement: dict) -> LogicalPlan:
 
 
 def plan_set_variable(statement, **kwargs):
-    root_node = "SetVariable"
+    root_node = "SingleAssignment"
+    statement = statement["Set"]
     plan = LogicalPlan()
     set_step = LogicalPlanNode(
         node_type=LogicalPlanStepType.Set,
-        variable=extract_variable(statement[root_node]["variables"]["One"]),
-        value=extract_value(statement[root_node]["value"]),
+        variable=extract_variable(statement[root_node]["variable"]),
+        value=extract_value(statement[root_node]["values"]),
     )
     plan.add_node(random_string(), set_step)
     return plan
@@ -998,7 +1002,7 @@ QUERY_BUILDERS = {
     "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,
-    "SetVariable": plan_set_variable,
+    "Set": plan_set_variable,
     "ShowColumns": plan_show_columns,
     "ShowCreate": plan_show_create_query,
     # "ShowFunctions": show_functions_query,
