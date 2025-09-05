@@ -436,6 +436,7 @@ DEPRECATED_FUNCTIONS = {
     "TRY_STRING": "TRY_VARCHAR",  # deprecated, removed 0.24.0
     "TRY_STRUCT": None,  # deprecated, removed 0.24.0
     "LEN": "LENGTH",  # deprecated, removed 0.24.0
+    "INT": "INTEGER",  # remove 0.27.0
 }
 
 # fmt:off
@@ -517,8 +518,8 @@ FUNCTIONS = {
     "RAND": (number_functions.random_number, "DOUBLE", 1.0),
     "NORMAL": (number_functions.random_normal, "DOUBLE", 1.0),
     "RANDOM_STRING": (number_functions.random_string, "BLOB", 1.0),
-    "BASE64_ENCODE": (_iterate_single_parameter(string_functions.get_base64_encode), "BLOB", 1.0),
-    "BASE64_DECODE": (_iterate_single_parameter(string_functions.get_base64_decode), "BLOB", 1.0),
+    "BASE64_ENCODE": (string_functions.base64_encode, "BLOB", 1.0),
+    "BASE64_DECODE": (string_functions.base64_decode, "BLOB", 1.0),
     "BASE85_ENCODE": (_iterate_single_parameter(string_functions.get_base85_encode), "BLOB", 1.0),
     "BASE85_DECODE": (_iterate_single_parameter(string_functions.get_base85_decode), "BLOB", 1.0),
     "HEX_ENCODE": (_iterate_single_parameter(string_functions.get_hex_encode), "BLOB", 1.0),

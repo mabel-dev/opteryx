@@ -16,65 +16,59 @@ from opteryx.third_party.fastfloat.fast_float cimport c_parse_fast_float as pars
 from libc.stdint cimport int32_t, int64_t, uint64_t, uint8_t, uintptr_t
 from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.object cimport PyObject_Hash
+from cpython.bytes cimport PyBytes_FromStringAndSize
 
 cpdef tuple build_rows_indices_and_column(object column):
     cdef:
         object child_elements = column.values
         list buffers = column.buffers()
         Py_ssize_t row_count = len(column), total_size, i, j, index_pos
+        numpy.ndarray indices_np, flat_data_np
         int64_t[::1] indices
-        numpy.ndarray flat_data
-        # Offset handling
+        object[:] flat_data
         Py_ssize_t arr_offset = column.offset
-        const int32_t* offsets32 = NULL
+        const int32_t* offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
+
         # Child array variables
         Py_ssize_t child_offset = child_elements.offset
-        const int32_t* child_offsets32 = NULL
-        const char* child_data = NULL
-        Py_ssize_t str_start, str_end
-        Py_ssize_t start, end
+        list child_buffers = child_elements.buffers()
+        const int32_t* child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
+        const char* child_data = <const char*><uintptr_t>(child_buffers[2].address)
+
+        const uint8_t* parent_valid = <const uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+        const uint8_t* child_valid = <const uint8_t*><uintptr_t>(child_buffers[0].address) if child_buffers[0] else NULL
+
+        Py_ssize_t start, end, str_start, str_end
 
     if row_count == 0:
-        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
+        return numpy.empty(0, dtype=numpy.int64), numpy.empty(0, dtype=object)
 
-    # Parent offset buffer setup
-    offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
     total_size = offsets32[arr_offset + row_count] - offsets32[arr_offset]
-
     if total_size == 0:
-        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=object))
+        return numpy.empty(0, dtype=numpy.int64), numpy.empty(0, dtype=object)
 
-    indices = numpy.empty(total_size, dtype=numpy.int64)
-    flat_data = numpy.empty(total_size, dtype=object)
-
-    # Child buffer setup
-    child_buffers = child_elements.buffers()
-    child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
-    child_data = <const char*><uintptr_t>(child_buffers[2].address)
+    indices_np = numpy.empty(total_size, dtype=numpy.int64)
+    flat_data_np = numpy.empty(total_size, dtype=object)
+    indices = indices_np
+    flat_data = flat_data_np
 
     index_pos = 0
     for i in range(row_count):
-        # Parent validity check
-        if buffers[0] and not ((<const uint8_t*><uintptr_t>(buffers[0].address))[i >> 3] & (1 << (i & 7))):
+        if parent_valid and not (parent_valid[i >> 3] & (1 << (i & 7))):
             continue
 
-        # Get list boundaries with offset
         start = offsets32[arr_offset + i]
         end = offsets32[arr_offset + i + 1]
 
         if start >= end:
             continue
 
-        # Bulk assign indices
-        indices[index_pos:index_pos + (end - start)] = i
-
-        # Process child elements
         for j in range(start, end):
-            # Child validity check
-            if child_buffers[0] and not (<const uint8_t*><uintptr_t>(child_buffers[0].address))[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7)):
+            indices[index_pos] = i
+
+            if child_valid and not (child_valid[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7))):
                 flat_data[index_pos] = None
             else:
-                # Get string boundaries with child offset
                 str_start = child_offsets32[child_offset + j]
                 str_end = child_offsets32[child_offset + j + 1]
 
@@ -86,7 +80,7 @@ cpdef tuple build_rows_indices_and_column(object column):
                     flat_data[index_pos] = ""
             index_pos += 1
 
-    return (numpy.asarray(indices), numpy.asarray(flat_data))
+    return indices_np, flat_data_np
 
 
 cpdef tuple numpy_build_rows_indices_and_column(numpy.ndarray column_data):
@@ -210,7 +204,7 @@ cpdef tuple build_filtered_rows_indices_and_column(object column, set valid_valu
     """
     Arrow-native version of build_filtered_rows_indices_and_column.
     Filters values from a ListArray column based on membership in `valid_values`.
-    Returns matching row indices and values.
+    Returns matching row indices and values (as bytes, not str).
     """
     cdef:
         object child_elements = column.values
@@ -218,39 +212,57 @@ cpdef tuple build_filtered_rows_indices_and_column(object column, set valid_valu
         Py_ssize_t row_count = len(column)
         Py_ssize_t arr_offset = column.offset
         const int32_t* offsets32 = <const int32_t*><uintptr_t>(buffers[1].address)
-        Py_ssize_t i, j, k = 0, start, end
-        object value
+        Py_ssize_t i, j, k = 0, start, end, str_len
         Py_ssize_t allocated_size = row_count * 4
-        numpy.ndarray flat_data = numpy.empty(allocated_size, dtype=object)
+
         numpy.ndarray indices = numpy.empty(allocated_size, dtype=numpy.int64)
         int64_t[::1] indices_mv = indices
-        object[:] flat_mv = flat_data
+        numpy.ndarray flat_data = numpy.empty(allocated_size, dtype=object)
+        object[::1] flat_mv = flat_data
+
         list child_buffers = child_elements.buffers()
         const int32_t* child_offsets32 = <const int32_t*><uintptr_t>(child_buffers[1].address)
         const char* child_data = <const char*><uintptr_t>(child_buffers[2].address)
         Py_ssize_t child_offset = child_elements.offset
-        Py_ssize_t str_start, str_end
+        const uint8_t* parent_bitmap = NULL
+        const uint8_t* child_bitmap = NULL
+
+    if buffers[0]:
+        parent_bitmap = <const uint8_t*><uintptr_t>(buffers[0].address)
+    if child_buffers[0]:
+        child_bitmap = <const uint8_t*><uintptr_t>(child_buffers[0].address)
+
+    # Normalize valid_values to bytes
+    cdef set valid_bytes = set()
+    for v in valid_values:
+        valid_bytes.add(v.encode("utf8") if isinstance(v, str) else v)
 
     for i in range(row_count):
-        if buffers[0] and not (<const uint8_t*><uintptr_t>(buffers[0].address))[i >> 3] & (1 << (i & 7)):
+        if parent_bitmap is not NULL and not (parent_bitmap[i >> 3] & (1 << (i & 7))):
             continue
 
         start = offsets32[arr_offset + i]
         end = offsets32[arr_offset + i + 1]
+
         for j in range(start, end):
-            if child_buffers[0] and not (<const uint8_t*><uintptr_t>(child_buffers[0].address))[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7)):
+            if child_bitmap is not NULL and not (child_bitmap[(child_offset + j) >> 3] & (1 << ((child_offset + j) & 7))):
                 continue
+
             str_start = child_offsets32[child_offset + j]
             str_end = child_offsets32[child_offset + j + 1]
-            value = PyUnicode_DecodeUTF8(child_data + str_start, str_end - str_start, "replace")
-            if value in valid_values:
+            str_len = str_end - str_start
+
+            # Materialize only matched values as bytes
+            value_bytes = PyBytes_FromStringAndSize(child_data + str_start, str_len)
+
+            if value_bytes in valid_bytes:
                 if k >= allocated_size:
                     allocated_size *= 2
                     indices = numpy.resize(indices, allocated_size)
-                    flat_data = numpy.resize(flat_data, allocated_size)
                     indices_mv = indices
-                    flat_mv = flat_data
-                flat_mv[k] = value
+                    flat_data = numpy.resize(flat_mv.base, allocated_size)
+
+                flat_mv[k] = value_bytes
                 indices_mv[k] = i
                 k += 1
 

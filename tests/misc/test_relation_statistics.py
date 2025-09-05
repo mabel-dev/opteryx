@@ -12,8 +12,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 from opteryx.compiled.structures.relation_statistics import RelationStatistics
 from opteryx.compiled.structures.relation_statistics import to_int
 
-NULL_FLAG:int = (-1 << 63)
-MIN_SIGNED_64BIT:int = (-1 << 63)
+NULL_FLAG:int = -(1 << 63)
+MIN_SIGNED_64BIT:int = NULL_FLAG + 1
 MAX_SIGNED_64BIT:int = (1 << 63) - 1
 
 def random_key(length=8):
@@ -23,8 +23,12 @@ def random_key(length=8):
 def test_to_int_basic_types():
     assert to_int(123) == 123
     assert to_int(-123) == -123
-    assert to_int(2**63 - 1) == 2**63 - 1
-    assert to_int(-(2**63)) == -(2**63)
+    assert to_int(0) == 0
+    assert to_int(MAX_SIGNED_64BIT) == MAX_SIGNED_64BIT
+    assert to_int(MIN_SIGNED_64BIT) == MIN_SIGNED_64BIT
+    assert to_int(NULL_FLAG) == MIN_SIGNED_64BIT
+    assert to_int(MIN_SIGNED_64BIT - 1) == MIN_SIGNED_64BIT
+    assert to_int(MAX_SIGNED_64BIT + 1) == MAX_SIGNED_64BIT
 
 def test_to_int_bounds():
     assert to_int(2**80) == MAX_SIGNED_64BIT
@@ -35,8 +39,7 @@ def test_to_int_floats():
     assert to_int(-123.456) == -123
     assert to_int(float("inf")) == MAX_SIGNED_64BIT
     assert to_int(float("-inf")) == MIN_SIGNED_64BIT
-    with pytest.raises(ValueError):
-        to_int(float("nan"))
+    assert to_int(float("nan")) == NULL_FLAG
 
 def test_to_int_datetime():
     dt = datetime.datetime(2020, 1, 1, 12, 0)
@@ -56,7 +59,7 @@ def test_to_int_decimal():
 
 def test_to_int_str_bytes():
     assert to_int("abc") == to_int(b"abc")
-    assert to_int("abcdefgh") == to_int(b"abcdefgh")
+    assert to_int("abcdefg") == to_int(b"abcdefg")
     assert to_int("abcdefghi") == to_int(b"abcdefgh")  # Truncate
 
 def test_to_int_invalid():
@@ -110,7 +113,7 @@ def test_serialization_stress_many_keys():
     # Add hundreds of entries with edge-case values
     for _ in range(500):
         col = random_key()
-        v = random.randint(-2**63, 2**63 - 1)
+        v = random.randint(MIN_SIGNED_64BIT, MAX_SIGNED_64BIT)
         stats.add_null(col, random.randint(0, 100))
         stats.update_lower(col, v)
         stats.update_upper(col, v + 100)

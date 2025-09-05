@@ -184,3 +184,4 @@ hits_split/*.parquet
 clickbench/**
 .github/environment/splunk/docker-compose.yml
 testdata/iceberg/**
+third_party/tktech/simdjson/csimdjson.cpp

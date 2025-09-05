@@ -80,11 +80,12 @@ class OptimizerVisitor:
             PredicateRewriteStrategy(statistics),
             PredicatePushdownStrategy(statistics),
             ProjectionPushdownStrategy(statistics),
+            JoinRewriteStrategy(statistics),
             JoinOrderingStrategy(statistics),
             DistinctPushdownStrategy(statistics),
             OperatorFusionStrategy(statistics),
             LimitPushdownStrategy(statistics),
-            PredicateFlatteningStrategy(statistics),
+            PredicateOrderingStrategy(statistics),
             RedundantOperationsStrategy(statistics),
             ConstantFoldingStrategy(statistics),
         ]

@@ -373,10 +373,9 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # clear the derived schema
         context.schemas.pop("$derived", None)
-        context.schemas["$derived"] = derived.schema()
 
         seen = set()
-        needs_qualifier = len(context.schemas) > 2 or any(
+        needs_qualifier = len(context.schemas) > 1 or any(
             column.name in seen or seen.add(column.name) is not None  # type: ignore
             for schema in context.schemas.values()
             for column in schema.columns

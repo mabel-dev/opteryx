@@ -63,7 +63,7 @@ def LongArrowOp(documents, elements) -> pyarrow.Array:
         documents = documents.to_numpy(zero_copy_only=False)
 
     def extract(doc: bytes, elem: Union[bytes, str]) -> bytes:
-        value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+        value = parser.parse(doc).get(elem)  # type:ignore
         if hasattr(value, "mini"):
             return value.mini  # type:ignore
         return None if value is None else str(value).encode()

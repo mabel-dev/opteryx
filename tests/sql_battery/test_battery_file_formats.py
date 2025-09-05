@@ -11,7 +11,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 import opteryx
-from tests.tools import is_pypy, is_windows
+from tests.tools import is_pypy, is_windows, is_version
 
 # fmt:off
 STATEMENTS = [
@@ -87,6 +87,11 @@ STATEMENTS = [
         ("SELECT * FROM testdata.flat.formats.psv", 586, 16, False),
         ("SELECT L_SHIPINSTRUCT, L_LINESTATUS FROM testdata.flat.formats.psv WHERE L_SHIPMODE ILIKE '%O%'", 90, 2, False),
         ("SELECT COUNT(*) FROM 'testdata/flat/formats/psv'", 1, 1, False),
+
+        # Vortex
+        ("SELECT * FROM testdata.flat.formats.vortex", 100000, 13, is_version("3.10")),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.vortex WHERE user_name ILIKE '%news%'", 122, 2, is_version("3.10")),
+        ("SELECT COUNT(*) FROM 'testdata/flat/formats/vortex'", 1, 1, is_version("3.10")),
     ]
 # fmt:on
 

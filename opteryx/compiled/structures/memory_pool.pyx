@@ -48,7 +48,7 @@ cdef int64_t DEBUG_MODE = os.environ.get("OPTERYX_DEBUG", 0) != 0
 cdef struct MemorySegment:
     int64_t start
     int64_t length
-    int8_t latched
+    int64_t latches
 
 
 cdef class MemoryPool:
@@ -100,12 +100,12 @@ cdef class MemoryPool:
         if DEBUG_MODE:
             print (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
-    cdef inline void _set_latch(self, int64_t ref_id, int8_t state):
+    cdef inline void _update_latch(self, int64_t ref_id, int8_t delta):
         cdef MemorySegment segment
-        with self.lock:
-            segment = self.used_segments[ref_id]
-            segment.latched = state
-            self.used_segments[ref_id] = segment
+
+        segment = <MemorySegment>self.used_segments[ref_id]
+        segment.latches += delta
+        self.used_segments[ref_id] = segment
 
     cdef inline int64_t _find_free_segment(self, int64_t size):
         """
@@ -156,30 +156,31 @@ cdef class MemoryPool:
         after this process.
         """
         cdef long offset = 0
+        cdef MemorySegment segment
         self.l2_compaction += 1
 
         # Sort used segments by start address
         used_segments_sorted = sorted(self.used_segments.items(), key=lambda x: x[1]["start"])
 
         for segment_id, segment in used_segments_sorted:
-            if segment["latched"] == 0:
-                if segment["start"] != offset:
-                    memcpy(self.pool + offset, self.pool + <long>segment["start"], segment["length"])
-                    segment["start"] = offset
+            if segment.latches == 0:
+                if segment.start != offset:
+                    memcpy(self.pool + offset, self.pool + <long>segment.start, segment.length)
+                    segment.start = offset
                     self.used_segments[segment_id] = segment
-                offset += segment["length"]
+                offset += segment.length
             else:
                 # Latched segment is not moved, skip it,
                 # but make sure the offset accounts for it
-                offset = max(offset, segment["start"] + segment["length"])
+                offset = max(offset, segment.start + segment.length)
 
         # Now find gaps between the compacted list (which includes latched)
         free_segments = []
         current = 0
         for segment_id, segment in sorted(self.used_segments.items(), key=lambda x: x[1]["start"]):
-            if segment["start"] > current:
-                free_segments.append(MemorySegment(current, segment["start"] - current, 0))
-            current = segment["start"] + segment["length"]
+            if segment.start > current:
+                free_segments.append(MemorySegment(current, segment.start - current, 0))
+            current = segment.start + segment.length
 
         if current < self.size:
             free_segments.append(MemorySegment(current, self.size - current, 0))
@@ -252,61 +253,50 @@ cdef class MemoryPool:
         cdef MemorySegment segment
         cdef char* char_ptr = <char*> self.pool
 
-        self.reads += 1
-
-        if ref_id not in self.used_segments:
-            raise ValueError("Invalid reference ID.")
-
-        segment = self.used_segments[ref_id]
-
-        if latch != 0:
-            self._set_latch(ref_id, 1)
-
-        if zero_copy != 0:
-            return memoryview(<char[:segment.length]>(char_ptr + segment.start))
-
-        return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
-
-    cpdef read_and_release(self, int64_t ref_id):
-        """
-        Read and release (free) a segment, we can't zero copy and release
-        """
-        cdef MemorySegment segment
-        cdef char* char_ptr = <char*> self.pool
-
         with self.lock:
-            self.reads += 1
-            self.releases += 1
-
             if ref_id not in self.used_segments:
-                raise ValueError(f"Invalid reference ID - {ref_id}.")
-            segment = self.used_segments.pop(ref_id)
-            self.free_segments.push_back(segment)
+                raise ValueError("Invalid reference ID.")
+
+            self.reads += 1
+            segment = <MemorySegment>self.used_segments[ref_id]
+
+            # optionally apply a latch
+            if latch != 0:
+                self._update_latch(ref_id, 1)
+
+            if zero_copy != 0:
+                return memoryview(<char[:segment.length]>(char_ptr + segment.start))
 
             return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
 
     cpdef unlatch(self, int64_t ref_id):
         """
-        Remove a latch from a segment
+        Remove a latch from a segment - don't release
         """
         cdef MemorySegment segment
 
-        if ref_id not in self.used_segments:
-            raise ValueError(f"Invalid reference ID - {ref_id}.")
-        segment = self.used_segments[ref_id]
-        if segment.latched == 0:
-            raise RuntimeError(f"Segment {ref_id} was not latched.")
-        self._set_latch(ref_id, 0)
+        with self.lock:
+            if ref_id not in self.used_segments:
+                raise ValueError(f"Invalid reference ID - {ref_id}.")
+            segment = <MemorySegment>self.used_segments[ref_id]
+            if segment.latches == 0:
+                raise RuntimeError(f"Segment {ref_id} was not latched.")
+            self._update_latch(ref_id, -1)
 
     cpdef release(self, int64_t ref_id):
         """
         Free a segment
-        """
-        with self.lock:
-            self.releases += 1
 
+        NOTE: Release assumes exclusive access and does not respect latches
+        """
+        cdef MemorySegment segment
+
+        with self.lock:
             if ref_id not in self.used_segments:
                 raise ValueError(f"Invalid reference ID - {ref_id}.")
+
+            self.releases += 1
+
             segment = self.used_segments.pop(ref_id)
             self.free_segments.push_back(segment)
 

@@ -45,6 +45,9 @@ class OptimizerContext:
         self.collected_limits: list = []
         """We collect limits to to to eliminate rows earlier"""
 
+        self.collected_joins = []
+        """We collect joins to try to rewrite to inner (or filter joins)"""
+
         self.distincted_indentities: set = set()
         """The columns that implicitly exist in the plan because of a distinct"""
 
