@@ -5,7 +5,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
-from opteryx.planner.logical_planner.logical_planner import simply_simplify_dnf
+from opteryx.utils.dnf import simplify_dnf as simply_simplify_dnf
 
 TESTS = [
 
