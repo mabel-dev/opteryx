@@ -29,6 +29,7 @@ from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import logical_planner_builders
 from opteryx.planner.logical_planner.logical_planner_rewriter import decompose_aggregates
 from opteryx.third_party.travers import Graph
+from opteryx.utils import dnf
 
 
 class LogicalPlanStepType(int, Enum):
@@ -1077,50 +1078,6 @@ def build_expression_tree(relation, dnf_list):
         return and_node
 
 
-def simply_simplify_dnf(dnf):
-    if not dnf:
-        return []
-
-    # 1) Normalize: remove duplicate predicates inside each clause
-    clauses = [frozenset(clause) for clause in dnf if clause]
-
-    if not clauses:
-        return []
-
-    # 2) Deduplicate identical clauses
-    clauses = list(set(clauses))
-
-    # 3) Absorption: drop clauses that are supersets of another
-    absorbed = []
-    for c in clauses:
-        if any((o != c) and o.issubset(c) for o in clauses):
-            continue
-        absorbed.append(c)
-
-    if not absorbed:
-        return []
-
-    # 4) Factor global common predicates
-    if len(absorbed) > 1:
-        common = set(absorbed[0]).intersection(*absorbed[1:])
-    else:
-        common = set(absorbed[0])
-
-    if not common:
-        # No common factor: return clauses as lists of predicates
-        return [list(c) for c in absorbed]
-
-    reduced = [c - common for c in absorbed]
-
-    # If any reduced is empty, OR collapses ⇒ just common
-    if any(len(r) == 0 for r in reduced):
-        return [list(common)]
-
-    # Otherwise build nested structure: [common, reduced_OR]
-    reduced_dnf = [list(r) for r in reduced]
-    return [list(common), reduced_dnf]
-
-
 QUERY_BUILDERS = {
     # "Analyze": analyze_query,
     "Execute": plan_execute_query,
@@ -1163,7 +1120,7 @@ def apply_visibility_filters(
             if filter_dnf:
                 # Do some basic simplification early, less binding etc to do if we can
                 # eliminate some elements from the tree now
-                filter_dnf = simply_simplify_dnf(filter_dnf)
+                filter_dnf = dnf.simplify_dnf(filter_dnf)
                 # Apply the transformation from DNF to an expression tree
                 expression_tree = build_expression_tree(node.alias, filter_dnf)
 

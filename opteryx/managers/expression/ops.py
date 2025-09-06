@@ -33,6 +33,7 @@ skip_compression_ops = {
     "AllOpEq",
     "AllOpNotEq",
     "AtArrow",
+    "ArrayContainsAll",
 }
 
 
@@ -312,5 +313,15 @@ def _inner_filter_operations(arr, operator, value):
             return numpy.array([set(arr[0]).intersection(value)], dtype=bool)
 
         return list_contains_any(arr, set(value))
+
+    if operator == "ArrayContainsAll":
+        from opteryx.compiled.list_ops.list_contains_all import list_contains_all
+
+        if hasattr(arr, "to_pylist"):
+            arr = arr.to_pylist()
+        if hasattr(value, "to_numpy"):
+            value = value.to_numpy(zero_copy_only=False)
+
+        return list_contains_all(value, set(arr[0]))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

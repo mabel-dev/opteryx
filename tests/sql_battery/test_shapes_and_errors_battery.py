@@ -1040,6 +1040,8 @@ id > /* 0 */ 1
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE missions @> ('Apollo 8', 'Apollo 13')", 5, 1, None),
+        ("SELECT * FROM $astronauts WHERE ('Apollo 11', 'Gemini 12') @>> missions", 1, 19, None),
+        ("SELECT * FROM $astronauts WHERE ('Gemini 7', 'Apollo 8') @>> missions", 2, 19, None),
 
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'C' > any(alma_mater)", 19, 19, None),

@@ -112,6 +112,10 @@ def binary_op(branch, alias: Optional[List[str]] = None, key=None):
     operator = branch["op"]
     right = build(branch["right"])
 
+    # Dialect-specific operator mapping
+    if isinstance(operator, dict):
+        operator = operator["Custom"]
+
     if operator in ("PGRegexMatch", "SimilarTo"):
         operator = "RLike"
     if operator in ("PGRegexNotMatch", "NotSimilarTo"):
