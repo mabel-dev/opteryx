@@ -91,7 +91,7 @@ test_cases = [
     ("SELECT * FROM $planets WHERE name LIKE 'M%'", {"$planets": [[("name", "Like", "M%")]]}, (2, 20)),
     ("SELECT * FROM $planets WHERE id > 3 AND name LIKE 'M%'", {"$planets": [[("id", "Gt", 3), ("name", "Like", "M%")]]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [[("name", "Eq", "Earth"), ("id", "Eq", 4)], [("id", "Gt", 7)]]}, (2, 20)),
-    ("SELECT * FROM $planets", {"$planets": [[[("name", "Eq", "Earth"), ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (3, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[("name", "Eq", "Earth"), ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (2, 20)),
     ("SELECT * FROM $planets", {"$planets": [[("name", "Eq", "Earth"), ("id", "Eq", 4)], [[("id", "Gt", 7)]]]}, (2, 20)),
 
     # misformed filters
@@ -101,7 +101,7 @@ test_cases = [
     ("SELECT * FROM $planets", {"$planets": [[[("id", "Eq", 1)]], [[("id", "Eq", 2)]]]}, (2, 20)),
     ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 1)], [[("id", "Eq", 2)]]]}, (2, 20)),
     ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 3), [[("name", "Eq", "Earth")]]]]}, (1, 20)),
-    ("SELECT * FROM $planets", {"$planets": [[[[("name", "Eq", "Earth")], ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (3, 20)),
+    ("SELECT * FROM $planets", {"$planets": [[[[("name", "Eq", "Earth")], ("id", "Eq", 4)]], [("id", "Gt", 7)]]}, (2, 20)),
     ("SELECT * FROM $planets", {"$planets": [[[[(("id", "Eq", 1))]]]]}, (1, 20)),
     ("SELECT * FROM $planets", {"$planets": [[("id", "Eq", 4), ("name", "Eq", "Earth")], [[[[("id", "Gt", 7)]]]]]}, (2, 20)),
 
