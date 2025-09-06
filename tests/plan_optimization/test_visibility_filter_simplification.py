@@ -52,9 +52,11 @@ TESTS = [
             [("id", "Eq", 5), ("name", "Eq", "Earth")],
         ],
         [
-            [("name", "Eq", "Earth")],
-            [("id", "Eq", 4)],
-            [("id", "Eq", 5)]
+            [("name","Eq","Earth")],
+            [
+                [("id","Eq",4)],
+                [("id","Eq",5)]
+            ]
         ]
     ],
 
@@ -86,8 +88,10 @@ TESTS = [
         ],
         [
             [("name","Eq","Earth"), ("type","Eq","Planet")],
-            [("id","Eq",4)],
-            [("id","Gt",7)],
+            [
+                [("id","Eq",4)],
+                [("id","Gt",7)]
+            ]
         ]
     ],
 
@@ -99,6 +103,140 @@ TESTS = [
             [("name", "Eq", "Earth")],
         ],
         [[("name", "Eq", "Earth")]]
+    ],
+
+    # 11. Factor out two common predicates across all clauses
+    [
+        [
+            [("id","Eq",1), ("name","Eq","Earth"), ("type","Eq","Planet")],
+            [("id","Eq",2), ("name","Eq","Earth"), ("type","Eq","Planet")],
+            [("id","Eq",3), ("name","Eq","Earth"), ("type","Eq","Planet")],
+        ],
+        [
+            [("name","Eq","Earth"), ("type","Eq","Planet")],
+            [
+                [("id","Eq",1)],
+                [("id","Eq",2)],
+                [("id","Eq",3)]
+            ]
+        ]
+    ],
+
+    # 12. Absorption hidden after factoring
+    [
+        [
+            [("name","Eq","Earth"), ("id","Eq",4)],
+            [("name","Eq","Earth"), ("id","Eq",4), ("type","Eq","Planet")],
+        ],
+        [
+            [("name","Eq","Earth"), ("id","Eq",4)],
+        ]
+    ],
+
+    # 13. No common factor, just dedup and absorption
+    [
+        [
+            [("id","Eq",1), ("name","Eq","Earth")],
+            [("id","Eq",1), ("type","Eq","Planet")],
+            [("id","Eq",1)],
+        ],
+        [[("id","Eq",1)]]
+    ],
+
+    # 14. Three clauses with pairwise overlaps but no global common factor
+    [
+        [
+            [("id","Eq",1), ("name","Eq","Earth")],
+            [("id","Eq",1), ("type","Eq","Planet")],
+            [("id","Eq",2), ("name","Eq","Earth")],
+        ],
+        [
+            [("id","Eq",1), ("name","Eq","Earth")],
+            [("id","Eq",1), ("type","Eq","Planet")],
+            [("id","Eq",2), ("name","Eq","Earth")],
+        ]
+    ],
+
+    # 15. Factor common across all, and absorb a subset afterwards
+    [
+        [
+            [("name","Eq","Earth"), ("id","Eq",1)],
+            [("name","Eq","Earth"), ("id","Eq",1), ("type","Eq","Planet")],
+            [("name","Eq","Earth"), ("id","Eq",2)],
+        ],
+        [
+            [("name","Eq","Earth")],
+            [
+                [("id","Eq",1)],
+                [("id","Eq",2)]
+            ]
+        ]
+    ],
+
+    # 16. Larger with duplication + factorization
+    [
+        [
+            [("name","Eq","Earth"), ("id","Eq",4), ("type","Eq","Planet")],
+            [("id","Eq",4), ("name","Eq","Earth"), ("type","Eq","Planet")],
+            [("name","Eq","Earth"), ("id","Gt",7), ("type","Eq","Planet")],
+        ],
+        [
+            [("name","Eq","Earth"), ("type","Eq","Planet")],
+            [
+                [("id","Eq",4)],
+                [("id","Gt",7)]
+            ]
+        ]
+    ],
+
+    # 17. Clause fully redundant after factoring
+    [
+        [
+            [("id","Eq",1), ("name","Eq","Earth")],
+            [("id","Eq",2), ("name","Eq","Earth")],
+            [("name","Eq","Earth")],
+        ],
+        [[("name","Eq","Earth")]]
+    ],
+
+    # 18. Factor out constant across many mixed ops
+    [
+        [
+            [("status","Eq","active"), ("id","Eq",1)],
+            [("status","Eq","active"), ("id","Eq",2)],
+            [("status","Eq","active"), ("id","Gt",5)],
+        ],
+        [
+            [("status","Eq","active")],
+            [
+                [("id","Eq",1)],
+                [("id","Eq",2)],
+                [("id","Gt",5)]
+            ]
+        ]
+    ],
+
+    # 19. Triple absorption chain
+    [
+        [
+            [("id","Eq",1)],
+            [("id","Eq",1), ("name","Eq","Earth")],
+            [("id","Eq",1), ("name","Eq","Earth"), ("type","Eq","Planet")],
+        ],
+        [[("id","Eq",1)]]
+    ],
+
+    # 20. Complex mixture: dedup, factorization, absorption
+    [
+        [
+            [("continent","Eq","Europe"), ("country","Eq","UK"), ("city","Eq","London")],
+            [("continent","Eq","Europe"), ("country","Eq","UK"), ("city","Eq","Manchester")],
+            [("continent","Eq","Europe"), ("country","Eq","UK")],
+            [("continent","Eq","Europe"), ("country","Eq","UK"), ("city","Eq","London")], # duplicate
+        ],
+        [
+            [("continent","Eq","Europe"), ("country","Eq","UK")],
+        ]
     ],
 ]
 
@@ -123,7 +261,7 @@ def test_filter_simpliciation(input_expression, expected_output):
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} FILTER SIMPLIFICATION TESTS")
     for index, (input_expression, expected_output) in enumerate(TESTS):
-        print(index, input_expression)
+        print(index + 1, input_expression)
         test_filter_simpliciation(input_expression, expected_output)
 
 

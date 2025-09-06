@@ -1081,35 +1081,44 @@ def simply_simplify_dnf(dnf):
     if not dnf:
         return []
 
-    # 1. Dedup predicates inside each clause (use frozenset)
-    norm_clauses = [frozenset(clause) for clause in dnf]
+    # 1) Normalize: remove duplicate predicates inside each clause
+    clauses = [frozenset(clause) for clause in dnf if clause]
 
-    # 2. Dedup identical clauses
-    norm_clauses = list(set(norm_clauses))
+    if not clauses:
+        return []
 
-    # 3. Absorption (drop supersets)
+    # 2) Deduplicate identical clauses
+    clauses = list(set(clauses))
+
+    # 3) Absorption: drop clauses that are supersets of another
     absorbed = []
-    for c in norm_clauses:
-        if any(other != c and other.issubset(c) for other in norm_clauses):
+    for c in clauses:
+        if any((o != c) and o.issubset(c) for o in clauses):
             continue
         absorbed.append(c)
 
     if not absorbed:
         return []
 
-    # 4. Factor out common predicates across all clauses
-    common = set(absorbed[0]).intersection(*absorbed[1:]) if absorbed else set()
-    if common:
-        reduced = [c - common for c in absorbed]
-        # top-level common ANDs + OR of the reduced
-        if reduced:
-            factored = [list(common)] + [list(clause) for clause in reduced if clause]
-        else:
-            factored = [list(common)]
+    # 4) Factor global common predicates
+    if len(absorbed) > 1:
+        common = set(absorbed[0]).intersection(*absorbed[1:])
     else:
-        factored = [list(clause) for clause in absorbed]
+        common = set(absorbed[0])
 
-    return factored
+    if not common:
+        # No common factor: return clauses as lists of predicates
+        return [list(c) for c in absorbed]
+
+    reduced = [c - common for c in absorbed]
+
+    # If any reduced is empty, OR collapses ⇒ just common
+    if any(len(r) == 0 for r in reduced):
+        return [list(common)]
+
+    # Otherwise build nested structure: [common, reduced_OR]
+    reduced_dnf = [list(r) for r in reduced]
+    return [list(common), reduced_dnf]
 
 
 QUERY_BUILDERS = {
