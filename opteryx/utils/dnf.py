@@ -115,15 +115,16 @@ def simplify_dnf(dnf):
     common = set(absorbed[0]).intersection(*absorbed[1:]) if len(absorbed) > 1 else set(absorbed[0])
 
     if not common:
-        # No common factor: return clauses as lists of predicates
         return [list(c) for c in absorbed]
 
     reduced = [c - common for c in absorbed]
 
-    # If any reduced clause is empty, OR collapses to just the common predicates
     if any(len(r) == 0 for r in reduced):
+        # One clause is exactly the common terms → whole OR collapses to common
         return [list(common)]
 
-    # Otherwise build nested structure: [common, reduced_OR]
-    reduced_dnf = [list(r) for r in reduced]
-    return [list(common), reduced_dnf]
+    # Build factored form: common AND (OR of reduced)
+    return [
+        list(common),
+        [list(r) for r in reduced],  # keep nested, not flattened
+    ]

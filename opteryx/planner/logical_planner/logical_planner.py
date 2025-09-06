@@ -1007,6 +1007,24 @@ def build_expression_tree(relation, dnf_list):
         # This means we a list with a single element, so we unpack it
         dnf_list = dnf_list[0]
 
+    # Detect factored form: [common, [or_clauses]]
+    if (
+        isinstance(dnf_list, list)
+        and len(dnf_list) == 2
+        and isinstance(dnf_list[0], list)
+        and isinstance(dnf_list[1], list)
+        and all(isinstance(c, list) for c in dnf_list[1])
+    ):
+        common_clause, or_clauses = dnf_list
+
+        # Build left side (common AND predicates)
+        left = build_expression_tree(relation, common_clause)
+
+        # Build right side (OR of reduced clauses)
+        right = build_expression_tree(relation, or_clauses)
+
+        return Node(node_type=NodeType.AND, left=left, right=right)
+
     if isinstance(dnf_list[0], list):
         # This means we have a list of lists, so it's a disjunction (OR)
         or_node = None

@@ -238,15 +238,44 @@ TESTS = [
             [("continent","Eq","Europe"), ("country","Eq","UK")],
         ]
     ],
+
+    # 21. Failing "real-world" scenario
+    [
+        [
+            [("missions","AnyOpEq","Apollo 11"), ("alma_mater","AnyOpEq","Purdue University"), ("missions","AnyOpEq","Gemini 8")],
+            [("missions","AnyOpEq","Apollo 13"), ("alma_mater","AnyOpEq","MIT"), ("missions","AnyOpEq","Gemini 8")]
+        ],
+        [
+            [("missions","AnyOpEq","Gemini 8")],
+            [
+                [("missions","AnyOpEq","Apollo 11"), ("alma_mater","AnyOpEq","Purdue University")],
+                [("missions","AnyOpEq","Apollo 13"), ("alma_mater","AnyOpEq","MIT")]
+            ]
+        ]
+    ]
+
 ]
 
 
-def normalize_expressions(expression):
-    # ensure the order of clauses and predicates is predictable
-    return sorted(
-    [sorted(list(clause), key=str) for clause in expression],
-    key=str
-)
+def normalize_expressions(expr):
+    """
+    Recursively normalize expression trees:
+      - Sort predicates within each clause
+      - Sort clauses within OR groups
+      - Sort top-level
+    """
+    if not isinstance(expr, list):
+        return expr  # literal / tuple stays as-is
+
+    # Recursively normalize each element
+    normalized = [normalize_expressions(e) for e in expr]
+
+    # If this looks like a clause (list of predicates = tuples)
+    if all(isinstance(p, tuple) for p in normalized):
+        return sorted(normalized, key=str)
+
+    # Otherwise treat it as an OR/group and sort its members
+    return sorted(normalized, key=str)
 
 @pytest.mark.parametrize("input_expression, expected_output", TESTS)
 def test_filter_simpliciation(input_expression, expected_output):
