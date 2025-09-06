@@ -13,7 +13,6 @@ from libc.stdint cimport uint32_t, uint16_t, uint64_t
 from cpython cimport PyUnicode_AsUTF8String, PyBytes_GET_SIZE
 from cpython.bytes cimport PyBytes_AsString
 
-cdef double GOLDEN_RATIO_APPROX = 1.618033988749895
 cdef uint32_t VECTOR_SIZE = 1024
 
 numpy.import_array()
@@ -138,51 +137,47 @@ cdef dict irregular_lemmas = {
     b'wrote': b'write'
 }
 
-cdef inline uint16_t djb2_hash(const unsigned char* byte_array, uint64_t length) nogil:
-    cdef uint32_t hash_value = 5381
-    cdef uint64_t i = 0
-
-    for i in range(length):
-        hash_value = ((hash_value << 5) + hash_value) + byte_array[i]
-    return <uint16_t>(hash_value & 0xFFFF)
+from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 
-def vectorize(list tokens):
+def vectorize(set tokens) -> numpy.ndarray:
     cdef numpy.ndarray[numpy.uint16_t, ndim=1] vector = numpy.zeros(VECTOR_SIZE, dtype=numpy.uint16)
     cdef uint16_t hash_1
     cdef uint16_t hash_2
+    cdef uint64_t hash_value
     cdef bytes token_bytes
     cdef uint32_t token_size
+    cdef unsigned char* token_ptr
 
     for token_bytes in tokens:
         token_size = PyBytes_GET_SIZE(token_bytes)
         if token_size > 1:
-            hash_1 = djb2_hash(token_bytes, token_size)
-            hash_2 = <uint16_t>((hash_1 * GOLDEN_RATIO_APPROX)) & (VECTOR_SIZE - 1)
+            token_ptr = <unsigned char*>token_bytes
+            hash_value = cy_xxhash3_64(token_ptr, token_size)
+            hash_1 = <uint16_t>hash_value & (VECTOR_SIZE - 1)
+            hash_2 = <uint16_t>(hash_value >> 16) & (VECTOR_SIZE - 1)
 
-            hash_1 = hash_1 & (VECTOR_SIZE - 1)
-            if vector[hash_1] < 65535:
-                vector[hash_1] += 1
-
-            if vector[hash_2] < 65535:
-                vector[hash_2] += 1
+            vector[hash_1] += 1
+            vector[hash_2] += 1
 
     return vector
 
 
-cdef inline bint possible_match(list query_tokens, numpy.uint16_t[:] vector):
+cdef inline bint possible_match(bytes[:] query_tokens, numpy.uint16_t[:] vector):
     cdef uint16_t hash_1, hash_2
+    cdef uint64_t hash_value
     cdef bytes token_bytes
     cdef uint32_t token_size
-    cdef const unsigned char* token_ptr
-    cdef uint16_t mask = VECTOR_SIZE - 1
+    cdef unsigned char* token_ptr
+
     for token_bytes in query_tokens:
         token_size = PyBytes_GET_SIZE(token_bytes)
         if token_size > 1:
-            token_ptr = <const unsigned char*>token_bytes
-            hash_1 = djb2_hash(token_ptr, token_size)
-            hash_2 = <uint16_t>((hash_1 * GOLDEN_RATIO_APPROX)) & mask
-            if vector[hash_1 & mask] == 0 or vector[hash_2] == 0:
+            token_ptr = <unsigned char*>token_bytes
+            hash_value = cy_xxhash3_64(token_ptr, token_size)
+            hash_1 = <uint16_t>hash_value & (VECTOR_SIZE - 1)
+            hash_2 = <uint16_t>(hash_value >> 16) & (VECTOR_SIZE - 1)
+            if vector[hash_1] == 0 or vector[hash_2] == 0:
                 return False  # If either position is zero, the token cannot be present
     return True
 
@@ -277,31 +272,31 @@ cpdef inline bytes lemmatize(char* word, int word_len):
     # Check 'ing' suffix
     if word_len > 5 and strncmp(word + word_len - 3, b"ing", 3) == 0:
         if word[word_len - 4] == word[word_len - 5]:  # Double consonant
-            return word[:word_len - 4]
-        return word[:word_len - 3]
+            return bytes(word[:word_len - 4])
+        return bytes(word[:word_len - 3])
 
     # Check 'ed' suffix
     if word_len > 4 and strncmp(word + word_len - 2, b"ed", 2) == 0:
         if word[word_len - 3] == word[word_len - 4]:
-            return word[:word_len - 3]
-        return word[:word_len - 2]
+            return bytes(word[:word_len - 3])
+        return bytes(word[:word_len - 2])
 
     # Check 'ly' suffix
     if word_len > 5 and strncmp(word + word_len - 2, b"ly", 2) == 0:
         if word[word_len - 3] == word[word_len - 4]:
-            return word[:word_len - 3]
-        return word[:word_len - 2]
+            return bytes(word[:word_len - 3])
+        return bytes(word[:word_len - 2])
 
     # Check 'ation' suffix
     if word_len > 8 and strncmp(word + word_len - 5, b"ation", 5) == 0:
-        return word[:word_len - 5] + b'e'
+        return bytes(word[:word_len - 5]) + b'e'
 
     # Check 'ment' suffix
-    if word_len > 8 and strncmp(word + word_len - 4, b"ation", 4) == 0:
-        return word[:word_len - 4]
+    if word_len > 8 and strncmp(word + word_len - 4, b"ment", 4) == 0:
+        return bytes(word[:word_len - 4])
 
     # Check 's' suffix
     if word_len > 2 and strncmp(word + word_len - 1, b"s", 1) == 0:
-        return word[:word_len - 1]
+        return bytes(word[:word_len - 1])
 
     return word  # Return the original if no suffix matches
