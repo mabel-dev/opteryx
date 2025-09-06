@@ -20,6 +20,7 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
+from opteryx.compiled.list_ops.list_contains_all import list_contains_all
 from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 from opteryx.compiled.list_ops.list_encode_utf8 import list_encode_utf8 as to_blob
 from opteryx.compiled.list_ops.list_length import list_length
@@ -530,7 +531,7 @@ FUNCTIONS = {
     "GET_STRING": (_get_string, "VARCHAR", 1.0),
     "ARRAY_CONTAINS": (_iterate_double_parameter(other_functions.list_contains), "BOOLEAN", 1.0),
     "ARRAY_CONTAINS_ANY": (lambda x, y: list_contains_any(x, set(y[0])), "BOOLEAN", 1.0),
-    "ARRAY_CONTAINS_ALL": (other_functions.list_contains_all, "BOOLEAN", 1.0),
+    "ARRAY_CONTAINS_ALL": (lambda x, y: list_contains_all(x, set(y[0])), "BOOLEAN", 1.0),
     "SEARCH": (other_functions.search, "BOOLEAN", 1.0),
     "COALESCE": (_coalesce, "VARIANT", 1.0),
     "IFNULL": (other_functions.if_null, "VARIANT", 1.0),

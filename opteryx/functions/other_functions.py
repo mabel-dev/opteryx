@@ -24,16 +24,6 @@ def list_contains(array, item):
     return item in set(array)
 
 
-def list_contains_all(array, items):
-    """
-    does array contain all of the items in items
-    """
-    if array is None:
-        return False
-    required_items = set(items[0])  # Convert items[0] to a set once for efficient lookups
-    return [None if a is None else set(a).issuperset(required_items) for a in array]
-
-
 def search(array, item, ignore_case: Optional[List[bool]] = None):
     """
     `search` provides a way to look for values across different field types, rather

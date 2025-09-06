@@ -96,6 +96,7 @@ def build_literal_node(
         datetime.date: OrsoTypes.DATE,
         decimal.Decimal: OrsoTypes.DECIMAL,
         list: OrsoTypes.ARRAY,
+        tuple: OrsoTypes.ARRAY,
     }
 
     value_type = type(value)

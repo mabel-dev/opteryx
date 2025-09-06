@@ -78,13 +78,24 @@ impl Dialect for OpteryxDialect {
                 op: BinaryOperator::MyIntegerDivide,
                 right: Box::new(parser.parse_expr().unwrap()),
             }))
-        // Add support for && (overlap) operator
-        } else if parser.consume_token(&Token::Overlap) {
-            Some(Ok(Expr::BinaryOp {
-                left: Box::new(expr.clone()),
-                op: BinaryOperator::PGOverlap,
-                right: Box::new(parser.parse_expr().unwrap()),
-            }))
+        // Parse `@>>` as "ArrayContainsAll"
+        } else if parser.consume_token(&Token::AtArrow) {
+            // we just consumed @>
+            if parser.consume_token(&Token::Gt) {
+                // Actually saw @>>
+                return Some(Ok(Expr::BinaryOp {
+                    left: Box::new(expr.clone()),
+                    op: BinaryOperator::Custom("ArrayContainsAll".to_string()), // your ALL operator
+                    right: Box::new(parser.parse_expr().unwrap()),
+                }));
+            } else {
+                // Just plain @>
+                return Some(Ok(Expr::BinaryOp {
+                    left: Box::new(expr.clone()),
+                    op: BinaryOperator::AtArrow,
+                    right: Box::new(parser.parse_expr().unwrap()),
+                }));
+            }
         } else {
             None
         }
