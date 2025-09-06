@@ -140,7 +140,7 @@ cdef dict irregular_lemmas = {
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 
-def vectorize(bytes[:] tokens) -> numpy.ndarray:
+def vectorize(set tokens) -> numpy.ndarray:
     cdef numpy.ndarray[numpy.uint16_t, ndim=1] vector = numpy.zeros(VECTOR_SIZE, dtype=numpy.uint16)
     cdef uint16_t hash_1
     cdef uint16_t hash_2

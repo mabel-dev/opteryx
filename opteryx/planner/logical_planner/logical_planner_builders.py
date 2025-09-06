@@ -636,7 +636,6 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
 def match_against(branch, alias: Optional[List[str]] = None, key=None):
     columns = [identifier(col["Identifier"]) for col in branch["columns"][0]]
     match_to = build(branch["match_value"])
-    mode = branch["opt_search_modifier"]
 
     return Node(
         NodeType.FUNCTION,
