@@ -1154,7 +1154,7 @@ id > /* 0 */ 1
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
         ("SELECT $satellites.name, $planets.name from $planets LEFT JOIN $satellites USING (id) WHERE $planets.name != 'Earth'", 8, 2, None),
 
-        ("SELECT * FROM $missions WHERE COSINE_SIMILARITY(Location, 'LC-18A, Cape Canaveral AFS, Florida, USA') > 0.7", 658, 8, None),
+        ("SELECT * FROM $missions WHERE COSINE_SIMILARITY(Location, 'LC-18A, Cape Canaveral AFS, Florida, USA') > 0.7", 666, 8, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
