@@ -997,6 +997,121 @@ def plan_show_create_query(statement, **kwargs):
     return plan
 
 
+def build_expression_tree(relation, dnf_list):
+    """
+    Recursively build an expression tree from a DNF list structure.
+    The DNF list consists of ORs of ANDs of simple predicates.
+    """
+    while isinstance(dnf_list, list) and len(dnf_list) == 1 and isinstance(dnf_list[0], list):
+        # This means we a list with a single element, so we unpack it
+        dnf_list = dnf_list[0]
+
+    if isinstance(dnf_list[0], list):
+        # This means we have a list of lists, so it's a disjunction (OR)
+        or_node = None
+        for conjunction in dnf_list:
+            and_node = None
+            for predicate in conjunction:
+                while isinstance(predicate, list):
+                    # This means we a list with a single element, so we unpack it
+                    predicate = predicate[0]
+
+                # Unpack the predicate (assume it comes as [identifier, operator, value])
+                identifier, operator, value = predicate
+                comparison_node = Node(
+                    node_type=NodeType.COMPARISON_OPERATOR,
+                    value=operator,
+                    left=LogicalColumn(
+                        NodeType.IDENTIFIER, source_column=identifier, source=relation
+                    ),
+                    right=build_literal_node(value),
+                )
+                if operator.startswith("AnyOp"):
+                    comparison_node.left, comparison_node.right = (
+                        comparison_node.right,
+                        comparison_node.left,
+                    )
+                if and_node is None:
+                    and_node = comparison_node
+                else:
+                    # Build a new AND node
+                    and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
+            if or_node is None:
+                or_node = and_node
+            else:
+                # Build a new OR node
+                or_node = Node(node_type=NodeType.OR, left=or_node, right=and_node)
+        return or_node
+    else:
+        # Single conjunction (list of predicates)
+        and_node = None
+        for predicate in dnf_list:
+            while isinstance(predicate, list):
+                # This means we a list with a single element, so we unpack it
+                predicate = predicate[0]
+
+            identifier, operator, value = predicate
+            # we have special handling for True and False literals in the place of identifiers
+            if identifier is True or identifier is False:
+                left_node = build_literal_node(identifier)
+            else:
+                left_node = LogicalColumn(
+                    NodeType.IDENTIFIER, source_column=identifier, source=relation
+                )
+            comparison_node = Node(
+                node_type=NodeType.COMPARISON_OPERATOR,
+                value=operator,
+                left=left_node,
+                right=build_literal_node(value),
+            )
+            if operator.startswith("AnyOp"):
+                comparison_node.left, comparison_node.right = (
+                    comparison_node.right,
+                    comparison_node.left,
+                )
+            if and_node is None:
+                and_node = comparison_node
+            else:
+                # Build a new AND node
+                and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
+        return and_node
+
+
+def simply_simplify_dnf(dnf):
+    if not dnf:
+        return []
+
+    # 1. Dedup predicates inside each clause (use frozenset)
+    norm_clauses = [frozenset(clause) for clause in dnf]
+
+    # 2. Dedup identical clauses
+    norm_clauses = list(set(norm_clauses))
+
+    # 3. Absorption (drop supersets)
+    absorbed = []
+    for c in norm_clauses:
+        if any(other != c and other.issubset(c) for other in norm_clauses):
+            continue
+        absorbed.append(c)
+
+    if not absorbed:
+        return []
+
+    # 4. Factor out common predicates across all clauses
+    common = set(absorbed[0]).intersection(*absorbed[1:]) if absorbed else set()
+    if common:
+        reduced = [c - common for c in absorbed]
+        # top-level common ANDs + OR of the reduced
+        if reduced:
+            factored = [list(common)] + [list(clause) for clause in reduced if clause]
+        else:
+            factored = [list(common)]
+    else:
+        factored = [list(clause) for clause in absorbed]
+
+    return factored
+
+
 QUERY_BUILDERS = {
     # "Analyze": analyze_query,
     "Execute": plan_execute_query,
@@ -1015,87 +1130,6 @@ QUERY_BUILDERS = {
 def apply_visibility_filters(
     logical_plan: LogicalPlan, visibility_filters: dict, statistics
 ) -> LogicalPlan:
-    def build_expression_tree(relation, dnf_list):
-        """
-        Recursively build an expression tree from a DNF list structure.
-        The DNF list consists of ORs of ANDs of simple predicates.
-        """
-        while isinstance(dnf_list, list) and len(dnf_list) == 1 and isinstance(dnf_list[0], list):
-            # This means we a list with a single element, so we unpack it
-            dnf_list = dnf_list[0]
-
-        if isinstance(dnf_list[0], list):
-            # This means we have a list of lists, so it's a disjunction (OR)
-            or_node = None
-            for conjunction in dnf_list:
-                and_node = None
-                for predicate in conjunction:
-                    while isinstance(predicate, list):
-                        # This means we a list with a single element, so we unpack it
-                        predicate = predicate[0]
-
-                    # Unpack the predicate (assume it comes as [identifier, operator, value])
-                    identifier, operator, value = predicate
-                    comparison_node = Node(
-                        node_type=NodeType.COMPARISON_OPERATOR,
-                        value=operator,
-                        left=LogicalColumn(
-                            NodeType.IDENTIFIER, source_column=identifier, source=relation
-                        ),
-                        right=build_literal_node(value),
-                    )
-                    if operator.startswith("AnyOp"):
-                        comparison_node.left, comparison_node.right = (
-                            comparison_node.right,
-                            comparison_node.left,
-                        )
-                    if and_node is None:
-                        and_node = comparison_node
-                    else:
-                        # Build a new AND node
-                        and_node = Node(
-                            node_type=NodeType.AND, left=and_node, right=comparison_node
-                        )
-                if or_node is None:
-                    or_node = and_node
-                else:
-                    # Build a new OR node
-                    or_node = Node(node_type=NodeType.OR, left=or_node, right=and_node)
-            return or_node
-        else:
-            # Single conjunction (list of predicates)
-            and_node = None
-            for predicate in dnf_list:
-                while isinstance(predicate, list):
-                    # This means we a list with a single element, so we unpack it
-                    predicate = predicate[0]
-
-                identifier, operator, value = predicate
-                # we have special handling for True and False literals in the place of identifiers
-                if identifier is True or identifier is False:
-                    left_node = build_literal_node(identifier)
-                else:
-                    left_node = LogicalColumn(
-                        NodeType.IDENTIFIER, source_column=identifier, source=relation
-                    )
-                comparison_node = Node(
-                    node_type=NodeType.COMPARISON_OPERATOR,
-                    value=operator,
-                    left=left_node,
-                    right=build_literal_node(value),
-                )
-                if operator.startswith("AnyOp"):
-                    comparison_node.left, comparison_node.right = (
-                        comparison_node.right,
-                        comparison_node.left,
-                    )
-                if and_node is None:
-                    and_node = comparison_node
-                else:
-                    # Build a new AND node
-                    and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
-            return and_node
-
     for nid, node in list(logical_plan.nodes(True)):
         if node.node_type == LogicalPlanStepType.Scan:
             filter_dnf = visibility_filters.get(node.relation)
@@ -1118,6 +1152,9 @@ def apply_visibility_filters(
                 logical_plan.insert_node_after(random_string(), filter_node, nid)
                 statistics.visibility_filters_blank_condition_added += 1
             if filter_dnf:
+                # Do some basic simplification early, less binding etc to do if we can
+                # eliminate some elements from the tree now
+                filter_dnf = simply_simplify_dnf(filter_dnf)
                 # Apply the transformation from DNF to an expression tree
                 expression_tree = build_expression_tree(node.alias, filter_dnf)
 
