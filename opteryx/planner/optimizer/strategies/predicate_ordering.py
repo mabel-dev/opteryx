@@ -21,6 +21,7 @@ been run if this strategy didn't run.
 - How to handle complex sub conditions or ORed conditions
 """
 
+from orso.schema import ConstantColumn
 from orso.tools import random_string
 
 # pragma: no cover
@@ -56,6 +57,83 @@ BASIC_COMPARISON_COSTS = {
     OrsoTypes._MISSING_TYPE: 10.00,  # for completeness
     0: 10.00,  # for completeness
 }
+
+
+def rewrite_anded_any_eq_to_contains_all(predicate, statistics):
+    """
+    Rewrite multiple AND'ed ANYOPEQ conditions on the same column into a single ArrayContainsAll (@>>) condition.
+
+    Example:
+      'a' = ANY(z) AND 'b' = ANY(z) AND 'c' = ANY(z)
+      -->  z @>> ('a','b','c')     # BinaryOperator::Custom("ArrayContainsAll")
+
+    Notes:
+      - We only match: LITERAL = ANY(IDENTIFIER)
+      - We group by the SAME column identity
+      - Remaining AND nodes are neutralized to TRUE (since X AND TRUE == X)
+    """
+    anyeq_by_col = {}
+
+    def collect_any_eq_and(node, grouped):
+        # Only collect beneath ANDs (like your OR rewrite only walks ORs)
+        if node.node_type == NodeType.DNF:
+            for param in node.parameters:
+                if param.node_type == NodeType.COMPARISON_OPERATOR and param.value == "AnyOpEq":
+                    # literal = ANY(identifier)
+                    if (
+                        param.left.node_type == NodeType.LITERAL
+                        and param.right.node_type == NodeType.IDENTIFIER
+                    ):
+                        col_id = param.right.schema_column.identity
+                        if col_id not in grouped:
+                            grouped[col_id] = {
+                                "values": [],
+                                "nodes": [],
+                                "column_node": param.right,
+                            }
+                        grouped[col_id]["values"].append(param.left.value)
+                        grouped[col_id]["nodes"].append(param)
+
+    collect_any_eq_and(predicate, anyeq_by_col)
+
+    for data in anyeq_by_col.values():
+        # Only worth rewriting if we have 2+ literals against the same array column
+        if len(data["values"]) > 1:
+            # optional: new counter; rename if you already have a metric for this
+            if hasattr(statistics, "optimization_predicate_rewriter_anyeq_to_contains_all"):
+                statistics.optimization_predicate_rewriter_anyeq_to_contains_all += 1
+
+            # Reuse the first matched node as the replacement site
+            new_node = data["nodes"][0]
+
+            # Build right-hand side as an ARRAY constant of unique values
+            # (use a set to dedupe; order doesn't matter)
+            values_set = set(data["values"])
+            new_node.left.value = values_set
+            new_node.left.element_type = new_node.left.type
+            new_node.left.type = OrsoTypes.ARRAY
+            new_node.left.schema_column = ConstantColumn(
+                name=new_node.left.name,
+                type=OrsoTypes.ARRAY,
+                element_type=new_node.left.element_type,
+                value=new_node.left.value,
+            )
+
+            # Turn node into: column @>> ARRAY[...]
+            new_node.value = "ArrayContainsAll"  # your @>> operator
+            new_node.node_type = NodeType.COMPARISON_OPERATOR
+            new_node.right = data["column_node"]
+
+            # Swap so LHS is the column (array), RHS is the values array
+            new_node.left, new_node.right = new_node.right, new_node.left
+
+            # Neutralize the remaining AND'ed ANYOPEQ nodes to TRUE
+            for node in data["nodes"][1:]:
+                node.node_type = NodeType.LITERAL
+                node.type = OrsoTypes.BOOLEAN
+                node.value = True
+
+    return predicate
 
 
 def order_predicates(predicates: list, statistics) -> list:
@@ -116,6 +194,10 @@ class PredicateOrderingStrategy(OptimizationStrategy):
                 new_node.all_relations.update(predicate.all_relations)
                 self.statistics.optimization_flatten_filters += 1
                 context.optimized_plan.remove_node(predicate.nid, heal=True)
+
+            new_node.condition = rewrite_anded_any_eq_to_contains_all(
+                new_node.condition, self.statistics
+            )
 
             context.optimized_plan.insert_node_after(random_string(), new_node, context.node_id)
             context.collected_predicates.clear()

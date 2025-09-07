@@ -317,11 +317,11 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "ArrayContainsAll":
         from opteryx.compiled.list_ops.list_contains_all import list_contains_all
 
-        if hasattr(arr, "to_pylist"):
-            arr = arr.to_pylist()
-        if hasattr(value, "to_numpy"):
-            value = value.to_numpy(zero_copy_only=False)
+        if hasattr(value, "to_pylist"):
+            value = value.to_pylist()
+        if hasattr(arr, "to_numpy"):
+            arr = arr.to_numpy(zero_copy_only=False)
 
-        return list_contains_all(value, set(arr[0]))
+        return list_contains_all(arr, set(value))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

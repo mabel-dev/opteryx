@@ -37,6 +37,9 @@ x = 'a' OR x = 'b' OR x = 'c'               → x IN ('a', 'b', 'c') (for ORed E
 a = ANY(z) OR b = ANY(z) OR c = ANY(z)      → (a, b, c) @> z
 ENDS_WITH(x, pattern)                       → x LIKE '%pattern'
 STARTS_WITH(x, pattern)                     → x LIKE 'pattern%'
+
+#### IN THE PREDICATE ORDERING STRATEGY∂
+a = ANY(z) AND b = ANY(z) AND c = ANY(z)    → z @>> (a, b, c)
 """
 
 import re
