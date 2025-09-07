@@ -9,11 +9,11 @@
 
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint64_t
 
 
 cdef class HashTable:
-    cdef public unordered_map[int64_t, vector[int64_t]] hash_table
+    cdef public unordered_map[uint64_t, vector[int64_t]] hash_table
 
-    cpdef bint insert(self, int64_t key, int64_t row_id)
-    cpdef vector[int64_t] get(self, int64_t key)
+    cpdef bint insert(self, uint64_t key, int64_t row_id)
+    cpdef vector[int64_t] get(self, uint64_t key)

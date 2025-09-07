@@ -21,12 +21,11 @@ import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.joins.inner_join import build_side_hash_map
+from opteryx.compiled.joins.outer_join import probe_side_hash_map
 from opteryx.compiled.joins.outer_join import right_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable
-from opteryx.compiled.table_ops.hash_ops import compute_hashes
-from opteryx.compiled.table_ops.null_avoidant_ops import non_null_indices
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
 
@@ -41,11 +40,13 @@ def left_join(
     left_columns: List[str],
     right_columns: List[str],
     filter_index,
-    left_hash,  # Cython HashTable
+    left_hash,
 ):
     """
     Perform a LEFT OUTER JOIN using a prebuilt hash map and optional filter.
-    Yields pyarrow.Table chunks of the joined result.
+
+    Yields:
+        pyarrow.Table chunks of the joined result.
     """
 
     left_indexes = IntBuffer()
@@ -53,10 +54,14 @@ def left_join(
     seen_flags = array("b", [0]) * left_relation.num_rows
 
     if filter_index:
+        # We can just dispose of rows from the right relation that don't match
+        # our bloom filter
         possibly_matching_rows = filter_index.possibly_contains_many(right_relation, right_columns)
         right_relation = right_relation.filter(possibly_matching_rows)
 
+        # If there's no matching rows in the right relation, we can exit early
         if right_relation.num_rows == 0:
+            # Short circuit: no matching right rows at all
             for i in range(0, left_relation.num_rows, CHUNK_SIZE):
                 chunk = list(range(i, min(i + CHUNK_SIZE, left_relation.num_rows)))
                 yield align_tables(
@@ -67,20 +72,19 @@ def left_join(
                 )
             return
 
-    right_hashes = compute_hashes(right_relation, right_columns)
-    non_null_rows = non_null_indices(right_relation, right_columns)
+    # Build the hash table of the right relation
+    right_hash = probe_side_hash_map(right_relation, right_columns)
 
-    for right_idx in non_null_rows:
-        row_hash = right_hashes[right_idx]
-        left_rows = left_hash.get(row_hash)
+    for h, right_rows in right_hash.hash_table.items():
+        left_rows = left_hash.get(h)
         if not left_rows:
             continue
-
         for l in left_rows:
             seen_flags[l] = 1
-            right_indexes.append(right_idx)
-        left_indexes.extend(left_rows)
+            left_indexes.extend([l] * len(right_rows))
+            right_indexes.extend(right_rows)
 
+    # Yield matching rows
     if left_indexes.size() > 0:
         yield align_tables(
             right_relation,
@@ -89,14 +93,22 @@ def left_join(
             left_indexes.to_numpy(),
         )
 
+    # Emit unmatched left rows using null-filled right columns
     unmatched = [i for i, seen in enumerate(seen_flags) if not seen]
+
     if unmatched:
         unmatched_left = left_relation.take(pyarrow.array(unmatched))
+        # Create a right-side table with zero rows, we do this because
+        # we want arrow to do the heavy lifting of adding new columns to
+        # the left relation, we do not want to add rows to the left
+        # relation - arrow is faster at adding null columns that we can be.
         null_right = pyarrow.table(
             [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
             schema=right_relation.schema,
         )
         yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
+
+    return
 
 
 def full_join(
@@ -105,14 +117,14 @@ def full_join(
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
-        hash_table.insert(hash(value_tuple), i)
+        hash_table.insert(abs(hash(value_tuple)), i)
 
     left_indexes = []
     right_indexes = []
 
     left_values = left_relation.select(left_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*left_values)):
-        rows = hash_table.get(hash(value_tuple))
+        rows = hash_table.get(abs(hash(value_tuple)))
         if rows:
             right_indexes.extend(rows)
             left_indexes.extend([i] * len(rows))
