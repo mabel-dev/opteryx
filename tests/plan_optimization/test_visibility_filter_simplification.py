@@ -253,6 +253,24 @@ TESTS = [
                 [("missions","AnyOpEq","Apollo 13"), ("alma_mater","AnyOpEq","MIT")]
             ]
         ]
+    ],
+
+    # 22
+    [
+        [[[("name","Eq","Earth")], [[[("id","Eq",3)] , [("id","Eq",4)]]]]],
+        [
+            [("name","Eq","Earth")],
+            [[("id","Eq",3)], [("id","Eq",4)]]
+        ]
+    ],
+
+    # 23
+    [
+        [[[[('name', 'Eq', 'Earth')], ('id', 'Eq', 4)]], [('id', 'Gt', 7)]],
+        [
+            [('name','Eq','Earth'), ('id','Eq',4)],
+            [('id','Gt',7)]
+        ]
     ]
 
 ]
@@ -264,14 +282,9 @@ def normalize_expressions(expr):
     """
     if not isinstance(expr, list):
         return expr  # tuple/literal unchanged
+    
+    return sorted([normalize_expressions(e) for e in expr], key=str)
 
-
-    # Mixed/irregular nesting: normalize each element
-    r = sorted([normalize_expressions(e) for e in expr], key=str)
-    print(expr)
-    print(r)
-    print()
-    return r
 
 @pytest.mark.parametrize("input_expression, expected_output", TESTS)
 def test_filter_simpliciation(input_expression, expected_output):
