@@ -9,6 +9,7 @@ Converts the AST to a logical query plan.
 The plan does not try to be efficient or clever, at this point it is only trying to be correct.
 """
 
+import time
 from enum import Enum
 from enum import auto
 from typing import List
@@ -1138,7 +1139,9 @@ def apply_visibility_filters(
             if filter_dnf:
                 # Do some basic simplification early, less binding etc to do if we can
                 # eliminate some elements from the tree now
+                start = time.monotonic_ns()
                 filter_dnf = dnf.simplify_dnf(filter_dnf)
+                statistics.time_rewriting_visibility_filters += time.monotonic_ns() - start
                 # Apply the transformation from DNF to an expression tree
                 expression_tree = build_expression_tree(node.alias, filter_dnf)
 
