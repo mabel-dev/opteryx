@@ -17,6 +17,9 @@ Functions:
     - simplify_dnf: Deduplicate, absorb, and factor DNF clauses for efficient evaluation.
 """
 
+from collections import Counter
+from collections import defaultdict
+
 
 def normalise_predicate(p):
     """
@@ -68,6 +71,103 @@ def normalise_dnf(dnf):
     return normalised
 
 
+def _pred_key(p):
+    # Deterministic ordering for predicates (col, op, val)
+    return (p[0], p[1], str(p[2]))
+
+
+def factor_clauses(clauses):
+    """
+    Greedy factoring with deterministic ties:
+      - Count predicate frequencies across clauses
+      - Find max frequency
+      - Group max-frequency predicates by their support set (indices of clauses they appear in)
+      - If any support-set group has size > 1, factor that whole group together
+      - Else factor a single predicate deterministically
+    Input:  list[frozenset]   (each frozenset = a clause)
+    Output: nested list structure
+      - flat: [list_of_predicates] for a clause
+      - factored: [ list(common_preds), [with_branch, without_branch] ]
+    """
+    if not clauses:
+        return []
+
+    # If all clauses are empty (shouldn't happen post-absorption), return []
+    if all(len(c) == 0 for c in clauses):
+        return []
+
+    # Frequency & support sets
+    counts = Counter(p for c in clauses for p in c)
+
+    # If nothing repeats, just return flat
+    max_freq = max(counts.values())
+    if max_freq <= 1:
+        return [sorted(list(c), key=_pred_key) for c in clauses]
+
+    # Build support sets (clause index membership) for each predicate
+    support = defaultdict(set)  # pred -> set(indices)
+    for i, c in enumerate(clauses):
+        for p in c:
+            support[p].add(i)
+
+    # Consider only max-frequency predicates
+    max_preds = [p for p, cnt in counts.items() if cnt == max_freq]
+
+    # Group by identical support set
+    groups_by_support = defaultdict(list)  # frozenset(indices) -> list[preds]
+    for p in max_preds:
+        groups_by_support[frozenset(support[p])].append(p)
+
+    # Choose the best group: largest number of predicates; deterministic tiebreak on predicate keys
+    best_sig, best_group = None, None
+    for sig, preds in groups_by_support.items():
+        preds_sorted = sorted(preds, key=_pred_key)
+        if best_group is None:
+            best_sig, best_group = sig, preds_sorted
+        else:
+            # prefer larger groups; then lexicographically smaller predicate list
+            if len(preds_sorted) > len(best_group) or (
+                len(preds_sorted) == len(best_group) and preds_sorted < best_group
+            ):
+                best_sig, best_group = sig, preds_sorted
+
+    # If the best group is only a single predicate, we still get determinism,
+    # but we didn't get multi-predicate factoring. That's fine.
+    preds_to_factor = set(best_group)
+
+    # Split clauses into with/without (w.r.t. the chosen support signature)
+    # best_sig are exactly the clause indices containing ALL preds in preds_to_factor
+    with_indices = set(best_sig)
+    with_clauses = [clauses[i] for i in sorted(with_indices)]
+    without_clauses = [c for i, c in enumerate(clauses) if i not in with_indices]
+
+    # Reduce the 'with' clauses by removing the factored predicates
+    reduced_with = [c - preds_to_factor for c in with_clauses]
+
+    # If any reduced clause becomes empty -> (∧preds_to_factor) AND (True OR …) == ∧preds_to_factor
+    if reduced_with:
+        if all(len(c) == 0 for c in reduced_with):
+            return [sorted(list(preds_to_factor), key=_pred_key)]
+        factored_with = factor_clauses([c for c in reduced_with if c])
+    else:
+        factored_with = []
+
+    # Handle without branch
+    factored_without = factor_clauses(without_clauses) if without_clauses else []
+
+    common_block = sorted(list(preds_to_factor), key=_pred_key)
+
+    result = []
+    if factored_with:
+        result.append([common_block, factored_with])
+    if factored_without:
+        result.extend(factored_without)
+
+    if isinstance(result, list) and len(result) == 1 and isinstance(result[0], list):
+        return result[0]
+    return result
+
+
 def simplify_dnf(dnf):
     """
     Simplify a DNF (Disjunctive Normal Form) filter expression.
@@ -111,20 +211,5 @@ def simplify_dnf(dnf):
         return []
 
     # 4) Factor global common predicates
-    # Find predicates common to all clauses (ternary for conciseness)
-    common = set(absorbed[0]).intersection(*absorbed[1:]) if len(absorbed) > 1 else set(absorbed[0])
-
-    if not common:
-        return [list(c) for c in absorbed]
-
-    reduced = [c - common for c in absorbed]
-
-    if any(len(r) == 0 for r in reduced):
-        # One clause is exactly the common terms → whole OR collapses to common
-        return [list(common)]
-
-    # Build factored form: common AND (OR of reduced)
-    return [
-        list(common),
-        [list(r) for r in reduced],  # keep nested, not flattened
-    ]
+    factored = factor_clauses(absorbed)
+    return factored

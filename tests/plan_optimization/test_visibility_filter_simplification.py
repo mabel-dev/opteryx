@@ -81,6 +81,7 @@ TESTS = [
     ],
 
     # 9. Larger clauses with factorization
+    # this isn't the final form, just an intermediate step
     [
         [
             [("id", "Eq", 4), ("name", "Eq", "Earth"), ("type", "Eq", "Planet")],
@@ -114,11 +115,7 @@ TESTS = [
         ],
         [
             [("name","Eq","Earth"), ("type","Eq","Planet")],
-            [
-                [("id","Eq",1)],
-                [("id","Eq",2)],
-                [("id","Eq",3)]
-            ]
+            [[("id","Eq",1)], [("id","Eq",2)], [("id","Eq",3)]]
         ]
     ],
 
@@ -151,9 +148,13 @@ TESTS = [
             [("id","Eq",2), ("name","Eq","Earth")],
         ],
         [
-            [("id","Eq",1), ("name","Eq","Earth")],
-            [("id","Eq",1), ("type","Eq","Planet")],
-            [("id","Eq",2), ("name","Eq","Earth")],
+            [
+                [("id","Eq",1)], [
+                    [("name","Eq","Earth")],
+                    [("type","Eq","Planet")]
+                ]
+                ],
+            [("id","Eq",2), ("name","Eq","Earth")]
         ]
     ],
 
@@ -259,23 +260,18 @@ TESTS = [
 
 def normalize_expressions(expr):
     """
-    Recursively normalize expression trees:
-      - Sort predicates within each clause
-      - Sort clauses within OR groups
-      - Sort top-level
+    Recursively normalize expression trees into a canonical
     """
     if not isinstance(expr, list):
-        return expr  # literal / tuple stays as-is
+        return expr  # tuple/literal unchanged
 
-    # Recursively normalize each element
-    normalized = [normalize_expressions(e) for e in expr]
 
-    # If this looks like a clause (list of predicates = tuples)
-    if all(isinstance(p, tuple) for p in normalized):
-        return sorted(normalized, key=str)
-
-    # Otherwise treat it as an OR/group and sort its members
-    return sorted(normalized, key=str)
+    # Mixed/irregular nesting: normalize each element
+    r = sorted([normalize_expressions(e) for e in expr], key=str)
+    print(expr)
+    print(r)
+    print()
+    return r
 
 @pytest.mark.parametrize("input_expression, expected_output", TESTS)
 def test_filter_simpliciation(input_expression, expected_output):
@@ -285,7 +281,7 @@ def test_filter_simpliciation(input_expression, expected_output):
     output = normalize_expressions(output)
     expected_output = normalize_expressions(expected_output)
 
-    assert output == expected_output, f"{expected_output} != {output}"
+    assert output == expected_output, f"{output} != {expected_output}"
 
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} FILTER SIMPLIFICATION TESTS")
