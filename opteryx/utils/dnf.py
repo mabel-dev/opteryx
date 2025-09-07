@@ -43,32 +43,144 @@ def normalise_predicate(p):
 
 def normalise_dnf(dnf):
     """
-    Force filters into canonical Disjunctive Normal Form (DNF): [[predicates], ...].
-    Ensures each clause is a list of (col, op, val) tuples, and the DNF is a list of such clauses.
-    Handles redundant nesting and single flat clauses.
+    Normalize an arbitrary nested DNF-like structure into *flat DNF*:
+      - returns a list of clauses, where each clause is a list of (col, op, val) tuples
+      - correctly preserves OR-groups by distributing AND over OR
+      - does NOT perform absorption/factoring; that's done later
+
+    Accepted shapes (examples):
+      - [(a), (b)]                         -> AND clause
+      - [[(a)], [(b)]]                     -> OR group
+      - [[(a)], [[(b)], [(c)]]]            -> a AND (b OR c)  --> expands to [(a,b), (a,c)]
+      - [ [(a),(b)],  [(a),(c)] ]          -> already flat DNF (two clauses)
+      - [ [common], [ [res1], [res2] ] ]   -> factored form (handled by distribution)
     """
-    if not dnf:
+
+    def is_predicate(x):
+        return isinstance(x, tuple) and len(x) == 3
+
+    def as_predicates(clause_like):
+        # Flatten nested/padded lists inside a clause and return list of (col,op,val) tuples
+        preds = []
+        for p in clause_like:
+            preds.extend(normalise_predicate(p))
+        return preds
+
+    def is_clause(x):
+        # A clause is a list of predicates (tuples)
+        return isinstance(x, list) and len(x) > 0 and all(is_predicate(p) for p in x)
+
+    def is_or_group(x):
+        return (
+            isinstance(x, list)
+            and len(x) > 0
+            and all(isinstance(c, list) for c in x)  # still must be lists
+            and any((all(is_predicate(p) for p in c)) for c in x if isinstance(c, list))
+        )
+
+    def is_factored_form(x):
+        return (
+            isinstance(x, list)
+            and len(x) == 2
+            and isinstance(x[0], list)
+            and isinstance(x[1], list)
+            and all(isinstance(c, list) for c in x[1])
+        )
+
+    def unwrap(expr):
+        """Recursively strip redundant single-element wrappers at any depth."""
+        # Peel this level
+        while isinstance(expr, list) and len(expr) == 1 and isinstance(expr[0], list):
+            expr = expr[0]
+
+        # Recurse into children if it's still a list
+        if isinstance(expr, list):
+            return [unwrap(e) for e in expr]
+        return expr
+
+    def expand(expr):
+        """
+        Expand to flat DNF: returns List[List[predicate_tuple]]
+        """
+        # Base: a single predicate
+        if is_predicate(expr):
+            return [[expr]]
+
+        # Base: a single clause (AND of predicates)
+        if is_clause(expr):
+            preds = as_predicates(expr)
+            return [preds] if preds else []
+
+        if is_factored_form(expr):
+            common, or_group = expr
+            common_preds = as_predicates(common)
+            clauses = []
+            for alt in or_group:
+                for expanded in expand(alt):
+                    clauses.append(common_preds + expanded)
+            return clauses
+
+        # Base: an OR group (list of clauses)
+        if is_or_group(expr):
+            clauses = []
+            for c in expr:
+                # each c is already a clause; normalize it
+                clauses.extend(expand(c))  # expand(c) returns [list_of_preds]
+            return clauses
+
+        # General list: treat as AND of sub-expressions -> distribute across ORs
+        if isinstance(expr, list):
+            parts = [expand(sub) for sub in expr]  # each part is a list of clauses
+            # Remove empty parts (they contribute nothing)
+            parts = [p for p in parts if p]
+
+            # If nothing left, no clauses
+            if not parts:
+                return []
+
+            # Cross-product (AND across OR alternatives)
+            acc = [[]]
+            for part in parts:
+                new_acc = []
+                for left in acc:
+                    for right in part:
+                        new_acc.append(left + right)
+                acc = new_acc
+            return acc
+
+        # Unknown shape -> no clauses
         return []
 
-    normalised = []
+    unwrapped = unwrap(dnf)
 
-    # Case: single clause written flat, e.g. [(a, '=', 1), (b, '>', 2)]
-    if all(isinstance(p, tuple) and len(p) == 3 for p in dnf):
-        dnf = [dnf]
+    # Expand to flat DNF
+    flat = expand(unwrapped)
 
-    for clause in dnf:
-        # Unwrap redundant nesting like [[[...]]]
-        while isinstance(clause, list) and len(clause) == 1 and isinstance(clause[0], list):
-            clause = clause[0]
+    # Normalize each clause: dedup predicates within a clause; keep deterministic order
+    norm = []
+    for clause in flat:
+        seen = set()
+        clean = []
+        for col, op, val in clause:
+            if isinstance(val, list):
+                val = tuple(val)
+            key = (col, op, val)
+            if key not in seen:
+                seen.add(key)
+                clean.append((col, op, val))
+        if clean:
+            norm.append(sorted(clean, key=_pred_key))
 
-        preds = []
-        for p in clause:
-            preds.extend(normalise_predicate(p))
+    # Deduplicate identical clauses
+    out = []
+    seen_clauses = set()
+    for cl in norm:
+        t = tuple(cl)
+        if t not in seen_clauses:
+            seen_clauses.add(t)
+            out.append(cl)
 
-        if preds:  # only add non-empty clauses
-            normalised.append(preds)
-
-    return normalised
+    return out
 
 
 def _pred_key(p):

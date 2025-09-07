@@ -1001,14 +1001,19 @@ def plan_show_create_query(statement, **kwargs):
 
 def build_expression_tree(relation, dnf_list):
     """
-    Recursively build an expression tree from a DNF list structure.
-    The DNF list consists of ORs of ANDs of simple predicates.
+    Recursively build an expression tree from a DNF-like list structure.
+    The structure can include:
+      - Flat clauses (list of tuples) -> AND of predicates
+      - OR groups (list of clauses) -> OR of them
+      - Mixed (some tuples, some nested lists) -> AND between flat predicates and subgroup
+      - Factored form [common, [or_clauses]] -> (common AND (OR ...))
     """
+
+    # Unwrap redundant single nesting
     while isinstance(dnf_list, list) and len(dnf_list) == 1 and isinstance(dnf_list[0], list):
-        # This means we a list with a single element, so we unpack it
         dnf_list = dnf_list[0]
 
-    # Detect factored form: [common, [or_clauses]]
+    # --- Case: Factored form [common_clause, [or_clauses]] ---
     if (
         isinstance(dnf_list, list)
         and len(dnf_list) == 2
@@ -1017,61 +1022,14 @@ def build_expression_tree(relation, dnf_list):
         and all(isinstance(c, list) for c in dnf_list[1])
     ):
         common_clause, or_clauses = dnf_list
-
-        # Build left side (common AND predicates)
         left = build_expression_tree(relation, common_clause)
-
-        # Build right side (OR of reduced clauses)
         right = build_expression_tree(relation, or_clauses)
-
         return Node(node_type=NodeType.AND, left=left, right=right)
 
-    if isinstance(dnf_list, list) and len(dnf_list) > 0 and isinstance(dnf_list[0], list):
-        # This means we have a list of lists, so it's a disjunction (OR)
-        or_node = None
-        for conjunction in dnf_list:
-            and_node = None
-            for predicate in conjunction:
-                while isinstance(predicate, list):
-                    # This means we a list with a single element, so we unpack it
-                    predicate = predicate[0]
-
-                # Unpack the predicate (assume it comes as [identifier, operator, value])
-                identifier, operator, value = predicate
-                comparison_node = Node(
-                    node_type=NodeType.COMPARISON_OPERATOR,
-                    value=operator,
-                    left=LogicalColumn(
-                        NodeType.IDENTIFIER, source_column=identifier, source=relation
-                    ),
-                    right=build_literal_node(value),
-                )
-                if operator.startswith("AnyOp"):
-                    comparison_node.left, comparison_node.right = (
-                        comparison_node.right,
-                        comparison_node.left,
-                    )
-                if and_node is None:
-                    and_node = comparison_node
-                else:
-                    # Build a new AND node
-                    and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
-            if or_node is None:
-                or_node = and_node
-            else:
-                # Build a new OR node
-                or_node = Node(node_type=NodeType.OR, left=or_node, right=and_node)
-        return or_node
-    else:
-        # Single conjunction (list of predicates) (AND)
+    # --- Case: flat clause (AND of tuples) ---
+    if all(isinstance(x, tuple) for x in dnf_list):
         and_node = None
-        for predicate in dnf_list:
-            while isinstance(predicate, list):
-                # This means we a list with a single element, so we unpack it
-                predicate = predicate[0]
-
-            identifier, operator, value = predicate
-            # we have special handling for True and False literals in the place of identifiers
+        for identifier, operator, value in dnf_list:
             if identifier is True or identifier is False:
                 left_node = build_literal_node(identifier)
             else:
@@ -1089,12 +1047,46 @@ def build_expression_tree(relation, dnf_list):
                     comparison_node.right,
                     comparison_node.left,
                 )
-            if and_node is None:
-                and_node = comparison_node
-            else:
-                # Build a new AND node
-                and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
+            and_node = (
+                comparison_node
+                if and_node is None
+                else Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
+            )
         return and_node
+
+    # --- Case: OR group (list of clauses, each clause = list of tuples) ---
+    if all(isinstance(x, list) and all(isinstance(p, tuple) for p in x) for x in dnf_list):
+        or_node = None
+        for clause in dnf_list:
+            clause_node = build_expression_tree(relation, clause)
+            or_node = (
+                clause_node
+                if or_node is None
+                else Node(node_type=NodeType.OR, left=or_node, right=clause_node)
+            )
+        return or_node
+
+    # --- Case: Mixed: some flat predicates and some nested groups ---
+    if any(isinstance(x, tuple) for x in dnf_list) and any(isinstance(x, list) for x in dnf_list):
+        flat_preds = [x for x in dnf_list if isinstance(x, tuple)]
+        subgroups = [x for x in dnf_list if isinstance(x, list)]
+        left = build_expression_tree(relation, flat_preds)
+        right = build_expression_tree(relation, subgroups)
+        return Node(node_type=NodeType.AND, left=left, right=right)
+
+    # --- Case: fallback, treat as OR of subgroups ---
+    if isinstance(dnf_list, list):
+        or_node = None
+        for subgroup in dnf_list:
+            subgroup_node = build_expression_tree(relation, subgroup)
+            or_node = (
+                subgroup_node
+                if or_node is None
+                else Node(node_type=NodeType.OR, left=or_node, right=subgroup_node)
+            )
+        return or_node
+
+    raise ValueError(f"Unsupported DNF structure: {dnf_list}")
 
 
 QUERY_BUILDERS = {

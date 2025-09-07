@@ -109,6 +109,29 @@ test_cases = [
     ("SELECT * FROM mission_reports", {"mission_reports": [("id", "Eq", 4)]}, (177, 1)),
     # the visibility filter is applied to the table underneath the view
     ("SELECT * FROM mission_reports", {"$satellites": [(("id", "Eq", 4))]}, (1, 1)),
+
+    # 1) Absorption: [A] absorbs [A ∧ B]  -> expect just Earth
+    ("SELECT * FROM $planets", {"$planets": [[("name","Eq","Earth")], [("name","Eq","Earth"), ("id","Eq",3)]]}, (1, 20)),
+    # 2) Duplicate predicate inside a clause -> dedup to single check
+    ("SELECT * FROM $planets", {"$planets": [[("id","Eq",4), ("id","Eq",4)]]}, (1, 20)),
+    # 3) Duplicate clause -> dedup whole clause set
+    ("SELECT * FROM $planets", {"$planets": [[("id","Eq",4)], [("id","Eq",4)]]}, (1, 20)),
+    # 4) Factoring with impossible residuals: name='Earth' ∧ (id=4 OR id=5) -> 0 rows
+    ("SELECT * FROM $planets", {"$planets": [[("name","Eq","Earth"), ("id","Eq",4)], [("name","Eq","Earth"), ("id","Eq",5)]]}, (0, 20)),
+    # 5) Tautology via OR: (id=4) OR (id<>4) -> all rows
+    ("SELECT * FROM $planets", {"$planets": [[("id","Eq",4)], [("id","NotEq",4)]]}, (9, 20)),
+    # 6) Contradiction clause absorbed by valid clause in OR
+    # [(id=4 ∧ id=5), (id=5)] -> effectively id=5 only
+    ("SELECT * FROM $planets", {"$planets": [[("id","Eq",4), ("id","Eq",5)], [("id","Eq",5)]]}, (1, 20)),
+    # 7) Deeply factored nesting: name='Earth' AND (id=3 OR id=4) -> just Earth (id=3)
+    ("SELECT * FROM $planets", {"$planets": [[[("name","Eq","Earth")], [[[("id","Eq",3)] , [("id","Eq",4)]]]]]}, (1, 20)),
+    # 8) Extreme nesting noise around a single clause -> still id=3
+    ("SELECT * FROM $planets", {"$planets": [[[[[("id","Eq",3)]]]]]}, (1, 20)),
+    # 9) ANY OR ANY: ('Apollo 11' ANY missions) OR ('Gemini 8' ANY missions) -> 4 astronauts
+    ("SELECT * FROM $astronauts", {"$astronauts": [[("missions","AnyOpEq","Apollo 11")], [("missions","AnyOpEq","Gemini 8")]]}, (4, 19)),
+    # 10) ANY AND ANY: ('Apollo 11' ANY missions) AND ('Gemini 8' ANY missions) -> Armstrong only
+    ("SELECT * FROM $astronauts", {"$astronauts": [[("missions","AnyOpEq","Apollo 11"), ("missions","AnyOpEq","Gemini 8")]]}, (1, 19)),
+
 ]
 
 
