@@ -117,14 +117,14 @@ def full_join(
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
-        hash_table.insert(hash(value_tuple), i)
+        hash_table.insert(abs(hash(value_tuple)), i)
 
     left_indexes = []
     right_indexes = []
 
     left_values = left_relation.select(left_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*left_values)):
-        rows = hash_table.get(hash(value_tuple))
+        rows = hash_table.get(abs(hash(value_tuple)))
         if rows:
             right_indexes.extend(rows)
             left_indexes.extend([i] * len(rows))
