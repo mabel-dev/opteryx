@@ -304,7 +304,13 @@ class BinderVisitor:
             tmp_aggregates, _ = zip(
                 *(inner_binder(aggregate, context) for aggregate in node.aggregates)
             )
-            node.aggregates = list(tmp_aggregates)
+            # Deduplicate aggregates by schema_column.identity
+            aggregates_by_identity = {
+                agg.schema_column.identity: agg
+                for agg in tmp_aggregates
+                if agg.schema_column.identity is not None
+            }
+            node.aggregates = list(aggregates_by_identity.values())
 
         for agg in node.aggregates:
             if agg.condition:
