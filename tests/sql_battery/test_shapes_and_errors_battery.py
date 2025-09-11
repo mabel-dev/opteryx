@@ -2511,7 +2511,16 @@ id > /* 0 */ 1
         # 2754
         ("SELECT name FROM $astronauts WHERE CONCAT(missions) ILIKE '%Apo%'", 34, 1, None),
         ("SELECT name FROM $astronauts WHERE CONCAT(missions) LIKE '%Apo%'", 34, 1, None),
-
+        # 2781
+        ("SELECT id, (COUNT(*) + COUNT(*)) AS c FROM $planets GROUP BY id", 9, 2, None),
+        ("SELECT id, (COUNT(*) + COUNT(*) + COUNT(*)) AS c FROM $planets GROUP BY id", 9, 2, None),
+        ("SELECT id, (COUNT(*) * 2) + COUNT(*) AS c FROM $planets GROUP BY id", 9, 2, None),
+        ("SELECT id, COUNT(*) AS c, c + c AS doubled FROM $planets GROUP BY id", 9, 3, None),
+        ("SELECT id, COUNT(*) / LN(COUNT(*)) AS c FROM $planets GROUP BY id", 9, 2, None),
+        ("SELECT (COUNT(*) + COUNT(*)) AS c FROM $planets", 1, 1, None),
+        ("SELECT (COUNT(*) + COUNT(*) + COUNT(*)) AS c FROM $planets", 1, 1, None),
+        ("SELECT (COUNT(*) * 2) + COUNT(*) AS c FROM $planets", 1, 1, None),
+        ("SELECT COUNT(*) / LN(COUNT(*)) AS c FROM $planets", 1, 1, None),
 ]
 # fmt:on
 
