@@ -322,6 +322,9 @@ def _inner_filter_operations(arr, operator, value):
         if hasattr(arr, "to_numpy"):
             arr = arr.to_numpy(zero_copy_only=False)
 
+        if len(arr) == 1 and len(value) != 0:
+            raise ValueError("Unable to execute @>>, check form matches `column @>> (values)`.")
+
         return list_contains_all(arr, set(value))
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
