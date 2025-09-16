@@ -2521,6 +2521,11 @@ id > /* 0 */ 1
         ("SELECT (COUNT(*) + COUNT(*) + COUNT(*)) AS c FROM $planets", 1, 1, None),
         ("SELECT (COUNT(*) * 2) + COUNT(*) AS c FROM $planets", 1, 1, None),
         ("SELECT COUNT(*) / LN(COUNT(*)) AS c FROM $planets", 1, 1, None),
+        # 2786
+        ("SELECT * EXCEPT(id) FROM $planets ORDER BY name", 9, 19, None),
+        ("SELECT * EXCEPT(id, density) FROM $planets ORDER BY name", 9, 18, None),
+        ("SELECT * EXCEPT(name) FROM $planets ORDER BY name", 9, 19, UnsupportedSyntaxError),
+        ("SELECT * EXCEPT(id, name) FROM $planets ORDER BY name", 9, 19, UnsupportedSyntaxError),
 ]
 # fmt:on
 
