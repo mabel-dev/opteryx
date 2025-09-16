@@ -428,7 +428,7 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
     # EXCEPT with ORDER BY creates complex situations
     if project_step and project_step.except_columns and _order_by_columns_not_in_projection:
         if any(
-            col.source_column in project_step.except_columns
+            col.source_column in {c.source_column for c in project_step.except_columns}
             for col in project_step.order_by_columns
         ):
             raise UnsupportedSyntaxError(
