@@ -365,6 +365,7 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
         _order_by_columns = [exp[0] for exp in _order_by]
 
     # projection
+    project_step = None
     if not (
         len(_projection) == 1
         and _projection[0].node_type == NodeType.WILDCARD
@@ -407,12 +408,13 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
             ]
 
             # Remove columns from ORDER BY that match the source of a wildcard in the projection
-            for proj_col in [pc for pc in _projection if pc.node_type == NodeType.WILDCARD]:
-                _order_by_columns_not_in_projection = [
-                    ord_col
-                    for ord_col in _order_by_columns_not_in_projection
-                    if ord_col.source != proj_col.value[0]
-                ]
+            if _projection[0].except_columns is None:
+                for proj_col in [pc for pc in _projection if pc.node_type == NodeType.WILDCARD]:
+                    _order_by_columns_not_in_projection = [
+                        ord_col
+                        for ord_col in _order_by_columns_not_in_projection
+                        if ord_col.source != proj_col.value[0]
+                    ]
 
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
@@ -422,8 +424,17 @@ def inner_query_planner(ast_branch: dict) -> LogicalPlan:
         inner_plan.add_node(step_id, project_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
-    else:
-        _order_by_columns_not_in_projection = []
+
+    # EXCEPT with ORDER BY creates complex situations
+    if project_step and project_step.except_columns and _order_by_columns_not_in_projection:
+        if any(
+            col.source_column in {c.source_column for c in project_step.except_columns}
+            for col in project_step.order_by_columns
+        ):
+            raise UnsupportedSyntaxError(
+                "Cannot ORDER BY columns excluded by the EXCEPT clause in the projection."
+            )
+        project_step.order_by_columns = []
 
     # having
     _having = logical_planner_builders.build(ast_branch["Select"].get("having"))
