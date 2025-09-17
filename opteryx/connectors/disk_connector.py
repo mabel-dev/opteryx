@@ -215,7 +215,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             decoder = get_decoder(blob_name)
             try:
                 if not just_schema:
-                    num_rows, _, decoded = self.read_blob(
+                    num_rows, _, raw_bytes, decoded = self.read_blob(
                         blob_name=blob_name,
                         decoder=decoder,
                         just_schema=False,
@@ -230,6 +230,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
 
                     self.statistics.rows_seen += num_rows
                     self.rows_seen += num_rows
+                    self.statistics.bytes_raw += raw_bytes
                     self.blobs_seen += 1
                     yield decoded
 

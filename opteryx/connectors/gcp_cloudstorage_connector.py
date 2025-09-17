@@ -254,10 +254,11 @@ class GcpCloudStorageConnector(
                     raise DatasetReadError(f"Unable to read file {blob_name} ({err})") from err
 
                 if not just_schema:
-                    num_rows, num_columns, decoded = decoded
+                    num_rows, num_columns, raw_bytes, decoded = decoded
                     self.blobs_seen += 1
                     self.rows_seen += num_rows
                     self.statistics.rows_seen += num_rows
+                    self.statistics.bytes_raw += raw_bytes
                 yield decoded
             except UnsupportedFileTypeError:  # pragma: no cover
                 pass

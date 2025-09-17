@@ -330,7 +330,7 @@ We’re actively adding features and improving performance.
 ## Related Projects
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
-- **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
+- **[draken](https://github.com/mabel-dev/draken)** Cython bindings for Arrow
 
 <!---
 ## Thank You
