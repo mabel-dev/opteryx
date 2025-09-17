@@ -126,8 +126,9 @@ class AwsS3Connector(
                 except Exception as err:
                     raise DataError(f"Unable to read file {blob_name} ({err})") from err
                 if not just_schema:
-                    num_rows, num_columns, decoded = decoded
+                    num_rows, num_columns, raw_bytes, decoded = decoded
                     self.statistics.rows_seen += num_rows
+                    self.statistics.bytes_raw += raw_bytes
                 yield decoded
             except UnsupportedFileTypeError:
                 pass

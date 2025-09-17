@@ -17,5 +17,5 @@ cdef extern from "fast_float.h" namespace "fast_float":
         double& value
     )
 
-cdef inline double c_parse_fast_float(bytes bts)
+cdef double c_parse_fast_float(bytes bts)
 cpdef double parse_fast_float(bytes bts)

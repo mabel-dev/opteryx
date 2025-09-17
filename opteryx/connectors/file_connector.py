@@ -145,7 +145,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
             statistics=self.statistics,
             projection=columns,
             selection=predicates,
-        )[2]
+        )[3]
 
         if limit is not None:
             morsel = morsel.slice(offset=0, length=limit)

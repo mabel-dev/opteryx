@@ -309,11 +309,24 @@ def parquet_decoder(
     if not selected_columns and not force_read:
         selected_columns = []
 
+    # get the full data size of the file to see how effective projection/selection is
+    uncompressed_size = sum(
+        row_group.column(j).total_uncompressed_size
+        for i in range(parquet_file.metadata.num_row_groups)
+        for row_group in [parquet_file.metadata.row_group(i)]
+        for j in range(row_group.num_columns)
+    )
+
     # If it's COUNT(*), we don't need to create a full dataset
     # We have a handler later to sum up the $COUNT(*) column
     if projection == [] and selection == []:
         table = pyarrow.Table.from_arrays([[parquet_file.metadata.num_rows]], names=["$COUNT(*)"])
-        return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
+        return (
+            parquet_file.metadata.num_rows,
+            parquet_file.metadata.num_columns,
+            uncompressed_size,
+            table,
+        )
 
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
@@ -330,7 +343,12 @@ def parquet_decoder(
     if processed_selection:
         table = filter_records(processed_selection, table)
 
-    return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
+    return (
+        parquet_file.metadata.num_rows,
+        parquet_file.metadata.num_columns,
+        uncompressed_size,
+        table,
+    )
 
 
 def orc_decoder(
@@ -369,7 +387,7 @@ def orc_decoder(
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def jsonl_decoder(
@@ -397,7 +415,7 @@ def jsonl_decoder(
     if projection == [] and selection == [] and not just_schema and not just_statistics:
         num_rows = buffer.count(b"\n")
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
-        return (num_rows, 0, table)
+        return (num_rows, 0, 0, table)
 
     parser = simdjson.Parser()
 
@@ -455,7 +473,7 @@ def jsonl_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def csv_decoder(
@@ -493,7 +511,7 @@ def csv_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def tsv_decoder(
@@ -566,7 +584,7 @@ def arrow_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def avro_decoder(
@@ -628,7 +646,7 @@ def avro_decoder(
         # We can't push filters in Fast Avro, so filter here
         table = filter_records(selection, table)
 
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def ipc_decoder(
@@ -672,7 +690,7 @@ def ipc_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *full_shape, table
+    return *full_shape, 0, table
 
 
 def excel_decoder(
@@ -718,7 +736,7 @@ def excel_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *shape, table
+    return *shape, 0, table
 
 
 def convert_string_view(field: pyarrow.Field) -> pyarrow.Field:
@@ -789,7 +807,7 @@ def vortex_decoder(
     if projection == [] and selection == [] and not just_schema and not just_statistics:
         num_rows = len(table)
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
-        return (num_rows, 0, table)
+        return (num_rows, 0, 0, table)
 
     # we currently aren't pushing filters into vortex so we need to read the columns we're filtering by
     projection_set = set(p.source_column for p in projection or [])
@@ -809,7 +827,7 @@ def vortex_decoder(
     if projection:
         table = post_read_projector(table, projection)
 
-    return *shape, table
+    return *shape, 0, table
 
 
 # for types we know about, set up how we handle them
