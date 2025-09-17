@@ -65,8 +65,9 @@ def right_join(
         pyarrow.Table: A chunk of the result of the RIGHT JOIN operation.
     """
     # Build hash table of left side
-    left_hash_table = HashTable()
-    num_left_rows = left_relation.num_rows
+    cdef HashTable left_hash_table = HashTable()
+    cdef Py_ssize_t num_left_rows = left_relation.num_rows
+    cdef Py_ssize_t i
 
     cdef uint64_t* raw_hashes = <uint64_t*> malloc(num_left_rows * sizeof(uint64_t))
     if raw_hashes == NULL:
