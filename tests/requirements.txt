@@ -31,7 +31,7 @@ pymysql
 psycopg2-binary
 pg8000
 polars
-duckdb
+duckdb==1.3.*
 duckdb-engine
 sqlalchemy-cockroachdb
 sqlalchemy-bigquery
