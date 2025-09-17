@@ -196,7 +196,7 @@ class AsyncReaderNode(ReaderNode):
                         )
                     raise DataError(f"Unable to read blob {blob_name} - error {err}") from err
                 self.statistics.time_reading_blobs += time.monotonic_ns() - start
-                num_rows, _, morsel = decoded
+                num_rows, _, raw_bytes, morsel = decoded
                 self.statistics.rows_seen += num_rows
 
                 morsel = struct_to_jsonb(morsel)
@@ -207,6 +207,7 @@ class AsyncReaderNode(ReaderNode):
                 self.statistics.blobs_read += 1
                 self.statistics.rows_read += morsel.num_rows
                 self.statistics.bytes_processed += morsel.nbytes
+                self.statistics.bytes_raw += raw_bytes
 
                 self.rows_seen += morsel.num_rows
                 self.blobs_seen += 1
