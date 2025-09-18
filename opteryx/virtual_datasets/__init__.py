@@ -13,3 +13,34 @@ from opteryx.virtual_datasets import missions
 from opteryx.virtual_datasets import statistics
 from opteryx.virtual_datasets import stop_words
 from opteryx.virtual_datasets import user
+
+
+def load_virtual_dataset(name: str):
+    _DATASETS = {
+        "$missions": "missions.parquet.zst",
+        "$satellites": "satellites.parquet.zst",
+        "$astronauts": "astronauts.parquet.zst",
+    }
+
+    import importlib.resources
+    import io
+
+    import pyarrow.parquet as pq
+    import zstandard as zstd
+
+    def _load_fallback_file(fname):
+        from pathlib import Path
+
+        # Fallback for source checkout mode
+        here = Path(__file__).parent
+        return (here / fname).read_bytes()
+
+    fname = _DATASETS[name]
+    try:
+        with importlib.resources.files("opteryx.virtual_datasets").joinpath(fname).open("rb") as f:
+            compressed = f.read()
+    except (FileNotFoundError, AttributeError):
+        compressed = _load_fallback_file(fname)
+
+    decompressed = zstd.ZstdDecompressor().decompress(compressed)
+    return pq.read_table(io.BytesIO(decompressed))

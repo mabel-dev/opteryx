@@ -1,3 +1,18 @@
+[project]
+name = "opteryx"
+version = "0.0.0"
+description = "Query your data, where it lives"
+requires-python = '>=3.11'
+readme = 'dynamic'
+authors = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
+maintainers = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
+dependencies = ['aiohttp', 'numpy>=2.0.0', 'orjson', 'orso>=0.0.204', 'psutil', 'pyarrow>=20.0.0', 'requests']
+
+[project.urls]
+Homepage = "https://opteryx.dev/"
+Documentation = "https://opteryx.dev/"
+Repository = "https://github.com/mabel-dev/opteryx.git"
+
 [tool.black]
 line-length = 100
 target-version = ['py312']
@@ -53,6 +68,9 @@ ignore = []
 "**/optimizer/**" = ["SIM102"]
 "opteryx/managers/expression/ops.py" = ["SIM118"]
 "**/third_party/**" = ["SIM115", "SIM110", "SIM109", "SIM108", "SIM105", "SIM103", "SIM102"]
+
+[tool.setuptools.package-data]
+"opteryx.virtual_datasets" = ["*.zst"]
 
 [tool.coverage.run]
 branch = true

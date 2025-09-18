@@ -88,13 +88,6 @@ print(f"\033[38;2;255;85;85mStatus:\033[0m {_status}", "(rc)" if RELEASE_CANDIDA
 with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
 
-try:
-    with open("requirements.txt", "r") as f:
-        required = f.read().splitlines()
-except:
-    with open(f"{LIBRARY}.egg-info/requires.txt", "r") as f:
-        required = f.read().splitlines()
-
 extensions = [
     Extension(
         name="opteryx.third_party.abseil.containers",
@@ -200,27 +193,6 @@ extensions = [
         include_dirs=include_dirs + ["third_party/abseil"],
         extra_compile_args=CPP_COMPILE_FLAGS,
     ),
-    #    Extension(
-    #        name="opteryx.compiled.aggregations.aggregate",
-    #        sources=["opteryx/compiled/aggregations/aggregate.pyx"],
-    #        language="c++",
-    #        include_dirs=include_dirs,
-    #        extra_compile_args=CPP_COMPILE_FLAGS,
-    #    ),
-    #    Extension(
-    #        name="opteryx.compiled.aggregations.agg_base",
-    #        sources=["opteryx/compiled/aggregations/agg_base.pyx"],
-    #        language="c++",
-    #        include_dirs=include_dirs,
-    #        extra_compile_args=CPP_COMPILE_FLAGS,
-    #    ),
-    #    Extension(
-    #        name="opteryx.compiled.aggregations.agg_sum",
-    #        sources=["opteryx/compiled/aggregations/agg_sum.pyx"],
-    #        language="c++",
-    #        include_dirs=include_dirs,
-    #        extra_compile_args=CPP_COMPILE_FLAGS,
-    #    ),
     Extension(
         name="opteryx.compiled.joins.cross_join",
         sources=["opteryx/compiled/joins/cross_join.pyx"],
@@ -365,13 +337,9 @@ setup_config = {
     "description": "Python SQL Query Engine",
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
-    "maintainer": "@joocer",
-    "author": __author__,
-    "author_email": "justin.joyce@joocer.com",
     "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
     "python_requires": ">=3.9",
     "url": "https://github.com/mabel-dev/opteryx/",
-    "install_requires": required,
     "ext_modules": cythonize(extensions),
     "entry_points": {
         "console_scripts": ["opteryx=opteryx.command:main"],

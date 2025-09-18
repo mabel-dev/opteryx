@@ -10,7 +10,7 @@ lint:
 update:
 	python -m pip install --upgrade pip uv
 	python -m uv pip install --upgrade -r tests/requirements.txt
-	python -m uv pip install --upgrade -r requirements.txt
+	python -m uv pip install --upgrade -r pyproject.toml
 
 t:
 	clear
