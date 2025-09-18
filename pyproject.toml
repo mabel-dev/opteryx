@@ -1,3 +1,12 @@
+[project]
+name = "opteryx"
+version = "0.0.0"
+description = "Query your data, where it lives"
+requires-python = '>=3.11'
+readme = 'dynamic'
+authors = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
+maintainers = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
+
 [tool.black]
 line-length = 100
 target-version = ['py312']
