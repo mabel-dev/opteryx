@@ -61,7 +61,7 @@ from typing import Union
 class MissingDependencyError(Exception):  # pragma: no cover
     def __init__(self, dependency: str):
         self.dependency = dependency
-        message = f"No module named '{dependency}' can be found, please install or include in requirements.txt"
+        message = f"No module named '{dependency}' can be found, please install or include in requirements.txt/pyproject.toml."
         super().__init__(message)
 
 

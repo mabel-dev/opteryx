@@ -6,6 +6,12 @@ requires-python = '>=3.11'
 readme = 'dynamic'
 authors = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
 maintainers = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
+dependencies = ['aiohttp', 'numpy>=2.0.0', 'orjson', 'orso>=0.0.204', 'psutil', 'pyarrow>=20.0.0', 'requests']
+
+[project.urls]
+Homepage = "https://opteryx.dev/"
+Documentation = "https://opteryx.dev/"
+Repository = "https://github.com/mabel-dev/opteryx.git"
 
 [tool.black]
 line-length = 100

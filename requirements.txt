@@ -1,7 +1,0 @@
-aiohttp
-numpy>=2.0.0
-orjson
-orso>=0.0.204
-psutil
-pyarrow>=20.0.0
-requests

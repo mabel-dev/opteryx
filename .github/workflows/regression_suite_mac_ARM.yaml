@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip uv
           python -m uv pip install --upgrade numpy cython==3.1.3 pyarrow
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
-          python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
+          python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
           python -c "import pyarrow; pyarrow.create_library_symlinks();"
 
       - name: Build on macOS universal2
