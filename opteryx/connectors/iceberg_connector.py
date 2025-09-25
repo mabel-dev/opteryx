@@ -171,6 +171,12 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         column_types = {col.field_id: col.field_type for col in iceberg_schema.columns}
 
         files = self.table.inspect.files()
+
+        # No files = empty table, no stats
+        if len(files.column("file_path")) == 0:
+            self.relation_statistics = relation_statistics
+            return self.schema
+
         relation_statistics.record_count = pyarrow.compute.sum(files.column("record_count")).as_py()
 
         if "distinct_counts" in files.columns:
