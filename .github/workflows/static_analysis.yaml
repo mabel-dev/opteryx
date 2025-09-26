@@ -4,19 +4,33 @@ on:
   - workflow_call
   - push
 
+# Prevent multiple concurrent runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Bandit Analysis
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-  
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871  # v4
+
       - name: Set Up Environment
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5
         with:
-          python-version: '3.11' 
-          
+          python-version: '3.11'
+          cache: 'pip'
+
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
@@ -29,14 +43,19 @@ jobs:
     name: Type Checks
     runs-on: ubuntu-latest
     if: false  # disable the job
+    
+    permissions:
+      contents: read
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-  
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871  # v4
+
       - name: Set Up Environment
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5
         with:
-          python-version: '3.11' 
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Install Requirements
         run: |

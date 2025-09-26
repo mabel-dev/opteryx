@@ -1,15 +1,23 @@
 name: version_comment
+
 on:
   pull_request:
+
+# Default permissions
+permissions:
+  contents: read
 
 jobs:
   comment:
     runs-on: ubuntu-latest
+    
     permissions:
+      contents: read
       pull-requests: write
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871  # v4
 
       - name: Extract version
         id: get_version
@@ -19,7 +27,7 @@ jobs:
           echo "version=$vers" >> "$GITHUB_OUTPUT"
 
       - name: Comment on the PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea  # v7
         with:
           script: |
             const version = process.env.VERSION;

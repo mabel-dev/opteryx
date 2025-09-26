@@ -6,6 +6,15 @@ on:
       - main  # Exclude the main branch
       - 'refs/tags/*'  # Exclude tags (releases)
 
+# Prevent multiple concurrent runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions:
+  contents: read
+
 jobs:
   regression_matrix:
     strategy:
@@ -15,23 +24,26 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
         os: [ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
+    
+    permissions:
+      contents: read
+      id-token: write  # For Google Cloud auth
+    
     steps:
-
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871  # v4
   
       - name: Set up Python ${{ matrix.python-version }}
         if: matrix.os == 'ubuntu-24.04-arm'
-        uses: buildjet/setup-python@v5
+        uses: buildjet/setup-python@af6bbf684b01b8ad5bbdb485362a1c3c3e004a3f  # v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17  # stable
         with:
             toolchain: stable
-            override: true
         
       - name: Install Requirements
         run: |
@@ -42,7 +54,7 @@ jobs:
           python setup.py build_ext --inplace -j 4
 
       - name: "Authenticate to Google Cloud"
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@8254fb75a33b976a221574d287e93919e6a36f70  # v2
         with:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
