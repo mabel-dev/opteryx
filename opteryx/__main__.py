@@ -36,7 +36,7 @@ ANSI_RESET = "\u001b[0m"
 
 def print_dots(stop_event):
     """
-    Prints five dots repeatedly until the stop_event is set.
+    Prints dots with pauses to indicate processing activity until the stop_event is set.
     """
     while not stop_event.is_set():  # pragma: no cover
         print(".", end="", flush=True)
@@ -82,7 +82,7 @@ def main():
     )
     parser.add_argument("--max_col_width", type=int, default=64, help="Maximum column width")
 
-    # Mutually exclusive group for `--color` and `--no-color`
+    # Mutually exclusive group for `--stats` and `--no-stats`
     stats_group = parser.add_mutually_exclusive_group()
     stats_group.add_argument(
         "--stats", dest="stats", action="store_true", default=True, help="Report statistics."

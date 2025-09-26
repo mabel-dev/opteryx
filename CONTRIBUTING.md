@@ -19,7 +19,7 @@ If you're unfamiliar with the Pull Request process, see the [GitHub Help Pages](
 
 If you are considering a significant change to the code, or adding a new feature not discussed previously, we ask that you start a [discussion](https://github.com/mabel-dev/opteryx/discussions) or raise an [issue](https://github.com/mabel-dev/opteryx/issues) before starting.
 
-### All Change must meet Quality Bars
+### All Changes must meet Quality Bars
 
 We have included a number of tests which run automatically when code is submitted using GitHub Actions. These tests must pass before a change is elligible to be merged.
 
