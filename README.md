@@ -167,7 +167,7 @@ aggregated_df.head()
 1  FALSE POSITIVE      5023
 2       CANDIDATE      2248 
 ~~~
-_this example is complete and should run as-is_
+_this example requires network access to download the data file_
 
 </details>
 
@@ -244,7 +244,7 @@ _this example requires a data file, [database.db](https://storage.googleapis.com
 <details>
 <summary>Query Data on GCS</summary>
 
-In this example, we are to querying a dataset on GCS in a public bucket called 'opteryx'.
+In this example, we are querying a dataset on GCS in a public bucket called 'opteryx'.
 
 ~~~python
 # Import the Opteryx query engine and the GcpCloudStorageConnector from its connectors module.
