@@ -661,10 +661,13 @@ def apply_function(function: str = None, *parameters):
 
 def is_function(name: str) -> bool:
     """
-    sugar
+    Check if the given name is a valid function name.
     """
     return name.upper() in FUNCTIONS
 
 
 def functions() -> list[str]:
+    """
+    Return a list of all available function names.
+    """
     return list(FUNCTIONS.keys())
