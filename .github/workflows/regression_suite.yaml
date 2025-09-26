@@ -20,10 +20,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Default permissions (restrict by default, expand as needed)
-permissions:
-  contents: read
-
 jobs:
   regression_matrix:
     strategy:
@@ -33,10 +29,6 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    
-    permissions:
-      contents: read
-      id-token: write  # For Google Cloud auth
     
     steps:
       - name: Checkout code
@@ -69,7 +61,7 @@ jobs:
                        -m 16
 
       - name: "Authenticate to Google Cloud"
-        uses: google-github-actions/auth@8254fb75a33b976a221574d287e93919e6a36f70  # v2
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
