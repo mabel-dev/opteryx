@@ -15,7 +15,7 @@ Download      | https://pypi.org/project/opteryx/
 [![Downloads](https://static.pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
-[![PyPI Latest Release](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue?logo=python)](https://pypi.org/project/opteryx/)
+[![PyPI Latest Release](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python)](https://pypi.org/project/opteryx/)
 
 [**Install**](#install) •
 [**Examples**](#examples) •
@@ -260,7 +260,7 @@ opteryx.register_store(
 
 # Execute a SQL query to select all columns from the 'space_missions' table located in the 'opteryx' store,
 # and limit the output to 5 rows. The result is stored in the 'result' variable.
-result = opteryx.query("SELECT * FROM opteryx.space_missions LIMIT 5;")
+result = opteryx.query("SELECT * FROM opteryx.space_missions WITH(NO_PARTITION) LIMIT 5;")
 
 # Display the result.
 # This is useful for quickly verifying that the query executed correctly.
@@ -303,15 +303,15 @@ We’re excited to have you join our journey. Let us know how we can help!
 
 We take security seriously. If you find any weaknesses please review our [Security Policy](https://github.com/mabel-dev/opteryx/blob/main/SECURITY.md) let us know through our [reporting process](https://github.com/mabel-dev/opteryx/security/advisories/new).
 
-[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
+[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
 
 ## License
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/main/LICENSE)
 
-Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) except where specific modules note otherwise.
+Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE) except where specific modules note otherwise.
 
 ## Status
 
