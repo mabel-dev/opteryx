@@ -3,22 +3,13 @@
 #
 
 name: Check on Every Push
-
 on:
   push:
     branches-ignore:
       - main
 
-# Prevent multiple concurrent runs
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-# Default permissions
-permissions:
-  contents: read
-
 jobs:
+
   secrets-scanning:
     uses: ./.github/workflows/secrets_scanning.yaml
 

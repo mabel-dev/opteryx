@@ -6,11 +6,6 @@ on:
       - main  # Exclude the main branch
       - 'refs/tags/*'  # Exclude tags (releases)
 
-# Prevent multiple concurrent runs
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   regression_matrix:
     strategy:
@@ -20,24 +15,21 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
         os: ['macos-14']
     runs-on: ${{ matrix.os }}
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871  # v4
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
       - name: Set up Python ${{ matrix.python-version }} 
-        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: |
-            tests/requirements.txt
-            pyproject.toml
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17  # stable
+        uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
+            override: true
 
       - name: Install Rust aarch64-apple-darwin target
         run: rustup target add aarch64-apple-darwin
@@ -71,8 +63,7 @@ jobs:
           MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
-          POSTGRES_HOST: '${{ secrets.POSTGRES_HOST }}'
           MEMCACHED_SERVER: 'localhost:11211'
           DATA_CATALOG_PROVIDER: 'ICEBERG'
-          DATA_CATALOG_CONNECTION: '${{ secrets.DATA_CATALOG_CONNECTION }}'
-          DATA_CATALOG_STORAGE: '${{ secrets.DATA_CATALOG_STORAGE }}'
+          DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
+          EXPERIMENTAL_EXECUTION_ENGINE: 'true'
