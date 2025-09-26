@@ -338,7 +338,7 @@ setup_config = {
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
     "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
-    "python_requires": ">=3.9",
+    "python_requires": ">=3.11",
     "url": "https://github.com/mabel-dev/opteryx/",
     "ext_modules": cythonize(extensions),
     "entry_points": {
