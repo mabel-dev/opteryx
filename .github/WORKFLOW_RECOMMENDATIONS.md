@@ -5,18 +5,22 @@ After reviewing your GitHub Actions workflows, here are **actionable recommendat
 ## 🎯 **Quick Wins (Safe to implement immediately)**
 
 ### 1. **Add Dependency Caching (10-30 second build time reduction)**
-Your workflows currently reinstall Python dependencies on every run. Add caching to speed up builds:
+Your workflows currently reinstall Python dependencies on every run. Since you use `uv` for package management, add proper uv caching to speed up builds:
 
-**In workflows with `actions/setup-python@v5`:**
+**For workflows with `uv` package management:**
 ```yaml
 - name: Set up Python ${{ matrix.python-version }}
   uses: actions/setup-python@v5
   with:
     python-version: ${{ matrix.python-version }}
-    cache: 'pip'  # Add this line
-    cache-dependency-path: |  # Add these lines
-      tests/requirements.txt
-      pyproject.toml
+
+- name: Cache uv dependencies
+  uses: actions/cache@v4
+  with:
+    path: ~/.cache/uv
+    key: ${{ runner.os }}-uv-${{ hashFiles('tests/requirements.txt', 'pyproject.toml') }}
+    restore-keys: |
+      ${{ runner.os }}-uv-
 ```
 
 **Files to update:** `regression_suite.yaml`, `fuzzer.yaml`, `static_analysis.yaml`, `code_form.yaml`

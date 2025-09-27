@@ -35,10 +35,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-          cache: 'pip'
-          cache-dependency-path: |
-            tests/requirements.txt
-            pyproject.toml
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('tests/requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
         
       - name: Install Requirements
         run: |
