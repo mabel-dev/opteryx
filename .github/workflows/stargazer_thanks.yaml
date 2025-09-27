@@ -5,18 +5,9 @@ on:
     - cron: "0 15 * * *"  # Runs daily at 15 UTC
   workflow_dispatch:  # Allows manual trigger
 
-# Default permissions
-permissions:
-  contents: read
-
 jobs:
   thank_stargazers:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-      issues: write
-    
     steps:
       - name: Get Latest Stargazers
         id: get_stargazers
