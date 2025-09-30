@@ -334,23 +334,37 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
             try:
                 with self._engine.connect() as conn:
                     query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                    # DEBUG: print("READ ROW\n", str(query))
-                    row = conn.execute(text(str(query))).fetchone()._asdict()
-                    # DEBUG: print("ROW:", row)
+                    rows = conn.execute(text(str(query))).fetchmany(25)
+
+                    if not rows:
+                        raise DatasetReadError(f"No rows found in dataset '{self.dataset}'.")
+
+                    column_types = {}
+
+                    # Walk rows until we find a non-null for each column
+                    for row in rows:
+                        row_dict = row._asdict()
+                        for column, value in row_dict.items():
+                            if column not in column_types:
+                                column_types[column] = None
+                            if column_types[column] is None and value is not None:
+                                column_types[column] = PYTHON_TO_ORSO_MAP.get(
+                                    type(value), OrsoTypes.NULL
+                                )
+
                     self.schema = RelationSchema(
                         name=self.dataset,
                         columns=[
                             FlatColumn(
-                                name=column,
-                                type=OrsoTypes.NULL
-                                if value is None
-                                else PYTHON_TO_ORSO_MAP[type(value)],
+                                name=col,
+                                type=column_types[col] or OrsoTypes.NULL,  # all nulls stays as NULL
                                 precision=38,
                                 scale=14,
                             )
-                            for column, value in row.items()
+                            for col in column_types
                         ],
                     )
+
                     # DEBUG: print("SCHEMA:", self.schema)
             except Exception as err:
                 raise DatasetReadError(f"Unable to read dataset '{self.dataset}'.") from err
