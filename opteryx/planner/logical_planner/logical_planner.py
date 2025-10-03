@@ -834,7 +834,7 @@ def plan_explain(statement, **kwargs) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]
-    explain_node.format = statement["Explain"]["format"] or "TEXT"
+    explain_node.format = statement["Explain"].get("format", {}).get("Keyword") or "TEXT"
 
     if explain_node.format == "GRAPHVIZ":
         explain_node.format = "MERMAID"
