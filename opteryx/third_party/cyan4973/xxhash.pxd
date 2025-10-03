@@ -8,5 +8,5 @@
 from libc.stdint cimport uint64_t
 from libc.stddef cimport size_t
 
-cdef uint64_t cy_xxhash3_64(const void *key, size_t len) nogil
+cdef uint64_t cy_xxhash3_64(const void *key, size_t len) nogil except *
 cpdef uint64_t hash_bytes(bytes key)
