@@ -340,14 +340,13 @@ setup_config = {
     "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
     "python_requires": ">=3.11",
     "url": "https://github.com/mabel-dev/opteryx/",
-    "ext_modules": cythonize(extensions),
+    "ext_modules": cythonize(extensions, compiler_directives=COMPILER_DIRECTIVES),
     "entry_points": {
         "console_scripts": ["opteryx=opteryx.command:main"],
     },
     "package_data": {
         "": ["*.pyx", "*.pxd"],
-    },
-    "compiler_directives": COMPILER_DIRECTIVES,
+    }
 }
 
 rust_build(setup_config)
