@@ -164,9 +164,12 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
         if self.schema is not None:
             return self.schema
 
-        file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
-        size = os.path.getsize(self.dataset)
-        _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
-        self.schema = self.decoder(_map, just_schema=True)
-        self.relation_statistics = self.decoder(_map, just_statistics=True)
-        return self.schema
+        try:
+            file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
+            size = os.path.getsize(self.dataset)
+            _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
+            self.schema = self.decoder(_map, just_schema=True)
+            self.relation_statistics = self.decoder(_map, just_statistics=True)
+            return self.schema
+        finally:
+            os.close(file_descriptor)

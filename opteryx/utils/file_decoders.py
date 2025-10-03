@@ -310,9 +310,9 @@ def parquet_decoder(
     # If we're here, we can't use rugo - we need to read the file with pyarrow
 
     # Open the parquet file only once
-    if type(buffer) is memoryview:
+    if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
-    elif type(buffer) is bytes:
+    elif isinstance(buffer, bytes):
         stream = pyarrow.BufferReader(buffer)
     else:
         stream = pyarrow.input_stream(buffer)
@@ -405,7 +405,8 @@ def orc_decoder(
     import pyarrow.orc as orc
 
     if isinstance(buffer, memoryview):
-        stream = pyarrow.BufferReader(buffer.obj)
+        # Convert memoryview to bytes for PyArrow BufferReader
+        stream = pyarrow.BufferReader(buffer.tobytes())
     elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
@@ -491,11 +492,12 @@ def jsonl_decoder(
         record = None
 
     # ensure all dicts have all keys to fix Arrow schema issue
-    missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
-    if missing_keys:
-        for row in rows:
-            for key in missing_keys:
-                row.setdefault(key, None)
+    if rows:  # Only process if we have rows
+        missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
+        if missing_keys:
+            for row in rows:
+                for key in missing_keys:
+                    row.setdefault(key, None)
 
     table = pyarrow.Table.from_pylist(rows)
 
@@ -756,8 +758,16 @@ def excel_decoder(
 
     import pandas
 
+    # Convert buffer to appropriate format for pandas
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     # Read Excel file using pandas
-    df = pandas.read_excel(buffer.read())
+    df = pandas.read_excel(stream)
 
     # Convert the pandas DataFrame to a PyArrow Table
     table = pyarrow.Table.from_pandas(df)
@@ -824,8 +834,16 @@ def vortex_decoder(
 
     # Current version of vortex appears to not be able to read streams
     # this is painfully slow, don't do this.
+    # Convert buffer to bytes if needed
+    if isinstance(buffer, memoryview):
+        buffer_bytes = buffer.tobytes()
+    elif isinstance(buffer, bytes):
+        buffer_bytes = buffer
+    else:
+        buffer_bytes = buffer.read()
+
     with tempfile.NamedTemporaryFile(suffix=".vortex", delete=False) as f:
-        f.write(buffer)
+        f.write(buffer_bytes)
         f.flush()
         tmp_name = f.name
     try:
@@ -845,7 +863,8 @@ def vortex_decoder(
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
         return (num_rows, 0, 0, table)
 
-    # we currently aren't pushing filters into vortex so we need to read the columns we're filtering by
+    # we currently aren't pushing filters into vortex so we need to read
+    # the columns we're filtering by
     projection_set = set(p.source_column for p in projection or [])
     filter_columns = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
     selected_columns = list(projection_set.union(filter_columns))
