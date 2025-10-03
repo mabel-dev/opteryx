@@ -804,7 +804,7 @@ def vortex_decoder(
         buffer_bytes = buffer
     else:
         buffer_bytes = buffer.read()
-    
+
     with tempfile.NamedTemporaryFile(suffix=".vortex", delete=False) as f:
         f.write(buffer_bytes)
         f.flush()
