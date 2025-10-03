@@ -267,13 +267,13 @@ def parquet_decoder(
 
     # Return just the schema if that's all that's needed
     # We can use rugo's metadata reader which is faster than pyarrow's
-    if just_schema:
-        if isinstance(buffer, memoryview):
-            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
-        else:
-            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
-
-        return rugo_to_orso_schema(metadata, "parquet")
+    # if just_schema:
+    #    if isinstance(buffer, memoryview):
+    #        metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+    #    else:
+    #        metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+    #
+    #    return rugo_to_orso_schema(metadata, "parquet")
 
     # Gather statistics if that's all that's needed
     # We can use rugo's metadata reader which is faster than pyarrow's
@@ -318,6 +318,13 @@ def parquet_decoder(
         stream = pyarrow.input_stream(buffer)
 
     parquet_file = parquet.ParquetFile(stream)
+
+    # Return just the schema if that's all that's needed
+    # Rugo appears to have issues with struct columns currently
+    if just_schema:
+        return convert_arrow_schema_to_orso_schema(
+            parquet_file.schema_arrow, parquet_file.metadata.num_rows
+        )
 
     # we need to work out if we have a selection which may force us
     # fetching columns just for filtering
