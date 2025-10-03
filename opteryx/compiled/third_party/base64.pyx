@@ -53,12 +53,3 @@ cpdef bytes decode(bytes data):
         return b""
 
     return result[:end_ptr - outbuf]
-
-
-# Cython-callable versions
-
-cdef bytes cy_encode(const unsigned char[::1] data):
-    return encode(bytes(data))
-
-cdef bytes cy_decode(const char[::1] data):
-    return decode(bytes(data))
