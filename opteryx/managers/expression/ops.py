@@ -160,25 +160,37 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
-        with suppress(AttributeError):
-            value = value.to_pylist()
-        with suppress(AttributeError):
-            value = value.to_numpy(zero_copy_only=False)
+        to_pylist = getattr(value, "to_pylist", None)
+        if to_pylist is not None:
+            value = to_pylist()
+
+        to_numpy = getattr(value, "to_numpy", None)
+        if to_numpy is not None:
+            value = to_numpy(zero_copy_only=False)
+
         values = set(value)
-        with suppress(AttributeError):
-            arr = arr.to_numpy(zero_copy_only=False)
+        to_numpy = getattr(arr, "to_numpy", None)
+        if to_numpy is not None:
+            arr = to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
             return list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
             return list_ops.list_in_list.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
-        with suppress(AttributeError):
-            value = value.to_pylist()
-        with suppress(AttributeError):
-            value = value.to_numpy(zero_copy_only=False)
+        to_pylist = getattr(value, "to_pylist", None)
+        if to_pylist is not None:
+            value = to_pylist()
+
+        to_numpy = getattr(value, "to_numpy", None)
+        if to_numpy is not None:
+            value = to_numpy(zero_copy_only=False)
+
         values = set(value)
-        with suppress(AttributeError):
-            arr = arr.to_numpy(zero_copy_only=False)
+
+        to_numpy = getattr(arr, "to_numpy", None)
+        if to_numpy is not None:
+            arr = to_numpy(zero_copy_only=False)
+
         if arr.dtype == numpy.int64:
             matches = list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
@@ -261,8 +273,9 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtQuestion":
         from opteryx.third_party.tktech import csimdjson as simdjson
 
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        to_numpy = getattr(arr, "to_numpy", None)
+        if to_numpy is not None:
+            arr = to_numpy(zero_copy_only=False)
 
         parser = simdjson.Parser()
 
@@ -303,10 +316,14 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtArrow":
         from opteryx.compiled.list_ops.list_contains_any import list_contains_any
 
-        if hasattr(value, "to_pylist"):
-            value = value.to_pylist()
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        to_pylist = getattr(value, "to_pylist", None)
+        if to_pylist is not None:
+            value = to_pylist()
+
+        to_numpy = getattr(arr, "to_numpy", None)
+        if to_numpy is not None:
+            arr = to_numpy(zero_copy_only=False)
+
         if len(arr) == 0:
             return numpy.array([], dtype=bool)
         if len(arr) == 1:
@@ -317,10 +334,13 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "ArrayContainsAll":
         from opteryx.compiled.list_ops.list_contains_all import list_contains_all
 
-        if hasattr(value, "to_pylist"):
-            value = value.to_pylist()
-        if hasattr(arr, "to_numpy"):
-            arr = arr.to_numpy(zero_copy_only=False)
+        to_pylist = getattr(value, "to_pylist", None)
+        if to_pylist is not None:
+            value = to_pylist()
+
+        to_numpy = getattr(arr, "to_numpy", None)
+        if to_numpy is not None:
+            arr = to_numpy(zero_copy_only=False)
 
         if len(arr) == 1 and len(value) != 0:
             raise ValueError("Unable to execute @>>, check form matches `column @>> (values)`.")
