@@ -25,7 +25,7 @@ cassandra-driver
 pyiceberg[sql-sqlite]
 openpyxl
 pyiceberg
-vortex-data==0.50.0
+vortex-data==0.53.0
 
 setuptools_rust
 freezegun
