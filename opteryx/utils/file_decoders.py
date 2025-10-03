@@ -827,7 +827,8 @@ def vortex_decoder(
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
         return (num_rows, 0, 0, table)
 
-    # we currently aren't pushing filters into vortex so we need to read the columns we're filtering by
+    # we currently aren't pushing filters into vortex so we need to read
+    # the columns we're filtering by
     projection_set = set(p.source_column for p in projection or [])
     filter_columns = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
     selected_columns = list(projection_set.union(filter_columns))
