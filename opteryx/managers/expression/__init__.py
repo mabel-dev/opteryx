@@ -243,12 +243,30 @@ def _inner_evaluate(root: Node, table: Table):
             return short_cut_and(root, table)
 
         if node_type in LOGICAL_OPERATIONS:
-            left = _inner_evaluate(root.left, table) if root.left else [None]
-            right = _inner_evaluate(root.right, table) if root.right else [None]
+            left = (
+                _inner_evaluate(root.left, table)
+                if root.left
+                else pyarrow.nulls(1, type=pyarrow.bool_())
+            )
+            right = (
+                _inner_evaluate(root.right, table)
+                if root.right
+                else pyarrow.nulls(1, type=pyarrow.bool_())
+            )
+
+            if not isinstance(left, pyarrow.Array):
+                left = pyarrow.array(left, type=pyarrow.bool_())
+            if not isinstance(right, pyarrow.Array):
+                right = pyarrow.array(right, type=pyarrow.bool_())
+
             return LOGICAL_OPERATIONS[node_type](left, right)  # type:ignore
 
         if node_type == NodeType.NOT:
-            centre = _inner_evaluate(root.centre, table) if root.centre else [None]
+            centre = (
+                _inner_evaluate(root.centre, table)
+                if root.centre
+                else pyarrow.nulls(1, type=pyarrow.bool_())
+            )
             centre = pyarrow.array(centre, type=pyarrow.bool_())
             return pyarrow.compute.invert(centre)
 

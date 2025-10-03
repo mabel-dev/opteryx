@@ -139,7 +139,62 @@ SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE b
 -- Query 27: SELECT * FROM tristatebooleans WHERE bool IS NOT FALSE;
 -- Expected rows: 2 (True, NULL)
 SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT FALSE;
-""", {True, None}),
+""", {True, None}),(
+"""
+-- Query 28: NULL OR TRUE should return TRUE (1 row)
+-- This tests the three-valued logic: null OR true = true
+SELECT 1 FROM $no_table WHERE NULL OR TRUE;
+""", {1}),(
+"""
+-- Query 29: TRUE OR NULL should return TRUE (1 row)
+-- This tests commutativity: true OR null = true
+SELECT 1 FROM $no_table WHERE TRUE OR NULL;
+""", {1}),(
+"""
+-- Query 30: NULL AND FALSE should return FALSE (0 rows)
+-- This tests the three-valued logic: null AND false = false
+SELECT 1 FROM $no_table WHERE NULL AND FALSE;
+""", {}),(
+"""
+-- Query 31: FALSE AND NULL should return FALSE (0 rows)
+-- This tests commutativity: false AND null = false
+SELECT 1 FROM $no_table WHERE FALSE AND NULL;
+""", {}),(
+"""
+-- Query 32: NULL AND TRUE should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests the three-valued logic: null AND true = null
+SELECT 1 FROM $no_table WHERE NULL AND TRUE;
+""", {}),(
+"""
+-- Query 33: TRUE AND NULL should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests commutativity: true AND null = null
+SELECT 1 FROM $no_table WHERE TRUE AND NULL;
+""", {}),(
+"""
+-- Query 34: NULL OR FALSE should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests the three-valued logic: null OR false = null
+SELECT 1 FROM $no_table WHERE NULL OR FALSE;
+""", {}),(
+"""
+-- Query 35: FALSE OR NULL should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests commutativity: false OR null = null
+SELECT 1 FROM $no_table WHERE FALSE OR NULL;
+""", {}),(
+"""
+-- Query 36: NULL XOR TRUE should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests the three-valued logic: null XOR true = null
+SELECT 1 FROM $no_table WHERE NULL XOR TRUE;
+""", {}),(
+"""
+-- Query 37: NULL XOR FALSE should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests the three-valued logic: null XOR false = null
+SELECT 1 FROM $no_table WHERE NULL XOR FALSE;
+""", {}),(
+"""
+-- Query 38: NOT NULL should return NULL (0 rows, null coerces to false in WHERE)
+-- This tests the three-valued logic: NOT null = null
+SELECT 1 FROM $no_table WHERE NOT NULL;
+""", {}),
 ]
 # fmt:on
 
