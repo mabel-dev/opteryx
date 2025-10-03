@@ -244,9 +244,9 @@ def parquet_decoder(
         Tuple containing number of rows, number of columns, and the table or schema.
     """
     # Open the parquet file only once
-    if type(buffer) is memoryview:
+    if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
-    elif type(buffer) is bytes:
+    elif isinstance(buffer, bytes):
         stream = pyarrow.BufferReader(buffer)
     else:
         stream = pyarrow.input_stream(buffer)
@@ -369,7 +369,8 @@ def orc_decoder(
     import pyarrow.orc as orc
 
     if isinstance(buffer, memoryview):
-        stream = pyarrow.BufferReader(buffer.obj)
+        # Convert memoryview to bytes for PyArrow BufferReader
+        stream = pyarrow.BufferReader(buffer.tobytes())
     elif isinstance(buffer, bytes):
         stream: BinaryIO = io.BytesIO(buffer)
     else:
@@ -720,8 +721,16 @@ def excel_decoder(
 
     import pandas
 
+    # Convert buffer to appropriate format for pandas
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
+        stream: BinaryIO = io.BytesIO(buffer)
+    else:
+        stream = buffer
+
     # Read Excel file using pandas
-    df = pandas.read_excel(buffer.read())
+    df = pandas.read_excel(stream)
 
     # Convert the pandas DataFrame to a PyArrow Table
     table = pyarrow.Table.from_pandas(df)
@@ -788,8 +797,16 @@ def vortex_decoder(
 
     # Current version of vortex appears to not be able to read streams
     # this is painfully slow, don't do this.
+    # Convert buffer to bytes if needed
+    if isinstance(buffer, memoryview):
+        buffer_bytes = buffer.tobytes()
+    elif isinstance(buffer, bytes):
+        buffer_bytes = buffer
+    else:
+        buffer_bytes = buffer.read()
+    
     with tempfile.NamedTemporaryFile(suffix=".vortex", delete=False) as f:
-        f.write(buffer)
+        f.write(buffer_bytes)
         f.flush()
         tmp_name = f.name
     try:
