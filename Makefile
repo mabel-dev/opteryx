@@ -40,7 +40,7 @@ coverage:
 compile:
 	clear
 	python -m pip install --upgrade pip uv
-	python -m uv pip install --upgrade numpy 'cython==3.1.3' setuptools
+	python -m uv pip install --upgrade numpy cython setuptools
 	find . -name '*.so' -delete
 	rm -rf build dist *.egg-info
 	python setup.py clean

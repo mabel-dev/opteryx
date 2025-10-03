@@ -17,9 +17,11 @@ from typing import Tuple
 from typing import Union
 
 import pyarrow
+import rugo.parquet as parquet_meta
 from orso.tools import random_string
 from orso.types import OrsoTypes
 from pyarrow import parquet
+from rugo.converters.orso import rugo_to_orso_schema
 
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedFileTypeError
@@ -243,6 +245,70 @@ def parquet_decoder(
     Returns:
         Tuple containing number of rows, number of columns, and the table or schema.
     """
+
+    # If it's COUNT(*), we don't need to create a full dataset
+    # We have a handler later to sum up the $COUNT(*) column
+    # We can use rugo's metadata reader which is faster than pyarrow's
+    if projection == [] and selection == []:
+        if isinstance(buffer, memoryview):
+            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+        else:
+            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+        num_rows = metadata["num_rows"]
+        num_columns = len(metadata["row_groups"][0]["columns"])
+        num_bytes = sum(x["total_byte_size"] for x in metadata["row_groups"])
+        table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
+        return (
+            num_rows,
+            num_columns,
+            num_bytes,
+            table,
+        )
+
+    # Return just the schema if that's all that's needed
+    # We can use rugo's metadata reader which is faster than pyarrow's
+    # if just_schema:
+    #    if isinstance(buffer, memoryview):
+    #        metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+    #    else:
+    #        metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+    #
+    #    return rugo_to_orso_schema(metadata, "parquet")
+
+    # Gather statistics if that's all that's needed
+    # We can use rugo's metadata reader which is faster than pyarrow's
+    if just_statistics:
+        if statistics is None:
+            statistics = RelationStatistics()
+
+        if isinstance(buffer, memoryview):
+            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+        else:
+            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+
+        num_rows = metadata["num_rows"]
+        statistics.record_count += num_rows
+
+        for row_group in metadata["row_groups"]:
+            for column in row_group["columns"]:
+                column_name = column["name"]
+
+                min_value = column.get("min")
+                if min_value is not None:
+                    statistics.update_lower(column_name, min_value)
+
+                max_value = column.get("max")
+                if max_value is not None:
+                    statistics.update_upper(column_name, max_value)
+
+                null_count = column.get("null_count")
+                if null_count:
+                    statistics.add_null(column_name, null_count)
+
+        return statistics
+
+    # If we're here, we can't use rugo - we need to read the file with pyarrow
+
     # Open the parquet file only once
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
@@ -254,41 +320,11 @@ def parquet_decoder(
     parquet_file = parquet.ParquetFile(stream)
 
     # Return just the schema if that's all that's needed
+    # Rugo appears to have issues with struct columns currently
     if just_schema:
         return convert_arrow_schema_to_orso_schema(
             parquet_file.schema_arrow, parquet_file.metadata.num_rows
         )
-
-    if just_statistics:
-        if statistics is None:
-            statistics = RelationStatistics()
-
-        metadata = parquet_file.metadata
-        schema = parquet_file.schema_arrow
-        num_row_groups = metadata.num_row_groups
-        statistics.record_count += metadata.num_rows
-
-        for column in schema.names:
-            column_index = schema.get_field_index(column)
-
-            for rg_index in range(num_row_groups):
-                column_chunk = metadata.row_group(rg_index).column(column_index)
-
-                stats = column_chunk.statistics
-                if stats is not None:
-                    min_value = stats.min
-                    if min_value is not None:
-                        statistics.update_lower(column, min_value)
-
-                    max_value = stats.max
-                    if max_value is not None:
-                        statistics.update_upper(column, max_value)
-
-                    null_count = stats.null_count
-                    if null_count:
-                        statistics.add_null(column, null_count)
-
-        return statistics
 
     # we need to work out if we have a selection which may force us
     # fetching columns just for filtering
