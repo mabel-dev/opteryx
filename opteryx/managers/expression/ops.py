@@ -323,6 +323,7 @@ def _inner_filter_operations(arr, operator, value):
         to_numpy = getattr(arr, "to_numpy", None)
         if to_numpy is not None:
             arr = to_numpy(zero_copy_only=False)
+
         if len(arr) == 0:
             return numpy.array([], dtype=bool)
         if len(arr) == 1:

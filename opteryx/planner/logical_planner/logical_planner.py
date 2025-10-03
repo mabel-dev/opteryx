@@ -834,21 +834,12 @@ def plan_explain(statement, **kwargs) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]
-    
-    # Handle format which can be None, a string, or a dict with "Keyword" key
     explain_format = statement["Explain"].get("format")
+
     if explain_format is None:
         explain_node.format = "TEXT"
-    elif isinstance(explain_format, dict):
-        # sqlparser 0.59.0+ returns format as a dict with "Keyword" key
-        explain_node.format = explain_format.get("Keyword", "TEXT").upper()
-    elif isinstance(explain_format, str):
-        # Handle case where format is a string
-        explain_node.format = explain_format.upper()
     else:
-        # Fallback for any other case
-        explain_node.format = "TEXT"
-
+        explain_node.format = explain_format.get("Keyword", "TEXT").upper()
     if explain_node.format == "GRAPHVIZ":
         explain_node.format = "MERMAID"
 
