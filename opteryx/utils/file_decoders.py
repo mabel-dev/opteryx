@@ -456,11 +456,12 @@ def jsonl_decoder(
         record = None
 
     # ensure all dicts have all keys to fix Arrow schema issue
-    missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
-    if missing_keys:
-        for row in rows:
-            for key in missing_keys:
-                row.setdefault(key, None)
+    if rows:  # Only process if we have rows
+        missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
+        if missing_keys:
+            for row in rows:
+                for key in missing_keys:
+                    row.setdefault(key, None)
 
     table = pyarrow.Table.from_pylist(rows)
 
