@@ -173,9 +173,9 @@ def _inner_filter_operations(arr, operator, value):
         if to_numpy is not None:
             arr = to_numpy(zero_copy_only=False)
         if arr.dtype == numpy.int64:
-            return list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
+            return list_ops.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
-            return list_ops.list_in_list.list_in_list(arr.astype(object), values)
+            return list_ops.list_in_list(arr.astype(object), values)
     if operator == "NotInList":
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
@@ -192,31 +192,27 @@ def _inner_filter_operations(arr, operator, value):
             arr = to_numpy(zero_copy_only=False)
 
         if arr.dtype == numpy.int64:
-            matches = list_ops.list_in_list.list_in_list_int64(memoryview(arr), values, len(arr))
+            matches = list_ops.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
-            matches = list_ops.list_in_list.list_in_list(arr.astype(object), values)
+            matches = list_ops.list_in_list(arr.astype(object), values)
         return numpy.invert(matches.astype(dtype=bool))
     if operator == "InStr":
         needle = str(value)
         arr = pyarrow.array(arr)
-        return numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
+        return numpy.asarray(list_ops.list_in_string(arr, needle), dtype=bool)
     if operator == "NotInStr":
         needle = str(value)
         arr = pyarrow.array(arr)
-        matches = numpy.asarray(list_ops.list_in_string.list_in_string(arr, needle), dtype=bool)
+        matches = numpy.asarray(list_ops.list_in_string(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value)
         arr = pyarrow.array(arr)
-        return numpy.asarray(
-            list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
-        )
+        return numpy.asarray(list_ops.list_in_string_case_insensitive(arr, needle), dtype=bool)
     if operator == "NotIInStr":
         needle = str(value)
         arr = pyarrow.array(arr)
-        matches = numpy.asarray(
-            list_ops.list_in_string.list_in_string_case_insensitive(arr, needle), dtype=bool
-        )
+        matches = numpy.asarray(list_ops.list_in_string_case_insensitive(arr, needle), dtype=bool)
         return numpy.invert(matches)
     if operator == "Like":
         return compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
@@ -234,21 +230,21 @@ def _inner_filter_operations(arr, operator, value):
         matches = compute.match_substring_regex(arr, value)  # [#325]
         return numpy.invert(matches)
     if operator == "AnyOpEq":
-        return list_ops.list_anyop_eq.list_anyop_eq(literal=arr[0], column=value)
+        return list_ops.list_anyop_eq(literal=arr[0], column=value)
     if operator == "AnyOpNotEq":
-        return list_ops.list_anyop_neq.list_anyop_neq(literal=arr[0], column=value)
+        return list_ops.list_anyop_neq(literal=arr[0], column=value)
     if operator == "AnyOpGt":
-        return list_ops.list_anyop_gt.list_anyop_gt(arr[0], value)
+        return list_ops.list_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":
-        return list_ops.list_anyop_lt.list_anyop_lt(arr[0], value)
+        return list_ops.list_anyop_lt(arr[0], value)
     if operator == "AnyOpGtEq":
-        return list_ops.list_anyop_gte.list_anyop_gte(arr[0], value)
+        return list_ops.list_anyop_gte(arr[0], value)
     if operator == "AnyOpLtEq":
-        return list_ops.list_anyop_lte.list_anyop_lte(arr[0], value)
+        return list_ops.list_anyop_lte(arr[0], value)
     if operator == "AllOpEq":
-        return list_ops.list_allop_eq.list_allop_eq(arr[0], value)
+        return list_ops.list_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
-        return list_ops.list_allop_neq.list_allop_neq(arr[0], value)
+        return list_ops.list_allop_neq(arr[0], value)
 
     if operator == "AnyOpILike":
         from opteryx.utils.sql import regex_match_any
@@ -314,7 +310,7 @@ def _inner_filter_operations(arr, operator, value):
         )
 
     if operator == "AtArrow":
-        from opteryx.compiled.list_ops.list_ops import list_contains_any
+        from opteryx.compiled.list_ops import list_contains_any
 
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
@@ -332,7 +328,7 @@ def _inner_filter_operations(arr, operator, value):
         return list_contains_any(arr, set(value))
 
     if operator == "ArrayContainsAll":
-        from opteryx.compiled.list_ops.list_ops import list_contains_all
+        from opteryx.compiled.list_ops import list_contains_all
 
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:

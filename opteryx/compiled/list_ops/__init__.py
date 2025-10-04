@@ -7,5 +7,7 @@
 List operations module.
 
 All individual .pyx files are compiled into a single .so file.
-Import functions directly from opteryx.compiled.list_ops.list_ops
+Import functions directly from opteryx.compiled.list_ops
 """
+
+from .list_ops import *  # noqa: F403,F401

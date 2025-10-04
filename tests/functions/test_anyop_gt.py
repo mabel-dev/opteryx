@@ -4,7 +4,7 @@ import pyarrow as pa
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.compiled.list_ops.list_ops import list_anyop_gt
+from opteryx.compiled.list_ops import list_anyop_gt
 
 def _test_gt_comparison(literal, test_value, expected_result, _type=pa.string()):
     """

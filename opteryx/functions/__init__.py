@@ -20,12 +20,10 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from opteryx.compiled.list_ops.list_ops import (
-    list_contains_all,
-    list_contains_any,
-    list_encode_utf8 as to_blob,
-    list_length,
-)
+from opteryx.compiled.list_ops import list_contains_all
+from opteryx.compiled.list_ops import list_contains_any
+from opteryx.compiled.list_ops import list_encode_utf8 as to_blob
+from opteryx.compiled.list_ops import list_length
 from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -53,7 +51,7 @@ def _get(array, key):
     key = key[0]
     if isinstance(first_element, dict):
         # Handle dict type
-        from opteryx.compiled.list_ops.list_ops import cython_arrow_op
+        from opteryx.compiled.list_ops import cython_arrow_op
 
         return cython_arrow_op(array, key)
     if isinstance(key, str):
@@ -81,7 +79,7 @@ def _get(array, key):
     except Exception:
         raise IncorrectTypeError("VARCHAR and ARRAY values must be subscripted with NUMERIC values")
     if isinstance(first_element, (list, str, pyarrow.ListScalar, bytes, numpy.ndarray)):
-        from opteryx.compiled.list_ops.list_ops import list_get_element
+        from opteryx.compiled.list_ops import list_get_element
 
         return list_get_element(array, index)
 
@@ -246,11 +244,11 @@ def cast_to_varchar(arr, *args):
         # If the array is a float64, we can use the fast format_double_array_strings
         return format_double_array_ascii(arr)
     if arr.dtype == numpy.int64:
-        from opteryx.compiled.list_ops.list_ops import list_cast_int64_to_ascii
+        from opteryx.compiled.list_ops import list_cast_int64_to_ascii
 
         return list_cast_int64_to_ascii(arr)
     if arr.dtype == numpy.uint64:
-        from opteryx.compiled.list_ops.list_ops import list_cast_uint64_to_ascii
+        from opteryx.compiled.list_ops import list_cast_uint64_to_ascii
 
         return list_cast_uint64_to_ascii(arr)
 
@@ -272,11 +270,11 @@ def cast_to_blob(arr, *args):
 
         return format_double_array_bytes(arr)
     if arr.dtype == numpy.int64:
-        from opteryx.compiled.list_ops.list_ops import list_cast_int64_to_bytes
+        from opteryx.compiled.list_ops import list_cast_int64_to_bytes
 
         return list_cast_int64_to_bytes(arr)
     if arr.dtype == numpy.uint64:
-        from opteryx.compiled.list_ops.list_ops import list_cast_uint64_to_bytes
+        from opteryx.compiled.list_ops import list_cast_uint64_to_bytes
 
         return list_cast_uint64_to_bytes(arr)
 
@@ -318,7 +316,8 @@ def cast_to_double(arr, *args):
 
 
 def cast_to_int(arr, *args):
-    from opteryx.compiled.list_ops.list_ops import list_cast_ascii_to_int, list_cast_bytes_to_int
+    from opteryx.compiled.list_ops import list_cast_ascii_to_int
+    from opteryx.compiled.list_ops import list_cast_bytes_to_int
 
     if hasattr(arr, "to_numpy"):
         arr = arr.to_numpy(False)
@@ -439,6 +438,8 @@ DEPRECATED_FUNCTIONS = {
     "TRY_STRUCT": None,  # deprecated, removed 0.24.0
     "LEN": "LENGTH",  # deprecated, removed 0.24.0
     "INT": "INTEGER",  # remove 0.27.0
+    "GET": None,  # remove 0.28.0
+    "SEARCH": None,  # remove 0.28.0
 }
 
 # fmt:off
