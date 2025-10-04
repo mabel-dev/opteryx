@@ -100,4 +100,7 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
     for source, destination, relation in logical_plan.edges():
         plan.add_edge(source, destination, relation)
 
+    # Identify flows/subplans for parallel execution
+    plan.identify_flows()
+
     return plan
