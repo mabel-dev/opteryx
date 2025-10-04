@@ -29,7 +29,7 @@ print(__version__)
 pyproject_path = Path("pyproject.toml")
 pyproject_contents = pyproject_path.read_text()
 pattern = re.compile(r'^(version\s*=\s*")[^"]*(")', re.MULTILINE)
-updated_contents, replacements = pattern.subn(rf"\\1{__version__}\\2", pyproject_contents, count=1)
+updated_contents, replacements = pattern.subn(rf"version = \"{__version__}\"", pyproject_contents, count=1)
 
 if replacements == 0:
     msg = "Unable to locate version field in pyproject.toml"
