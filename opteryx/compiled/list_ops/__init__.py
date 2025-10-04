@@ -4,23 +4,74 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-Dynamically import all compiled modules in this directory.
+Import all functions from the consolidated list_ops module.
 """
 
-import glob
-import importlib
-import os
+# Import all functions from the single compiled module
+from opteryx.compiled.list_ops.list_ops import (
+    list_allop_eq,
+    list_allop_neq,
+    list_anyop_eq,
+    list_anyop_gt,
+    list_anyop_gte,
+    list_anyop_lt,
+    list_anyop_lte,
+    list_anyop_neq,
+    list_arrow_op,
+    list_cast_int64_to_bytes,
+    list_cast_int64_to_ascii,
+    list_cast_ascii_to_int,
+    list_cast_bytes_to_int,
+    list_cast_uint64_to_bytes,
+    list_cast_uint64_to_ascii,
+    list_contains_all,
+    list_contains_any,
+    list_encode_utf8,
+    list_get_element,
+    list_in_list,
+    list_in_list_int64,
+    list_in_string,
+    list_in_string_case_insensitive,
+    list_length,
+    list_long_arrow_op,
+    cython_arrow_op,
+    cython_long_arrow_op,
+)
 
-# Get the directory of this file
-current_dir = os.path.dirname(__file__)
+# Create submodules for backward compatibility with code that imports like:
+# from opteryx.compiled.list_ops.list_in_list import list_in_list
+# This is achieved by creating module-like objects
+import sys
+from types import ModuleType
 
-# Find all compiled modules
-compiled_modules = glob.iglob(os.path.join(current_dir, "*.pyx"))
+# Create a mapping of module names to their functions
+_SUBMODULE_FUNCTIONS = {
+    'list_allop_eq': ['list_allop_eq'],
+    'list_allop_neq': ['list_allop_neq'],
+    'list_anyop_eq': ['list_anyop_eq'],
+    'list_anyop_gt': ['list_anyop_gt'],
+    'list_anyop_gte': ['list_anyop_gte'],
+    'list_anyop_lt': ['list_anyop_lt'],
+    'list_anyop_lte': ['list_anyop_lte'],
+    'list_anyop_neq': ['list_anyop_neq'],
+    'list_arrow_op': ['list_arrow_op'],
+    'list_cast_int64_to_string': ['list_cast_int64_to_bytes', 'list_cast_int64_to_ascii'],
+    'list_cast_string_to_int': ['list_cast_ascii_to_int', 'list_cast_bytes_to_int'],
+    'list_cast_uint64_to_string': ['list_cast_uint64_to_bytes', 'list_cast_uint64_to_ascii'],
+    'list_contains_all': ['list_contains_all'],
+    'list_contains_any': ['list_contains_any'],
+    'list_encode_utf8': ['list_encode_utf8'],
+    'list_get_element': ['list_get_element'],
+    'list_in_list': ['list_in_list', 'list_in_list_int64'],
+    'list_in_string': ['list_in_string', 'list_in_string_case_insensitive'],
+    'list_length': ['list_length'],
+    'list_long_arrow_op': ['list_long_arrow_op'],
+}
 
-# Import each compiled module
-for module_path in compiled_modules:
-    module_name = os.path.basename(module_path).replace(".pyx", "")
-    try:
-        importlib.import_module(f"opteryx.compiled.list_ops.{module_name}", package=__name__)
-    except ImportError as e:
-        print(f"Failed to import {module_name}: {e}")
+# Dynamically create submodules for backward compatibility
+for module_name, func_names in _SUBMODULE_FUNCTIONS.items():
+    submodule = ModuleType(f'opteryx.compiled.list_ops.{module_name}')
+    for func_name in func_names:
+        setattr(submodule, func_name, globals()[func_name])
+    sys.modules[f'opteryx.compiled.list_ops.{module_name}'] = submodule
+

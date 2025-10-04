@@ -308,27 +308,25 @@ if machine.startswith("arm") and not machine.startswith("aarch64"):
 elif "x86" in machine or "amd64" in machine:
     CPP_COMPILE_FLAGS.append("-mavx2")
 
-for cython_file in glob.iglob("opteryx/compiled/list_ops/*.pyx"):
-    if is_win():
-        cython_file = cython_file.replace("\\", "/")
-    module_name = cython_file.replace("/", ".").replace(".pyx", "")
-    print(f"\033[38;2;189;147;249mProcessing file:\033[0m {cython_file}")
-    extensions.append(
-        Extension(
-            name=module_name,
-            sources=[
-                cython_file,
-                "src/cpp/simd_search.cpp"
-            ],
-            language="c++",
-            include_dirs=include_dirs + [
-                "third_party/abseil",
-                "third_party/apache",
-                "opteryx/third_party/apache"
-            ],
-            extra_compile_args=CPP_COMPILE_FLAGS,
-        ),
-    )
+# Compile the consolidated list_ops module
+list_ops_file = "opteryx/compiled/list_ops/list_ops.pyx"
+print(f"\033[38;2;189;147;249mProcessing consolidated file:\033[0m {list_ops_file}")
+extensions.append(
+    Extension(
+        name="opteryx.compiled.list_ops.list_ops",
+        sources=[
+            list_ops_file,
+            "src/cpp/simd_search.cpp"
+        ],
+        language="c++",
+        include_dirs=include_dirs + [
+            "third_party/abseil",
+            "third_party/apache",
+            "opteryx/third_party/apache"
+        ],
+        extra_compile_args=CPP_COMPILE_FLAGS,
+    ),
+)
 
 
 setup_config = {
