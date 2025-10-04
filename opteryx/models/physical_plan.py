@@ -148,19 +148,33 @@ class PhysicalPlan(Graph):
             node = self[nid]
             node.flow_id = None
         
-        visited = set()
         flow_counter = 0
         
-        # Process nodes in depth-first order
-        for nid, node in self.depth_first_search_flat():
+        # Process all nodes - we need to do this in forward direction (from entries to exits)
+        # to properly propagate flow IDs
+        entry_points = self.get_entry_points()
+        
+        # Use a queue for breadth-first processing to ensure parents are processed before children
+        from collections import deque
+        queue = deque(entry_points)
+        visited = set()
+        
+        while queue:
+            nid = queue.popleft()
+            
             if nid in visited:
                 continue
             
             visited.add(nid)
+            node = self[nid]
             
             # Stateful nodes and joins don't belong to flows - they are flow boundaries
             if not node.is_stateless or node.is_join:
                 # Mark as visited but don't assign to a flow
+                # Add children to queue
+                for _, child, _ in self.outgoing_edges(nid):
+                    if child not in visited:
+                        queue.append(child)
                 continue
             
             # Check if this node can start or continue a flow
@@ -195,6 +209,11 @@ class PhysicalPlan(Graph):
             
             # Assign this node to the flow
             node.flow_id = current_flow_id
+            
+            # Add children to queue
+            for _, child, _ in self.outgoing_edges(nid):
+                if child not in visited:
+                    queue.append(child)
         
         return flow_counter
 

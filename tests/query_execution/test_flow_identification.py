@@ -182,6 +182,83 @@ def test_merge_breaks_flow():
     assert project.flow_id != scan2.flow_id
 
 
+def test_complex_query_flow():
+    """Test flow identification on a more complex query structure."""
+    plan = PhysicalPlan()
+    
+    # Create a complex plan representing:
+    # SELECT ... FROM table1 JOIN table2 WHERE ... GROUP BY ... ORDER BY ... LIMIT
+    # 
+    # Scan1 -> Filter1 \
+    #                    Join -> Project -> Aggregate -> Sort -> Limit
+    # Scan2 -> Filter2 /
+    
+    scan1 = MockNode(is_stateless=True, is_scan=True)
+    filter1 = MockNode(is_stateless=True)
+    scan2 = MockNode(is_stateless=True, is_scan=True)
+    filter2 = MockNode(is_stateless=True)
+    join = MockNode(is_stateless=False, is_join=True)
+    project = MockNode(is_stateless=True)
+    aggregate = MockNode(is_stateless=False)
+    sort = MockNode(is_stateless=False)
+    limit = MockNode(is_stateless=True)
+    
+    plan.add_node("scan1", scan1)
+    plan.add_node("filter1", filter1)
+    plan.add_node("scan2", scan2)
+    plan.add_node("filter2", filter2)
+    plan.add_node("join", join)
+    plan.add_node("project", project)
+    plan.add_node("aggregate", aggregate)
+    plan.add_node("sort", sort)
+    plan.add_node("limit", limit)
+    
+    # Left side of join
+    plan.add_edge("scan1", "filter1")
+    plan.add_edge("filter1", "join", "left")
+    
+    # Right side of join
+    plan.add_edge("scan2", "filter2")
+    plan.add_edge("filter2", "join", "right")
+    
+    # After join
+    plan.add_edge("join", "project")
+    plan.add_edge("project", "aggregate")
+    plan.add_edge("aggregate", "sort")
+    plan.add_edge("sort", "limit")
+    
+    # Identify flows
+    num_flows = plan.identify_flows()
+    
+    # Flow 0: scan1 -> filter1 (left side of join)
+    assert scan1.flow_id == filter1.flow_id
+    
+    # Flow 1: scan2 -> filter2 (right side of join)
+    assert scan2.flow_id == filter2.flow_id
+    
+    # Flows should be different for left and right
+    assert scan1.flow_id != scan2.flow_id
+    
+    # Join is a boundary
+    assert join.flow_id is None
+    
+    # Flow 2: project (after join, before aggregate)
+    assert project.flow_id is not None
+    assert project.flow_id != scan1.flow_id
+    assert project.flow_id != scan2.flow_id
+    
+    # Aggregate and Sort are boundaries
+    assert aggregate.flow_id is None
+    assert sort.flow_id is None
+    
+    # Flow 3: limit (after sort)
+    assert limit.flow_id is not None
+    assert limit.flow_id != project.flow_id
+    
+    # Should have at least 4 flows (left, right, project, limit)
+    assert num_flows >= 4
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
