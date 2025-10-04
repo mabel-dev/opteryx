@@ -1,4 +1,6 @@
+import re
 import subprocess
+from pathlib import Path
 
 __build__ = None
 
@@ -24,4 +26,15 @@ with open("opteryx/__version__.py", mode="r") as v:
 exec(vers)  # nosec
 print(__version__)
 
-subprocess.run(["git", "add", "opteryx/__version__.py"])
+pyproject_path = Path("pyproject.toml")
+pyproject_contents = pyproject_path.read_text()
+pattern = re.compile(r'^(version\s*=\s*")[^"]*(")', re.MULTILINE)
+updated_contents, replacements = pattern.subn(f'version = "{__version__}"', pyproject_contents, count=1)
+
+if replacements == 0:
+    msg = "Unable to locate version field in pyproject.toml"
+    raise ValueError(msg)
+
+pyproject_path.write_text(updated_contents)
+
+subprocess.run(["git", "add", "opteryx/__version__.py", "pyproject.toml"])
