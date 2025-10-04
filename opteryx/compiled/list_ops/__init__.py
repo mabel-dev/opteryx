@@ -10,4 +10,5 @@ All individual .pyx files are compiled into a single .so file.
 Import functions directly from opteryx.compiled.list_ops
 """
 
-from .list_ops import *  # noqa: F403,F401
+# This is created by the setup.py build process
+from .function_definitions import *  # noqa: F403,F401

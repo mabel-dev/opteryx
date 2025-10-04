@@ -347,7 +347,7 @@ print(f"\033[38;2;189;147;249mAuto-generated list_ops.pyx with {len(pyx_files)} 
 
 extensions.append(
     Extension(
-        name="opteryx.compiled.list_ops",
+        name="opteryx.compiled.list_ops.function_definitions",
         sources=[
             list_ops_file,
             "src/cpp/simd_search.cpp"
