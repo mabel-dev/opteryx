@@ -5,7 +5,13 @@
 
 """
 Import all functions from the consolidated list_ops module.
+
+The individual .pyx files are kept separate for maintainability,
+but they are compiled into a single .so file via include directives.
 """
+
+import sys
+from types import ModuleType
 
 # Import all functions from the single compiled module
 from opteryx.compiled.list_ops.list_ops import (
@@ -40,11 +46,6 @@ from opteryx.compiled.list_ops.list_ops import (
 
 # Create submodules for backward compatibility with code that imports like:
 # from opteryx.compiled.list_ops.list_in_list import list_in_list
-# This is achieved by creating module-like objects
-import sys
-from types import ModuleType
-
-# Create a mapping of module names to their functions
 _SUBMODULE_FUNCTIONS = {
     'list_allop_eq': ['list_allop_eq'],
     'list_allop_neq': ['list_allop_neq'],

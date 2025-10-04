@@ -308,9 +308,10 @@ if machine.startswith("arm") and not machine.startswith("aarch64"):
 elif "x86" in machine or "amd64" in machine:
     CPP_COMPILE_FLAGS.append("-mavx2")
 
-# Compile the consolidated list_ops module
+# Compile all list_ops files into a single .so by using include directives
+# The individual .pyx files are kept separate for maintainability
 list_ops_file = "opteryx/compiled/list_ops/list_ops.pyx"
-print(f"\033[38;2;189;147;249mProcessing consolidated file:\033[0m {list_ops_file}")
+print(f"\033[38;2;189;147;249mProcessing consolidated list_ops module:\033[0m {list_ops_file}")
 extensions.append(
     Extension(
         name="opteryx.compiled.list_ops.list_ops",
