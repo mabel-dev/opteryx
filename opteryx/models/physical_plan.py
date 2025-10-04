@@ -5,6 +5,28 @@
 
 """
 The Physical Plan is a tree of nodes that represent the execution plan for a query.
+
+Flow/Subplan Identification:
+    The PhysicalPlan includes logic to identify "flows" or "subplans" - chains of 
+    operations that can be executed together without intermediate checkpoints.
+    
+    A flow is a linear sequence of stateless operators. Flows break at:
+    - Stateful nodes (aggregates, sorts, etc.)
+    - Join nodes
+    - Branch points (multiple children)
+    - Merge points (multiple parents)
+    
+    Each node is annotated with a flow_id. Stateful/join nodes have flow_id=None
+    as they act as boundaries. This enables the parallel execution engine to send
+    entire flows to workers for efficient execution.
+    
+    Example:
+        Scan -> Filter -> Project -> Aggregate -> Limit
+        
+        Creates 2 flows:
+        - Flow 0: [Scan, Filter, Project]
+        - Aggregate: flow_id=None (boundary)
+        - Flow 1: [Limit]
 """
 
 from typing import Optional
@@ -102,7 +124,22 @@ class PhysicalPlan(Graph):
         
         Stateful/join nodes are NOT included in flows - they act as boundaries.
         
+        Example:
+            For a plan: Scan -> Filter -> Project -> Aggregate -> Limit
+            
+            This would create 2 flows:
+            - Flow 0: [Scan, Filter, Project] (all stateless, linear chain)
+            - Flow 1: [Limit] (after the stateful Aggregate boundary)
+            - Aggregate has flow_id=None (boundary node)
+            
+            The parallel engine can send Flow 0 to a worker to execute all three
+            operations together, then the Aggregate runs serially, then Flow 1 can
+            be sent to a worker.
+        
         This method annotates each node with a flow_id to indicate which flow it belongs to.
+        
+        Returns:
+            int: The number of flows identified in the plan.
         """
         from orso.tools import random_string
         

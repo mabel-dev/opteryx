@@ -15,6 +15,33 @@ ENABLE_NATIVE_AGGREGATOR: bool = features.enable_native_aggregator
 
 
 def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
+    """
+    Creates a physical execution plan from a logical plan.
+    
+    The physical plan is a directed acyclic graph (DAG) of operator nodes that
+    represent the actual execution steps. After creating the plan, this function
+    identifies "flows" or "subplans" - chains of operations that can be executed
+    together without needing to report back interim snapshots.
+    
+    Flows are identified as follows:
+    - A flow is a sequence of stateless operators in a linear chain
+    - Flows break at:
+      * Stateful nodes (aggregates, joins, etc.) that require accumulation
+      * Branch points where one node has multiple children
+      * Merge points where one node has multiple parents
+    - Stateful/join nodes act as flow boundaries and are not part of any flow
+    
+    Each node in the physical plan is annotated with a flow_id to indicate which
+    flow it belongs to (or None if it's a boundary node). This enables the parallel
+    execution engine to send entire flows to workers for efficient execution.
+    
+    Parameters:
+        logical_plan: The logical plan to convert
+        query_properties: Query execution properties
+        
+    Returns:
+        PhysicalPlan: The physical execution plan with flow annotations
+    """
     plan = PhysicalPlan()
 
     for nid, logical_node in logical_plan.nodes(data=True):
