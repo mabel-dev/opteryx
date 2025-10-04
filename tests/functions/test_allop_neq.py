@@ -4,7 +4,7 @@ import pyarrow as pa
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.compiled.list_ops.list_allop_neq import list_allop_neq
+from opteryx.compiled.list_ops.list_ops import list_allop_neq
 
 def _test_all_neq_comparison(literal, test_value, expected_result, _type=pa.string()):
     array = pa.array([test_value], type=pa.list_(_type))

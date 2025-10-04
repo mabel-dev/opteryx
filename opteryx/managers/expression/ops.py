@@ -314,7 +314,7 @@ def _inner_filter_operations(arr, operator, value):
         )
 
     if operator == "AtArrow":
-        from opteryx.compiled.list_ops.list_contains_any import list_contains_any
+        from opteryx.compiled.list_ops.list_ops import list_contains_any
 
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
@@ -332,7 +332,7 @@ def _inner_filter_operations(arr, operator, value):
         return list_contains_any(arr, set(value))
 
     if operator == "ArrayContainsAll":
-        from opteryx.compiled.list_ops.list_contains_all import list_contains_all
+        from opteryx.compiled.list_ops.list_ops import list_contains_all
 
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
