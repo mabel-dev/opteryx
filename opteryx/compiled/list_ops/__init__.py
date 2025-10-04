@@ -4,23 +4,11 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-Dynamically import all compiled modules in this directory.
+List operations module.
+
+All individual .pyx files are compiled into a single .so file.
+Import functions directly from opteryx.compiled.list_ops
 """
 
-import glob
-import importlib
-import os
-
-# Get the directory of this file
-current_dir = os.path.dirname(__file__)
-
-# Find all compiled modules
-compiled_modules = glob.iglob(os.path.join(current_dir, "*.pyx"))
-
-# Import each compiled module
-for module_path in compiled_modules:
-    module_name = os.path.basename(module_path).replace(".pyx", "")
-    try:
-        importlib.import_module(f"opteryx.compiled.list_ops.{module_name}", package=__name__)
-    except ImportError as e:
-        print(f"Failed to import {module_name}: {e}")
+# This is created by the setup.py build process
+from .function_definitions import *  # noqa: F403,F401

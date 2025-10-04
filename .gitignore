@@ -185,3 +185,4 @@ clickbench/**
 .github/environment/splunk/docker-compose.yml
 testdata/iceberg/**
 third_party/tktech/simdjson/csimdjson.cpp
+opteryx/compiled/list_ops/list_ops.pyx
