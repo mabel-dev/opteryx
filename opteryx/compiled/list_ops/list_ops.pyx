@@ -34,7 +34,3 @@ include "list_in_list.pyx"
 include "list_in_string.pyx"
 include "list_length.pyx"
 include "list_long_arrow_op.pyx"
-
-# Aliases for backward compatibility
-cython_arrow_op = list_arrow_op
-cython_long_arrow_op = list_long_arrow_op
