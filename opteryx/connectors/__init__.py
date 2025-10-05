@@ -90,7 +90,7 @@ def register_df(name, frame):
     """register a orso, pandas or Polars dataframe"""
     # Lazy import ArrowConnector
     from opteryx.connectors.arrow_connector import ArrowConnector
-    
+
     # polars (maybe others) - the polars to arrow API is a mess
     if hasattr(frame, "_df"):  # pragma: no cover
         frame = frame._df
