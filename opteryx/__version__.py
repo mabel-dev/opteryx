@@ -1,4 +1,4 @@
-__build__ = 1535
+__build__ = 1537
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,12 @@ Store the version here so:
 """
 from enum import Enum  # isort: skip
 
+
 class VersionStatus(Enum):
     ALPHA = "alpha"
     BETA = "beta"
     RELEASE = "release"
+
 
 _major = 0
 _minor = 26
