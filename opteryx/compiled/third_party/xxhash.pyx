@@ -14,7 +14,7 @@ from cpython.bytes cimport PyBytes_AsStringAndSize
 cdef extern from "xxhash.h":
     uint64_t XXH3_64bits(const void* input, size_t length) nogil
 
-cdef inline uint64_t cy_xxhash3_64(const void *key, size_t len) nogil:
+cdef inline uint64_t cy_xxhash3_64(const void *key, size_t len) except? 0 nogil:
     return XXH3_64bits(key, len)
 
 cpdef uint64_t hash_bytes(bytes key):

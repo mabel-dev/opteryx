@@ -18,10 +18,12 @@ from cpython.unicode cimport PyUnicode_AsUTF8AndSize, PyUnicode_Check
 
 import datetime
 from decimal import Decimal
+from cython cimport cast
 
-cdef int64_t NULL_FLAG = -(1 << 63)              # -9223372036854775808
-cdef int64_t MIN_SIGNED_64BIT = NULL_FLAG + 1    # -9223372036854775807
-cdef int64_t MAX_SIGNED_64BIT = (1 << 63) - 1    # 09223372036854775807
+cdef uint64_t _INT64_HIGH_BIT = (<uint64_t>1) << 63
+cdef int64_t NULL_FLAG = -cast(int64_t, _INT64_HIGH_BIT)              # -9223372036854775808
+cdef int64_t MIN_SIGNED_64BIT = NULL_FLAG + 1               # -9223372036854775807
+cdef int64_t MAX_SIGNED_64BIT = cast(int64_t, _INT64_HIGH_BIT - 1)    # 9223372036854775807
 
 cdef inline bint map_contains(unordered_map[string, int64_t]& m, string key):
     return m.find(key) != m.end()

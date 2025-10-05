@@ -10,12 +10,7 @@
 // Extends:
 //  https://github.com/apache/datafusion-sqlparser-rs/blob/main/src/dialect/mod.rs
 
-#[cfg(feature = "std")]
 use std::boxed::Box;
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-#[cfg(not(feature = "std"))]
-use alloc::boxed::Box;
 
 use sqlparser::ast::{BinaryOperator, Expr};
 use sqlparser::dialect::Dialect;

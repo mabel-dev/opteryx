@@ -55,15 +55,15 @@ cdef void process_string_chunk(chunk, FlatHashSet seen_hashes):
         Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
         uint64_t hash_val
         list buffers = chunk.buffers()
-        size_t str_len
-        int start, end
+        Py_ssize_t str_len
+        Py_ssize_t start, end
 
     # Handle potential missing buffers
     validity = <uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
     offsets = <int32_t*><uintptr_t>(buffers[1].address) if len(buffers) > 1 else NULL
     data = <const char*><uintptr_t>buffers[2].address if len(buffers) > 2 else NULL
     row_count = len(chunk)
-    buffer_length = len(data) if data else 0
+    buffer_length = buffers[2].size if len(buffers) > 2 and buffers[2] else 0
     arr_offset = chunk.offset  # Account for non-zero offset in chunk
 
     # Calculate the byte and bit offset for validity
@@ -90,7 +90,7 @@ cdef void process_string_chunk(chunk, FlatHashSet seen_hashes):
                 hash_val = EMPTY_HASH
             else:
                 # Hash the string using xxhash3_64
-                hash_val = <int64_t>cy_xxhash3_64(data + start, str_len)
+                hash_val = <int64_t>cy_xxhash3_64(data + start, <size_t>str_len)
 
         seen_hashes.just_insert(hash_val)
 
@@ -127,7 +127,7 @@ cdef void process_primitive_chunk(chunk, FlatHashSet seen_hashes):
             # cast 8-byte values directly into hash_val
             hash_val = (<uint64_t*>(data + ((arr_offset + i) * 8)))[0]
         else:
-            hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+            hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), <size_t>item_size)
 
         seen_hashes.just_insert(hash_val)
 
@@ -196,7 +196,7 @@ cdef void process_list_chunk(chunk, FlatHashSet seen_hashes):
                     data_size = PyBytes_Size(element)
 
                     # Combine each element's hash with a simple mix
-                    hash_val = cy_xxhash3_64(<const void*>data_ptr, data_size) ^ hash_val
+                    hash_val = cy_xxhash3_64(<const void*>data_ptr, <size_t>data_size) ^ hash_val
 
                     # Optionally apply SplitMix64 finalizer (commented out for now)
                     hash_val = (hash_val ^ (hash_val >> 30)) * c1

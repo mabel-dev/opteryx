@@ -64,8 +64,8 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
     cdef Py_ssize_t arr_offset, offset_in_bits, offset_in_bytes, byte_index, bit_index
     cdef uint64_t hash_val
     cdef list buffers = chunk.buffers()
-    cdef size_t str_len
-    cdef int start, end
+    cdef Py_ssize_t str_len
+    cdef Py_ssize_t start, end
 
     # Handle potential missing buffers
     validity = <uint8_t*><uintptr_t>(buffers[0].address) if len(buffers) > 0 and buffers[0] else NULL
@@ -98,7 +98,7 @@ cdef void process_string_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_
                 hash_val = EMPTY_HASH
             else:
                 # Hash the string using xxhash3_64
-                hash_val = <uint64_t>cy_xxhash3_64(data + start, str_len)
+                hash_val = <uint64_t>cy_xxhash3_64(data + start, <size_t>str_len)
 
         update_row_hash(row_hashes, row_offset + i, hash_val)
 
@@ -137,7 +137,7 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
                 update_row_hash(row_hashes, row_offset + i, hash_val)
         else:
             for i in range(length):
-                hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+                hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), <size_t>item_size)
                 update_row_hash(row_hashes, row_offset + i, hash_val)
     else:
         if item_size == 8:
@@ -158,7 +158,7 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
                 if not (validity[byte_index] & (1 << bit_index)):
                     hash_val = NULL_HASH
                 else:
-                    hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), item_size)
+                    hash_val = cy_xxhash3_64(data + ((arr_offset + i) * item_size), <size_t>item_size)
                 update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
@@ -226,7 +226,7 @@ cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t 
                     data_size = PyBytes_Size(element)
 
                     # Combine each element's hash with a simple mix
-                    hash_val = cy_xxhash3_64(<const void*>data_ptr, data_size) ^ hash_val
+                    hash_val = cy_xxhash3_64(<const void*>data_ptr, <size_t>data_size) ^ hash_val
                     hash_val = (hash_val ^ (hash_val >> 30)) * c1
                     hash_val = (hash_val ^ (hash_val >> 27)) * c2
                     hash_val = hash_val ^ (hash_val >> 31)
