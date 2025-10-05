@@ -51,48 +51,58 @@ __all__ = (
 def _lazy_import_connector(connector_name: str):
     """
     Lazy import a connector class by name.
-    
+
     This function is called by __getattr__ when a connector is accessed,
     or by connector_factory when a connector needs to be instantiated.
-    
+
     Args:
         connector_name: The name of the connector class to import
-        
+
     Returns:
         The connector class
-        
+
     Raises:
         ValueError: If the connector name is unknown
     """
     if connector_name == "ArrowConnector":
         from opteryx.connectors.arrow_connector import ArrowConnector
+
         return ArrowConnector
     elif connector_name == "AwsS3Connector":
         from opteryx.connectors.aws_s3_connector import AwsS3Connector
+
         return AwsS3Connector
     elif connector_name == "CqlConnector":
         from opteryx.connectors.cql_connector import CqlConnector
+
         return CqlConnector
     elif connector_name == "DiskConnector":
         from opteryx.connectors.disk_connector import DiskConnector
+
         return DiskConnector
     elif connector_name == "FileConnector":
         from opteryx.connectors.file_connector import FileConnector
+
         return FileConnector
     elif connector_name == "GcpCloudStorageConnector":
         from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
+
         return GcpCloudStorageConnector
     elif connector_name == "GcpFireStoreConnector":
         from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
+
         return GcpFireStoreConnector
     elif connector_name == "IcebergConnector":
         from opteryx.connectors.iceberg_connector import IcebergConnector
+
         return IcebergConnector
     elif connector_name == "MongoDbConnector":
         from opteryx.connectors.mongodb_connector import MongoDbConnector
+
         return MongoDbConnector
     elif connector_name == "SqlConnector":
         from opteryx.connectors.sql_connector import SqlConnector
+
         return SqlConnector
     else:
         raise ValueError(f"Unknown connector: {connector_name}")
@@ -103,7 +113,7 @@ def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     if not isinstance(connector, type):  # type: ignore
         # uninstantiated classes aren't a type
         raise ValueError("connectors registered with `register_store` must be uninstantiated.")
-    
+
     # Store connector class directly (not as a string)
     _storage_prefixes[prefix] = {
         "connector": connector,  # type: ignore
@@ -154,7 +164,7 @@ def register_arrow(name, table):
     """register an arrow table"""
     from opteryx.connectors.arrow_connector import ArrowConnector
     from opteryx.shared import MaterializedDatasets
-    
+
     materialized_datasets = MaterializedDatasets()
     materialized_datasets[name] = table
     register_store(name, ArrowConnector)
@@ -212,19 +222,19 @@ def connector_factory(dataset, statistics, **config):
 def __getattr__(name):
     """
     Lazy load connector classes when accessed as module attributes.
-    
+
     This allows the standard import pattern to work:
         from opteryx.connectors import ArrowConnector
-        
+
     But defers the actual import until the connector is accessed,
     significantly improving initial module load time.
-    
+
     Args:
         name: The attribute name being accessed
-        
+
     Returns:
         The connector class if it exists in __all__
-        
+
     Raises:
         AttributeError: If the attribute doesn't exist
     """
