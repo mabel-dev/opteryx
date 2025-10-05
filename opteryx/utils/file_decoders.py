@@ -251,9 +251,13 @@ def parquet_decoder(
     # We can use rugo's metadata reader which is faster than pyarrow's
     if projection == [] and selection == []:
         if isinstance(buffer, memoryview):
-            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+            metadata = parquet_meta.read_metadata_from_memoryview(
+                buffer, include_statistics=False, max_row_groups=1
+            )
         else:
-            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+            metadata = parquet_meta.read_metadata_from_memoryview(
+                memoryview(buffer), include_statistics=False, max_row_groups=1
+            )
         num_rows = metadata["num_rows"]
         num_columns = len(metadata["row_groups"][0]["columns"])
         num_bytes = sum(x["total_byte_size"] for x in metadata["row_groups"])
@@ -269,9 +273,13 @@ def parquet_decoder(
     # We can use rugo's metadata reader which is faster than pyarrow's
     if just_schema:
         if isinstance(buffer, memoryview):
-            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+            metadata = parquet_meta.read_metadata_from_memoryview(
+                buffer, schema_only=True, max_row_groups=1, include_statistics=False
+            )
         else:
-            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+            metadata = parquet_meta.read_metadata_from_memoryview(
+                memoryview(buffer), schema_only=True, max_row_groups=1, include_statistics=False
+            )
         return rugo_to_orso_schema(metadata, "parquet")
 
     # Gather statistics if that's all that's needed
@@ -281,9 +289,11 @@ def parquet_decoder(
             statistics = RelationStatistics()
 
         if isinstance(buffer, memoryview):
-            metadata = parquet_meta.read_metadata_from_memoryview(buffer)
+            metadata = parquet_meta.read_metadata_from_memoryview(buffer, include_statistics=True)
         else:
-            metadata = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
+            metadata = parquet_meta.read_metadata_from_memoryview(
+                memoryview(buffer), include_statistics=True
+            )
 
         num_rows = metadata["num_rows"]
         statistics.record_count += num_rows
