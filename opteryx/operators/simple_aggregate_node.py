@@ -108,6 +108,8 @@ class SimpleAggregateCollector:
                 return None
             return self.current_value / self.counter
         if self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
+            if self.current_value is None:
+                return 0
             return self.current_value.items()
         if self.aggregate_type == "COUNT":
             return self.counter
