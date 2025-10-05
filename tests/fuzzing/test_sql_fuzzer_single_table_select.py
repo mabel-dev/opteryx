@@ -29,12 +29,14 @@ def random_value(t):
     if t == OrsoTypes.BLOB:
         return f"b'{random_string(8)}'"
     if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        # Use a fixed reference date to ensure reproducibility
+        reference_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         if random.random() < 0.5:
-            return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
-        return f"'{(datetime.datetime.now() + datetime.timedelta(seconds=random_int())).date()}'"
+            return f"'{reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))}'"
+        return f"'{(reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))).date()}'"
     if random.random() < 0.5:
-        return random_int()
-    return random_int() / 1000
+        return random.randint(-1000000, 1000000)
+    return random.randint(-1000000, 1000000) / 1000
 
 
 def generate_condition(columns):
@@ -192,7 +194,8 @@ def test_sql_fuzzing_single_table(i):
     iceberg = set_up_iceberg()
     opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
 
-    seed = random_int()
+    # Use test iteration number as seed for reproducibility
+    seed = i
     random.seed(seed)
 
     table = TABLES[random.choice(range(len(TABLES)))]

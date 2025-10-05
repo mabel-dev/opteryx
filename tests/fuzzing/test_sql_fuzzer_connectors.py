@@ -102,12 +102,14 @@ def random_value(t):
     if t == OrsoTypes.VARCHAR:
         return f"'{random_string(4)}'"
     if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        # Use a fixed reference date to ensure reproducibility
+        reference_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         if random.random() < 0.5:
-            return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
-        return f"'{(datetime.datetime.now() + datetime.timedelta(seconds=random_int())).date()}'"
+            return f"'{reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))}'"
+        return f"'{(reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))).date()}'"
     if random.random() < 0.5:
-        return random_int()
-    return random_int() / 1000
+        return random.randint(-1000000, 1000000)
+    return random.randint(-1000000, 1000000) / 1000
 
 
 def generate_condition(columns):
@@ -193,7 +195,9 @@ def test_sql_fuzzing_connector_comparisons(i):
 
     set_up_connections()
 
-    seed = random_int()
+    # Use test iteration number as seed for reproducibility
+    worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
+    seed = i + hash(worker_id) % 1000
     random.seed(seed)
 
     table_name = random.choice(list(TABLES.keys()))
