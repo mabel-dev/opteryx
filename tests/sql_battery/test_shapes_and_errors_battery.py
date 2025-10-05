@@ -2529,6 +2529,9 @@ id > /* 0 */ 1
         ("SELECT * EXCEPT(id, density) FROM $planets ORDER BY name", 9, 18, None),
         ("SELECT * EXCEPT(name) FROM $planets ORDER BY name", 9, 19, UnsupportedSyntaxError),
         ("SELECT * EXCEPT(id, name) FROM $planets ORDER BY name", 9, 19, UnsupportedSyntaxError),
+        # 2818
+        ("SELECT COUNT_DISTINCT(perihelion) FROM testdata.planets WHERE diameter >= 378092", 1, 1, None),
+        ("SELECT COUNT_DISTINCT(perihelion) FROM testdata.planets WHERE diameter >= 378092 GROUP BY name", 0, 1, None),
 ]
 # fmt:on
 
