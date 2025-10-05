@@ -83,7 +83,7 @@ cdef uint8_t[::1] _anyop_eq_string_chunk(object literal, object list_array):
         literal_bytes = literal.encode('utf-8')
 
     cdef const char* literal_ptr = PyBytes_AsString(literal_bytes)
-    cdef size_t literal_len = len(literal_bytes)
+    cdef Py_ssize_t literal_len = len(literal_bytes)
     cdef list buffers = list_array.buffers()
     cdef const uint8_t* outer_validity = NULL
     cdef const int32_t* offsets = NULL
@@ -136,7 +136,7 @@ cdef uint8_t[::1] _anyop_eq_string_chunk(object literal, object list_array):
             if val_len != literal_len:
                 continue
 
-            if memcmp(value_data + val_start, literal_ptr, literal_len) == 0:
+            if memcmp(value_data + val_start, literal_ptr, <size_t>literal_len) == 0:
                 result_view[i] = 1
                 break  # short-circuit
 

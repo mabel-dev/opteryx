@@ -33,7 +33,10 @@ cpdef numpy.ndarray[numpy.uint32_t, ndim=1] list_length(object array):
         try:
             offsets_buffer = array.buffers()[1]
             offsets = numpy.frombuffer(offsets_buffer, dtype=numpy.int32, count=n + 1)
-            return (offsets[1:] - offsets[:-1]).astype(numpy.uint32)
+            # Avoid negative indices when wraparound is disabled by using explicit slice bounds
+            offsets_head = offsets[1 : n + 1]
+            offsets_tail = offsets[:n]
+            return (offsets_head - offsets_tail).astype(numpy.uint32)
         except Exception:
             pass  # fallback if offsets unavailable
 

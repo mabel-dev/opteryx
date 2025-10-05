@@ -85,7 +85,7 @@ cdef uint8_t[::1] _anyop_lt_string_chunk(object literal, object list_array):
     cdef:
         bytes literal_bytes = literal.encode('utf-8')
         const char* literal_ptr = PyBytes_AsString(literal_bytes)
-        size_t literal_len = len(literal_bytes)
+        Py_ssize_t literal_len = len(literal_bytes)
 
         list buffers = list_array.buffers()
         const uint8_t* outer_validity = NULL

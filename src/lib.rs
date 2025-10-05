@@ -16,7 +16,7 @@ pub use opteryx_dialect::OpteryxDialect;
 /// we have a _dialect parameter that is not used.
 #[pyfunction]
 #[pyo3(text_signature = "(sql, dialect)")]
-fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<PyObject> {
+fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<Py<PyAny>> {
     let chosen_dialect = Box::new(OpteryxDialect {});
     let parse_result = Parser::parse_sql(&*chosen_dialect, &sql);
 

@@ -26,7 +26,7 @@ cdef extern from "fast_float.h" namespace "fast_float":
 
 cdef inline double c_parse_fast_float(bytes bts):
     cdef const char* s = bts
-    cdef double value
+    cdef double value = 0.0
     cdef Py_ssize_t n = len(bts)
 
     cdef from_chars_result res = from_chars(s, s + n, value)
@@ -50,7 +50,7 @@ cpdef numpy.ndarray[double] parse_ascii_array_to_double(numpy.ndarray[object, nd
     cdef bytes encoded
     cdef const char* c_str
     cdef Py_ssize_t length
-    cdef double val
+    cdef double val = 0.0
     cdef from_chars_result res
     cdef object item
 
@@ -63,7 +63,7 @@ cpdef numpy.ndarray[double] parse_ascii_array_to_double(numpy.ndarray[object, nd
         # Convert str to bytes (UTF-8 encoded, ideally ASCII)
         encoded = PyUnicode_AsUTF8String(item)
         c_str = PyBytes_AS_STRING(encoded)
-        length = PyBytes_GET_SIZE(item)
+        length = PyBytes_GET_SIZE(encoded)
 
         res = from_chars(c_str, c_str + length, val)
         if res.ptr != NULL:
@@ -83,7 +83,7 @@ cpdef numpy.ndarray[double] parse_byte_array_to_double(numpy.ndarray[object, ndi
     cdef double[:] out_view = out
     cdef const char* c_str
     cdef Py_ssize_t length
-    cdef double val
+    cdef double val = 0.0
     cdef from_chars_result res
     cdef object item
 

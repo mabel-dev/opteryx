@@ -85,7 +85,7 @@ cdef uint8_t[::1] _anyop_neq_string_chunk(object literal, object list_array):
 
     cdef:
         const char* literal_ptr = PyBytes_AsString(literal_bytes)
-        size_t literal_len = len(literal_bytes)
+        Py_ssize_t literal_len = len(literal_bytes)
 
         list buffers = list_array.buffers()
         const uint8_t* outer_validity = NULL
@@ -149,7 +149,7 @@ cdef uint8_t[::1] _anyop_neq_string_chunk(object literal, object list_array):
                 result_view[i] = 1
                 break  # short-circuit
 
-            if memcmp(value_data + val_start, literal_ptr, literal_len) != 0:
+            if memcmp(value_data + val_start, literal_ptr, <size_t>literal_len) != 0:
                 result_view[i] = 1
                 break
 
