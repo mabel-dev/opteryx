@@ -112,7 +112,7 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.third_party.abseil.containers",
             sources=[
-                "opteryx/compiled/third_party/abseil_containers.pyx",
+                "opteryx/third_party/abseil/containers.pyx",
                 "third_party/abseil/absl/hash/internal/hash.cc",
                 "third_party/abseil/absl/hash/internal/city.cc",
                 "third_party/abseil/absl/container/internal/raw_hash_set.cc",
@@ -130,7 +130,7 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.third_party.alantsd.base64",
             sources=[
-                "opteryx/compiled/third_party/base64.pyx", 
+                "opteryx/third_party/alantsd/base64.pyx", 
                 "third_party/alantsd/base64.c"
             ],
             include_dirs=include_dirs + ["third_party/alantsd"],
@@ -140,7 +140,7 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.third_party.cyan4973.xxhash",
             sources=[
-                "opteryx/compiled/third_party/xxhash.pyx", 
+                "opteryx/third_party/cyan4973/xxhash.pyx", 
                 "third_party/cyan4973/xxhash.c"
             ],
             include_dirs=include_dirs + ["third_party/cyan4973"],
@@ -150,7 +150,7 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.third_party.fastfloat.fast_float",
             sources=[
-                "opteryx/compiled/third_party/fast_float.pyx",
+                "opteryx/third_party/fastfloat/fast_float.pyx",
             ],
             include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
             language="c++",
@@ -160,17 +160,18 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.third_party.tktech.csimdjson",
             sources=[
+                "opteryx/third_party/tktech/csimdjson.pyx",
                 "third_party/tktech/simdjson/simdjson.cpp",
                 "third_party/tktech/simdjson/util.cpp",
-                "third_party/tktech/simdjson/csimdjson.pyx",
             ],
+            include_dirs=include_dirs + ["third_party/tktech/simdjson"],
             language="c++",
             extra_compile_args=CPP_COMPILE_FLAGS,
         ),
         Extension(
             name="opteryx.third_party.ulfjack.ryu",
             sources=[
-                "opteryx/compiled/third_party/ryu.pyx",
+                "opteryx/third_party/ulfjack/ryu.pyx",
                 "third_party/ulfjack/ryu/d2fixed.c",
             ],
             include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
@@ -314,7 +315,7 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.third_party.fuzzy",
-            sources=["opteryx/compiled/third_party/fuzzy_soundex.pyx"],
+            sources=["opteryx/third_party/fuzzy/soundex.pyx"],
             extra_compile_args=C_COMPILE_FLAGS,
         ),
     ]
