@@ -29,12 +29,14 @@ def random_value(t):
     if t == OrsoTypes.BLOB:
         return f"b'{random_string(8)}'"
     if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        # Use a fixed reference date to ensure reproducibility
+        reference_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         if random.random() < 0.5:
-            return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
-        return f"'{(datetime.datetime.now() + datetime.timedelta(seconds=random_int())).date()}'"
+            return f"'{reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))}'"
+        return f"'{(reference_date + datetime.timedelta(seconds=random.randint(-1000000, 1000000))).date()}'"
     if random.random() < 0.5:
-        return random_int()
-    return random_int() / 1000
+        return random.randint(-1000000, 1000000)
+    return random.randint(-1000000, 1000000) / 1000
 
 
 def generate_condition(table, columns):
@@ -174,7 +176,8 @@ TEST_CYCLES: int = 10
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_join(i):
-    seed = random_int()
+    # Use test iteration number as seed for reproducibility
+    seed = i
     random.seed(seed)
 
     from tests.tools import set_up_iceberg
