@@ -17,7 +17,7 @@ cdef const int64_t MINUTES = 60 * 1000000
 cdef const int64_t HOURS = 3600 * 1000000
 cdef const int64_t DAYS = 86400 * 1000000
 
-cdef int64_t get_divisor(str part) noexcept nogil:
+cdef inline int64_t get_divisor(str part) noexcept:
     """
     Map unit string → microsecond divisor.
     """
