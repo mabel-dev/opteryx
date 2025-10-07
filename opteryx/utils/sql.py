@@ -25,7 +25,6 @@ def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: boo
     Examples:
         sql_like_to_regex("a%")       -> "^a.*?$"
         sql_like_to_regex("_b")       -> "^.b$"
-        sql_like_to_regex("%[test]%") -> "^.*?\[test\].*?$"
     """
     if pattern is None:
         raise ValueError("Pattern cannot be None")
