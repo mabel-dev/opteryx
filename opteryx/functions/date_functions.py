@@ -124,47 +124,74 @@ def date_part(part, arr):
 def date_diff(part, start, end):
     """calculate the difference between timestamps"""
 
-    extractors = {
-        "days": compute.days_between,
-        "hours": compute.hours_between,
-        "microseconds": compute.microseconds_between,
-        "minutes": compute.minutes_between,
+    from opteryx.compiled.list_ops import list_date_diff
+
+    arrow_extractors = {
         "months": compute.month_interval_between,  # this one doesn't work
         "quarters": compute.quarters_between,
-        "seconds": compute.seconds_between,
         "weeks": compute.weeks_between,
         "years": compute.years_between,
     }
 
-    # if we get date literals - this will never run due to [#325]
-    if isinstance(start, str):  # pragma: no cover
-        if not isinstance(end, (str, datetime.datetime)):
-            start = pyarrow.array([parse_iso(start)] * len(end), type=pyarrow.timestamp("us"))
-        else:
-            start = pyarrow.array([parse_iso(start)], type=pyarrow.timestamp("us"))
-    if isinstance(end, str):  # pragma: no cover
-        if not isinstance(start, (str, datetime.datetime)):
-            end = pyarrow.array([parse_iso(end)] * len(start), type=pyarrow.timestamp("us"))
-        else:
-            end = pyarrow.array([parse_iso(end)], type=pyarrow.timestamp("us"))
-
-    TARGET_DATE_TYPE: str = "datetime64[us]"
-    # cast to the desired type
-    if hasattr(start, "dtype") and start.dtype != TARGET_DATE_TYPE:
-        start = start.astype(TARGET_DATE_TYPE)
-    if hasattr(end, "dtype") and end.dtype != TARGET_DATE_TYPE:
-        end = end.astype(TARGET_DATE_TYPE)
-
-    part = part[0].lower()  # [#325]
-    if part[-1] != "s":
+    part = str(part[0]).lower()
+    if not part.endswith("s"):
         part += "s"
-    if part in extractors:
-        diff = extractors[part](start, end)
+
+    if part in arrow_extractors:
+        diff = arrow_extractors[part](start, end)
         if not hasattr(diff, "__iter__"):
             diff = numpy.array([diff])
         return [i.as_py() for i in diff]
 
-    raise SqlError(f"Date part '{part}' unsupported for DATEDIFF")
+    # --- normalize `start` ---
+    if isinstance(start, numpy.ndarray):
+        if start.dtype == numpy.int64:
+            pass  # already correct
+        elif numpy.issubdtype(start.dtype, numpy.datetime64):
+            start = start.astype("datetime64[us]").astype(numpy.int64)
+        else:
+            # likely dtype=object → datetimes, convert explicitly
+            start = numpy.array(
+                [
+                    int(x.timestamp() * 1_000_000) if isinstance(x, datetime.datetime) else 0
+                    for x in start
+                ],
+                dtype=numpy.int64,
+            )
+
+    elif isinstance(start, pyarrow.Array):
+        start = start.cast("timestamp[us]").to_numpy()
+    else:
+        # scalar or iterable
+        start = numpy.array(
+            [int(x.timestamp() * 1_000_000) for x in numpy.atleast_1d(start)],
+            dtype=numpy.int64,
+        )
+
+    # --- normalize `end` ---
+    if isinstance(end, numpy.ndarray):
+        if end.dtype == numpy.int64:
+            pass
+        elif numpy.issubdtype(end.dtype, numpy.datetime64):
+            end = end.astype("datetime64[us]").astype(numpy.int64)
+        else:
+            end = numpy.array(
+                [
+                    int(x.timestamp() * 1_000_000) if isinstance(x, datetime.datetime) else 0
+                    for x in end
+                ],
+                dtype=numpy.int64,
+            )
+
+    elif isinstance(end, pyarrow.Array):
+        end = end.cast("timestamp[us]").to_numpy()
+    else:
+        end = numpy.array(
+            [int(x.timestamp() * 1_000_000) for x in numpy.atleast_1d(end)],
+            dtype=numpy.int64,
+        )
+
+    return list_date_diff(start, end, part)
 
 
 def time_diff(time1, time2):
