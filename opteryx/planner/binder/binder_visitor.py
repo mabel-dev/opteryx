@@ -940,7 +940,9 @@ class BinderVisitor:
         from opteryx.connectors.capabilities import Statistics
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
+        from opteryx.exceptions import DatabaseError
         from opteryx.managers.permissions import can_read_table
+        from opteryx.managers.schemes.mabel_partitions import UnsupportedSegementationError
 
         if node.alias in context.relations:
             raise AmbiguousDatasetError(dataset=node.alias)
@@ -969,19 +971,28 @@ class BinderVisitor:
                 original_async_read_blob = node.connector.async_read_blob
                 node.connector.async_read_blob = async_read_thru_cache(original_async_read_blob)
 
-        node.schema = node.connector.get_dataset_schema()
-        node.schema.aliases.append(node.alias)
+        try:
+            node.schema = node.connector.get_dataset_schema()
+            node.schema.aliases.append(node.alias)
 
-        if Statistics in connector_capabilities:
-            node.schema = node.connector.map_statistics(
-                node.connector.relation_statistics, node.schema
-            )
+            if Statistics in connector_capabilities:
+                node.schema = node.connector.map_statistics(
+                    node.connector.relation_statistics, node.schema
+                )
 
-        context.schemas[node.alias] = node.schema
-        for column in node.schema.columns:
-            column.origin = [node.alias]
+            context.schemas[node.alias] = node.schema
+            for column in node.schema.columns:
+                column.origin = [node.alias]
 
-        context.relations[node.alias] = node.connector.__mode__
+            context.relations[node.alias] = node.connector.__mode__
+        except (DatabaseError, UnsupportedSegementationError) as err:
+            raise err
+        except Exception as e:
+            from opteryx.exceptions import DatasetReadError
+
+            raise DatasetReadError(
+                f"Cannot read information for dataset '{node.relation}': {e}"
+            ) from e
 
         return node, context
 
