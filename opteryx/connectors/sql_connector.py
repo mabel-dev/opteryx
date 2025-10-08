@@ -27,6 +27,7 @@ from orso.types import OrsoTypes
 
 from opteryx.compiled.structures.relation_statistics import RelationStatistics
 from opteryx.config import OPTERYX_DEBUG
+from opteryx.config import features
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
@@ -194,17 +195,26 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     break
 
                 # If we have a struct column, we need to convert the data to bytes
-                if any(col.type == OrsoTypes.STRUCT for col in self.schema.columns):
-                    batch_rows = list(batch_rows)
-                    for i, row in enumerate(batch_rows):
-                        batch_rows[i] = tuple(
-                            orjson.dumps(field) if isinstance(field, dict) else field
-                            for field in row
+                struct_column_indices = [
+                    i for i, col in enumerate(self.schema.columns) if col.type == OrsoTypes.STRUCT
+                ]
+                if struct_column_indices:
+                    batch_rows = [
+                        tuple(
+                            orjson.dumps(field)
+                            if i in struct_column_indices and isinstance(field, dict)
+                            else field
+                            for i, field in enumerate(row)
                         )
+                        for row in batch_rows
+                    ]
+                    rows = batch_rows
+                else:
+                    rows = map(tuple, batch_rows)
 
                 # convert the SqlAlchemy Results to Arrow using Orso
                 b = time.monotonic_ns()
-                morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
+                morsel = DataFrame(schema=result_schema, rows=rows).arrow()
                 convert_time += time.monotonic_ns() - b
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
@@ -228,6 +238,9 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         # DEBUG: print(f"time spent converting: {convert_time/1e9}s")
 
     def collect_relation_stats(self) -> RelationStatistics:
+        if features.disable_sql_statistics_gathering:
+            return RelationStatistics()
+
         from sqlalchemy import inspect
         from sqlalchemy.sql import text
 
@@ -292,6 +305,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
+        from sqlalchemy.exc import DatabaseError
+        from sqlalchemy.exc import NoSuchTableError
 
         if self.schema:
             return self.schema
@@ -306,7 +321,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 columns=[
                     FlatColumn(
                         name=column.name,
-                        type=PYTHON_TO_ORSO_MAP[column.type.python_type],
+                        type=PYTHON_TO_ORSO_MAP.get(column.type.python_type, OrsoTypes.VARCHAR),
                         precision=(
                             column.type.precision
                             if hasattr(column.type, "precision")
@@ -323,12 +338,17 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     for column in table.columns
                 ],
             )
-        except Exception as err:
-            if not err:
-                pass
+            # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns")
+        except (NoSuchTableError, DatabaseError) as err:
+            pass
+            # These are expected errors that should trigger fallback
+            # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
             # Fall back to getting the schema from the first few rows, this is the column names,
             # and where possible, column types.
-            # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
+        except Exception as err:
+            # Unexpected errors should be logged for debugging
+            # DEBUG: print(f"UNEXPECTED ERROR getting schema for {self.dataset}: {type(err).__name__}({err})")
+            # Still fall back to sampling, but we know something unexpected happened
             from sqlalchemy.sql import text
 
             try:

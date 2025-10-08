@@ -47,3 +47,5 @@ setuptools_rust
 aiohttp
 psutil
 freezegun
+
+pydantic==2.11.10

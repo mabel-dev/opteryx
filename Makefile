@@ -88,7 +88,7 @@ update: ## Update all dependencies
 	$(call print_blue,"Updating dependencies...")
 	@$(PYTHON) -m pip install --upgrade pip uv
 	@$(UV) pip install --upgrade -r tests/requirements.txt
-	@$(UV) pip sync pyproject.toml
+	@$(UV) pip install --upgrade -r pyproject.toml
 
 # === TESTING ===
 

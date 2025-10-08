@@ -208,6 +208,7 @@ class Features:
     enable_native_aggregator = bool(get("FEATURE_ENABLE_NATIVE_AGGREGATOR", False))
     disable_nested_loop_join = bool(get("FEATURE_DISABLE_NESTED_LOOP_JOIN", False))
     force_nested_loop_join = bool(get("FEATURE_FORCE_NESTED_LOOP_JOIN", False))
+    disable_sql_statistics_gathering = bool(get("FEATURE_DISABLE_SQL_STATISTICS_GATHERING", False))
     use_draken_ops_kernels = bool(get("FEATURE_USE_DRAKEN_OPS_KERNELS", False))
 
 
