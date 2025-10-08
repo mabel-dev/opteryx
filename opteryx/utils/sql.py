@@ -38,12 +38,17 @@ def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: boo
     escaped_pattern = ESCAPE_SPECIAL_CHARS.sub(r"\\\1", pattern)
 
     # Replace SQL wildcards with regex equivalents
-    regex_pattern = "^" + escaped_pattern.replace("%", ".*?").replace("_", ".") + "$"
-    if not full_match:
-        if regex_pattern.startswith("^.*?"):
-            regex_pattern = regex_pattern[4:]
-        if regex_pattern.endswith(".*?$"):
-            regex_pattern = regex_pattern[:-4]
+    regex_pattern = escaped_pattern.replace("%", ".*?").replace("_", ".")
+    
+    if full_match:
+        regex_pattern = f"^{regex_pattern}$"
+    else:
+        # For partial matches, trim leading/trailing wildcards
+        if regex_pattern.startswith(".*?"):
+            regex_pattern = regex_pattern[3:]
+        if regex_pattern.endswith(".*?"):
+            regex_pattern = regex_pattern[:-3]
+    
     if not case_sensitive:
         regex_pattern = f"(?i)({regex_pattern})"
     return regex_pattern
