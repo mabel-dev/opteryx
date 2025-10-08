@@ -129,6 +129,20 @@ SQL_PARTS = (
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
 
+# Precompile regex patterns at module level for performance
+_KEYWORDS_REGEX = re.compile(
+    r"(\,|\(|\)|;|\t|\n|\->>|\->|@>|@>>|\&\&|@\?|"
+    + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
+    + r")",
+    re.IGNORECASE,
+)
+
+# Match ", ', b", b', `
+# We match b prefixes separately after the non-prefix versions
+_QUOTED_STRINGS_REGEX = re.compile(
+    r'("[^"]*"|\'[^\']*\'|\b[bB]"[^"]*"|\b[bB]\'[^\']*\'|\b[rR]"[^"]*"|\b[rR]\'[^\']*\'|`[^`]*`)'
+)
+
 # states for the collection algorithm
 WAITING: int = 1
 RELATION: int = 2
@@ -141,20 +155,9 @@ def sql_parts(string):
     """
     Split a SQL statement into clauses
     """
-    keywords = re.compile(
-        r"(\,|\(|\)|;|\t|\n|\->>|\->|@>|@>>|\&\&|@\?|"
-        + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
-        + r")",
-        re.IGNORECASE,
-    )
-    # Match ", ', b", b', `
-    # We match b prefixes separately after the non-prefix versions
-    quoted_strings = re.compile(
-        r'("[^"]*"|\'[^\']*\'|\b[bB]"[^"]*"|\b[bB]\'[^\']*\'|\b[rR]"[^"]*"|\b[rR]\'[^\']*\'|`[^`]*`)'
-    )
 
     parts = []
-    for part in quoted_strings.split(string):
+    for part in _QUOTED_STRINGS_REGEX.split(string):
         if part and part[-1] in ("'", '"', "`"):
             if part[0] in ("b", "B"):
                 parts.append(f"blob({part[1:]})")
@@ -168,7 +171,7 @@ def sql_parts(string):
             else:
                 parts.append(part)
         else:
-            for subpart in keywords.split(part):
+            for subpart in _KEYWORDS_REGEX.split(part):
                 subpart = subpart.strip()
                 if subpart:
                     parts.append(subpart)
