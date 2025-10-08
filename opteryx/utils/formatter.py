@@ -5,13 +5,17 @@
 
 import re
 
+# Precompile regex patterns at module level
+_TOKEN_PATTERN = re.compile(r"[(),;]|[\r\n]+|[^\s(),;\r\n]+")
+_COMMENT_PATTERN = re.compile(
+    r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)", re.MULTILINE | re.DOTALL
+)
+_ANSI_ESCAPE_PATTERN = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
+
 
 def tokenize_string(string):
-    # Define the regular expression to match tokens
-    token_pattern = re.compile(r"[(),;]|[\r\n]+|[^\s(),;\r\n]+")
-
     # Use the regular expression to find all tokens in the string
-    tokens = token_pattern.findall(string)
+    tokens = _TOKEN_PATTERN.findall(string)
 
     # Remove any leading or trailing whitespace from the tokens
     tokens = ["\n" if token == "\n" else token.strip() for token in tokens]
@@ -27,16 +31,12 @@ def format_sql(sql):  # pragma: no cover
     """
 
     def color_comments(string):  # pragma: no cover
-        pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
-        regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
-        ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
-
         def _replacer(match):
             if match.group(2) is not None:
-                return f"\033[38;2;98;114;164m\033[3m{ansi_escape.sub('', match.group(2))}\033[0m"
+                return f"\033[38;2;98;114;164m\033[3m{_ANSI_ESCAPE_PATTERN.sub('', match.group(2))}\033[0m"
             return match.group(1)
 
-        return regex.sub(_replacer, string)
+        return _COMMENT_PATTERN.sub(_replacer, string)
 
     if hasattr(sql, "decode"):
         sql = sql.decode()
