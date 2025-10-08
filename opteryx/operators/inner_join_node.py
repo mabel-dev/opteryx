@@ -25,8 +25,8 @@ import pyarrow
 from pyarrow import Table
 
 from opteryx import EOS
-from opteryx.compiled.joins.inner_join import build_side_hash_map
-from opteryx.compiled.joins.inner_join import inner_join
+from opteryx.compiled.joins import build_side_hash_map
+from opteryx.compiled.joins import inner_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables

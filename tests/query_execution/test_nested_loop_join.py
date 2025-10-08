@@ -7,7 +7,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import time
 
 import opteryx
-from opteryx.compiled.joins.inner_join import nested_loop_join
+from opteryx.compiled.joins import nested_loop_join
 
 
 def test_nested_loop_join_simple():
