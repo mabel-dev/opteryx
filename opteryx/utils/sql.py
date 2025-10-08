@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 from typing import List
 
 import numpy
@@ -7,6 +8,7 @@ import pyarrow
 ESCAPE_SPECIAL_CHARS = re.compile(r"([.^$*+?{}[\]|()\\])")
 
 
+@lru_cache(maxsize=512)
 def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: bool = True) -> str:
     """
     Converts an SQL `LIKE` pattern into a regular expression.
@@ -47,6 +49,12 @@ def sql_like_to_regex(pattern: str, full_match: bool = True, case_sensitive: boo
     return regex_pattern
 
 
+# Compile regex patterns at module level for reuse
+_COMMENT_REGEX = re.compile(
+    r"(\"[^\"]*\"|\'[^\']*\')|(/\*.*?\*/|--[^\r\n]*$)", re.MULTILINE | re.DOTALL
+)
+
+
 def remove_comments(string: str) -> str:
     """
     Remove comments from the string.
@@ -58,11 +66,6 @@ def remove_comments(string: str) -> str:
     Returns:
         str: The SQL query string with comments removed.
     """
-    # First group captures quoted strings (double or single)
-    # Second group captures comments (/* multi-line */ or -- single-line)
-    pattern = r"(\"[^\"]*\"|\'[^\']*\')|(/\*.*?\*/|--[^\r\n]*$)"
-
-    regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
         if match.group(2) is not None:
@@ -70,7 +73,12 @@ def remove_comments(string: str) -> str:
         else:
             return match.group(1)  # Keep the quoted string
 
-    return regex.sub(_replacer, string)
+    return _COMMENT_REGEX.sub(_replacer, string)
+
+
+_WHITESPACE_REGEX = re.compile(
+    r"(\"[^\"]*\"|\'[^\']*\'|\`[^\`]*\`)|(\s+)", re.MULTILINE | re.DOTALL
+)
 
 
 def clean_statement(string: str) -> str:
@@ -79,15 +87,13 @@ def clean_statement(string: str) -> str:
 
     Avoid removing whitespace in quoted strings.
     """
-    pattern = r"(\"[^\"]*\"|\'[^\']*\'|\`[^\`]*\`)|(\s+)"
-    regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
         if match.group(2) is not None:
             return " "
         return match.group(1)  # captured quoted-string
 
-    return regex.sub(_replacer, string).strip()
+    return _WHITESPACE_REGEX.sub(_replacer, string).strip()
 
 
 def split_sql_statements(sql: str) -> List[str]:
