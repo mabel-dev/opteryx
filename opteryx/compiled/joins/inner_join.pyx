@@ -27,18 +27,27 @@ cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap lef
     cdef IntBuffer right_indexes = IntBuffer()
     cdef int64_t num_rows = right_relation.num_rows
     cdef int64_t[::1] non_null_indices = non_null_row_indices(right_relation, join_columns)
-    cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
+    cdef int64_t non_null_count = non_null_indices.shape[0]
     cdef int64_t i, row_idx
     cdef uint64_t hash_val
     cdef size_t match_count
     cdef int j
 
-    # Precompute hashes for right relation
-    compute_row_hashes(right_relation, join_columns, row_hashes)
+    # Early exit for empty right relation after null filtering
+    if non_null_count == 0:
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=numpy.int64))
 
-    for i in range(non_null_indices.shape[0]):
+    # Optimization: Compute hashes only for non-null rows, not all rows
+    # Create a filtered relation with only non-null rows for hash computation
+    cdef object filtered_relation = right_relation.select(join_columns).take(non_null_indices)
+    cdef uint64_t[::1] row_hashes = numpy.empty(non_null_count, dtype=numpy.uint64)
+    
+    # Precompute hashes only for non-null rows
+    compute_row_hashes(filtered_relation, join_columns, row_hashes)
+
+    for i in range(non_null_count):
         row_idx = non_null_indices[i]
-        hash_val = row_hashes[row_idx]
+        hash_val = row_hashes[i]
 
         # Probe the left-side hash table
         left_matches = left_hash_table.get(hash_val)
@@ -62,14 +71,23 @@ cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
     cdef FlatHashMap ht = FlatHashMap()
     cdef int64_t num_rows = relation.num_rows
     cdef int64_t[::1] non_null_indices = non_null_row_indices(relation, join_columns)
-    cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
+    cdef int64_t non_null_count = non_null_indices.shape[0]
     cdef int64_t i, row_idx
 
-    compute_row_hashes(relation, join_columns, row_hashes)
+    # Early exit for empty relation after null filtering
+    if non_null_count == 0:
+        return ht
 
-    for i in range(non_null_indices.shape[0]):
+    # Optimization: Compute hashes only for non-null rows, not all rows
+    # Create a filtered relation with only non-null rows for hash computation
+    cdef object filtered_relation = relation.select(join_columns).take(non_null_indices)
+    cdef uint64_t[::1] row_hashes = numpy.empty(non_null_count, dtype=numpy.uint64)
+    
+    compute_row_hashes(filtered_relation, join_columns, row_hashes)
+
+    for i in range(non_null_count):
         row_idx = non_null_indices[i]
-        ht.insert(row_hashes[row_idx], row_idx)
+        ht.insert(row_hashes[i], row_idx)
 
     return ht
 
@@ -79,7 +97,7 @@ cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, l
     A buffer-aware nested loop join using direct Arrow buffer access and hash computation.
     Only intended for small relations (<1000 rows), primarily used for correctness testing or fallbacks.
     """
-    # determine the rows we're going to try to join on
+    # Determine the rows we're going to try to join on
     cdef int64_t[::1] left_non_null_indices = non_null_row_indices(left_relation, left_columns)
     cdef int64_t[::1] right_non_null_indices = non_null_row_indices(right_relation, right_columns)
 
@@ -89,21 +107,26 @@ cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, l
     cdef IntBuffer right_indexes = IntBuffer()
     cdef int64_t left_non_null_idx, right_non_null_idx, left_record_idx, right_record_idx
 
+    # Early exit for empty relations after null filtering
+    if nl == 0 or nr == 0:
+        return (numpy.array([], dtype=numpy.int64), numpy.array([], dtype=numpy.int64))
+
+    # Optimization: Create filtered relations with only non-null rows
+    # This avoids duplicate null filtering that was done with drop_null()
+    cdef object left_filtered = left_relation.select(sorted(set(left_columns))).take(left_non_null_indices)
+    cdef object right_filtered = right_relation.select(sorted(set(right_columns))).take(right_non_null_indices)
+
     cdef uint64_t[::1] left_hashes = numpy.empty(nl, dtype=numpy.uint64)
     cdef uint64_t[::1] right_hashes = numpy.empty(nr, dtype=numpy.uint64)
 
-    # remove the rows from the relations
-    left_relation = left_relation.select(sorted(set(left_columns))).drop_null()
-    right_relation = right_relation.select(sorted(set(right_columns))).drop_null()
-
-    # build hashes for the columns we're joining on
-    compute_row_hashes(left_relation, left_columns, left_hashes)
-    compute_row_hashes(right_relation, right_columns, right_hashes)
+    # Build hashes for the columns we're joining on (only for non-null rows)
+    compute_row_hashes(left_filtered, left_columns, left_hashes)
+    compute_row_hashes(right_filtered, right_columns, right_hashes)
 
     # Compare each pair of rows (naive quadratic approach)
     for left_non_null_idx in range(nl):
         for right_non_null_idx in range(nr):
-            # if we have a match, look up the offset in the original table
+            # If we have a match, look up the offset in the original table
             if left_hashes[left_non_null_idx] == right_hashes[right_non_null_idx]:
                 left_record_idx = left_non_null_indices[left_non_null_idx]
                 right_record_idx = right_non_null_indices[right_non_null_idx]
