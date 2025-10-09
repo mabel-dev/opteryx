@@ -357,7 +357,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 ],
             )
             # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns")
-        except Exception:
+        except Exception as err:
             # Try again with quoted identifiers if the first attempt fails
             # This handles case sensitivity and reserved word issues
             try:
