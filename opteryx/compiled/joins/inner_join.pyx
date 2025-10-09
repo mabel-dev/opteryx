@@ -10,6 +10,8 @@ import numpy
 cimport numpy
 numpy.import_array()
 
+import pyarrow
+
 from libc.stdint cimport int64_t, uint64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashMap
@@ -39,7 +41,7 @@ cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap lef
 
     # Optimization: Compute hashes only for non-null rows, not all rows
     # Create a filtered relation with only non-null rows for hash computation
-    cdef object filtered_relation = right_relation.select(join_columns).take(non_null_indices)
+    cdef object filtered_relation = right_relation.select(join_columns).take(pyarrow.array(non_null_indices))
     cdef uint64_t[::1] row_hashes = numpy.empty(non_null_count, dtype=numpy.uint64)
     
     # Precompute hashes only for non-null rows
@@ -80,7 +82,7 @@ cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
 
     # Optimization: Compute hashes only for non-null rows, not all rows
     # Create a filtered relation with only non-null rows for hash computation
-    cdef object filtered_relation = relation.select(join_columns).take(non_null_indices)
+    cdef object filtered_relation = relation.select(join_columns).take(pyarrow.array(non_null_indices))
     cdef uint64_t[::1] row_hashes = numpy.empty(non_null_count, dtype=numpy.uint64)
     
     compute_row_hashes(filtered_relation, join_columns, row_hashes)
@@ -113,8 +115,8 @@ cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, l
 
     # Optimization: Create filtered relations with only non-null rows
     # This avoids duplicate null filtering that was done with drop_null()
-    cdef object left_filtered = left_relation.select(sorted(set(left_columns))).take(left_non_null_indices)
-    cdef object right_filtered = right_relation.select(sorted(set(right_columns))).take(right_non_null_indices)
+    cdef object left_filtered = left_relation.select(sorted(set(left_columns))).take(pyarrow.array(left_non_null_indices))
+    cdef object right_filtered = right_relation.select(sorted(set(right_columns))).take(pyarrow.array(right_non_null_indices))
 
     cdef uint64_t[::1] left_hashes = numpy.empty(nl, dtype=numpy.uint64)
     cdef uint64_t[::1] right_hashes = numpy.empty(nr, dtype=numpy.uint64)

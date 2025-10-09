@@ -240,7 +240,40 @@ for i in range((length // 4) * 4, length):
 
 ---
 
-## Priority Recommendations
+## Implementation Status
+
+### ✅ IMPLEMENTED (Phase 1 - Critical Optimizations):
+
+#### OPTIMIZATION 1 & 4: Eliminate redundant hash computation for null rows
+- **Status**: ✅ IMPLEMENTED
+- **Files Modified**: `opteryx/compiled/joins/inner_join.pyx` (inner_join, build_side_hash_map functions)
+- **Changes**:
+  - Compute hashes only for non-null rows instead of all rows
+  - Use `take()` to create filtered relations before hash computation
+  - Add early exit checks for empty relations
+- **Estimated Impact**: 10-30% speedup for datasets with >10% nulls
+- **Testing**: ✅ All tests pass (test_join_flaw.py, test_nested_loop_join.py)
+
+#### OPTIMIZATION 6: Remove duplicate null filtering in nested loop join
+- **Status**: ✅ IMPLEMENTED
+- **Files Modified**: `opteryx/compiled/joins/inner_join.pyx` (nested_loop_join function)
+- **Changes**:
+  - Use `take()` with non_null_indices instead of `drop_null()`
+  - Eliminates duplicate null filtering
+  - Avoids creating intermediate filtered tables with `drop_null()`
+- **Estimated Impact**: 20-40% speedup for nested loop joins
+- **Testing**: ✅ All tests pass
+
+#### OPTIMIZATION 3: Early exit for empty results
+- **Status**: ✅ IMPLEMENTED
+- **Files Modified**: `opteryx/compiled/joins/inner_join.pyx` (all three functions)
+- **Changes**:
+  - Added early exit checks after null filtering
+  - Avoids unnecessary hash computation for empty datasets
+- **Estimated Impact**: Significant for edge cases (empty relations)
+- **Testing**: ✅ All tests pass
+
+---
 
 ### 🔥 CRITICAL (Implement First):
 1. **OPTIMIZATION 1 & 4**: Eliminate redundant hash computation for null rows
