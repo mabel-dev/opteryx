@@ -115,5 +115,5 @@ def test_eq_edge_strings():
     _test_eq_comparison("a\tb", "a b", 0)
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
     run_tests()

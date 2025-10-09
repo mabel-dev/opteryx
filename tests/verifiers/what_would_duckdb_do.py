@@ -9,7 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import opteryx
 from opteryx.utils.formatter import format_sql
-from tests.tools import create_duck_db
+from tests import create_duck_db
 
 
 TABLES = ("planets","satellites")

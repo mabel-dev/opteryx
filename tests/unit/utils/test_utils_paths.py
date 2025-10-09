@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 from opteryx.utils import paths
-from tests.tools import is_windows, skip_if
+from tests import is_windows, skip_if
 
 # fmt:off
 PATH_PARTS_TEST = [

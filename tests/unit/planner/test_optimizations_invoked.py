@@ -12,7 +12,7 @@ import pytest
 
 import opteryx
 from opteryx.utils.formatter import format_sql
-from tests.tools import trunc_printable
+from tests import trunc_printable
 
 # fmt:off
 STATEMENTS = [

@@ -166,7 +166,7 @@ def test_serialization_round_trip_repeated():
     assert stats.upper_bounds[b"x"] == 123
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()
 

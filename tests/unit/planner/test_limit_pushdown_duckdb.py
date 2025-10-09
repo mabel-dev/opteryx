@@ -7,7 +7,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import SqlConnector
 from opteryx.utils.formatter import format_sql
-from tests.tools import create_duck_db
+from tests import create_duck_db
 
 create_duck_db()
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
     from opteryx.utils.formatter import format_sql
 
     start_suite = time.monotonic_ns()

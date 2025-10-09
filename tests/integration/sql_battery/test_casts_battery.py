@@ -11,7 +11,7 @@ import sys
 
 from typing import Optional
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.utils.formatter import format_sql
@@ -82,7 +82,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
     width = shutil.get_terminal_size((80, 20))[0] - 15

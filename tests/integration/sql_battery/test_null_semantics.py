@@ -7,7 +7,7 @@ This tests the way NULLs are handled in filter conditions.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 

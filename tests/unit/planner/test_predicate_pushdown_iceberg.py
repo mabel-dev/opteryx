@@ -10,7 +10,7 @@ import pytest
 import opteryx
 from opteryx.connectors import IcebergConnector
 from opteryx.utils.formatter import format_sql
-from tests.tools import set_up_iceberg
+from tests import set_up_iceberg
 
 # Define test cases
 #fmt:off
@@ -98,7 +98,7 @@ def test_predicate_pushdowns_blobs_parquet(query, expected_rowcount, expected_ro
 if __name__ == "__main__":  # pragma: no cover
     import shutil
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
     passed = 0

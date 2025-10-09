@@ -8,7 +8,7 @@ import opteryx
 from opteryx.connectors import CqlConnector
 from opteryx.utils.formatter import format_sql
 from orso.tools import lru_cache_with_expiry
-from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
+from tests import is_arm, is_mac, is_windows, skip_if, is_version
 
 @lru_cache_with_expiry
 def set_up_connection():
@@ -57,7 +57,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
     from opteryx.utils.formatter import format_sql
 
     start_suite = time.monotonic_ns()

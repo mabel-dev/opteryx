@@ -2541,7 +2541,7 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     """
     Test an battery of statements
     """
-    from tests.tools import set_up_iceberg
+    from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
     opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
@@ -2589,7 +2589,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
     width = shutil.get_terminal_size((80, 20))[0] - 15

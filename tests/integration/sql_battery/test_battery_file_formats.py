@@ -7,11 +7,11 @@ This tests the various format readers.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 import pytest
 
 import opteryx
-from tests.tools import is_pypy, is_windows, is_version
+from tests import is_pypy, is_windows, is_version
 
 # fmt:off
 STATEMENTS = [

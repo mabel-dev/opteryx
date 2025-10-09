@@ -5,8 +5,8 @@ import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import is_arm, is_mac, is_windows, skip_if
-from tests.tools import set_up_iceberg
+from tests import is_arm, is_mac, is_windows, skip_if
+from tests import set_up_iceberg
 import opteryx
 from opteryx.connectors import DiskConnector
 from opteryx.connectors import IcebergConnector
@@ -203,6 +203,6 @@ def test_iceberg_remote():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

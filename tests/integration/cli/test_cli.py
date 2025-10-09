@@ -2,11 +2,11 @@ import os
 import sys
 import subprocess
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 def run_cli(args):
     """Helper function to run the CLI and return the result."""
-    from tests.tools import find_file
+    from tests import find_file
 
     path = find_file("**/__main__.py")
     result = subprocess.run(
@@ -73,6 +73,6 @@ def test_unknown_param():
     assert result.returncode != 0
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

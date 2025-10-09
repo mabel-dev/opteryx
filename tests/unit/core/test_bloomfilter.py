@@ -4,7 +4,7 @@ import sys
 import pyarrow
 import random
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.compiled.structures.bloom_filter import BloomFilter
@@ -320,6 +320,6 @@ def test_bloom_filter_false_positives():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

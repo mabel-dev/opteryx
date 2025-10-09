@@ -82,6 +82,6 @@ def test_all_neq_nulls_booleans():
     _test_all_neq_comparison(None, [None], 0, pa.bool_())
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
     test_all_neq_floats()
     run_tests()

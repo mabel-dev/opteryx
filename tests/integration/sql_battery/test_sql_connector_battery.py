@@ -7,7 +7,7 @@ This is testing the SQL connector.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 from sqlalchemy import create_engine
@@ -105,7 +105,7 @@ if __name__ == "__main__":  # pragma: no cover
     import time
 
     from opteryx.utils.formatter import format_sql
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
 

@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import download_file, is_version, skip_if
+from tests import download_file, is_version, skip_if
 
 
 @skip_if(is_version("3.9"))
@@ -275,6 +275,6 @@ def test_membership_permissions():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

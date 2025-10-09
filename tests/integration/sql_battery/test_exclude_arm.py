@@ -10,13 +10,13 @@ memory management means we know we will crash on the Raspberry Pi.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 
 import opteryx
 from opteryx.connectors import DiskConnector
-from tests.tools import is_arm, skip_if
+from tests import is_arm, skip_if
 
 # fmt:off
 STATEMENTS = [

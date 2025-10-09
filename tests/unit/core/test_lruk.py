@@ -5,7 +5,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.compiled.structures.lru_k import LRU_K
-from tests.tools import is_windows, skip_if
+from tests import is_windows, skip_if
 
 
 @skip_if(is_windows())
@@ -345,7 +345,7 @@ def test_fifo():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     import time
     start_time = time.perf_counter_ns()
