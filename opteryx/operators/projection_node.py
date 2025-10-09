@@ -23,6 +23,8 @@ from . import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
+    is_stateless = True
+
     def __init__(self, properties: QueryProperties, **parameters):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
