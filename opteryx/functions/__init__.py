@@ -68,7 +68,9 @@ import opteryx
 from opteryx.compiled.list_ops import list_contains_all
 from opteryx.compiled.list_ops import list_contains_any
 from opteryx.compiled.list_ops import list_encode_utf8 as to_blob
+from opteryx.compiled.list_ops import list_initcap
 from opteryx.compiled.list_ops import list_length
+from opteryx.compiled.list_ops import list_replace
 from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -540,6 +542,7 @@ FUNCTIONS = {
     "REVERSE": (compute.utf8_reverse, "VARCHAR", 1.0),
     "SOUNDEX": (string_functions.soundex, "VARCHAR", 1.0),
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
+    "INITCAP": (list_initcap, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
     "CONCAT_WS": (string_functions.concat_ws, "VARCHAR", 1.0),
     "SUBSTRING": (string_functions.substring, "VARCHAR", 1.0),
@@ -552,6 +555,7 @@ FUNCTIONS = {
     "LEVENSHTEIN": (string_functions.levenshtein, "INTEGER", 1.0),
     "SPLIT": (string_functions.split, "ARRAY<VARCHAR>", 1.0),
     "MATCH_AGAINST": (string_functions.match_against, "BOOLEAN", 1.0),
+    "REPLACE": (list_replace, "VARCHAR", 1.0),
     "REGEXP_REPLACE": (string_functions.regex_replace, "BLOB", 1.0),
 
     # HASHING & ENCODING

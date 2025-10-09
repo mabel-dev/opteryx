@@ -2127,6 +2127,9 @@ id > /* 0 */ 1
 
         ("SELECT * FROM testdata.flat.struct_array WHERE data[0]->'id' = 1", 1, 2, None),
         
+        ("SELECT * FROM $planets WHERE REPLACE(name, 'e', 'a') = 'Vanas'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE INITCAP(REVERSE(name)) = 'Htrae'", 1, 20, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
