@@ -8,10 +8,8 @@
 
 import numpy
 cimport numpy
-numpy.import_array()
-
 import pyarrow
-
+numpy.import_array()
 from libc.stdint cimport int64_t, uint64_t
 
 from opteryx.third_party.abseil.containers cimport FlatHashMap
@@ -41,7 +39,7 @@ cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap lef
 
     # Optimization: Compute hashes only for non-null rows, not all rows
     # Create a filtered relation with only non-null rows for hash computation
-    cdef object filtered_relation = right_relation.select(join_columns).take(pyarrow.array(non_null_indices))
+    cdef object filtered_relation = right_relation.select(join_columns).take(numpy.asarray(non_null_indices))
     cdef uint64_t[::1] row_hashes = numpy.empty(non_null_count, dtype=numpy.uint64)
     
     # Precompute hashes only for non-null rows
