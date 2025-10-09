@@ -18,9 +18,9 @@ import time
 import pyarrow
 
 from opteryx import EOS
-from opteryx.compiled.joins.filter_join import anti_join
-from opteryx.compiled.joins.filter_join import filter_join_set
-from opteryx.compiled.joins.filter_join import semi_join
+from opteryx.compiled.joins import anti_join
+from opteryx.compiled.joins import filter_join_set
+from opteryx.compiled.joins import semi_join
 from opteryx.models import QueryProperties
 
 from . import JoinNode
