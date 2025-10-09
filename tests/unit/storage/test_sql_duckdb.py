@@ -22,7 +22,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
-from tests.tools import create_duck_db
+from tests import create_duck_db
 
 # fmt: off
 STATEMENTS = [
@@ -109,6 +109,6 @@ def test_duckdb_battery():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests import is_arm, is_mac, is_windows, skip_if
 
 
 @skip_if(is_arm() or is_windows() or is_mac())
@@ -83,6 +83,6 @@ def test_valkey_delete():
     assert cache.get(b"key") is None
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
     
     run_tests()

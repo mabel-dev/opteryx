@@ -9,8 +9,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import MongoDbConnector
-from tests.tools import is_arm, is_mac, is_windows, skip_if
-from tests.tools import populate_mongo
+from tests import is_arm, is_mac, is_windows, skip_if
+from tests import populate_mongo
 
 COLLECTION_NAME = "tweets"
 MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
@@ -71,6 +71,6 @@ def test_mongo_storage_explicit_parameters():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

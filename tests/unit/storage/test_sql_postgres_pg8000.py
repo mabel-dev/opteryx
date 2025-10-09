@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
-from tests.tools import is_arm, is_mac, is_version, is_windows, skip_if
+from tests import is_arm, is_mac, is_version, is_windows, skip_if
 
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
@@ -86,6 +86,6 @@ def test_postgres_empty_table():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

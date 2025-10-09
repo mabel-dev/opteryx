@@ -20,7 +20,7 @@ import sys
 
 import pytest
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import orjson
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
 

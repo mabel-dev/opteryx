@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.utils.formatter import format_sql
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests import is_arm, is_mac, is_windows, skip_if
 
 
 STATEMENTS = [
@@ -39,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
     from opteryx.utils.formatter import format_sql
 
     start_suite = time.monotonic_ns()

@@ -64,7 +64,7 @@ def test_predicate_pushdown_postgres_parameterized(
 if __name__ == "__main__":  # pragma: no cover
     import shutil
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
     passed = 0

@@ -39,5 +39,5 @@ def test_all_eq_floats():
     _test_all_eq_comparison(float("inf"), [float("inf"), float("inf")], 1, pa.float64())
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
     run_tests()
