@@ -9,7 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests import is_arm, is_mac, is_windows, skip_if
 
 COCKROACH_PASSWORD = os.environ.get("COCKROACH_PASSWORD")
 COCKROACH_USER = os.environ.get("COCKROACH_USER")
@@ -60,6 +60,6 @@ def test_cockroach_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

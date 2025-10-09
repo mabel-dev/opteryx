@@ -60,7 +60,7 @@ def test_predicate_pushdowns_blobs_parquet(query, expected_rowcount, expected_ro
 if __name__ == "__main__":  # pragma: no cover
     import shutil
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
     passed = 0

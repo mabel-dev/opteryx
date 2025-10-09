@@ -25,5 +25,5 @@ def test_basic_comparison_ints():
     _test_comparison(0, -1, 0, pa.int64())  # 0 <= -1 -> False
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
     run_tests()

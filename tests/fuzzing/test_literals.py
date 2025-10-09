@@ -15,7 +15,7 @@ import hypothesis.strategies as st
 from hypothesis import given, settings
 
 import opteryx
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests import is_arm, is_mac, is_windows, skip_if
 
 # allows us to run short CI and longer scheduled tests
 TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
@@ -23,7 +23,7 @@ TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 literals = st.text(min_size=1)
 
 
-@skip_if(is_arm() or is_windows() or is_mac())
+#@skip_if(is_arm() or is_windows() or is_mac())
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(literal=literals)
 def test_fuzz_literals(literal):
@@ -45,6 +45,6 @@ def test_fuzz_literals(literal):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_fuzz_literals("\\")
+    test_fuzz_literals()
 
     print("✅ okay")

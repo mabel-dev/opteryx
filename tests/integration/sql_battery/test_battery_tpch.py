@@ -8,7 +8,7 @@ interested in functional regression than performance in this context.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import glob
 import pytest
@@ -69,7 +69,7 @@ if __name__ == "__main__":  # pragma: no cover
     import time
 
     from opteryx.utils.formatter import format_sql
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     width = shutil.get_terminal_size((80, 20))[0]
 

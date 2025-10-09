@@ -141,6 +141,6 @@ def test_gt_full_list_comparison():
     assert result == [1, 0, 0], f"Expected [1, 0, 0], got {result}"
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

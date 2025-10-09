@@ -15,7 +15,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import numpy
 
 import opteryx
-from tests.tools import is_version, skip_if
+from tests import is_version, skip_if
 
 
 @skip_if(is_version("3.9"))
@@ -31,6 +31,6 @@ def test_we_dont_fold_random():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    from tests import run_tests
 
     run_tests()

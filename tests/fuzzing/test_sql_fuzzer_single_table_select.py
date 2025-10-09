@@ -120,7 +120,7 @@ def generate_random_sql_select(columns, table):
     return select_clause
 
 from opteryx import virtual_datasets
-from tests.tools import set_up_iceberg
+from tests import set_up_iceberg
 
 catalog = set_up_iceberg()
 
@@ -189,7 +189,7 @@ TEST_CYCLES: int = 10
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_single_table(i):
 
-    from tests.tools import set_up_iceberg
+    from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
     opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)

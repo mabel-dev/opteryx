@@ -114,7 +114,7 @@ def main():
     import shutil
     import time
 
-    from tests.tools import trunc_printable
+    from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
 

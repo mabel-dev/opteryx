@@ -12,6 +12,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import string
+import pytest
 
 import hypothesis.strategies as st
 from hypothesis import given, settings
@@ -28,9 +29,12 @@ names = st.text(alphabet=string.ascii_letters, min_size=1)
 @given(name=names, value=st.text(alphabet=string.printable))
 def test_fuzz_variables(name, value):
     # we know these fail
-    failures = ("'", "\\", "\r", "\n", "\t", "\x0b", "\x0c", "--")
-    if any(f in value for f in failures):  # pragma: no cover
-        return
+    #failures = ("'", "\\", "\r", "\n", "\t", "\x0b", "\x0c", "--")
+    #if any(f in value for f in failures):  # pragma: no cover
+    #    return
+
+    # single quote is the delimiter, it's not a bug that we think its a delimeter
+    value = value.replace("'", "#")
 
     statement = f"SET @{name} = '{value}'; SELECT @{name};"
     #    print(statement.encode())
@@ -38,20 +42,11 @@ def test_fuzz_variables(name, value):
     conn = opteryx.connect()
     curr = conn.cursor()
     curr.execute(statement)
-    #    result = curr.fetchall()
-    #    print(result)
+    
     result = curr.arrow().to_pylist()
-    #    print(result)
 
-    #    print(name, value, result)
-
-    assert next(iter(result[0].values())) == value, result
+    assert next(iter(result[0].values())) == value, statement
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(string.ascii_letters)
-
-    test_fuzz_variables("a", "b")
-    test_fuzz_variables("val", "\x00")
-
-    print("✅ okay")
+    pytest.main([__file__])
