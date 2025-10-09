@@ -6,13 +6,16 @@ This script benchmarks the optimizations made to opteryx/utils/sql.py
 Run this to verify the performance improvements.
 """
 
-import time
-import sys
 import os
+import sys
+import time
+
+from opteryx.utils.sql import clean_statement
+from opteryx.utils.sql import remove_comments
+from opteryx.utils.sql import sql_like_to_regex
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from opteryx.utils.sql import sql_like_to_regex, remove_comments, clean_statement
 
 
 def benchmark_sql_like_to_regex():
