@@ -46,7 +46,7 @@ from typing import Optional
 sys.path.insert(1, os.path.join(sys.path[0], "../../../draken"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../../orso"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../../rugo"))
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 
