@@ -4,7 +4,52 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-These are a set of functions that can be applied to data.
+SQL Functions Module
+
+This module provides all SQL functions available in Opteryx queries. Functions are
+organized by category and automatically registered for use in SQL expressions.
+
+Categories:
+- Arithmetic: Mathematical operations and calculations
+- String: Text manipulation (UPPER, LOWER, SUBSTRING, CONCAT, etc.)
+- Date/Time: Temporal operations (NOW, DATE_TRUNC, EXTRACT, etc.)
+- Aggregate: Aggregation functions (SUM, COUNT, AVG, MIN, MAX, etc.)
+- Conditional: Logic functions (CASE, COALESCE, NULLIF, etc.)
+- Array: Array operations and manipulations
+- Encoding: Base64, hex, and other encoding/decoding functions
+- Other: Utility and specialized functions
+
+Function Registration:
+Functions are registered in the FUNCTIONS dictionary with their implementation,
+return type, and cost estimate for query optimization.
+
+Structure:
+- function_name: (implementation_function, return_type, cost_estimate)
+- return_type: PyArrow data type or "VARIANT" for dynamic types
+- cost_estimate: Relative execution cost (currently always 1.0)
+
+Adding New Functions:
+1. Implement the function logic in the appropriate category module
+2. Add to the FUNCTIONS dictionary below
+3. Add comprehensive tests in tests/functions/
+4. Update documentation if the function introduces new patterns
+
+Example:
+    # Using functions in queries
+    SELECT UPPER(name), DATE_TRUNC('month', created_at) FROM users
+
+    # Function returns PyArrow arrays and handles null values
+    def my_string_function(arr):
+        return pa.compute.upper(arr)
+
+    # Register in FUNCTIONS dictionary
+    FUNCTIONS['MY_UPPER'] = (my_string_function, 'VARCHAR', 1.0)
+
+Performance Notes:
+- Functions should operate on PyArrow arrays for vectorization
+- Use PyArrow compute functions when available for best performance
+- Handle null values appropriately
+- Consider memory usage for large arrays
 """
 
 import datetime
