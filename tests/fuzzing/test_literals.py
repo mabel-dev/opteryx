@@ -23,7 +23,6 @@ TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 literals = st.text(min_size=1)
 
 
-#@skip_if(is_arm() or is_windows() or is_mac())
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(literal=literals)
 def test_fuzz_literals(literal):
