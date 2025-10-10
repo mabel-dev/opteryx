@@ -11,7 +11,8 @@ To get started:
     import opteryx
     results = opteryx.query("SELECT * FROM my_table")
 
-Opteryx handles parsing, planning, and execution of SQL queries with a focus on low-latency analytics over local or remote data sources.
+Opteryx handles parsing, planning, and execution of SQL queries with a focus on low-latency analytics over
+local or remote data sources.
 
 For more information check out https://opteryx.dev.
 """
@@ -21,6 +22,7 @@ import os
 import time
 import warnings
 import platform
+from pathlib import Path
 
 from decimal import getcontext
 from typing import Optional, Union, Dict, Any, List
@@ -44,9 +46,22 @@ def is_mac() -> bool:  # pragma: no cover
     return platform.system().lower() == "darwin"
 
 
-# we do a separate check for debug mode here so we don't loaf the config
-# module just yet
+# we do a separate check for debug mode here so we don't load the config module just yet
 OPTERYX_DEBUG = os.environ.get("OPTERYX_DEBUG") is not None
+
+
+# python-dotenv allows us to create an environment file to store secrets.
+try:
+    import dotenv  # type:ignore
+
+    _env_path = Path.cwd() / ".env"
+    if _env_path.exists() and dotenv is not None:
+        dotenv.load_dotenv(dotenv_path=_env_path)
+        if OPTERYX_DEBUG:
+            print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
+except ImportError:  # pragma: no cover
+    pass
+
 
 if OPTERYX_DEBUG:  # pragma: no cover
     from opteryx.debugging import OpteryxOrsoImportFinder

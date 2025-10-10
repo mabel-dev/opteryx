@@ -3,35 +3,7 @@
 
 _A unified SQL interface to unlock insights across your diverse data sources, from blobs stores to databases - **effortless cross-platform data analytics**._
 
-![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/terminal.gif)We're excited to have you join our journey. Let us know how we can help!
-
-## For Developers
-
-If you're interested in contributing to Opteryx or understanding how it works:
-
-- **[Developer Guide](DEVELOPER_GUIDE.md)** - Comprehensive guide to Opteryx's architecture and development patterns
-- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
-- **[Examples](examples/)** - Code examples and tutorials for various use cases
-- **[Tools](tools/)** - Development and analysis tools for working with Opteryx
-
-### Project Structure
-
-- `opteryx/` - Main source code
-  - `planner/` - Query planning and optimization
-  - `operators/` - Physical execution operators  
-  - `connectors/` - Data source adapters
-  - `functions/` - SQL function implementations
-  - `managers/` - Resource and cache management
-- `tests/` - Comprehensive test suite
-- `dev/` - Development tools and build scripts
-- `examples/` - Usage examples and tutorials
-- `tools/` - Development utilities and profiling tools
-
-## Securityesource      | Location
-------------- | -------------
-Source Code   | https://github.com/mabel-dev/opteryx
-Documentation | https://opteryx.dev/
-Download      | https://pypi.org/project/opteryx/
+![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/terminal.gif) We're excited to have you join our journey. Let us know how we can help!
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![Downloads](https://static.pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
@@ -42,6 +14,12 @@ Download      | https://pypi.org/project/opteryx/
 [**Install**](#install) •
 [**Examples**](#examples) •
 [**Get Involved**](#community)
+
+Resource        | Location
+--------------- | -------------
+Source Code     | https://github.com/mabel-dev/opteryx
+Documentation   | https://opteryx.dev/
+Download        | https://pypi.org/project/opteryx/
 
 ## What is Opteryx?
 
@@ -311,7 +289,28 @@ You can also try Opteryx right now using our [interactive labs](https://github.c
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
 [![Medium](https://img.shields.io/badge/Read%20on-Medium-5865F2.svg?logo=medium)](https://medium.com/opteryx)
 
-**Get Involved**
+If you're interested in contributing to Opteryx or understanding how it works:
+
+Resource        | Location | Description
+--------------- | ------------- | --
+Examples        | [examples/](examples/) | Code examples and tutorials for various use cases
+Developer Guide | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Guide to Opteryx's architecture and development patterns
+Contributing    | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute to the project
+
+### Project Structure
+
+- `opteryx/` - Main source code
+  - `planner/` - Query planning and optimization
+  - `operators/` - Physical execution operators  
+  - `connectors/` - Data source adapters
+  - `functions/` - SQL function implementations
+  - `managers/` - Resource and cache management
+- `tests/` - Comprehensive test suite
+- `dev/` - Development tools and build scripts
+- `examples/` - Usage examples and tutorials
+- `tools/` - Development utilities and profiling tools
+
+### Get Involved
 
 🌟 **Star this repo** to show your support and help others discover Opteryx.  
 💬 [Join the discussion](https://github.com/mabel-dev/opteryx/discussions) — share your ideas, tell us how you’re using Opteryx, or suggest [features](https://github.com/mabel-dev/opteryx/issues/new/choose).  

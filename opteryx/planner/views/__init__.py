@@ -5,15 +5,16 @@
 
 import orjson
 
+from opteryx.config import RESOURCES_PATH
 from opteryx.exceptions import DatasetNotFoundError
 
 
 def _load_views():
     try:
-        with open("views.json", "rb") as defs:
+        with open(RESOURCES_PATH / "views.json", "rb") as defs:
             return orjson.loads(defs.read())
     except Exception as err:  # nosec
-        # DEBUG:: log (f"[OPTERYX] Unable to open views definition file. {err}")
+        # DEBUG: print(f"[OPTERYX] Unable to open views definition file. {err}")
         return {}
 
 

@@ -187,6 +187,7 @@ DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG_CONFIGURATION")
 DISABLE_ZERO_COPY_BUFFER_READS = bool(get("DISABLE_ZERO_COPY_BUFFER_READS", False))
 """Disable zero-copy reads from the buffer pool."""
 
+RESOURCES_PATH: Path = Path(get("RESOURCES_PATH", Path.cwd()))
 
 
 # GCP project ID - for Google Cloud Data
