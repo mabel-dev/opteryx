@@ -7,7 +7,6 @@ This example demonstrates working with different data types in Opteryx:
 - String operations and text processing
 - Date and time handling
 - Boolean logic
-- Arrays and complex types
 """
 
 import pyarrow
@@ -72,7 +71,8 @@ def string_operations():
         SELECT 
             first_name || ' ' || last_name as full_name,
             UPPER(first_name) as upper_first,
-            LOWER(last_name) as lower_last
+            LOWER(last_name) as lower_last,
+            INITCAP(first_name || ' ' || last_name) as initcap_full_name
         FROM people
     """)
     print(result)
@@ -82,8 +82,9 @@ def string_operations():
     result = opteryx.query("""
         SELECT 
             LENGTH(email) as email_length,
-            SUBSTRING(email, 1, 5) as email_prefix,
-            POSITION('@' in email) as at_position
+            SUBSTRING(email, 1, 5) as email_start,
+            POSITION('@' in email) as at_position,
+            REPLACE(email, 'example.com', 'sample.com') as updated_email
         FROM people
     """)
     print(result)
@@ -121,7 +122,7 @@ def date_time_operations():
         SELECT 
             NOW() as current_timestamp,
             CURRENT_DATE as today,
-            DATE('2024-12-25') as christmas,
+            CAST('2024-12-25' AS DATE) as christmas,
             EXTRACT(year FROM event_date) as event_year,
             EXTRACT(month FROM event_date) as event_month
         FROM events

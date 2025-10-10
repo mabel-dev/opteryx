@@ -10,6 +10,8 @@ from typing import List
 
 import orjson
 
+from opteryx.config import RESOURCES_PATH
+
 
 def load_permissions() -> List[Dict]:
     """
@@ -21,7 +23,7 @@ def load_permissions() -> List[Dict]:
         List[Dict]: A list of dictionaries where each dictionary represents a permission.
     """
     try:
-        with open("permissions.json", "r", encoding="UTF8") as file:
+        with open(RESOURCES_PATH / "permissions.json", "r", encoding="UTF8") as file:
             # Load each line as a JSON object and append a default permission entry.
             _permissions = [orjson.loads(line) for line in file] + [
                 {"role": "opteryx", "permission": "READ", "table": "*"}

@@ -19,6 +19,7 @@ from typing import Tuple
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
+from opteryx.config import RESOURCES_PATH
 from opteryx.exceptions import UnnamedColumnError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
@@ -791,7 +792,7 @@ def plan_execute_query(statement, **kwargs) -> LogicalPlan:
     statement_name = statement["Execute"]["name"][0]["Identifier"]["value"].upper()
     parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
-        with open("prepared_statements.json", "r") as ps:
+        with open(RESOURCES_PATH / "prepared_statements.json", "r") as ps:
             prepared_statatements = {str(k).upper(): v for k, v in orjson.loads(ps.read()).items()}
     except (OSError, ValueError):
         prepared_statatements = {}
