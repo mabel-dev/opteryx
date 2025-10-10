@@ -11,7 +11,7 @@ from cpython.slice cimport PySlice_GetIndicesEx, PySlice_New
 from cpython.mem cimport PyMem_Free
 from cpython.buffer cimport PyBuffer_FillInfo
 
-from simdjson.csimdjson cimport *  # noqa
+from csimdjson cimport *  # noqa
 
 MAXSIZE_BYTES = SIMDJSON_MAXSIZE_BYTES
 PADDING = SIMDJSON_PADDING
