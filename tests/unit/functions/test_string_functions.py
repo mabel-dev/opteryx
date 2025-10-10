@@ -10,6 +10,8 @@ import numpy
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from opteryx.compiled.list_ops import list_initcap
+from opteryx.compiled.list_ops import list_replace
 from opteryx.functions import string_functions
 
 
@@ -52,6 +54,42 @@ def test_random_string():
         seen.add(rs)
         # we shouldn't see padding in the string
         assert rs.count("=") == 0
+
+
+def test_compiled_replace():
+    data = numpy.array(["hello world", "banana", None], dtype=object)
+    search = numpy.array(["l"], dtype=object)
+    replace = numpy.array(["L"], dtype=object)
+
+    result = list_replace(data, search, replace).tolist()
+
+    assert result == ["heLLo worLd", "banana", None]
+
+
+def test_compiled_replace_bytes():
+    data = numpy.array([b"abcabc", b"", None], dtype=object)
+    search = numpy.array([b"abc"], dtype=object)
+    replace = numpy.array([b"x"], dtype=object)
+
+    result = list_replace(data, search, replace).tolist()
+
+    assert result == [b"xx", b"", None]
+
+
+def test_compiled_initcap():
+    data = numpy.array(["hello world", "AmiGoS", "o'connor", "3rd street", None], dtype=object)
+
+    result = list_initcap(data).tolist()
+
+    assert result == ["Hello World", "Amigos", "O'Connor", "3rd Street", None]
+
+
+def test_compiled_initcap_bytes():
+    data = numpy.array([b"mixed CASE"], dtype=object)
+
+    result = list_initcap(data).tolist()
+
+    assert result == ["Mixed Case"]
 
 
 if __name__ == "__main__":  # pragma: no cover
