@@ -21,7 +21,7 @@ import opteryx
 from opteryx.utils.formatter import format_sql
 
 from opteryx.connectors import FileConnector, IcebergConnector
-from tests.tools import set_up_iceberg
+from tests import set_up_iceberg
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -120,7 +120,7 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
     return query
 
 from opteryx import virtual_datasets
-from tests.tools import set_up_iceberg
+from tests import set_up_iceberg
 
 catalog = set_up_iceberg()
 
@@ -180,7 +180,7 @@ def test_sql_fuzzing_join(i):
     seed = i
     random.seed(seed)
 
-    from tests.tools import set_up_iceberg
+    from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
     opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)

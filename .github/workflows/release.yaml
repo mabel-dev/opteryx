@@ -21,7 +21,7 @@ jobs:
           path: io
 
       - name: Set permissions for build-wheels.sh
-        run: chmod +x io/build-wheels.sh
+        run: chmod +x io/dev/build-wheels.sh
 
       - name: Build Wheels
         run: >
@@ -32,7 +32,7 @@ jobs:
           -v `pwd`:/io
           --workdir /io
           quay.io/pypa/manylinux2014_x86_64
-          io/build-wheels.sh
+          io/dev/build-wheels.sh
 
       - name: Archive Wheels
         uses: actions/upload-artifact@v4

@@ -25,7 +25,7 @@ import pyarrow
 from pyarrow import Table
 
 from opteryx import EOS
-from opteryx.compiled.joins.inner_join import nested_loop_join
+from opteryx.compiled.joins import nested_loop_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables

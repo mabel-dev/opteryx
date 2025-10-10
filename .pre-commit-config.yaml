@@ -3,6 +3,6 @@ repos:
     hooks:
       - id: update-version
         name: build_counter
-        entry: python ./build_counter.py
+        entry: python ./dev/build_counter.py
         language: python
         stages: [pre-commit]

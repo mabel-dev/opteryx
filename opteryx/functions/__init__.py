@@ -4,7 +4,52 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-These are a set of functions that can be applied to data.
+SQL Functions Module
+
+This module provides all SQL functions available in Opteryx queries. Functions are
+organized by category and automatically registered for use in SQL expressions.
+
+Categories:
+- Arithmetic: Mathematical operations and calculations
+- String: Text manipulation (UPPER, LOWER, SUBSTRING, CONCAT, etc.)
+- Date/Time: Temporal operations (NOW, DATE_TRUNC, EXTRACT, etc.)
+- Aggregate: Aggregation functions (SUM, COUNT, AVG, MIN, MAX, etc.)
+- Conditional: Logic functions (CASE, COALESCE, NULLIF, etc.)
+- Array: Array operations and manipulations
+- Encoding: Base64, hex, and other encoding/decoding functions
+- Other: Utility and specialized functions
+
+Function Registration:
+Functions are registered in the FUNCTIONS dictionary with their implementation,
+return type, and cost estimate for query optimization.
+
+Structure:
+- function_name: (implementation_function, return_type, cost_estimate)
+- return_type: PyArrow data type or "VARIANT" for dynamic types
+- cost_estimate: Relative execution cost (currently always 1.0)
+
+Adding New Functions:
+1. Implement the function logic in the appropriate category module
+2. Add to the FUNCTIONS dictionary below
+3. Add comprehensive tests in tests/functions/
+4. Update documentation if the function introduces new patterns
+
+Example:
+    # Using functions in queries
+    SELECT UPPER(name), DATE_TRUNC('month', created_at) FROM users
+
+    # Function returns PyArrow arrays and handles null values
+    def my_string_function(arr):
+        return pa.compute.upper(arr)
+
+    # Register in FUNCTIONS dictionary
+    FUNCTIONS['MY_UPPER'] = (my_string_function, 'VARCHAR', 1.0)
+
+Performance Notes:
+- Functions should operate on PyArrow arrays for vectorization
+- Use PyArrow compute functions when available for best performance
+- Handle null values appropriately
+- Consider memory usage for large arrays
 """
 
 import datetime
@@ -23,7 +68,9 @@ import opteryx
 from opteryx.compiled.list_ops import list_contains_all
 from opteryx.compiled.list_ops import list_contains_any
 from opteryx.compiled.list_ops import list_encode_utf8 as to_blob
+from opteryx.compiled.list_ops import list_initcap
 from opteryx.compiled.list_ops import list_length
+from opteryx.compiled.list_ops import list_replace
 from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -495,6 +542,7 @@ FUNCTIONS = {
     "REVERSE": (compute.utf8_reverse, "VARCHAR", 1.0),
     "SOUNDEX": (string_functions.soundex, "VARCHAR", 1.0),
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
+    "INITCAP": (list_initcap, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
     "CONCAT_WS": (string_functions.concat_ws, "VARCHAR", 1.0),
     "SUBSTRING": (string_functions.substring, "VARCHAR", 1.0),
@@ -507,6 +555,7 @@ FUNCTIONS = {
     "LEVENSHTEIN": (string_functions.levenshtein, "INTEGER", 1.0),
     "SPLIT": (string_functions.split, "ARRAY<VARCHAR>", 1.0),
     "MATCH_AGAINST": (string_functions.match_against, "BOOLEAN", 1.0),
+    "REPLACE": (list_replace, "VARCHAR", 1.0),
     "REGEXP_REPLACE": (string_functions.regex_replace, "BLOB", 1.0),
 
     # HASHING & ENCODING

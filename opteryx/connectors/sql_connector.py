@@ -27,6 +27,7 @@ from orso.types import OrsoTypes
 
 from opteryx.compiled.structures.relation_statistics import RelationStatistics
 from opteryx.config import OPTERYX_DEBUG
+from opteryx.config import features
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
@@ -194,17 +195,26 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     break
 
                 # If we have a struct column, we need to convert the data to bytes
-                if any(col.type == OrsoTypes.STRUCT for col in self.schema.columns):
-                    batch_rows = list(batch_rows)
-                    for i, row in enumerate(batch_rows):
-                        batch_rows[i] = tuple(
-                            orjson.dumps(field) if isinstance(field, dict) else field
-                            for field in row
+                struct_column_indices = [
+                    i for i, col in enumerate(self.schema.columns) if col.type == OrsoTypes.STRUCT
+                ]
+                if struct_column_indices:
+                    batch_rows = [
+                        tuple(
+                            orjson.dumps(field)
+                            if i in struct_column_indices and isinstance(field, dict)
+                            else field
+                            for i, field in enumerate(row)
                         )
+                        for row in batch_rows
+                    ]
+                    rows = batch_rows
+                else:
+                    rows = map(tuple, batch_rows)
 
                 # convert the SqlAlchemy Results to Arrow using Orso
                 b = time.monotonic_ns()
-                morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
+                morsel = DataFrame(schema=result_schema, rows=rows).arrow()
                 convert_time += time.monotonic_ns() - b
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
@@ -228,17 +238,23 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         # DEBUG: print(f"time spent converting: {convert_time/1e9}s")
 
     def collect_relation_stats(self) -> RelationStatistics:
+        if features.disable_sql_statistics_gathering:
+            return RelationStatistics()
+
         from sqlalchemy import inspect
         from sqlalchemy.sql import text
 
         stats = RelationStatistics()
         dialect = self._engine.dialect.name.lower()
 
+        # Extract table name for stats queries (some need just the table name)
+        table_name_only = self.dataset.split(".")[-1] if "." in self.dataset else self.dataset
+
         if dialect == "postgresql":
             with self._engine.connect() as conn:
                 row_est = conn.execute(
                     text("SELECT reltuples::BIGINT FROM pg_class WHERE relname = :t"),
-                    {"t": self.dataset},
+                    {"t": table_name_only},
                 ).scalar()
                 if row_est is not None:
                     stats.record_count_estimate = int(row_est)
@@ -249,7 +265,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     FROM pg_stats
                     WHERE tablename = :t
                 """),
-                    {"t": self.dataset},
+                    {"t": table_name_only},
                 ).fetchall()
 
             for row in pg_stats:
@@ -265,7 +281,13 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
         elif dialect in {"duckdb", "sqlite", "mysql"}:
             # fallback: query full stats for small/embedded engines
-            columns = inspect(self._engine).get_columns(self.dataset)
+            try:
+                # Try with full dataset name first
+                columns = inspect(self._engine).get_columns(self.dataset)
+            except Exception:
+                # Fall back to table name only
+                columns = inspect(self._engine).get_columns(table_name_only)
+
             numeric_cols = [
                 col["name"]
                 for col in columns
@@ -299,14 +321,25 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         # get the schema from the dataset
         # DEBUG: print("GET SQL SCHEMA:", self.dataset)
         try:
-            table = Table(self.dataset, self.metadata, autoload_with=self._engine)
+            # Handle schema.table format
+            schema_name = None
+            table_name = self.dataset
+            if "." in self.dataset:
+                parts = self.dataset.split(".")
+                if len(parts) == 2:
+                    schema_name, table_name = parts
+                elif len(parts) > 2:
+                    # Handle database.schema.table format (take last two parts)
+                    schema_name, table_name = parts[-2], parts[-1]
+
+            table = Table(table_name, self.metadata, schema=schema_name, autoload_with=self._engine)
 
             self.schema = RelationSchema(
                 name=table.name,
                 columns=[
                     FlatColumn(
                         name=column.name,
-                        type=PYTHON_TO_ORSO_MAP[column.type.python_type],
+                        type=PYTHON_TO_ORSO_MAP.get(column.type.python_type, OrsoTypes.VARCHAR),
                         precision=(
                             column.type.precision
                             if hasattr(column.type, "precision")
@@ -323,51 +356,92 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     for column in table.columns
                 ],
             )
+            # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns")
         except Exception as err:
-            if not err:
-                pass
-            # Fall back to getting the schema from the first few rows, this is the column names,
-            # and where possible, column types.
-            # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
-            from sqlalchemy.sql import text
-
+            # Try again with quoted identifiers if the first attempt fails
+            # This handles case sensitivity and reserved word issues
             try:
-                with self._engine.connect() as conn:
-                    query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                    rows = conn.execute(text(str(query))).fetchmany(25)
+                from sqlalchemy import quoted_name
 
-                    if not rows:
-                        raise DatasetReadError(f"No rows found in dataset '{self.dataset}'.")
+                quoted_table_name = quoted_name(table_name, quote=True)
+                quoted_schema_name = quoted_name(schema_name, quote=True) if schema_name else None
 
-                    column_types = {}
+                table = Table(
+                    quoted_table_name,
+                    self.metadata,
+                    schema=quoted_schema_name,
+                    autoload_with=self._engine,
+                )
 
-                    # Walk rows until we find a non-null for each column
-                    for row in rows:
-                        row_dict = row._asdict()
-                        for column, value in row_dict.items():
-                            if column not in column_types:
-                                column_types[column] = None
-                            if column_types[column] is None and value is not None:
-                                column_types[column] = PYTHON_TO_ORSO_MAP.get(
-                                    type(value), OrsoTypes.NULL
+                self.schema = RelationSchema(
+                    name=table.name,
+                    columns=[
+                        FlatColumn(
+                            name=column.name,
+                            type=PYTHON_TO_ORSO_MAP.get(column.type.python_type, OrsoTypes.VARCHAR),
+                            precision=(
+                                column.type.precision
+                                if hasattr(column.type, "precision")
+                                and column.type.precision is not None
+                                else 38
+                            ),
+                            scale=(
+                                column.type.scale
+                                if hasattr(column.type, "scale") and column.type.scale is not None
+                                else 14
+                            ),
+                            nullable=column.nullable,
+                        )
+                        for column in table.columns
+                    ],
+                )
+                # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns using quoted identifiers")
+            except Exception as inner_err:
+                # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err}) AND {type(inner_err).__name__}({inner_err})")
+                # Fall back to getting the schema from the first few rows, this is the column names,
+                # and where possible, column types.
+                from sqlalchemy.sql import text
+
+                try:
+                    with self._engine.connect() as conn:
+                        query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
+                        rows = conn.execute(text(str(query))).fetchmany(25)
+
+                        if not rows:
+                            raise DatasetReadError(f"No rows found in dataset '{self.dataset}'.")
+
+                        column_types = {}
+
+                        # Walk rows until we find a non-null for each column
+                        for row in rows:
+                            row_dict = row._asdict()
+                            for column, value in row_dict.items():
+                                if column not in column_types:
+                                    column_types[column] = None
+                                if column_types[column] is None and value is not None:
+                                    column_types[column] = PYTHON_TO_ORSO_MAP.get(
+                                        type(value), OrsoTypes.NULL
+                                    )
+
+                        self.schema = RelationSchema(
+                            name=self.dataset,
+                            columns=[
+                                FlatColumn(
+                                    name=col,
+                                    type=column_types[col]
+                                    or OrsoTypes.NULL,  # all nulls stays as NULL
+                                    precision=38,
+                                    scale=14,
                                 )
+                                for col in column_types
+                            ],
+                        )
 
-                    self.schema = RelationSchema(
-                        name=self.dataset,
-                        columns=[
-                            FlatColumn(
-                                name=col,
-                                type=column_types[col] or OrsoTypes.NULL,  # all nulls stays as NULL
-                                precision=38,
-                                scale=14,
-                            )
-                            for col in column_types
-                        ],
-                    )
-
-                    # DEBUG: print("SCHEMA:", self.schema)
-            except Exception as err:
-                raise DatasetReadError(f"Unable to read dataset '{self.dataset}'.") from err
+                        # DEBUG: print("SCHEMA:", self.schema)
+                except Exception as final_err:
+                    raise DatasetReadError(
+                        f"Unable to read dataset '{self.dataset}'."
+                    ) from final_err
 
         self.schema.relation_statistics = self.collect_relation_stats()
 

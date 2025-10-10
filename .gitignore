@@ -193,3 +193,4 @@ opteryx/third_party/fastfloat/fast_float.cpp
 opteryx/third_party/fuzzy/soundex.c
 opteryx/third_party/tktech/csimdjson.cpp
 opteryx/third_party/ulfjack/ryu.c
+opteryx/compiled/joins/joins.pyx
