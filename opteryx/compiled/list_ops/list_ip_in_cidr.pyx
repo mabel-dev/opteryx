@@ -43,7 +43,17 @@ cdef inline uint32_t ip_to_int(const char* ip):
     return result
 
 
-def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
+cpdef numpy.ndarray[numpy.uint8_t, ndim=1] list_ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
+    """
+    Check if IP addresses are within a CIDR block.
+
+    Parameters:
+        ip_addresses: Array of IP address strings
+        cidr: CIDR notation string (e.g., "192.168.1.0/24")
+
+    Returns:
+        Boolean array indicating which IPs are in the CIDR block
+    """
 
     # CIDR validation...
     cdef int slash_idx = cidr.find('/')
@@ -60,7 +70,7 @@ def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
     cdef bytes ip_bytes
 
     cdef Py_ssize_t arr_len = ip_addresses.shape[0]
-    cdef unsigned char[:] result = numpy.zeros(arr_len, dtype=numpy.bool_)
+    cdef numpy.ndarray[numpy.uint8_t, ndim=1] result = numpy.zeros(arr_len, dtype=numpy.uint8)
 
     # Use memoryview for input if possible
     cdef Py_ssize_t i
@@ -74,4 +84,4 @@ def ip_in_cidr(numpy.ndarray ip_addresses, str cidr):
             ip_int = ip_to_int(ip_bytes)
             result[i] = (ip_int & netmask) == base_ip
 
-    return numpy.asarray(result, dtype=bool)
+    return result

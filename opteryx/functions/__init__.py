@@ -70,7 +70,14 @@ from opteryx.compiled.list_ops import list_contains_any
 from opteryx.compiled.list_ops import list_encode_utf8 as to_blob
 from opteryx.compiled.list_ops import list_initcap
 from opteryx.compiled.list_ops import list_length
+from opteryx.compiled.list_ops import list_md5
 from opteryx.compiled.list_ops import list_replace
+from opteryx.compiled.list_ops import list_sha1
+from opteryx.compiled.list_ops import list_sha256
+from opteryx.compiled.list_ops import list_sha512
+from opteryx.compiled.list_ops import list_soundex
+from opteryx.compiled.list_ops import list_string_slice_left
+from opteryx.compiled.list_ops import list_string_slice_right
 from opteryx.exceptions import FunctionExecutionError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -537,10 +544,10 @@ FUNCTIONS = {
     "LENGTH": (list_length, "INTEGER", 1.0),  # LENGTH(str) -> int
     "UPPER": (compute.utf8_upper, "VARCHAR", 1.0),  # UPPER(str) -> str
     "LOWER": (compute.utf8_lower, "VARCHAR", 1.0),  # LOWER(str) -> str
-    "LEFT": (string_functions.string_slicer_left, "VARCHAR", 1.0),
-    "RIGHT": (string_functions.string_slicer_right, "VARCHAR", 1.0),
+    "LEFT": (list_string_slice_left, "VARCHAR", 1.0),
+    "RIGHT": (list_string_slice_right, "VARCHAR", 1.0),
     "REVERSE": (compute.utf8_reverse, "VARCHAR", 1.0),
-    "SOUNDEX": (string_functions.soundex, "VARCHAR", 1.0),
+    "SOUNDEX": (list_soundex, "VARCHAR", 1.0),
     "TITLE": (compute.utf8_title, "VARCHAR", 1.0),
     "INITCAP": (list_initcap, "VARCHAR", 1.0),
     "CONCAT": (string_functions.concat, "VARCHAR", 1.0),
@@ -560,16 +567,16 @@ FUNCTIONS = {
 
     # HASHING & ENCODING
     "HASH": (_iterate_single_parameter(lambda x: hex(hash_bytes(str(x).encode()))[2:]), "BLOB", 1.0),
-    "MD5": (_iterate_single_parameter(string_functions.get_md5), "BLOB", 1.0),
-    "SHA1": (_iterate_single_parameter(string_functions.get_sha1), "BLOB", 1.0),
+    "MD5": (list_md5, "BLOB", 1.0),
+    "SHA1": (list_sha1, "BLOB", 1.0),
     "SHA224": (_iterate_single_parameter(string_functions.get_sha224), "BLOB", 1.0),
-    "SHA256": (_iterate_single_parameter(string_functions.get_sha256), "BLOB", 1.0),
+    "SHA256": (list_sha256, "BLOB", 1.0),
     "SHA384": (_iterate_single_parameter(string_functions.get_sha384), "BLOB", 1.0),
-    "SHA512": (_iterate_single_parameter(string_functions.get_sha512), "BLOB", 1.0),
+    "SHA512": (list_sha512, "BLOB", 1.0),
     "RANDOM": (number_functions.random_number, "DOUBLE", 1.0),
     "RAND": (number_functions.random_number, "DOUBLE", 1.0),
     "NORMAL": (number_functions.random_normal, "DOUBLE", 1.0),
-    "RANDOM_STRING": (number_functions.random_string, "BLOB", 1.0),
+    "RANDOM_STRING": (number_functions.random_strings, "BLOB", 1.0),
     "BASE64_ENCODE": (string_functions.base64_encode, "BLOB", 1.0),
     "BASE64_DECODE": (string_functions.base64_decode, "BLOB", 1.0),
     "BASE85_ENCODE": (_iterate_single_parameter(string_functions.get_base85_encode), "BLOB", 1.0),
