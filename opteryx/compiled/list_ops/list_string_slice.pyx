@@ -11,7 +11,7 @@ cimport numpy
 numpy.import_array()
 
 
-cpdef numpy.ndarray list_string_slice_left(numpy.ndarray arr, object length):
+cpdef numpy.ndarray list_string_slice_left(object arr, object length):
     """
     Slice strings from the left (beginning).
 
@@ -22,6 +22,10 @@ cpdef numpy.ndarray list_string_slice_left(numpy.ndarray arr, object length):
     Returns:
         Array of sliced strings
     """
+
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(zero_copy_only=False)
+
     cdef Py_ssize_t i, n = len(arr)
     cdef numpy.ndarray[object, ndim=1] result = numpy.empty(n, dtype=object)
     cdef numpy.ndarray length_arr
@@ -55,7 +59,7 @@ cpdef numpy.ndarray list_string_slice_left(numpy.ndarray arr, object length):
     return result
 
 
-cpdef numpy.ndarray list_string_slice_right(numpy.ndarray arr, object length):
+cpdef numpy.ndarray list_string_slice_right(object arr, object length):
     """
     Slice strings from the right (end).
 
@@ -66,6 +70,10 @@ cpdef numpy.ndarray list_string_slice_right(numpy.ndarray arr, object length):
     Returns:
         Array of sliced strings
     """
+
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(zero_copy_only=False)
+
     cdef Py_ssize_t i, n = len(arr)
     cdef numpy.ndarray[object, ndim=1] result = numpy.empty(n, dtype=object)
     cdef numpy.ndarray length_arr
