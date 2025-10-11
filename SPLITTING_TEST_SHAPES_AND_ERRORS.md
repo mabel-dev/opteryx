@@ -302,3 +302,58 @@ test-quick: ## Run quick test (alias: t)
 - Matches the pattern of other test files in the repository (e.g., `test_run_only_battery.py`)
 
 The split can be done incrementally, moving one logical section at a time, which reduces risk and allows for validation at each step.
+
+## Visual Comparison
+
+### Current Structure
+```
+tests/integration/sql_battery/
+└── test_shapes_and_errors_battery.py  (2,647 lines, 2,123 tests)
+    ├── Basic queries (300+ tests)
+    ├── Operators & expressions (600+ tests)
+    ├── Aliases & DISTINCT (700+ tests)
+    ├── Functions & aggregates (300+ tests)
+    ├── Joins & subqueries (150+ tests)
+    ├── Data sources (200+ tests)
+    └── Edge cases (200+ tests)
+
+Execution: make t → runs single file → ~10 seconds
+```
+
+### Proposed Structure (Option 1)
+```
+tests/integration/sql_battery/
+├── shapes_battery_common.py           (shared infrastructure)
+├── run_shapes_battery.py              (optional runner script)
+├── test_shapes_basic.py               (~300 tests, 1-2s)
+├── test_shapes_operators_expressions.py  (~600 tests, 2-3s)
+├── test_shapes_aliases_distinct.py    (~700 tests, 3-4s)
+├── test_shapes_functions_aggregates.py  (~300 tests, 1-2s)
+├── test_shapes_joins_subqueries.py    (~150 tests, 1s)
+├── test_shapes_data_sources.py        (~200 tests, 1-2s)
+└── test_shapes_edge_cases.py          (~200 tests, 1s)
+
+Execution: make t → runs all files via script → ~10 seconds total
+           OR: python test_shapes_basic.py → runs just basic tests → 1-2s
+           OR: pytest -k shapes → runs all shape tests
+```
+
+## Quick Start After Implementation
+
+```bash
+# Run all shape tests (same as before)
+make t
+
+# Run specific test subset
+python tests/integration/sql_battery/test_shapes_basic.py
+
+# Run multiple specific subsets
+pytest tests/integration/sql_battery/test_shapes_basic.py \
+       tests/integration/sql_battery/test_shapes_operators_expressions.py
+
+# Run with pytest markers (if implemented)
+pytest -m "basic or operators" tests/integration/sql_battery/
+
+# Parallel execution (if desired)
+pytest -n auto tests/integration/sql_battery/test_shapes_*.py
+```
