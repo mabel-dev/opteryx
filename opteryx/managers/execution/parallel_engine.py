@@ -22,6 +22,7 @@ from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.models import PhysicalPlan
 from opteryx.models import QueryStatistics
+from opteryx.utils.threading import is_free_threading_available
 
 from .serial_engine import explain
 
@@ -29,13 +30,21 @@ from .serial_engine import explain
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Detect if free-threading is available
+FREE_THREADING_AVAILABLE = is_free_threading_available()
+
 
 class ExecutionContext:
     """Encapsulates execution state, thread pool, and async task tracking."""
 
     def __init__(self, num_workers: int = 2):
-        self.thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=num_workers)
-        self.futures = {}  # Track active futures {future: (node_id, join_leg)}
+        self.use_threading = FREE_THREADING_AVAILABLE
+        if self.use_threading:
+            self.thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=num_workers)
+            self.futures = {}  # Track active futures {future: (node_id, join_leg)}
+        else:
+            self.thread_pool = None
+            self.futures = {}
 
     def submit_task(
         self, node: Callable, morsel: Optional[pyarrow.Table], join_leg: Optional[str], nid: str
@@ -48,23 +57,41 @@ class ExecutionContext:
             join_leg: Join identifier if this is part of a join
             nid: Unique node identifier in the plan
         """
-        future = self.thread_pool.submit(node, morsel, join_leg)
-        self.futures[future] = (nid, join_leg)
+        if self.use_threading:
+            future = self.thread_pool.submit(node, morsel, join_leg)
+            self.futures[future] = (nid, join_leg)
+        else:
+            # Without free-threading, execute synchronously
+            # Store the result with a dummy future object
+            class DummyFuture:
+                def __init__(self, result):
+                    self._result = result
+
+                def result(self):
+                    return self._result
+
+            result = node(morsel, join_leg)
+            dummy_future = DummyFuture(result)
+            self.futures[dummy_future] = (nid, join_leg)
 
     def process_async_tasks(self, plan):
         """Process completed async tasks and dispatch results."""
         if not self.futures:
             return
 
-        # Wait for any completed futures without blocking
-        done, not_done = concurrent.futures.wait(
-            self.futures.keys(), timeout=0, return_when=concurrent.futures.FIRST_COMPLETED
-        )
+        if self.use_threading:
+            # Wait for any completed futures without blocking
+            done, not_done = concurrent.futures.wait(
+                self.futures.keys(), timeout=0, return_when=concurrent.futures.FIRST_COMPLETED
+            )
 
-        # If work is still in progress but nothing is complete, indicate that
-        if not done and not_done:
-            yield None
-            return
+            # If work is still in progress but nothing is complete, indicate that
+            if not done and not_done:
+                yield None
+                return
+        else:
+            # Without threading, all tasks are already complete (executed synchronously)
+            done = list(self.futures.keys())
 
         # Process all completed futures
         for future in done:
@@ -88,7 +115,8 @@ class ExecutionContext:
 
     def shutdown(self):
         """Shut down the execution context."""
-        self.thread_pool.shutdown(wait=True)
+        if self.use_threading and self.thread_pool:
+            self.thread_pool.shutdown(wait=True)
 
 
 def execute(

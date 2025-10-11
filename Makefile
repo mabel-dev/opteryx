@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 
 # Variables
-PYTHON := python
+PYTHON := PYTHON_GIL=0 python
 UV := $(PYTHON) -m uv
 PIP := $(UV) pip
 PYTEST := $(PYTHON) -m pytest
@@ -102,6 +102,9 @@ test-quick: ## Run quick test (alias: t)
 	@clear
 	@$(PYTHON) tests/integration/sql_battery/run_shapes_battery.py
 
+b:
+	@clear
+	@$(PYTHON) scratch/brace.py
 
 # Aliases for backward compatibility
 t: test-quick
@@ -127,7 +130,7 @@ mypy: ## Run type checking
 
 compile: clean ## Compile Cython extensions
 	$(call print_blue,"Compiling Cython extensions...")
-	@$(PIP) install --upgrade pip uv numpy cython setuptools
+	@$(PIP) install --upgrade pip uv numpy cython setuptools setuptools_rust
 	@$(PYTHON) setup.py clean
 	@$(PYTHON) setup.py build_ext --inplace -j $(JOBS)
 	$(call print_green,"Compilation complete!")
@@ -159,11 +162,3 @@ distclean: clean ## Deep clean including compiled extensions
 all: clean dev-install lint mypy test compile ## Run complete development workflow
 
 check-all: lint mypy test coverage ## Run all checks without compilation
-
-# === DOCKER SUPPORT (if needed) ===
-
-docker-build: ## Build Docker image
-	@docker build -t opteryx .
-
-docker-test: ## Run tests in Docker
-	@docker run --rm opteryx make test

@@ -181,7 +181,7 @@ def sql_parts(string):
 
 def parse_range(fixed_range):  # pragma: no cover
     fixed_range = fixed_range.upper()
-    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    now = datetime.datetime.now(datetime.UTC).replace(minute=0, second=0, microsecond=0)
 
     if fixed_range in ("PREVIOUS_MONTH", "LAST_MONTH"):
         # end the day before the first of this month
@@ -211,7 +211,7 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     if not date:
         return None
 
-    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    now = datetime.datetime.now(datetime.UTC).replace(minute=0, second=0, microsecond=0)
 
     if date == "TODAY":
         return now
@@ -420,7 +420,7 @@ def extract_temporal_filters(parts: str):  # pragma: no cover
                     "Invalid temporal range, expected format `FOR LAST <number> DAYS`."
                 )
             interval = int(parts[1])
-            end_date = datetime.datetime.utcnow().replace(
+            end_date = datetime.datetime.now(datetime.UTC).replace(
                 hour=23, minute=59, second=0, microsecond=0
             )
             start_date = (end_date - datetime.timedelta(interval)).replace(
@@ -434,7 +434,9 @@ def extract_temporal_filters(parts: str):  # pragma: no cover
         elif for_date_string.startswith("DATES SINCE "):
             parts = shlex.split(for_date_string)
             start_date = parse_date(parts[2])
-            end_date = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+            end_date = datetime.datetime.now(datetime.UTC).replace(
+                minute=0, second=0, microsecond=0
+            )
 
         elif for_date_string:
             raise InvalidTemporalRangeFilterError(
