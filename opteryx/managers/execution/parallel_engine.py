@@ -66,10 +66,10 @@ class ExecutionContext:
             class DummyFuture:
                 def __init__(self, result):
                     self._result = result
-                
+
                 def result(self):
                     return self._result
-            
+
             result = node(morsel, join_leg)
             dummy_future = DummyFuture(result)
             self.futures[dummy_future] = (nid, join_leg)

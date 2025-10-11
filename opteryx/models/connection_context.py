@@ -44,7 +44,9 @@ class ConnectionContext:
     """
 
     connection_id: int = field(default_factory=random_int, init=False)
-    connected_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow, init=False)
+    connected_at: datetime.datetime = field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC), init=False
+    )
     user: str = None
     schema: str = None
     memberships: Iterable[str] = None

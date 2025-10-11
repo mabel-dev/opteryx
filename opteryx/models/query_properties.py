@@ -18,8 +18,8 @@ class QueryProperties:
         # this is empty unless it's set as part of the query
         self.variables: dict[str, Any] = variables
         self.temporal_filters: list = []
-        self.date = datetime.datetime.utcnow().date()
-        self.current_time = datetime.datetime.utcnow()
+        self.date = datetime.datetime.now(datetime.UTC).date()
+        self.current_time = datetime.datetime.now(datetime.UTC)
         self.cache = None
         self.qid = qid
         self.ctes: dict = {}

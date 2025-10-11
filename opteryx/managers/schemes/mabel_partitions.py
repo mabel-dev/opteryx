@@ -73,7 +73,9 @@ class MabelPartitionScheme(BasePartitionScheme):
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
 
-        midnight = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        midnight = datetime.datetime.now(datetime.UTC).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         by_label = f"{OS_SEP}by_"
         as_at_label = f"{OS_SEP}as_at"
 

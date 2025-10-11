@@ -206,10 +206,12 @@ PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 
 # FEATURE FLAGS
 class Features:
+    # Feature flags are used to enable or disable experimental features.
     enable_native_aggregator = bool(get("FEATURE_ENABLE_NATIVE_AGGREGATOR", False))
     disable_nested_loop_join = bool(get("FEATURE_DISABLE_NESTED_LOOP_JOIN", False))
     force_nested_loop_join = bool(get("FEATURE_FORCE_NESTED_LOOP_JOIN", False))
     disable_sql_statistics_gathering = bool(get("FEATURE_DISABLE_SQL_STATISTICS_GATHERING", False))
+    enable_free_threading = bool(get("FEATURE_ENABLE_FREE_THREADING", False))
     use_draken_ops_kernels = bool(get("FEATURE_USE_DRAKEN_OPS_KERNELS", False))
 
 

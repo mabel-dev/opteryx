@@ -207,7 +207,7 @@ def fixed_value_function(function, context):
         return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
     if function == "UTC_TIMESTAMP":
         # UTC timestamp
-        return OrsoTypes.TIMESTAMP, numpy.datetime64(datetime.datetime.utcnow(), "us")
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(datetime.datetime.now(datetime.UTC), "us")
     if function == "UNIXTIME":
         # We should only ever get here if the function is called without parameters
         return OrsoTypes.INTEGER, context.connection.connected_at.timestamp()
