@@ -27,7 +27,7 @@ def random_normal(size):
     return rng.standard_normal(size)
 
 
-def random_string(items):
+def random_strings(items):
     # this is roughly twice as fast the the previous implementation
     # a tuple is slightly faster than a string, don't use a list
     if isinstance(items, int):
@@ -39,11 +39,9 @@ def random_string(items):
     else:
         return []
 
-    import pyarrow
+    from opteryx.compiled.list_ops import list_random_strings
 
-    from opteryx.compiled.functions.functions import generate_random_strings
-
-    return pyarrow.array(generate_random_strings(row_count, width), type=pyarrow.binary())
+    return list_random_strings(row_count, width)
 
 
 def safe_power(base_array, exponent_array):
