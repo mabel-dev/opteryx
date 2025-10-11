@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 import numpy
-from opteryx.compiled.functions.ip_address import ip_in_cidr
+from opteryx.compiled.list_ops import list_ip_in_cidr
 
 TESTS = [
     # Test case 1: Single IP in CIDR
@@ -103,7 +103,7 @@ TESTS = [
 @pytest.mark.parametrize("ips, cidr, expected", TESTS)
 def test_ip_containment(ips, cidr, expected):
     try:
-        result = ip_in_cidr(numpy.array(ips), cidr)
+        result = list_ip_in_cidr(numpy.array(ips), cidr)
         assert (x == y for x, y in zip(result, expected))
     except AssertionError as e:
         assert False, (ips, cidr, expected, result)

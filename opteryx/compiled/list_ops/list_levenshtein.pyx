@@ -6,7 +6,9 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-import numpy as np  # Required for array allocation
+import numpy as np
+cimport numpy as cnp
+cnp.import_array()
 from libc.stdint cimport int64_t
 
 
@@ -20,7 +22,8 @@ cdef inline int64_t min3(int64_t x, int64_t y, int64_t z) nogil:
         return y
     return z
 
-cpdef int64_t levenshtein(str string1, str string2):
+
+cdef inline int64_t levenshtein_single(str string1, str string2):
     """
     Calculate the Levenshtein distance between two strings.
 
@@ -58,3 +61,27 @@ cpdef int64_t levenshtein(str string1, str string2):
                 )
 
     return dp[len1 * len2 + (len2 - 1)]
+
+
+cpdef cnp.ndarray[cnp.int64_t, ndim=1] list_levenshtein(cnp.ndarray[object, ndim=1] a, cnp.ndarray[object, ndim=1] b):
+    """
+    Calculate Levenshtein distance for arrays of strings.
+
+    Parameters:
+        a: Array of strings
+        b: Array of strings
+
+    Returns:
+        Array of integers representing Levenshtein distances
+    """
+    cdef Py_ssize_t size = len(a)
+    cdef cnp.ndarray[cnp.int64_t, ndim=1] result = np.zeros(size, dtype=np.int64)
+    cdef Py_ssize_t i
+
+    for i in range(size):
+        if a[i] is None or b[i] is None:
+            result[i] = -1  # or some other value to indicate null
+        else:
+            result[i] = levenshtein_single(str(a[i]), str(b[i]))
+
+    return result
