@@ -100,7 +100,7 @@ test: dev-install ## Run full test suite
 
 test-quick: ## Run quick test (alias: t)
 	@clear
-	@$(PYTHON) tests/integration/sql_battery/test_shapes_and_errors_battery.py
+	@$(PYTHON) tests/integration/sql_battery/run_shapes_battery.py
 
 
 # Aliases for backward compatibility
