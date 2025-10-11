@@ -71,7 +71,7 @@ cdef extern from *:
 cdef const char* _HEX_DIGITS = "0123456789abcdef"
 
 
-cdef inline void _digest_to_hex(const unsigned char* digest, size_t length, char* out) nogil:
+cdef inline void _digest_to_hex(const unsigned char* digest, size_t length, char* out) noexcept nogil:
     cdef size_t i
     cdef unsigned char byte
     for i in range(length):

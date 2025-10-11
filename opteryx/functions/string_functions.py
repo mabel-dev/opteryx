@@ -220,11 +220,22 @@ def rtrim(*args):
 def levenshtein(a, b):
     from opteryx.compiled.list_ops import list_levenshtein
 
-    # Convert to numpy arrays if needed
+    # Convert to numpy arrays with object dtype if needed
     if hasattr(a, "to_numpy"):
         a = a.to_numpy(zero_copy_only=False)
     if hasattr(b, "to_numpy"):
         b = b.to_numpy(zero_copy_only=False)
+
+    # Ensure arrays are numpy arrays with object dtype
+    if not isinstance(a, numpy.ndarray):
+        a = numpy.array(a, dtype=object)
+    elif a.dtype.kind in ["U", "S"]:  # Unicode or byte string dtypes
+        a = a.astype(object)
+
+    if not isinstance(b, numpy.ndarray):
+        b = numpy.array(b, dtype=object)
+    elif b.dtype.kind in ["U", "S"]:  # Unicode or byte string dtypes
+        b = b.astype(object)
 
     return list_levenshtein(a, b)
 

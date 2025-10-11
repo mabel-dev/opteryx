@@ -1,15 +1,16 @@
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 
 def test_random_generate_random_string():
-    from opteryx.compiled.functions.functions import generate_random_strings
+    from opteryx.compiled.list_ops import list_random_strings
 
     count = 1000
+    width = 22
 
-    strings = generate_random_strings(count, 16)
+    strings = list_random_strings(count, width)
 
     assert len(set(strings)) == count
 
