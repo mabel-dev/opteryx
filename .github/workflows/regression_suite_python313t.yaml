@@ -21,37 +21,58 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Cache Python 3.13t build
+        id: cache-python313t
+        uses: actions/cache@v4
+        with:
+          path: ~/python313t
+          key: python-313t-${{ runner.os }}-${{ hashFiles('.github/workflows/regression_suite_python313t.yaml') }}
   
-      - name: Install Python 3.13t (free-threading) from deadsnakes
+      - name: Install build dependencies
+        if: steps.cache-python313t.outputs.cache-hit != 'true'
         run: |
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt-get update
-          # Install Python 3.13 with free-threading support
-          # Note: The 't' suffix denotes the free-threading build
-          sudo apt-get install -y python3.13-nogil python3.13-nogil-dev python3.13-nogil-venv || \
-          sudo apt-get install -y python3.13t python3.13t-dev python3.13t-venv || \
-          sudo apt-get install -y python3.13-dev python3.13-venv
-          
-      - name: Set up Python 3.13t environment
+          sudo apt-get install -y build-essential gdb lcov pkg-config \
+            libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+            libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
+            lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+      
+      - name: Download and build Python 3.13 with free-threading
+        if: steps.cache-python313t.outputs.cache-hit != 'true'
         run: |
-          # Create a virtual environment and use it
-          python3.13-nogil -m venv venv || python3.13t -m venv venv || python3.13 -m venv venv
-          echo "$GITHUB_WORKSPACE/venv/bin" >> $GITHUB_PATH
+          # Download Python 3.13 source
+          cd /tmp
+          wget https://www.python.org/ftp/python/3.13.0/Python-3.13.0.tar.xz
+          tar -xf Python-3.13.0.tar.xz
+          cd Python-3.13.0
+          
+          # Configure with --disable-gil for free-threading
+          ./configure --prefix=$HOME/python313t --enable-optimizations --disable-gil
+          
+          # Build and install
+          make -j$(nproc)
+          make install
+      
+      - name: Add Python 3.13t to PATH
+        run: echo "$HOME/python313t/bin" >> $GITHUB_PATH
       
       - name: Verify free-threading is enabled
         run: |
-          python --version
-          python -c "import sys; print('Python version:', sys.version)"
-          python -c "import sys; print('Free-threading available:', hasattr(sys, '_is_gil_disabled'))"
-          python -c "import sys; print('GIL disabled:', sys._is_gil_disabled() if hasattr(sys, '_is_gil_disabled') else 'N/A')"
+          python3.13 --version
+          python3.13 -c "import sys; print('Python version:', sys.version)"
+          python3.13 -c "import sys; print('Free-threading available:', hasattr(sys, '_is_gil_disabled'))"
+          python3.13 -c "import sys; print('GIL disabled:', sys._is_gil_disabled() if hasattr(sys, '_is_gil_disabled') else 'N/A')"
+          # Verify the GIL is actually disabled
+          python3.13 -c "import sys; assert hasattr(sys, '_is_gil_disabled') and sys._is_gil_disabled(), 'Free-threading is not enabled!'"
         
       - name: Install Requirements
         run: |
-          python -m pip install --upgrade pip uv
-          python -m uv pip install --upgrade numpy cython==3.1.3
-          python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
-          python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
-          python setup.py build_ext --inplace -j 4
+          python3.13 -m pip install --upgrade pip uv
+          python3.13 -m uv pip install --upgrade numpy cython==3.1.3
+          python3.13 -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
+          python3.13 -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
+          python3.13 setup.py build_ext --inplace -j 4
 
       - name: "Start Memcached Instance"
         run: |
@@ -70,7 +91,7 @@ jobs:
           echo "${{ secrets.ASTRA_SECURE_BUNDLE_BASE64 }}" | base64 -d > secure-connect.zip
 
       - name: Run Regression Tests with Free-Threading
-        run: python -m coverage run -m pytest --color=yes
+        run: python3.13 -m coverage run -m pytest --color=yes
         env:
           AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
           MINIO_END_POINT: "s3.eu-west-2.amazonaws.com"
@@ -97,7 +118,7 @@ jobs:
           VALKEY_CONNECTION: '${{ secrets.VALKEY_CONNECTION }}'
 
       - name: Check Coverage
-        run: python -m coverage report -m
+        run: python3.13 -m coverage report -m
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v1
