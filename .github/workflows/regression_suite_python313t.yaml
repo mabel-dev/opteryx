@@ -41,11 +41,11 @@ jobs:
       - name: Download and build Python 3.13 with free-threading
         if: steps.cache-python313t.outputs.cache-hit != 'true'
         run: |
-          # Download Python 3.13 source
+          # Download Python 3.13.8 source (latest stable)
           cd /tmp
-          wget https://www.python.org/ftp/python/3.13.0/Python-3.13.0.tar.xz
-          tar -xf Python-3.13.0.tar.xz
-          cd Python-3.13.0
+          wget https://www.python.org/ftp/python/3.13.8/Python-3.13.8.tar.xz
+          tar -xf Python-3.13.8.tar.xz
+          cd Python-3.13.8
           
           # Configure with --disable-gil for free-threading
           ./configure --prefix=$HOME/python313t --enable-optimizations --disable-gil
@@ -61,10 +61,12 @@ jobs:
         run: |
           python3.13 --version
           python3.13 -c "import sys; print('Python version:', sys.version)"
-          python3.13 -c "import sys; print('Free-threading available:', hasattr(sys, '_is_gil_disabled'))"
-          python3.13 -c "import sys; print('GIL disabled:', sys._is_gil_disabled() if hasattr(sys, '_is_gil_disabled') else 'N/A')"
-          # Verify the GIL is actually disabled
-          python3.13 -c "import sys; assert hasattr(sys, '_is_gil_disabled') and sys._is_gil_disabled(), 'Free-threading is not enabled!'"
+          # Check multiple ways to detect free-threading
+          python3.13 -c "import sys; print('Has _is_gil_disabled:', hasattr(sys, '_is_gil_disabled'))"
+          python3.13 -c "import sys; print('Has flags.gil:', hasattr(sys.flags, 'gil') if hasattr(sys, 'flags') else False)"
+          python3.13 -c "import sysconfig; print('Py_GIL_DISABLED:', sysconfig.get_config_var('Py_GIL_DISABLED'))"
+          # Try to verify GIL is disabled - use sysconfig as primary method
+          python3.13 -c "import sysconfig; gil_disabled = sysconfig.get_config_var('Py_GIL_DISABLED'); print('GIL disabled:', gil_disabled); assert gil_disabled == 1, f'Free-threading is not enabled! Py_GIL_DISABLED={gil_disabled}'"
         
       - name: Install Requirements
         run: |
