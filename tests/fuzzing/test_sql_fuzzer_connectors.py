@@ -27,8 +27,8 @@ from opteryx.connectors import MongoDbConnector
 from opteryx import virtual_datasets
 from orso.tools import lru_cache_with_expiry
 
-from tests.tools import create_duck_db, populate_mongo, set_up_iceberg
-from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
+from tests import create_duck_db, populate_mongo, set_up_iceberg
+from tests import is_arm, is_mac, is_windows, skip_if, is_version
 
 TEST_CYCLES: int = 10
 

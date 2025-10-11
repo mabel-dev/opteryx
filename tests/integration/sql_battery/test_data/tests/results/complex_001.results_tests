@@ -1,0 +1,15 @@
+{
+    "summary": "Complex tests - This is a variation of the regression 001 query",
+    "statement": "SELECT name AS nom, IFNULL(satellites_count.gm_big_count, 0) AS big_occurrences, IFNULL(satellites_count.gm_small_count, 0) AS small_occurrences FROM (SELECT id, name FROM $planets WHERE name = 'Saturn') AS planets LEFT JOIN (SELECT planetId, SUM(CASE WHEN gm > 10 THEN 1 ELSE 0 END) AS gm_big_count, SUM(CASE WHEN gm <= 10 THEN 1 ELSE 0 END) AS gm_small_count FROM $satellites GROUP BY planetId) AS satellites_count ON planets.id = satellites_count.planetId;",
+    "result": {
+        "nom": [
+            "Saturn"
+        ],
+        "big_occurrences": [
+            5
+        ],
+        "small_occurrences": [
+            56
+        ]
+    }
+}

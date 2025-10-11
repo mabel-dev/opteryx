@@ -4,16 +4,85 @@
 # Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
 """
-Connectors module with lazy loading support.
+Data Source Connectors with Lazy Loading
 
+This module provides connectors to various data sources, enabling Opteryx to query
+data from files, databases, cloud storage, and other systems. Connectors are lazily
+loaded to improve startup performance and reduce memory footprint.
+
+Architecture:
+Connectors abstract different data sources behind a common interface (BaseConnector),
+allowing the query engine to work with any data source transparently. Each connector
+is responsible for:
+- Reading data and converting it to PyArrow format
+- Providing schema information
+- Supporting predicate pushdown when possible
+- Handling authentication and connection management
+
+Connector Types:
+
+File System Connectors:
+- DiskConnector: Local file system access
+- AwsS3Connector: Amazon S3 storage
+- GcpCloudStorageConnector: Google Cloud Storage
+
+Database Connectors:
+- SqlConnector: SQL databases (PostgreSQL, MySQL, SQLite, etc.)
+- MongoDbConnector: MongoDB document database
+- CqlConnector: Cassandra/ScyllaDB
+
+Format Connectors:
+- ArrowConnector: Apache Arrow tables and datasets
+- FileConnector: Generic file format handler
+- IcebergConnector: Apache Iceberg tables
+
+Special Connectors:
+- VirtualDataConnector: In-memory datasets and computed tables
+- InformationSchemaConnector: System metadata tables
+
+Lazy Loading:
 Connectors are only imported when actually needed, which significantly improves
-the initial import time of the opteryx package. This is especially important for
-CLI usage and serverless deployments where cold start time matters.
+module import time. The lazy loading is transparent to users - all import patterns
+work normally, but the actual connector classes are loaded on first access.
 
-The lazy loading is transparent to users - all import patterns work the same way:
-- from opteryx.connectors import ArrowConnector
-- from opteryx.connectors import register_store
-- Using connectors via connector_factory()
+Usage Patterns:
+
+1. Direct Import:
+   from opteryx.connectors import ArrowConnector
+
+2. Registration:
+   opteryx.register_store("my_prefix", my_connector_instance)
+
+3. Query Usage:
+   opteryx.query("SELECT * FROM s3://bucket/file.parquet")
+
+Connector Development:
+1. Inherit from BaseConnector
+2. Implement required methods (read_dataset, get_dataset_schema)
+3. Add optional optimizations (predicate pushdown, column pruning)
+4. Register with appropriate prefixes
+5. Add comprehensive tests
+
+Example Custom Connector:
+    class MyConnector(BaseConnector):
+        def read_dataset(self, dataset, **kwargs):
+            # Read data and return PyArrow table
+            return pa.table(data)
+
+        def get_dataset_schema(self, dataset):
+            # Return schema information
+            return pa.schema([...])
+
+Performance Considerations:
+- Implement predicate pushdown to reduce data transfer
+- Support column pruning for wide tables
+- Use async operations for I/O bound connectors
+- Cache schema information when appropriate
+- Consider connection pooling for database connectors
+
+The lazy loading system maps prefixes to connector classes and loads them
+on demand, significantly reducing initial import time while maintaining
+full functionality.
 """
 
 import os

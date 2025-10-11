@@ -1,0 +1,21 @@
+{
+    "summary": "Retrieve planets with specific gravity and diameter metrics, along with count and average radius of high GM satellites and average magnitude of visible satellites.",
+    "statement": "SELECT p.name AS planet_name, p.diameter, high_gm_stats.high_gm_satellites_count, high_gm_stats.avg_high_gm_radius, visible_stats.avg_magnitude FROM $planets p LEFT JOIN (SELECT planetId, COUNT(*) AS high_gm_satellites_count, AVG(radius) AS avg_high_gm_radius FROM $satellites s1 WHERE gm > 5 GROUP BY planetId) AS high_gm_stats ON p.id = high_gm_stats.planetId LEFT JOIN (SELECT planetId, AVG(magnitude) AS avg_magnitude FROM $satellites s2 WHERE magnitude < 2.0 GROUP BY planetId) AS visible_stats ON p.id = visible_stats.planetId WHERE p.diameter > 100 AND p.gravity BETWEEN 0.5 AND 2.0 ORDER BY high_gm_stats.high_gm_satellites_count DESC, visible_stats.avg_magnitude ASC;",
+    "result": {
+        "planet_name": [
+            "Pluto"
+        ],
+        "p.diameter": [
+            2370
+        ],
+        "high_gm_stats.high_gm_satellites_count": [
+            1
+        ],
+        "high_gm_stats.avg_high_gm_radius": [
+            603.6
+        ],
+        "visible_stats.avg_magnitude": [
+            null
+        ]
+    }
+}

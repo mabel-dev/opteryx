@@ -54,6 +54,9 @@ def _date_plus_interval(left, left_type, right, right_type, operator):
 
     months, seconds = right[0].as_py()
 
+    if hasattr(left, "to_numpy"):
+        left = left.to_numpy(zero_copy_only=False)
+
     result = left.astype("datetime64[s]") + (seconds * signum)
 
     # Handle months separately, requiring special logic

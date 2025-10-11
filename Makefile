@@ -96,19 +96,15 @@ test: dev-install ## Run full test suite
 	$(call print_blue,"Running full test suite...")
 	@$(PIP) install --upgrade pytest pytest-xdist
 	@clear
-	@MANUAL_TEST=1 $(PYTEST) -n auto --color=yes -v
+	@MANUAL_TEST=1 $(PYTEST) -n auto --color=yes
 
 test-quick: ## Run quick test (alias: t)
 	@clear
-	@$(PYTHON) tests/sql_battery/test_shapes_and_errors_battery.py
+	@$(PYTHON) tests/integration/sql_battery/run_shapes_battery.py
 
-test-battery: ## Run battery test (alias: r)
-	@clear
-	@$(PYTHON) tests/sql_battery/test_run_only_battery.py
 
 # Aliases for backward compatibility
 t: test-quick
-r: test-battery
 
 coverage: ## Generate test coverage report
 	$(call print_blue,"Running coverage analysis...")

@@ -1,0 +1,11 @@
+{
+    "summary": "This was an AI generated test case to perform a non-trival query",
+    "statement": "SELECT p.name AS planet_name, p.density AS planet_density, p.meanTemperature AS mean_temperature, SUM(CASE WHEN s.albedo > 0.3 THEN 1 ELSE 0 END) AS high_albedo_satellites, AVG(CASE WHEN s.magnitude < 2 THEN s.magnitude ELSE NULL END) AS avg_visible_magnitude FROM $planets p JOIN $satellites s ON p.id = s.planetId WHERE p.escapeVelocity > 0 AND p.surfacePressure < 0.1 GROUP BY p.name, p.density, p.gravity, p.meanTemperature ORDER BY high_albedo_satellites DESC, avg_visible_magnitude;",
+    "result": {
+        "planet_name": ["Pluto", "Mars"],
+        "planet_density": [2095, 3933],
+        "mean_temperature": [-225, -63],
+        "high_albedo_satellites": [5, 0],
+        "avg_visible_magnitude": [null, null]
+    }
+}

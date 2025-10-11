@@ -12,36 +12,6 @@ from pyarrow import compute
 from opteryx.exceptions import InvalidFunctionParameterError
 
 
-def string_slicer_left(arr, length):
-    """
-    Slice a list of strings from the left
-    """
-    if len(arr) == 0:
-        return [[]]
-    if not hasattr(length, "__iter__"):
-        length = [length] * len(arr)
-    if hasattr(arr, "to_numpy"):
-        arr = arr.to_numpy(zero_copy_only=False)
-    if hasattr(length, "to_numpy"):
-        length = length.to_numpy(zero_copy_only=False)
-    return [None if s is None else s[: int(length[i])] for i, s in enumerate(arr)]
-
-
-def string_slicer_right(arr, length):
-    """
-    Slice a list of strings from the right
-    """
-    if len(arr) == 0:
-        return [[]]
-    if not hasattr(length, "__iter__"):
-        length = [length] * len(arr)
-    if hasattr(arr, "to_numpy"):
-        arr = arr.to_numpy(zero_copy_only=False)
-    if hasattr(length, "to_numpy"):
-        length = length.to_numpy(zero_copy_only=False)
-    return [None if s is None else s[-int(length[i]) :] for i, s in enumerate(arr)]
-
-
 def split(arr, delimiter=",", limit=None):
     """
     Slice a list of strings from the right
@@ -59,40 +29,6 @@ def split(arr, delimiter=",", limit=None):
     )
 
 
-def soundex(arr):
-    from opteryx.third_party.fuzzy import soundex
-
-    interim = ["0000"] * arr.size
-
-    for index, string in enumerate(arr):
-        if string:
-            interim[index] = soundex(string)
-        else:
-            interim[index] = None
-
-    return numpy.array(interim, dtype=numpy.str_)
-
-
-def get_md5(item):
-    """calculate MD5 hash of a value"""
-    import hashlib  # delay the import - it's rarely needed
-
-    if item is None:
-        return None
-
-    return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
-
-
-def get_sha1(item):
-    """calculate SHA1 hash of a value"""
-    import hashlib  # delay the import - it's rarely needed
-
-    if item is None:
-        return None
-
-    return hashlib.sha1(str(item).encode()).hexdigest()
-
-
 def get_sha224(item):
     """calculate SHA256 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
@@ -103,16 +39,6 @@ def get_sha224(item):
     return hashlib.sha224(str(item).encode()).hexdigest()
 
 
-def get_sha256(item):
-    """calculate SHA256 hash of a value"""
-    import hashlib  # delay the import - it's rarely needed
-
-    if item is None:
-        return None
-
-    return hashlib.sha256(str(item).encode()).hexdigest()
-
-
 def get_sha384(item):
     """calculate SHA256 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
@@ -121,16 +47,6 @@ def get_sha384(item):
         return None
 
     return hashlib.sha384(str(item).encode()).hexdigest()
-
-
-def get_sha512(item):
-    """calculate SHA512 hash of a value"""
-    import hashlib  # delay the import - it's rarely needed
-
-    if item is None:
-        return None
-
-    return hashlib.sha512(str(item).encode()).hexdigest()
 
 
 def base64_encode(arr):
@@ -302,14 +218,26 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-    from opteryx.compiled.functions.levenstein import levenshtein as lev
+    from opteryx.compiled.list_ops import list_levenshtein
 
-    # Convert numpy arrays to lists
-    a_list = a.tolist()
-    b_list = b.tolist()
+    # Convert to numpy arrays with object dtype if needed
+    if hasattr(a, "to_numpy"):
+        a = a.to_numpy(zero_copy_only=False)
+    if hasattr(b, "to_numpy"):
+        b = b.to_numpy(zero_copy_only=False)
 
-    # Use zip to iterate over pairs of elements from a and b
-    return [lev(value_a, value_b) for value_a, value_b in zip(a_list, b_list)]
+    # Ensure arrays are numpy arrays with object dtype
+    if not isinstance(a, numpy.ndarray):
+        a = numpy.array(a, dtype=object)
+    elif a.dtype.kind in ["U", "S"]:  # Unicode or byte string dtypes
+        a = a.astype(object)
+
+    if not isinstance(b, numpy.ndarray):
+        b = numpy.array(b, dtype=object)
+    elif b.dtype.kind in ["U", "S"]:  # Unicode or byte string dtypes
+        b = b.astype(object)
+
+    return list_levenshtein(a, b)
 
 
 def to_char(arr) -> List[str]:

@@ -1,0 +1,34 @@
+{
+    "summary": "This query retrieves planets with their orbital periods and diameters, along with counts and averages of their dense and bright satellites. It filters planets based on their distance from the sun and orbital eccentricity.",
+    "statement": "SELECT pl.name AS planet_name, pl.orbital_period, pl.diameter, dense_moons_stats.total_dense_moons, dense_moons_stats.avg_density, bright_moons_stats.avg_magnitude, bright_moons_stats.total_bright_moons FROM $planets pl LEFT JOIN (SELECT planetId, COUNT(*) AS total_dense_moons, AVG(density) AS avg_density FROM $satellites s1 WHERE density > 2 GROUP BY planetId) AS dense_moons_stats ON pl.id = dense_moons_stats.planetId LEFT JOIN (SELECT planetId, AVG(magnitude) AS avg_magnitude, COUNT(*) AS total_bright_moons FROM $satellites s2 WHERE magnitude < 5 GROUP BY planetId) AS bright_moons_stats ON pl.id = bright_moons_stats.planetId WHERE pl.distance_from_sun BETWEEN 100 AND 200 AND pl.orbital_eccentricity < 0.1 ORDER BY dense_moons_stats.total_dense_moons DESC, bright_moons_stats.avg_magnitude ASC LIMIT 10;",
+    "result": {
+        "bright_moons_stats.avg_magnitude": [
+            -12.74,
+            null
+        ],
+        "bright_moons_stats.total_bright_moons": [
+            1,
+            null
+        ],
+        "dense_moons_stats.total_dense_moons": [
+            1,
+            null
+        ],
+        "dense_moons_stats.avg_density": [
+            3.344,
+            null
+        ],
+        "planet_name": [
+            "Earth",
+            "Venus"
+        ],
+        "pl.diameter": [
+            12756,
+            12104
+        ],
+        "pl.orbital_period": [
+            365.2,
+            224.7
+        ]
+    }
+}
