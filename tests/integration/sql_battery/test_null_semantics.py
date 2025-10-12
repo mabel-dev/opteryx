@@ -194,7 +194,95 @@ SELECT 1 FROM $no_table WHERE NULL XOR FALSE;
 -- Query 38: NOT NULL should return NULL (0 rows, null coerces to false in WHERE)
 -- This tests the three-valued logic: NOT null = null
 SELECT 1 FROM $no_table WHERE NOT NULL;
-""", {}),
+""", {}),(
+"""
+-- Query 39: NULL in aggregate functions - COUNT should ignore NULLs
+SELECT COUNT(bool) FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool);
+""", {2}),(
+"""
+-- Query 40: NULL in aggregate functions - COUNT(*) should count NULLs
+SELECT COUNT(*) FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool);
+""", {3}),(
+"""
+-- Query 41: NULL in string concatenation
+SELECT 1 FROM $no_table WHERE ('hello' || NULL) IS NULL;
+""", {1}),(
+"""
+-- Query 42: NULL in arithmetic operations - addition
+SELECT 1 FROM $no_table WHERE (5 + NULL) IS NULL;
+""", {1}),(
+"""
+-- Query 43: NULL in arithmetic operations - multiplication
+SELECT 1 FROM $no_table WHERE (5 * NULL) IS NULL;
+""", {1}),(
+"""
+-- Query 44: NULL in comparison - NULL = NULL is NULL (not TRUE)
+SELECT 1 FROM $no_table WHERE NULL = NULL;
+""", {}),(
+"""
+-- Query 45: NULL in comparison - NULL <> NULL is NULL (not TRUE)
+SELECT 1 FROM $no_table WHERE NULL <> NULL;
+""", {}),(
+"""
+-- Query 46: NULL in comparison - NULL IS DISTINCT FROM NULL is FALSE
+SELECT 1 FROM $no_table WHERE NOT (NULL IS DISTINCT FROM NULL);
+""", {1}),(
+"""
+-- Query 47: NULL in CASE expression - NULL in condition
+SELECT 1 FROM $no_table WHERE CASE WHEN NULL THEN FALSE ELSE TRUE END;
+""", {1}),(
+"""
+-- Query 48: NULL NULLS FIRST in ORDER BY (just checking it doesn't error)
+SELECT bool FROM (VALUES (1), (NULL), (2)) AS test(bool) ORDER BY bool NULLS FIRST;
+""", {1, None, 2}),(
+"""
+-- Query 49: NULL NULLS LAST in ORDER BY (just checking it doesn't error)
+SELECT bool FROM (VALUES (1), (NULL), (2)) AS test(bool) ORDER BY bool NULLS LAST;
+""", {1, None, 2}),(
+"""
+-- Query 50: NULL with COALESCE - returns first non-NULL
+SELECT 1 FROM $no_table WHERE COALESCE(NULL, NULL, 5) = 5;
+""", {1}),(
+"""
+-- Query 51: NULL with COALESCE - all NULLs returns NULL
+SELECT 1 FROM $no_table WHERE COALESCE(NULL, NULL, NULL) IS NULL;
+""", {1}),(
+"""
+-- Query 52: NULL in HAVING clause
+SELECT bool FROM (VALUES (True), (False), (NULL)) AS test(bool) GROUP BY bool HAVING bool IS NULL;
+""", {None}),(
+"""
+-- Query 53: NULL in MIN aggregate
+SELECT MIN(val) FROM (VALUES (1), (2), (NULL)) AS test(val);
+""", {1}),(
+"""
+-- Query 54: NULL in MAX aggregate
+SELECT MAX(val) FROM (VALUES (1), (2), (NULL)) AS test(val);
+""", {2}),(
+"""
+-- Query 55: NULL in SUM aggregate
+SELECT SUM(val) FROM (VALUES (1), (2), (NULL)) AS test(val);
+""", {3}),(
+"""
+-- Query 56: NULL in AVG aggregate
+SELECT AVG(val) FROM (VALUES (1.0), (3.0), (NULL)) AS test(val);
+""", {2.0}),(
+"""
+-- Query 57: NULL with IN operator - NULL IN (values) is always NULL
+SELECT 1 FROM $no_table WHERE NULL IN (1, 2, 3);
+""", {}),(
+"""
+-- Query 58: NULL with NOT IN operator - value NOT IN (values with NULL) can be NULL
+SELECT 1 FROM $no_table WHERE 5 NOT IN (1, 2, NULL);
+""", {}),(
+"""
+-- Query 59: Non-NULL with NOT IN operator - value NOT IN (values without the value) is TRUE
+SELECT 1 FROM $no_table WHERE 5 NOT IN (1, 2, 3);
+""", {1}),(
+"""
+-- Query 60: NULL in DISTINCT - should be treated as a unique value
+SELECT COUNT(DISTINCT val) FROM (VALUES (1), (1), (NULL), (NULL)) AS test(val);
+""", {2}),
 ]
 # fmt:on
 

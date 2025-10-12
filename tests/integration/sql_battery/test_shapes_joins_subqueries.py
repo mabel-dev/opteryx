@@ -265,6 +265,68 @@ STATEMENTS = [
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN) AS SQ", 1, 1, None),
         # EXPLAIN has two heads (found looking a [#408])
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, None),
+
+        # Additional complex nested subqueries
+        ("SELECT * FROM (SELECT * FROM (SELECT id FROM $planets WHERE id < 5) AS s1 WHERE id > 2) AS s2", 2, 1, None),
+        ("SELECT COUNT(*) FROM (SELECT id FROM (SELECT * FROM $planets) AS inner_query) AS outer_query", 1, 1, None),
+        ("SELECT * FROM $planets WHERE id IN (SELECT planetId FROM (SELECT * FROM $satellites) AS s)", 9, 20, None),
+
+        # Correlated subqueries
+        ("SELECT p.id, (SELECT COUNT(*) FROM $satellites s WHERE s.planetId = p.id) AS sat_count FROM $planets p", 9, 2, None),
+        ("SELECT p.name FROM $planets p WHERE EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id)", 9, 1, None),
+        ("SELECT p.name FROM $planets p WHERE NOT EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id AND s.id > 1000)", 9, 1, None),
+
+        # Multiple JOIN operations
+        ("SELECT COUNT(*) FROM $planets p INNER JOIN $satellites s ON p.id = s.planetId INNER JOIN $missions m ON p.id = m.id", 9, 1, None),
+        ("SELECT p.id FROM $planets p LEFT JOIN $satellites s1 ON p.id = s1.planetId LEFT JOIN $satellites s2 ON p.id = s2.planetId", 177, 1, None),
+
+        # Self-join variations
+        ("SELECT p1.id, p2.id FROM $planets p1 INNER JOIN $planets p2 ON p1.id < p2.id", 36, 2, None),
+        ("SELECT COUNT(*) FROM $planets p1 LEFT JOIN $planets p2 ON p1.id = p2.id", 9, 1, None),
+
+        # Subquery in SELECT clause
+        ("SELECT id, (SELECT COUNT(*) FROM $satellites WHERE planetId = $planets.id) FROM $planets", 9, 2, None),
+        ("SELECT id, name, (SELECT MAX(id) FROM $satellites) AS max_sat_id FROM $planets", 9, 3, None),
+
+        # Subquery in WHERE with multiple conditions
+        ("SELECT * FROM $planets WHERE id IN (SELECT planetId FROM $satellites WHERE id > 10 AND id < 50)", 9, 20, None),
+        ("SELECT * FROM $planets WHERE id = (SELECT MIN(planetId) FROM $satellites)", 1, 20, None),
+
+        # JOIN with subqueries
+        ("SELECT * FROM (SELECT id, name FROM $planets) p INNER JOIN (SELECT planetId FROM $satellites) s ON p.id = s.planetId", 177, 3, None),
+        ("SELECT COUNT(*) FROM (SELECT * FROM $planets WHERE id < 5) p LEFT JOIN $satellites s ON p.id = s.planetId", 121, 1, None),
+
+        # Complex JOIN conditions with subqueries
+        ("SELECT p.id FROM $planets p WHERE id IN (SELECT planetId FROM $satellites GROUP BY planetId HAVING COUNT(*) > 1)", 6, 1, None),
+
+        # UNION in subqueries
+        ("SELECT * FROM (SELECT id FROM $planets WHERE id < 3 UNION SELECT id FROM $planets WHERE id > 7) AS combined", 4, 1, None),
+        ("SELECT COUNT(*) FROM (SELECT id FROM $planets UNION SELECT planetId FROM $satellites) AS all_ids", 1, 1, None),
+
+        # Nested EXISTS
+        ("SELECT * FROM $planets p WHERE EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id AND EXISTS (SELECT 1 FROM $missions m WHERE m.id = s.id))", 9, 20, None),
+
+        # Multiple subqueries in WHERE
+        ("SELECT * FROM $planets WHERE id > (SELECT MIN(id) FROM $planets) AND id < (SELECT MAX(id) FROM $planets)", 7, 20, None),
+
+        # Subquery with GROUP BY in JOIN
+        ("SELECT p.id, counts.cnt FROM $planets p LEFT JOIN (SELECT planetId, COUNT(*) AS cnt FROM $satellites GROUP BY planetId) counts ON p.id = counts.planetId", 9, 2, None),
+
+        # Complex nested WITH/CTE-like subqueries
+        ("SELECT * FROM (SELECT id, name FROM $planets) AS p WHERE id IN (SELECT planetId FROM $satellites WHERE id < 100)", 9, 2, None),
+
+        # Lateral-style correlations
+        ("SELECT p.id, sub.max_sat FROM $planets p LEFT JOIN (SELECT planetId, MAX(id) AS max_sat FROM $satellites WHERE planetId = p.id GROUP BY planetId) sub ON TRUE", 9, 2, None),
+
+        # Multiple levels of nesting with aggregates
+        ("SELECT outer_id FROM (SELECT inner_id AS outer_id FROM (SELECT id AS inner_id FROM $planets) AS level1) AS level2", 9, 1, None),
+
+        # Subquery returning multiple columns
+        ("SELECT * FROM (SELECT id, name, id * 2 AS doubled FROM $planets) AS sub WHERE doubled > 10", 4, 3, None),
+
+        # JOIN with DISTINCT in subquery
+        ("SELECT COUNT(*) FROM $planets p INNER JOIN (SELECT DISTINCT planetId FROM $satellites) s ON p.id = s.planetId", 9, 1, None),
+
 ]
 # fmt:on
 
