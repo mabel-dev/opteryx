@@ -20,7 +20,7 @@ from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.utils.formatter import format_sql
 
 # Use naive UTC datetimes consistently everywhere
-APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0)
+APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0, tzinfo=None)
 
 # fmt:off
 THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -29,7 +29,7 @@ NOWISH = APOLLO_17_LAUNCH_DATE.replace(minute=0, second=0, microsecond=0)
 YESTERDAY = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
 A_WEEK_AGO = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
 
-opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
 # fmt:on
 
 # fmt:off
