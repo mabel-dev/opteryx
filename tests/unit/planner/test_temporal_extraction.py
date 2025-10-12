@@ -25,11 +25,9 @@ APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0, tzinfo=datetime
 # fmt:off
 THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
 TONIGHT = APOLLO_17_LAUNCH_DATE.replace(hour=23, minute=59, second=0, microsecond=0)
-NOWISH = APOLLO_17_LAUNCH_DATE.replace(minute=0, second=0, microsecond=0)
+NOWISH = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
 YESTERDAY = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
 A_WEEK_AGO = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
-
-opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
 # fmt:on
 
 # fmt:off
@@ -151,6 +149,7 @@ def test_temporal_extraction(statement, filters):
     """
     Test an battery of statements
     """
+    opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
     with freeze_time(APOLLO_17_LAUNCH_DATE):
         clean = clean_statement(remove_comments(statement))
         parts = sql_parts(clean)
@@ -184,7 +183,8 @@ INVALID_STATEMENTS = [
 
 @pytest.mark.parametrize("statement", INVALID_STATEMENTS)
 def test_temporal_extraction_errors(statement):
-    with freeze_time(APOLLO_17_LAUNCH_DATE):
+    opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
+    with freeze_time(APOLLO_17_LAUNCH_DATE, tz_offset=0):
         clean = clean_statement(remove_comments(statement))
         parts = sql_parts(clean)
         
@@ -199,6 +199,7 @@ if __name__ == "__main__":  # pragma: no cover
     for statement, filters in STATEMENTS:
         print(format_sql(statement))
         # Use timezone-aware freeze_time
+        opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
         with freeze_time(APOLLO_17_LAUNCH_DATE, tz_offset=0):
             clean = clean_statement(remove_comments(statement))
             parts = sql_parts(clean)
@@ -212,12 +213,12 @@ if __name__ == "__main__":  # pragma: no cover
             if start is not None:
                 converted_start = _real_datetime(
                     start.year, start.month, start.day, start.hour, start.minute, start.second,
-                    start.microsecond, tzinfo=start.tzinfo
+                    start.microsecond, tzinfo=None
                 )
             if end is not None:
                 converted_end = _real_datetime(
                     end.year, end.month, end.day, end.hour, end.minute, end.second,
-                    end.microsecond, tzinfo=end.tzinfo
+                    end.microsecond, tzinfo=None
                 )
             converted_filters.append((relation, converted_start, converted_end))
         
@@ -227,6 +228,7 @@ if __name__ == "__main__":  # pragma: no cover
     for statement in INVALID_STATEMENTS:
         print(format_sql(statement))
         # Use timezone-aware freeze_time
+        opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
         with freeze_time(APOLLO_17_LAUNCH_DATE, tz_offset=0):
             clean = clean_statement(remove_comments(statement))
             parts = sql_parts(clean)

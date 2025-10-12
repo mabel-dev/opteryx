@@ -164,7 +164,7 @@ WEEKDAYS: List[str] = [
 NOW = (
     datetime.datetime.now(tz=datetime.timezone.utc)
     .replace(tzinfo=None)
-    .replace(minute=0, second=0, microsecond=0)
+    .replace(hour=0, minute=0, second=0, microsecond=0)
 )
 
 
@@ -232,7 +232,7 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     if date == "TODAY":
         return NOW
     if date == "YESTERDAY":
-        return (NOW - datetime.timedelta(days=1)).replace(hour=0)
+        return NOW - datetime.timedelta(days=1)
 
     if date in WEEKDAYS:
         # Find the weekday number (0=Monday, 1=Tuesday, ..., 6=Sunday)
