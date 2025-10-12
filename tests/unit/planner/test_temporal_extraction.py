@@ -20,7 +20,7 @@ from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.utils.formatter import format_sql
 
 # Use naive UTC datetimes consistently everywhere
-APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0, tzinfo=None)
+APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0, tzinfo=datetime.timezone.utc).replace(tzinfo=None)
 
 # fmt:off
 THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
