@@ -1,113 +1,179 @@
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
+import jellyfish
 
 from opteryx.third_party.fuzzy import soundex
 
-# fmt:off
-TESTS = [
-    ('Test', 'T230'),
-    ('Therkelsen', 'T624'),
-    ('Troccoli', 'T624'),
-    ('Zelenski', 'Z452'),
-    ('Zielonka', 'Z452'),
-    ('Smith', 'S530'),
-    ('Johnson', 'J525'),
-    ('Williams', 'W452'),
-    ('Jones', 'J520'),
-    ('Brown', 'B650'),
-    ('Davis', 'D120'),
-    ('Miller', 'M460'),
-    ('Wilson', 'W425'),
-    ('Moore', 'M600'),
-    ('Taylor', 'T460'),
-    ('Anderson', 'A536'),
-    ('Thomas', 'T520'),
-    ('Jackson', 'J250'),
-    ('White', 'W300'),
-    ('Harris', 'H620'),
-    ('Martin', 'M635'),
-    ('Thompson', 'T512'),
-    ('Garcia', 'G620'),
-    ('Martinez', 'M635'),
-    ('Robinson', 'R152'),
-    ('Xi', 'X000'),
-    ('Lee', 'L000'),
-    ('Zz', 'Z200'),
-    ('Kkk', 'K200'),
-    ('Aa', 'A000'),
-    ('Mmmmm', 'M500'),
-    ('O\'Neil', 'O540'),
-    ('Van der Sar', 'V536'),
-    ('St. John', 'S325'),
-    ('D\'Amico', 'D520'),
-    ('McDonald', 'M235'),
-    ('de la Cruz', 'D426'),
-    ('O\'Connor', 'O256'),
-    ('Von Trapp', 'V536'),
-    ('Al', 'A400'),
-    ('Bo', 'B000'),
-    ('Cy', 'C000'),
-    ('Du', 'D000'),
-    ('Ek', 'E200'),
-    ('', ''),
-    ('Washington', 'W252'),
-    ('Jefferson', 'J162'),
-    ('Lincoln', 'L524'),
-    ('Roosevelt', 'R214'),
-    ('Kennedy', 'K530'),
-    ('Reagan', 'R250'),
-    ('Bush', 'B200'),
-    ('Clinton', 'C453'),
-    ('Obama', 'O150'),
-    ('Trump', 'T651'),
-    ('Biden', 'B350'),
-    ('Harrison', 'H625'),
-    ('Cleveland', 'C414'),
-    ('McKinley', 'M254'),
-    ('Coolidge', 'C432'),
-    ('Hoover', 'H160'),
-    ('Truman', 'T650'),
-    ('Eisenhower', 'E256'),
-    ('Nixon', 'N250'),
-    ('Ford', 'F630'),
-    ('Carter', 'C636'),
-    ('Adams', 'A352'),
-    ('Madison', 'M325'),
-    ('Monroe', 'M560'),
-    ('Jackson', 'J250'),
-    ('Polk', 'P420'),
-    ('Taylor', 'T460'),
-    ('Fillmore', 'F456'),
-    ('Pierce', 'P620'),
-    ('Buchanan', 'B250'),
-    ('Grant', 'G653'),
-    ('Hayes', 'H200'),
-    ('Garfield', 'G614'),
-    ('Arthur', 'A636'),
-    ('Taft', 'T130'),
-    ('Harding', 'H635'),
+# Test cases for soundex algorithm - these are just the input names
+# We'll compare against jellyfish (reference implementation) rather than hardcoded values
+TEST_NAMES = [
+    'Test',
+    'Therkelsen',
+    'Troccoli',
+    'Zelenski',
+    'Zielonka',
+    'Smith',
+    'Johnson',
+    'Williams',
+    'Jones',
+    'Brown',
+    'Davis',
+    'Miller',
+    'Wilson',
+    'Moore',
+    'Taylor',
+    'Anderson',
+    'Thomas',
+    'Jackson',
+    'White',
+    'Harris',
+    'Martin',
+    'Thompson',
+    'Garcia',
+    'Martinez',
+    'Robinson',
+    'Xi',
+    'Lee',
+    'Zz',
+    'Kkk',
+    'Aa',
+    'Mmmmm',
+    'O\'Neil',
+    'Van der Sar',
+    'St. John',
+    'D\'Amico',
+    'McDonald',
+    'de la Cruz',
+    'O\'Connor',
+    'Von Trapp',
+    'Al',
+    'Bo',
+    'Cy',
+    'Du',
+    'Ek',
+    '',
+    'Washington',
+    'Jefferson',
+    'Lincoln',
+    'Roosevelt',
+    'Kennedy',
+    'Reagan',
+    'Bush',
+    'Clinton',
+    'Obama',
+    'Trump',
+    'Biden',
+    'Harrison',
+    'Cleveland',
+    'McKinley',
+    'Coolidge',
+    'Hoover',
+    'Truman',
+    'Eisenhower',
+    'Nixon',
+    'Ford',
+    'Carter',
+    'Adams',
+    'Madison',
+    'Monroe',
+    'Jackson',
+    'Polk',
+    'Taylor',
+    'Fillmore',
+    'Pierce',
+    'Buchanan',
+    'Grant',
+    'Hayes',
+    'Garfield',
+    'Arthur',
+    'Taft',
+    'Harding',
+    # additional edge cases: short names
+    'A',
+    'B',
+    'I',
+    'Z',
+    # additional edge cases: names with hyphens
+    'Smith-Jones',
+    'Mary-Ann',
+    'Jean-Luc',
+    # additional edge cases: names with apostrophes  
+    'O\'Reilly',
+    'D\'Angelo',
+    'L\'Enfant',
+    # additional edge cases: double letters
+    'Phillip',
+    'Matthew',
+    'Lloyds',
+    'Becker',
+    # additional edge cases: silent letters
+    'Knight',
+    'Wright',
+    'Knuth',
+    'Pneumonia',  # (name used as test)
+    # additional edge cases: names starting with vowels
+    'Ashcroft',
+    'Ellsworth',
+    'Ingram',
+    'Underwood',
+    # additional edge cases: repeated consonants
+    'Bennett',
+    'Garrett',
+    'Harriett',
+    'Jarrett',
+    # additional edge cases: common international names
+    'Singh',
+    'Zhang',
+    'Nguyen',
+    'Schmidt',
+    'Mueller',
+    'Kowalski',
+    # additional edge cases: Welsh names
+    'Llewellyn',
+    'Cadwallader',
+    'Rhys',
+    # additional edge cases: Irish names
+    'McCarthy',
+    'Gallagher',
+    'Sullivan',
+    # additional edge cases: Scottish names
+    'MacGregor',
+    'MacDonald',
+    'Campbell',
+    # additional edge cases: names with special patterns
+    'Schwarzenegger',
+    'Tchotchke',
+    'Pfeiffer',
+    'Czajkowski',
 ]
-# fmt:on
 
 
-@pytest.mark.parametrize("input, result", TESTS)
-def test_soundex_battery(input, result):
-    actual_result = soundex(input)
-    assert actual_result == result, f"for {input} - expected: '{result}', got: '{actual_result}'"
+@pytest.mark.parametrize("input_name", TEST_NAMES)
+def test_soundex_against_reference(input_name):
+    """Test that our soundex implementation matches the jellyfish reference implementation."""
+    expected = jellyfish.soundex(input_name)
+    actual = soundex(input_name)
+    assert actual == expected, f"for '{input_name}' - expected: '{expected}', got: '{actual}'"
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
-    for str1, str2 in TESTS:
+    print(f"RUNNING BATTERY OF {len(TEST_NAMES)} TESTS")
+    failed_count = 0
+    
+    for test_name in TEST_NAMES:
         try:
-            test_soundex_battery(str1, str2)
-            print("\033[38;2;26;185;67m.\033[0m", end="")
-        except Exception as e:
-            print(f"Test failed for {str1} and {str2} with error: {e}")
+            test_soundex_against_reference(test_name)
+            print("\033[38;2;26;185;67m.\033[0m", end="\n")
+        except AssertionError as e:
+            print(f"Test failed for {test_name} with error: {e}")
+            failed_count += 1
 
     print()
-    print("✅ okay")
+    if failed_count == 0:
+        print("✅ All tests passed!")
+    else:
+        print(f"❌ {failed_count} tests failed")

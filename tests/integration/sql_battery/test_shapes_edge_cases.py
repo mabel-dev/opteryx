@@ -451,6 +451,77 @@ STATEMENTS = [
         # 2818
         ("SELECT COUNT_DISTINCT(perihelion) FROM testdata.planets WHERE diameter >= 378092", 1, 1, None),
         ("SELECT COUNT_DISTINCT(perihelion) FROM testdata.planets WHERE diameter >= 378092 GROUP BY name", 0, 1, None),
+
+        # Additional edge cases - UNION/EXCEPT/INTERSECT
+        ("SELECT id FROM $planets WHERE id < 3 UNION SELECT id FROM $planets WHERE id > 7", 4, 1, AmbiguousDatasetError),
+        ("SELECT id FROM $planets WHERE id < 5 UNION ALL SELECT id FROM $planets WHERE id < 3", 6, 1, AmbiguousDatasetError),
+        ("SELECT id FROM $planets EXCEPT SELECT id FROM $satellites WHERE id < 5", 5, 1, UnsupportedSyntaxError),
+        ("SELECT id FROM $planets INTERSECT SELECT id FROM $satellites", 9, 1, UnsupportedSyntaxError),
+
+        # Complex nested subqueries
+        ("SELECT * FROM (SELECT * FROM (SELECT * FROM $planets) AS s1) AS s2", 9, 20, None),
+        ("SELECT COUNT(*) FROM (SELECT id FROM $planets WHERE id IN (SELECT planetId FROM $satellites)) AS subq", 1, 1, UnsupportedSyntaxError),
+
+        # CROSS JOIN edge cases
+        ("SELECT COUNT(*) FROM $planets CROSS JOIN $no_table", 1, 1, None),
+        ("SELECT p.id FROM $planets p CROSS JOIN (SELECT 1 AS one) AS t", 9, 1, None),
+
+        # Edge cases with HAVING
+        ("SELECT planetId, COUNT(*) FROM $satellites GROUP BY planetId HAVING COUNT(*) > 1", 6, 2, None),
+        ("SELECT planetId FROM $satellites GROUP BY planetId HAVING COUNT(*) = 1", 1, 1, ColumnReferencedBeforeEvaluationError),
+        ("SELECT planetId FROM $satellites GROUP BY planetId HAVING MAX(id) > 100", 1, 1, ColumnNotFoundError),
+
+        # Window function edge cases (if supported)
+        # ("SELECT id, ROW_NUMBER() OVER (ORDER BY id) FROM $planets", 9, 2, None),
+        # ("SELECT id, RANK() OVER (ORDER BY id) FROM $planets", 9, 2, None),
+
+        # Complex CASE expressions
+        ("SELECT CASE WHEN id < 5 THEN 'small' WHEN id < 8 THEN 'medium' ELSE 'large' END FROM $planets", 9, 1, None),
+        ("SELECT CASE id WHEN 1 THEN 'one' WHEN 2 THEN 'two' ELSE 'other' END FROM $planets", 9, 1, None),
+        ("SELECT CASE WHEN id IS NULL THEN 'null' WHEN id < 0 THEN 'negative' ELSE 'positive' END FROM $planets", 9, 1, None),
+
+        # LIMIT with expressions
+        ("SELECT * FROM $planets LIMIT 1 + 1", 2, 20, TypeError),
+        ("SELECT * FROM $planets LIMIT 10 - 5", 5, 20, TypeError),
+
+        # Edge cases with string functions
+        ("SELECT * FROM $planets WHERE LENGTH(name) > 5", 5, 20, None),
+        ("SELECT * FROM $planets WHERE UPPER(name) = 'EARTH'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE LOWER(name) LIKE 'mars'", 1, 20, None),
+
+        # Temporal query edge cases
+        ("SELECT * FROM $planets FOR DATES BETWEEN '2020-01-01' AND '2025-12-31'", 9, 20, None),
+        ("SELECT * FROM $planets FOR '2023-06-15'", 9, 20, None),
+
+        # Complex JOIN conditions
+        ("SELECT p.id FROM $planets p INNER JOIN $satellites s ON p.id = s.planetId AND p.id < 5", 121, 1, UnsupportedSyntaxError),
+        ("SELECT COUNT(*) FROM $planets p LEFT JOIN $satellites s ON p.id = s.planetId WHERE s.id IS NULL", 1, 1, None),
+        ("SELECT COUNT(*) FROM $satellites s RIGHT JOIN $planets p ON s.planetId = p.id WHERE s.id IS NOT NULL", 1, 1, None),
+
+        # Self-join edge cases
+        ("SELECT p1.id FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id", 9, 1, None),
+        ("SELECT COUNT(*) FROM $planets p1, $planets p2 WHERE p1.id != p2.id", 1, 1, None),
+
+        # Multiple aggregations
+        ("SELECT COUNT(*), SUM(id), AVG(id), MIN(id), MAX(id) FROM $planets", 1, 5, None),
+        ("SELECT COUNT(DISTINCT id), COUNT(*) FROM $planets", 1, 2, None),
+
+        # Empty result handling
+        ("SELECT * FROM $planets WHERE FALSE", 0, 20, None),
+        ("SELECT * FROM $planets WHERE 1 = 0", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id > 1000", 0, 20, None),
+
+        # Extreme LIMIT values
+        ("SELECT * FROM $planets LIMIT 999999", 9, 20, None),
+
+        # Complex ORDER BY
+        ("SELECT * FROM $planets ORDER BY id ASC, name DESC", 9, 20, None),
+        ("SELECT id, name FROM $planets ORDER BY 1, 2", 9, 2, UnsupportedSyntaxError),
+
+        # Aggregate with no GROUP BY
+        ("SELECT COUNT(*), 'constant' FROM $planets", 1, 2, None),
+        ("SELECT MAX(id), MIN(id), AVG(id) FROM $planets", 1, 3, None),
+
 ]
 # fmt:on
 

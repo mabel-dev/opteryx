@@ -5,7 +5,7 @@ Some tests created with assistance from ChatGTP
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 from hypothesis import given
@@ -123,6 +123,70 @@ TESTS = [
     ("a", "", 1),
     ("mambo", "jumbo", 2),
     ("pizza", "pizzeria", -1),
+
+    # additional edge cases: numeric strings
+    ("123", "123", 0),
+    ("123", "124", 1),
+    ("123", "1234", 1),
+    ("1234", "123", 1),
+    ("999", "000", -1),
+
+    # additional edge cases: single characters
+    ("x", "x", 0),
+    ("x", "y", 1),
+    ("x", "xy", 1),
+    ("xy", "x", 1),
+
+    # additional edge cases: repeated characters
+    ("aaa", "aaa", 0),
+    ("aaa", "aaaa", 1),
+    ("aaaa", "aaa", 1),
+    ("aaa", "bbb", -1),
+    ("aaaa", "bbbb", -1),
+
+    # additional edge cases: punctuation variations
+    ("hello!", "hello?", 1),
+    ("test.", "test,", 1),
+    ("foo;bar", "foo:bar", 1),
+    ("a-b-c", "a_b_c", 2),
+
+    # additional edge cases: unicode and emojis
+    ("café", "cafe", 1),
+    ("naïve", "naive", 1),
+    ("😀", "😁", 1),
+    ("🎉🎊", "🎉🎈", 1),
+
+    # additional edge cases: whitespace variations
+    ("a b", "ab", 1),
+    ("a  b", "a b", 1),
+    ("\ta\t", " a ", 2),
+    ("x\ny", "x y", 1),
+
+    # additional edge cases: mixed alphanumeric
+    ("test1", "test2", 1),
+    ("v1.0", "v2.0", 1),
+    ("abc123", "abc124", 1),
+    ("123abc", "124abc", 1),
+
+    # additional edge cases: common typos
+    ("teh", "the", 2),
+    ("recieve", "receive", 2),
+    ("seperate", "separate", 1),
+
+    # additional edge cases: length differences > 2 (should return -1)
+    ("short", "verylongstring", -1),
+    ("x", "wxyz", -1),
+    ("ab", "abcde", -1),
+    ("", "abcde", -1),
+
+    # additional edge cases: null terminators
+    ("test\x00", "test", 1),
+    ("a\x00b", "ab", 1),
+
+    # additional edge cases: prefix/suffix matching
+    ("pre", "prefix", -1),
+    ("fix", "suffix", -1),
+    ("test", "testing", -1),
 ]
 # fmt:on
 

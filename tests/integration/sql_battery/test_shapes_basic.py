@@ -87,6 +87,79 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) AS FK GROUP BY column_1 ORDER BY COUNT(*)) AS SQ LIMIT 5", 5, 2, None),
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS [#182]
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19, None),
+
+        # Additional basic query patterns - LIMIT and OFFSET
+        ("SELECT * FROM $planets LIMIT 5", 5, 20, None),
+        ("SELECT * FROM $planets LIMIT 0", 0, 20, None),
+        ("SELECT * FROM $planets LIMIT 1", 1, 20, None),
+        ("SELECT * FROM $planets OFFSET 5", 4, 20, None),
+        ("SELECT * FROM $planets LIMIT 3 OFFSET 2", 3, 20, None),
+        ("SELECT * FROM $planets LIMIT 100", 9, 20, None),
+
+        # ORDER BY variations
+        ("SELECT * FROM $planets ORDER BY id", 9, 20, None),
+        ("SELECT * FROM $planets ORDER BY id DESC", 9, 20, None),
+        ("SELECT * FROM $planets ORDER BY name ASC", 9, 20, None),
+        ("SELECT * FROM $planets ORDER BY id, name", 9, 20, None),
+        ("SELECT * FROM $planets ORDER BY id DESC, name ASC", 9, 20, None),
+
+        # DISTINCT variations
+        ("SELECT DISTINCT id FROM $planets", 9, 1, None),
+        ("SELECT DISTINCT name FROM $planets", 9, 1, None),
+        ("SELECT DISTINCT id, name FROM $planets", 9, 2, None),
+
+        # Basic aggregations
+        ("SELECT COUNT(*) FROM $planets", 1, 1, None),
+        ("SELECT COUNT(id) FROM $planets", 1, 1, None),
+        ("SELECT COUNT(DISTINCT id) FROM $planets", 1, 1, None),
+        ("SELECT SUM(id) FROM $planets", 1, 1, None),
+        ("SELECT AVG(id) FROM $planets", 1, 1, None),
+        ("SELECT MIN(id) FROM $planets", 1, 1, None),
+        ("SELECT MAX(id) FROM $planets", 1, 1, None),
+
+        # GROUP BY with aggregations
+        ("SELECT COUNT(*) FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT planetId, COUNT(*) FROM $satellites GROUP BY planetId", 7, 2, None),
+        ("SELECT planetId, COUNT(*), MAX(id) FROM $satellites GROUP BY planetId", 7, 3, None),
+
+        # WHERE clause variations
+        ("SELECT * FROM $planets WHERE id = 1", 1, 20, None),
+        ("SELECT * FROM $planets WHERE id != 1", 8, 20, None),
+        ("SELECT * FROM $planets WHERE id > 5", 4, 20, None),
+        ("SELECT * FROM $planets WHERE id >= 5", 5, 20, None),
+        ("SELECT * FROM $planets WHERE id < 5", 4, 20, None),
+        ("SELECT * FROM $planets WHERE id <= 5", 5, 20, None),
+        ("SELECT * FROM $planets WHERE id BETWEEN 3 AND 6", 4, 20, None),
+        ("SELECT * FROM $planets WHERE name LIKE 'M%'", 2, 20, None),
+        ("SELECT * FROM $planets WHERE name ILIKE 'm%'", 2, 20, None),
+        ("SELECT * FROM $planets WHERE id IN (1, 3, 5)", 3, 20, None),
+        ("SELECT * FROM $planets WHERE id NOT IN (1, 3, 5)", 6, 20, None),
+
+        # NULL handling
+        ("SELECT * FROM $planets WHERE name IS NULL", 0, 20, None),
+        ("SELECT * FROM $planets WHERE name IS NOT NULL", 9, 20, None),
+
+        # Combining conditions
+        ("SELECT * FROM $planets WHERE id > 3 AND id < 7", 3, 20, None),
+        ("SELECT * FROM $planets WHERE id < 3 OR id > 7", 4, 20, None),
+        ("SELECT * FROM $planets WHERE (id > 3 AND id < 7) OR id = 1", 4, 20, None),
+
+        # Column selection variations
+        ("SELECT id FROM $planets", 9, 1, None),
+        ("SELECT id, name FROM $planets", 9, 2, None),
+        ("SELECT name, id FROM $planets", 9, 2, None),
+        ("SELECT id, name, id FROM $planets", 9, 3, AmbiguousIdentifierError),
+
+        # Expressions in SELECT
+        ("SELECT id * 2 FROM $planets", 9, 1, None),
+        ("SELECT id + 1 FROM $planets", 9, 1, None),
+        ("SELECT id - 1, id + 1 FROM $planets", 9, 2, None),
+
+        # Subqueries
+        ("SELECT * FROM (SELECT * FROM $planets) AS subquery", 9, 20, None),
+        ("SELECT * FROM (SELECT id, name FROM $planets) AS subquery", 9, 2, None),
+        ("SELECT COUNT(*) FROM (SELECT * FROM $planets WHERE id > 5) AS subquery", 1, 1, None),
+
 ]
 # fmt:on
 

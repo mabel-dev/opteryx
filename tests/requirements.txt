@@ -10,6 +10,7 @@ pytest-xdist
 black
 isort
 pycln
+jellyfish
 
 pandas
 pymemcache

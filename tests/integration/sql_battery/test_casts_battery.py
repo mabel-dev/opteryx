@@ -44,6 +44,63 @@ STATEMENTS = [
     ("SELECT 1 FROM testdata.tweets WHERE str_timestamp || '.000000' == CAST(ts_timestamp AS VARCHAR)", 100000, 1, None),
     ("SELECT 1 FROM testdata.tweets WHERE CAST(int_timestamp * 1_000_000 AS TIMESTAMP) == ts_timestamp", 100000, 1, None),
 
+    # Additional CAST edge cases - NULL handling
+    ("SELECT CAST(NULL AS INTEGER)", 1, 1, None),
+    ("SELECT CAST(NULL AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(NULL AS DOUBLE)", 1, 1, None),
+    ("SELECT CAST(NULL AS BOOLEAN)", 1, 1, None),
+    ("SELECT CAST(NULL AS TIMESTAMP)", 1, 1, None),
+
+    # BOOLEAN casts
+    ("SELECT CAST(1 AS BOOLEAN)", 1, 1, None),
+    ("SELECT CAST(0 AS BOOLEAN)", 1, 1, None),
+    ("SELECT CAST('true' AS BOOLEAN)", 1, 1, None),
+    ("SELECT CAST('false' AS BOOLEAN)", 1, 1, None),
+    ("SELECT CAST(TRUE AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(FALSE AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(TRUE AS INTEGER)", 1, 1, None),
+    ("SELECT CAST(FALSE AS INTEGER)", 1, 1, None),
+
+    # VARCHAR casts with special characters
+    ("SELECT CAST('hello world' AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST('123' AS INTEGER)", 1, 1, None),
+    ("SELECT CAST('123.456' AS DOUBLE)", 1, 1, None),
+    ("SELECT CAST('2023-01-01' AS TIMESTAMP)", 1, 1, None),
+
+    # Numeric edge cases
+    ("SELECT CAST(0 AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(-0 AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(0.0 AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(-0.0 AS VARCHAR)", 1, 1, None),
+
+    # Large numbers
+    ("SELECT CAST(999999999999 AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(-999999999999 AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(1.7976931348623157e+308 AS VARCHAR)", 1, 1, None),
+
+    # Scientific notation
+    ("SELECT CAST('1e10' AS DOUBLE)", 1, 1, None),
+    ("SELECT CAST('1.5e-5' AS DOUBLE)", 1, 1, None),
+    ("SELECT CAST('-2.5e3' AS DOUBLE)", 1, 1, None),
+
+    # Empty string casts
+    ("SELECT CAST('' AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST('' AS BLOB)", 1, 1, None),
+
+    # Special numeric values (these may need adjustment based on engine support)
+    # ("SELECT CAST('inf' AS DOUBLE)", 1, 1, None),
+    # ("SELECT CAST('-inf' AS DOUBLE)", 1, 1, None),
+    # ("SELECT CAST('nan' AS DOUBLE)", 1, 1, None),
+
+    # Cross-type casting chains
+    ("SELECT CAST(CAST(CAST(123 AS VARCHAR) AS INTEGER) AS DOUBLE)", 1, 1, None),
+    ("SELECT CAST(CAST(CAST('456' AS INTEGER) AS DOUBLE) AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST(CAST(TRUE AS INTEGER) AS VARCHAR)", 1, 1, None),
+
+    # BLOB/BINARY casts
+    ("SELECT CAST('test' AS BLOB)", 1, 1, None),
+    ("SELECT CAST(CAST('test' AS BLOB) AS VARCHAR)", 1, 1, None),
+
 ]
 # fmt:on
 

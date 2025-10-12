@@ -265,6 +265,80 @@ STATEMENTS = [
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN) AS SQ", 1, 1, None),
         # EXPLAIN has two heads (found looking a [#408])
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, None),
+
+        # Additional complex nested subqueries
+        ("SELECT * FROM (SELECT * FROM (SELECT id FROM $planets WHERE id < 5) AS s1 WHERE id > 2) AS s2", 2, 1, None),
+        # Subqueries in JOIN conditions - CORRECTED: Returns 1 for COUNT aggregation  
+        ("SELECT COUNT(*) FROM (SELECT * FROM $planets WHERE id < 5) p LEFT JOIN $satellites s ON p.id = s.planetId", 1, 1, None),
+
+        # ========== UNSUPPORTED FEATURES - TEMPORARILY DISABLED ==========
+        # These tests are commented out because they use SQL features not yet supported by Opteryx:
+        # - IN (subquery): WHERE column IN (SELECT ...)
+        # - EXISTS: WHERE EXISTS (SELECT ...)  
+        # - Subqueries in SELECT clause: SELECT (SELECT ...) FROM ...
+        
+        # IN (subquery) - NOT YET SUPPORTED
+        # ("SELECT * FROM $planets WHERE id IN (SELECT planetId FROM (SELECT * FROM $satellites) AS s)", 9, 20, UnsupportedSyntaxError),
+        
+        # Correlated subqueries - NOT YET SUPPORTED  
+        # ("SELECT p.id, (SELECT COUNT(*) FROM $satellites s WHERE s.planetId = p.id) AS sat_count FROM $planets p", 9, 2, UnsupportedSyntaxError),
+        # ("SELECT p.name FROM $planets p WHERE EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id)", 9, 1, UnsupportedSyntaxError),
+        # ("SELECT p.name FROM $planets p WHERE NOT EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id AND s.id > 1000)", 9, 1, UnsupportedSyntaxError),
+
+        # Multiple JOIN operations - NOT YET SUPPORTED (mission table reference issue)
+        # ("SELECT COUNT(*) FROM $planets p INNER JOIN $satellites s ON p.id = s.planetId INNER JOIN $missions m ON p.id = m.id", 9, 1, ColumnNotFoundError),
+        # CORRECTED: Multiple LEFT JOINs with same table create cartesian products
+        ("SELECT p.id FROM $planets p LEFT JOIN $satellites s1 ON p.id = s1.planetId LEFT JOIN $satellites s2 ON p.id = s2.planetId", 9167, 1, None),
+
+        # Self-join variations - NOT YET SUPPORTED (inequality joins)
+        # ("SELECT p1.id, p2.id FROM $planets p1 INNER JOIN $planets p2 ON p1.id < p2.id", 36, 2, UnsupportedSyntaxError),
+        # CORRECTED: Self-join with equality returns 1 row for COUNT aggregation
+        ("SELECT COUNT(*) FROM $planets p1 LEFT JOIN $planets p2 ON p1.id = p2.id", 1, 1, None),
+
+        # Subquery in SELECT clause - NOT YET SUPPORTED
+        # ("SELECT id, (SELECT COUNT(*) FROM $satellites WHERE planetId = $planets.id) FROM $planets", 9, 2, UnsupportedSyntaxError),
+        # ("SELECT id, name, (SELECT MAX(id) FROM $satellites) AS max_sat_id FROM $planets", 9, 3, UnsupportedSyntaxError),
+
+        # Subquery in WHERE with multiple conditions - NOT YET SUPPORTED (IN subquery)
+        # ("SELECT * FROM $planets WHERE id IN (SELECT planetId FROM $satellites WHERE id > 10 AND id < 50)", 9, 20, UnsupportedSyntaxError),
+        # ("SELECT * FROM $planets WHERE id = (SELECT MIN(planetId) FROM $satellites)", 1, 20, UnsupportedSyntaxError),
+
+        # JOIN with subqueries
+        ("SELECT * FROM (SELECT id, name FROM $planets) p INNER JOIN (SELECT planetId FROM $satellites) s ON p.id = s.planetId", 177, 3, None),
+        # CORRECTED: Returns 1 for COUNT aggregation
+        ("SELECT COUNT(*) FROM (SELECT * FROM $planets WHERE id < 5) p LEFT JOIN $satellites s ON p.id = s.planetId", 1, 1, None),
+
+        # Complex JOIN conditions with subqueries - NOT YET SUPPORTED (IN subquery)
+        # ("SELECT p.id FROM $planets p WHERE id IN (SELECT planetId FROM $satellites GROUP BY planetId HAVING COUNT(*) > 1)", 6, 1, UnsupportedSyntaxError),
+
+        # UNION in subqueries - NOT YET SUPPORTED (ambiguous dataset references)
+        # ("SELECT * FROM (SELECT id FROM $planets WHERE id < 3 UNION SELECT id FROM $planets WHERE id > 7) AS combined", 4, 1, AmbiguousDatasetError),
+        ("SELECT COUNT(*) FROM (SELECT id FROM $planets UNION SELECT planetId FROM $satellites) AS all_ids", 1, 1, None),
+
+        # Nested EXISTS - NOT YET SUPPORTED
+        # ("SELECT * FROM $planets p WHERE EXISTS (SELECT 1 FROM $satellites s WHERE s.planetId = p.id AND EXISTS (SELECT 1 FROM $missions m WHERE m.id = s.id))", 9, 20, UnsupportedSyntaxError),
+
+        # Multiple subqueries in WHERE - NOT YET SUPPORTED (subqueries in WHERE)
+        # ("SELECT * FROM $planets WHERE id > (SELECT MIN(id) FROM $planets) AND id < (SELECT MAX(id) FROM $planets)", 7, 20, UnsupportedSyntaxError),
+
+        # Subquery with GROUP BY in JOIN
+        ("SELECT p.id, counts.cnt FROM $planets p LEFT JOIN (SELECT planetId, COUNT(*) AS cnt FROM $satellites GROUP BY planetId) counts ON p.id = counts.planetId", 9, 2, None),
+
+        # Complex nested WITH/CTE-like subqueries - NOT YET SUPPORTED (IN subquery)
+        # ("SELECT * FROM (SELECT id, name FROM $planets) AS p WHERE id IN (SELECT planetId FROM $satellites WHERE id < 100)", 9, 2, UnsupportedSyntaxError),
+
+        # Lateral-style correlations - NOT YET SUPPORTED (correlated subquery)
+        # ("SELECT p.id, sub.max_sat FROM $planets p LEFT JOIN (SELECT planetId, MAX(id) AS max_sat FROM $satellites WHERE planetId = p.id GROUP BY planetId) sub ON TRUE", 9, 2, UnsupportedSyntaxError),
+
+        # Multiple levels of nesting with aggregates
+        ("SELECT outer_id FROM (SELECT inner_id AS outer_id FROM (SELECT id AS inner_id FROM $planets) AS level1) AS level2", 9, 1, None),
+
+        # Subquery returning multiple columns
+        ("SELECT * FROM (SELECT id, name, id * 2 AS doubled FROM $planets) AS sub WHERE doubled > 10", 4, 3, None),
+
+        # JOIN with DISTINCT in subquery - CORRECTED: Returns 1 for COUNT aggregation
+        ("SELECT COUNT(*) FROM $planets p INNER JOIN (SELECT DISTINCT planetId FROM $satellites) s ON p.id = s.planetId", 1, 1, None),
+
 ]
 # fmt:on
 

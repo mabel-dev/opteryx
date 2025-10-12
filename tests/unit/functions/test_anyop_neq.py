@@ -2,7 +2,7 @@ import os
 import sys
 import pyarrow as pa
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.compiled.list_ops import list_anyop_neq
 
@@ -133,6 +133,124 @@ def test_comparison_with_nulls():
     _test_comparison(-1, -2, 1, pa.int64())  # -1 != -2 -> True
     _test_comparison(0, -1, 1, pa.int64())  # 0 != -1 -> True
 
+def test_comparison_edge_case_numbers():
+    # Zero comparisons
+    _test_comparison(0, 0, 0, pa.int64())  # 0 != 0 -> False
+    _test_comparison(0, -0, 0, pa.int64())  # 0 != -0 -> False
+    
+    # Large numbers
+    _test_comparison(2**60, 2**60, 0, pa.int64())  # same large number
+    _test_comparison(2**60, 2**60 + 1, 1, pa.int64())  # large numbers differ by 1
+    
+    # Float edge cases
+    _test_comparison(1.0, 1.0, 0, pa.float64())  # same float
+    _test_comparison(1.0, 1.0000001, 1, pa.float64())  # very close floats
+    _test_comparison(float("inf"), float("inf"), 0, pa.float64())  # infinity equals infinity
+    _test_comparison(float("-inf"), float("-inf"), 0, pa.float64())  # neg infinity
+    _test_comparison(float("inf"), float("-inf"), 1, pa.float64())  # different infinities
+
+def test_comparison_unicode_edge_cases():
+    # Various unicode characters
+    _test_comparison("café", "café", 0)  # accented chars same
+    _test_comparison("café", "cafe", 1)  # with vs without accent
+    _test_comparison("😀", "😀", 0)  # same emoji
+    _test_comparison("😀", "😁", 1)  # different emojis
+    _test_comparison("🇺🇸", "🇺🇸", 0)  # same flag
+    _test_comparison("🇺🇸", "🇬🇧", 1)  # different flags
+    
+def test_comparison_control_characters():
+    # Null bytes
+    _test_comparison("\x00", "\x00", 0)  # same null
+    _test_comparison("\x00", "\x01", 1)  # different control chars
+    _test_comparison("a\x00b", "a\x00b", 0)  # null in middle same
+    _test_comparison("a\x00b", "ab", 1)  # with vs without null
+    
+    # Line endings
+    _test_comparison("\r\n", "\r\n", 0)  # CRLF same
+    _test_comparison("\r\n", "\n", 1)  # CRLF vs LF different
+    _test_comparison("\r", "\n", 1)  # CR vs LF
+
+def test_comparison_empty_and_whitespace():
+    # Empty strings
+    _test_comparison("", "", 0)  # empty equals empty
+    _test_comparison("", " ", 1)  # empty vs space
+    _test_comparison(" ", "  ", 1)  # different number of spaces
+    _test_comparison("\t", " ", 1)  # tab vs space
+    _test_comparison("\n", "", 1)  # newline vs empty
+
+def test_comparison_binary_edge_cases():
+    # Null bytes in binary
+    _test_comparison(b"\x00", b"\x00", 0, pa.binary())
+    _test_comparison(b"\x00", b"\x01", 1, pa.binary())
+    
+    # Binary sequences
+    _test_comparison(b"\x00\x01\x02", b"\x00\x01\x02", 0, pa.binary())
+    _test_comparison(b"\x00\x01\x02", b"\x00\x01\x03", 1, pa.binary())
+    
+    # Repeated bytes
+    _test_comparison(b"\xff" * 10, b"\xff" * 10, 0, pa.binary())
+    _test_comparison(b"\xff" * 10, b"\xff" * 9, 1, pa.binary())
+    
+    # UTF-8 sequences as binary
+    _test_comparison(b"\xf0\x9f\x98\x80", b"\xf0\x9f\x98\x80", 0, pa.binary())  # 😀 emoji bytes
+    _test_comparison(b"\xf0\x9f\x98\x80", b"\xf0\x9f\x98\x81", 1, pa.binary())  # different emoji bytes
+
+def test_comparison_list_edge_cases():
+    # Empty list comparison
+    array = pa.array([[]], type=pa.list_(pa.string()))
+    result = list(list_anyop_neq("a", array))
+    assert result == [0], "Expected 'a' != [] to be False (no different values)"
+    
+    # Single element matching
+    array = pa.array([["a"]], type=pa.list_(pa.string()))
+    result = list(list_anyop_neq("a", array))
+    assert result == [0], "Expected 'a' != ['a'] to be False"
+    
+    # All nulls
+    array = pa.array([[None, None, None]], type=pa.list_(pa.string()))
+    result = list(list_anyop_neq("a", array))
+    assert result == [1], "Expected 'a' != [None,None,None] to be True"
+    
+    # Multiple rows
+    array = pa.array([["a"], ["b"], ["a", "b"], []], type=pa.list_(pa.string()))
+    result = list(list_anyop_neq("a", array))
+    assert result == [0, 1, 1, 0], f"Expected [0, 1, 1, 0], got {result}"
+
+def test_comparison_list_floats():
+    # Float list comparisons
+    array = pa.array([[1.0, 2.0, 3.0]], type=pa.list_(pa.float64()))
+    result = list(list_anyop_neq(1.0, array))
+    assert result == [1], "Expected 1.0 != [1.0,2.0,3.0] to be True (2.0,3.0 are different)"
+    
+    array = pa.array([[1.0, 1.0, 1.0]], type=pa.list_(pa.float64()))
+    result = list(list_anyop_neq(1.0, array))
+    assert result == [0], "Expected 1.0 != [1.0,1.0,1.0] to be False"
+    
+    # Infinity
+    array = pa.array([[float("inf"), 1.0]], type=pa.list_(pa.float64()))
+    result = list(list_anyop_neq(1.0, array))
+    assert result == [1], "Expected 1.0 != [inf,1.0] to be True (inf is different)"
+
+def test_comparison_list_dates():
+    import datetime
+    # Date list comparisons - use days since epoch for consistent comparison
+    date1 = datetime.date(2023, 1, 1)
+    date2 = datetime.date(2023, 1, 2)
+    
+    # Convert to days since epoch (what date32 uses internally)
+    date1_days = (date1 - datetime.date(1970, 1, 1)).days
+    date2_days = (date2 - datetime.date(1970, 1, 1)).days
+    
+    # Test with date32 array but compare using integer days
+    array = pa.array([[date1_days, date2_days]], type=pa.list_(pa.int32()))
+    result = list(list_anyop_neq(date1_days, array))
+    assert result[0] == 1, f"Expected date comparison to return True for different dates, got {result}"
+    
+    array = pa.array([[date1_days, date1_days]], type=pa.list_(pa.int32()))
+    result = list(list_anyop_neq(date1_days, array))
+    assert result[0] == 0, f"Expected date comparison to return False for same dates, got {result}"
+
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
+    test_comparison_list_dates()
     run_tests()
