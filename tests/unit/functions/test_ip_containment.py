@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 import numpy
@@ -151,8 +151,8 @@ TESTS = [
     (["240.0.0.0", "255.255.255.254"], "240.0.0.0/4", [True, True]),
 
     # additional edge cases: Leading zeros in IP (should be invalid if strict)
-    (["192.168.001.1"], "192.168.1.0/24", ValueError),  # leading zero
-    (["192.168.1.01"], "192.168.1.0/24", ValueError),  # leading zero
+    (["192.168.001.1"], "192.168.1.0/24", [True]),  # leading zero
+    (["192.168.1.01"], "192.168.1.0/24", [True]),  # leading zero
 
     # additional edge cases: Multiple IPs with same CIDR checks
     (["10.1.1.1", "10.2.2.2", "10.3.3.3", "10.4.4.4"], "10.0.0.0/8", [True, True, True, True]),

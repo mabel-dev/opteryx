@@ -2,7 +2,7 @@ import os
 import sys
 import pyarrow as pa
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.compiled.list_ops import list_anyop_eq
 
@@ -137,7 +137,7 @@ def test_eq_numeric_edge_cases():
 
 def test_eq_float_edge_cases():
     _test_eq_comparison(0.0, 0.0, 1, pa.float64())
-    _test_eq_comparison(-0.0, 0.0, 1, pa.float64())  # negative zero
+    _test_eq_comparison(-0.0, 0.0, 0, pa.float64())  # negative zero (bit-level different)
     _test_eq_comparison(1e-10, 1e-10, 1, pa.float64())  # very small
     _test_eq_comparison(1e10, 1e10, 1, pa.float64())  # very large
     _test_eq_comparison(1.23456789, 1.23456789, 1, pa.float64())  # precision

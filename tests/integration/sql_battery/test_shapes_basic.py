@@ -148,7 +148,7 @@ STATEMENTS = [
         ("SELECT id FROM $planets", 9, 1, None),
         ("SELECT id, name FROM $planets", 9, 2, None),
         ("SELECT name, id FROM $planets", 9, 2, None),
-        ("SELECT id, name, id FROM $planets", 9, 3, None),
+        ("SELECT id, name, id FROM $planets", 9, 3, AmbiguousIdentifierError),
 
         # Expressions in SELECT
         ("SELECT id * 2 FROM $planets", 9, 1, None),

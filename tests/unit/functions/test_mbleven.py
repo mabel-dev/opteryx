@@ -5,7 +5,7 @@ Some tests created with assistance from ChatGTP
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 from hypothesis import given
@@ -129,7 +129,7 @@ TESTS = [
     ("123", "124", 1),
     ("123", "1234", 1),
     ("1234", "123", 1),
-    ("999", "000", 2),
+    ("999", "000", -1),
 
     # additional edge cases: single characters
     ("x", "x", 0),
@@ -141,8 +141,8 @@ TESTS = [
     ("aaa", "aaa", 0),
     ("aaa", "aaaa", 1),
     ("aaaa", "aaa", 1),
-    ("aaa", "bbb", 2),
-    ("aaaa", "bbbb", 2),
+    ("aaa", "bbb", -1),
+    ("aaaa", "bbbb", -1),
 
     # additional edge cases: punctuation variations
     ("hello!", "hello?", 1),
@@ -169,7 +169,7 @@ TESTS = [
     ("123abc", "124abc", 1),
 
     # additional edge cases: common typos
-    ("teh", "the", 1),
+    ("teh", "the", 2),
     ("recieve", "receive", 2),
     ("seperate", "separate", 1),
 

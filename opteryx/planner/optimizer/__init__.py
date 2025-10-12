@@ -40,15 +40,17 @@ the primary activities involved in optimization, such as splitting nodes, perfor
 node rewrites, and pushing down predicates and projections.
 
 The optimizer applies a series of strategies, each encapsulating a specific optimization rule.
-These strategies are applied sequentially, allowing for incremental improvements to the logical plan.
+These strategies are applied sequentially, allowing for incremental improvements to the logical
+plan.
 
 Key Concepts:
 - Visitor Pattern: Used to traverse and modify the logical plan.
 - Strategies: Encapsulate individual optimization rules, applied either per-node or per-plan.
 - Context: Maintains the state during optimization, including the pre-optimized and optimized plans.
 
-The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each strategy
-in sequence. The `do_optimizer` function serves as the entry point for optimizing a logical plan.
+The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each
+strategy in sequence. The `do_optimizer` function serves as the entry point for optimizing a
+logical plan.
 
 Example Usage:
     optimized_plan = do_optimizer(logical_plan)

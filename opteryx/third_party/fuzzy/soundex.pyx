@@ -39,18 +39,38 @@ cpdef soundex(char* s):
 
     written = 0
     out = <char *>malloc(SOUNDEX_LENGTH + 1)
+    cdef char prev_code = 0  # Track the previous soundex code from original input
 
     for i from 0<= i < ls:
         c = cs[i]
+        # Convert to uppercase
         if c >= 97 and c <= 122:
             c = c - 32
+        # Only process alphabetic characters
         if c >= 65 and c <= 90:
             if written == 0:
+                # First character is always the first letter
                 out[written] = c
                 written = written + 1
-            elif soundex_map[c - 65] != 48 and (written == 1 or out[written - 1] != soundex_map[c - 65]):
-                out[written] = soundex_map[c - 65]
-                written = written + 1
+                prev_code = soundex_map[c - 65]  # Remember the code for the first letter
+            else:
+                # Get the soundex code for this character
+                code = soundex_map[c - 65]
+                
+                if code != 48:  # Not a vowel/ignored letter
+                    # Only add if not the same as previous soundex code
+                    if code != prev_code:
+                        out[written] = code
+                        written = written + 1
+                    prev_code = code
+                else:  # code == 48 (vowel or H/W)
+                    # A, E, I, O, U, Y reset the previous code
+                    # H and W act as separators but don't reset prev_code
+                    if c == 72 or c == 87:  # H=72, W=87 - separators only
+                        pass  # Don't reset prev_code, just continue
+                    else:  # True vowels (A, E, I, O, U, Y)
+                        prev_code = 48  # Reset previous code
+        # Stop if we've filled the soundex code
         if written == SOUNDEX_LENGTH:
             break
     for i from written <= i < SOUNDEX_LENGTH:

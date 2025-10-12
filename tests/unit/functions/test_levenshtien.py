@@ -145,7 +145,7 @@ TESTS = [
 
     # additional edge cases: case variations
     ("ABC", "abc", 3),  # all uppercase to lowercase
-    ("AbC", "aBc", 2),  # mixed case differences
+    ("AbC", "aBc", 3),  # mixed case differences
     ("HELLO", "hello", 5),  # all caps to all lowercase
 ]
 # fmt:on
