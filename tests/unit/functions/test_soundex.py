@@ -90,6 +90,75 @@ TESTS = [
     ('Arthur', 'A636'),
     ('Taft', 'T130'),
     ('Harding', 'H635'),
+
+    # additional edge cases: short names
+    ('A', 'A000'),
+    ('B', 'B000'),
+    ('I', 'I000'),
+    ('Z', 'Z000'),
+
+    # additional edge cases: names with hyphens
+    ('Smith-Jones', 'S532'),
+    ('Mary-Ann', 'M650'),
+    ('Jean-Luc', 'J524'),
+
+    # additional edge cases: names with apostrophes  
+    ('O\'Reilly', 'O640'),
+    ('D\'Angelo', 'D524'),
+    ('L\'Enfant', 'L153'),
+
+    # additional edge cases: double letters
+    ('Phillip', 'P410'),
+    ('Matthew', 'M300'),
+    ('Lloyds', 'L320'),
+    ('Becker', 'B260'),
+
+    # additional edge cases: silent letters
+    ('Knight', 'K523'),
+    ('Wright', 'W623'),
+    ('Knuth', 'K530'),
+    ('Pneumonia', 'P555'),  # (name used as test)
+
+    # additional edge cases: names starting with vowels
+    ('Ashcroft', 'A261'),
+    ('Ellsworth', 'E421'),
+    ('Ingram', 'I526'),
+    ('Underwood', 'U536'),
+
+    # additional edge cases: repeated consonants
+    ('Bennett', 'B530'),
+    ('Garrett', 'G630'),
+    ('Harriett', 'H630'),
+    ('Jarrett', 'J630'),
+
+    # additional edge cases: common international names
+    ('Singh', 'S520'),
+    ('Zhang', 'Z520'),
+    ('Nguyen', 'N250'),
+    ('Schmidt', 'S530'),
+    ('Mueller', 'M460'),
+    ('Kowalski', 'K420'),
+
+    # additional edge cases: Welsh names
+    ('Llewellyn', 'L450'),
+    ('Cadwallader', 'C343'),
+    ('Rhys', 'R200'),
+
+    # additional edge cases: Irish names
+    ('McCarthy', 'M263'),
+    ('Gallagher', 'G426'),
+    ('Sullivan', 'S415'),
+
+    # additional edge cases: Scottish names
+    ('MacGregor', 'M262'),
+    ('MacDonald', 'M235'),
+    ('Campbell', 'C514'),
+
+    # additional edge cases: names with special patterns
+    ('Schwarzenegger', 'S625'),
+    ('Tchotchke', 'T322'),
+    ('Pfeiffer', 'P160'),
+    ('Czajkowski', 'C222'),
 ]
 # fmt:on
 
