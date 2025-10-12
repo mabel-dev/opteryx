@@ -189,3 +189,9 @@ if __name__ == "__main__":  # pragma: no cover
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
+
+    # Exit with appropriate code to signal success/failure to parent process
+    if failed > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)

@@ -17,9 +17,11 @@ This does two things that the projection node doesn't do:
 This node doesn't do any calculations, it is a pure Projection.
 """
 
+from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx import EOS
+from opteryx.datatypes.intervals import to_arrow_interval
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.models import QueryProperties
@@ -113,6 +115,12 @@ class ExitNode(BasePlanNode):
             )
 
         morsel = morsel.select(self.final_columns)
+
+        for index, column in enumerate(self.columns):
+            if column.schema_column.type == OrsoTypes.INTERVAL:
+                converted = to_arrow_interval(morsel.column(index))
+                morsel = morsel.set_column(index, column.schema_column.identity, converted)
+
         morsel = morsel.rename_columns(self.final_names)
 
         yield morsel

@@ -21,6 +21,10 @@ from orso.types import OrsoTypes
 
 from opteryx import functions
 from opteryx import operators
+from opteryx.datatypes.intervals import MICROSECONDS_PER_DAY
+from opteryx.datatypes.intervals import MICROSECONDS_PER_HOUR
+from opteryx.datatypes.intervals import MICROSECONDS_PER_MINUTE
+from opteryx.datatypes.intervals import MICROSECONDS_PER_SECOND
 from opteryx.exceptions import ArrayWithMixedTypesError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -452,6 +456,11 @@ def in_list(branch, alias: Optional[List[str]] = None, key=None):
 
 def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
     # if it's a sub-query we create a plan for it
+
+    from opteryx.exceptions import UnsupportedSyntaxError
+
+    raise UnsupportedSyntaxError("IN subqueries are currently not supported in Opteryx")
+
     from opteryx.planner.logical_planner.logical_planner import plan_query
 
     left = build(branch["expr"])
@@ -543,7 +552,7 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
 
     unit_index = parts.index(leading_unit)
 
-    month, seconds = (0, 0)
+    month, microseconds = (0, 0)
 
     for index, value in enumerate(values):
         value = int(value)
@@ -553,15 +562,15 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
         if unit == "Month":
             month += value
         if unit == "Day":
-            seconds = value * 24 * 60 * 60
+            microseconds += value * MICROSECONDS_PER_DAY
         if unit == "Hour":
-            seconds += value * 60 * 60
+            microseconds += value * MICROSECONDS_PER_HOUR
         if unit == "Minute":
-            seconds += value * 60
+            microseconds += value * MICROSECONDS_PER_MINUTE
         if unit == "Second":
-            seconds += value
+            microseconds += value * MICROSECONDS_PER_SECOND
 
-    interval = (month, seconds)
+    interval = (month, microseconds)
 
     return Node(NodeType.LITERAL, type=OrsoTypes.INTERVAL, value=interval, alias=alias)
 

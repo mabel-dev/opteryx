@@ -91,18 +91,18 @@ if SHOULD_BUILD_EXTENSIONS:
 
     __author__ = "notset"
     __version__ = "notset"
-    _status = None
+
     with open(f"{LIBRARY}/__version__.py", mode="r", encoding="UTF8") as v:
         vers = v.read()
     exec(vers)  # nosec
 
-    RELEASE_CANDIDATE = _status == VersionStatus.RELEASE
+    RELEASE_CANDIDATE = "a" not in __version__ and "b" not in __version__
     COMPILER_DIRECTIVES = {"language_level": "3"}
     COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
     COMPILER_DIRECTIVES["linetrace"] = not RELEASE_CANDIDATE
 
     print(f"\033[38;2;255;85;85mBuilding Opteryx version:\033[0m {__version__}")
-    print(f"\033[38;2;255;85;85mStatus:\033[0m {_status}", "(rc)" if RELEASE_CANDIDATE else "")
+    print(f"\033[38;2;255;85;85mStatus:\033[0m (test)", "(rc)" if RELEASE_CANDIDATE else "")
 
     with open("README.md", mode="r", encoding="UTF8") as rm:
         long_description = rm.read()

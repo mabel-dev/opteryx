@@ -160,7 +160,9 @@ class Cursor(DataFrame):
         if not operation:  # pragma: no cover
             raise MissingSqlStatement("SQL provided was empty.")
 
-        self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
+        self._connection.context.history.append(
+            (operation, True, datetime.datetime.now(datetime.UTC))
+        )
 
         start = time.time_ns()
         try:

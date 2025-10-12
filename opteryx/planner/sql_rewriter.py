@@ -150,6 +150,23 @@ TEMPORAL: int = 4
 ALIAS: int = 8
 FUNCTION_RELATION: int = 16
 
+WEEKDAYS: List[str] = [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+]
+
+# Get current time in UTC but without timezone info
+NOW = (
+    datetime.datetime.now(tz=datetime.timezone.utc)
+    .replace(tzinfo=None)
+    .replace(hour=0, minute=0, second=0, microsecond=0)
+)
+
 
 def sql_parts(string):
     """
@@ -181,18 +198,17 @@ def sql_parts(string):
 
 def parse_range(fixed_range):  # pragma: no cover
     fixed_range = fixed_range.upper()
-    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 
     if fixed_range in ("PREVIOUS_MONTH", "LAST_MONTH"):
         # end the day before the first of this month
-        end = now.replace(day=1) - datetime.timedelta(days=1)
+        end = NOW.replace(day=1) - datetime.timedelta(days=1)
         # start the first day of that month
         start = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     elif fixed_range == "THIS_MONTH":
         # start the first day of this month
-        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        start = NOW.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         # end today
-        end = now
+        end = NOW
     else:
         if parse_date(fixed_range):
             raise InvalidTemporalRangeFilterError(
@@ -210,28 +226,19 @@ def parse_range(fixed_range):  # pragma: no cover
 def parse_date(date, end: bool = False):  # pragma: no cover
     if not date:
         return None
-
-    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    if len(date) > 30:
+        return None
 
     if date == "TODAY":
-        return now
+        return NOW
     if date == "YESTERDAY":
-        return (now - datetime.timedelta(days=1)).replace(hour=0)
+        return NOW - datetime.timedelta(days=1)
 
-    weekdays = [
-        "MONDAY",
-        "TUESDAY",
-        "WEDNESDAY",
-        "THURSDAY",
-        "FRIDAY",
-        "SATURDAY",
-        "SUNDAY",
-    ]
-    if date in weekdays:
+    if date in WEEKDAYS:
         # Find the weekday number (0=Monday, 1=Tuesday, ..., 6=Sunday)
-        target_weekday = weekdays.index(date)
+        target_weekday = WEEKDAYS.index(date)
         # Find the current weekday number
-        current_weekday = now.weekday()
+        current_weekday = NOW.weekday()
 
         # Calculate how many days to subtract to get the last occurrence of the target weekday
         days_to_subtract = (current_weekday - target_weekday) % 7
@@ -240,7 +247,7 @@ def parse_date(date, end: bool = False):  # pragma: no cover
             days_to_subtract = 7
 
         # Calculate the most recent date for the target weekday
-        most_recent_day = (now - datetime.timedelta(days=days_to_subtract)).replace(
+        most_recent_day = (NOW - datetime.timedelta(days=days_to_subtract)).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         return most_recent_day
@@ -248,11 +255,16 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     if date[0] == date[-1] and date[0] in ("'", '"', "`"):
         date = date[1:-1]
 
+    # Parse ISO dates and convert to naive UTC
     parsed = dates.parse_iso(date)
-    if parsed and end and len(date) <= 12:
-        return parsed.replace(hour=23, minute=59)
+    if parsed:
+        # Convert to UTC and make naive
+        parsed = parsed.replace(tzinfo=None)
+        if end and len(date) <= 12:
+            return parsed.replace(hour=23, minute=59)
+        return parsed
 
-    return parsed
+    return None
 
 
 def _temporal_extration_state_machine(
@@ -420,9 +432,8 @@ def extract_temporal_filters(parts: str):  # pragma: no cover
                     "Invalid temporal range, expected format `FOR LAST <number> DAYS`."
                 )
             interval = int(parts[1])
-            end_date = datetime.datetime.utcnow().replace(
-                hour=23, minute=59, second=0, microsecond=0
-            )
+            # Get current time in UTC but without timezone info
+            end_date = NOW.replace(hour=23, minute=59, second=0, microsecond=0)
             start_date = (end_date - datetime.timedelta(interval)).replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
@@ -434,7 +445,8 @@ def extract_temporal_filters(parts: str):  # pragma: no cover
         elif for_date_string.startswith("DATES SINCE "):
             parts = shlex.split(for_date_string)
             start_date = parse_date(parts[2])
-            end_date = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+            # Get current time in UTC but without timezone info
+            end_date = NOW
 
         elif for_date_string:
             raise InvalidTemporalRangeFilterError(
