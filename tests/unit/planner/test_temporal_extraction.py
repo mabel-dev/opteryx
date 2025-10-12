@@ -12,6 +12,7 @@ _real_datetime = datetime.datetime
 import pytest
 from freezegun import freeze_time
 
+import opteryx
 from opteryx.planner.sql_rewriter import extract_temporal_filters
 from opteryx.planner.sql_rewriter import sql_parts
 from opteryx.utils.sql import clean_statement, remove_comments
@@ -27,6 +28,8 @@ TONIGHT = APOLLO_17_LAUNCH_DATE.replace(hour=23, minute=59, second=0, microsecon
 NOWISH = APOLLO_17_LAUNCH_DATE.replace(minute=0, second=0, microsecond=0)
 YESTERDAY = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
 A_WEEK_AGO = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=7)
+
+opteryx.planner.sql_rewriter.NOW = APOLLO_17_LAUNCH_DATE
 # fmt:on
 
 # fmt:off
