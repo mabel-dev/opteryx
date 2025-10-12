@@ -5,6 +5,8 @@ from orso.schema import FlatColumn
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
+from opteryx.datatypes.intervals import MICROSECONDS_PER_SECOND
+
 
 @dataclass(init=False)
 class ExpressionColumn(FlatColumn):
@@ -12,8 +14,9 @@ class ExpressionColumn(FlatColumn):
 
 
 def _format_interval(value):
-    months, seconds = value
+    months, microseconds = value
 
+    seconds = microseconds / MICROSECONDS_PER_SECOND
     days, seconds = divmod(seconds, 86400)
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
@@ -29,8 +32,8 @@ def _format_interval(value):
         parts.append(f"{int(hours)} HOUR")
     if minutes >= 1:
         parts.append(f"{int(minutes)} MINUTE")
-    if seconds > 0:
-        parts.append(f"{seconds:.2f} SECOND")
+    if abs(seconds) > 0:
+        parts.append(f"{seconds:.6f} SECOND")
     return " ".join(parts)
 
 

@@ -291,7 +291,11 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
                 statistics.optimization_constant_aggregation += 1
                 return build_literal_node(agg.parameters[0].value, root, root.schema_column.type)
 
-    if len(identifiers) == 0 and len(aggregators) == 0:
+    if (
+        len(identifiers) == 0
+        and len(aggregators) == 0
+        and root.schema_column.type != OrsoTypes.INTERVAL
+    ):
         table = no_table_data.read()
         try:
             result = evaluate(root, table)[0]

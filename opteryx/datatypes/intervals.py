@@ -5,6 +5,7 @@
 
 from typing import Callable
 from typing import Dict
+from typing import Iterable
 from typing import Optional
 from typing import Tuple
 
@@ -12,6 +13,95 @@ import numpy
 import pyarrow
 import pyarrow.compute
 from orso.types import OrsoTypes
+
+MICROSECONDS_PER_SECOND = 1_000_000
+MICROSECONDS_PER_MINUTE = 60 * MICROSECONDS_PER_SECOND
+MICROSECONDS_PER_HOUR = 60 * MICROSECONDS_PER_MINUTE
+MICROSECONDS_PER_DAY = 24 * MICROSECONDS_PER_HOUR
+NANOSECONDS_PER_MICROSECOND = 1_000
+
+
+def _normalise_interval_value(value) -> Tuple[int, int]:
+    """
+    Convert different interval representations into the internal (months, microseconds) tuple form.
+    """
+    if value is None:
+        return (0, 0)
+    if isinstance(value, tuple):
+        return value
+    if hasattr(value, "as_py"):
+        value = value.as_py()
+    if hasattr(value, "months") and hasattr(value, "nanoseconds"):
+        months = int(value.months)
+        micros = (
+            int(value.days) * MICROSECONDS_PER_DAY
+            + int(value.nanoseconds) // NANOSECONDS_PER_MICROSECOND
+        )
+        return (months, micros)
+    return value
+
+
+def normalize_interval_value(value) -> Tuple[int, int]:
+    """
+    Public wrapper for interval normalization.
+    """
+    return _normalise_interval_value(value)
+
+
+def _intervals_to_month_day_nano(rows: Iterable[Optional[Tuple[int, int]]]) -> pyarrow.Array:
+    """
+    Convert an iterable of (months, microseconds) tuples into a month-day-nano INTERVAL Arrow array.
+    """
+    converted = []
+    for entry in rows:
+        if entry is None or any(component is None for component in entry):
+            converted.append(None)
+            continue
+        months, microseconds = entry
+        if microseconds is None:
+            converted.append((int(months), 0, 0))
+            continue
+        days, remainder = divmod(int(microseconds), MICROSECONDS_PER_DAY)
+        nanoseconds = remainder * NANOSECONDS_PER_MICROSECOND
+        converted.append((int(months), int(days), int(nanoseconds)))
+    return pyarrow.array(converted, type=pyarrow.month_day_nano_interval())
+
+
+def to_arrow_interval(array: pyarrow.Array) -> pyarrow.Array:
+    """
+    Ensure the provided Arrow array uses the month-day-nano INTERVAL logical type.
+    """
+    if isinstance(array, pyarrow.ChunkedArray):
+        converted = [to_arrow_interval(chunk) for chunk in array.chunks]
+        return pyarrow.chunked_array(converted)
+
+    if pyarrow.types.is_interval(array.type) and array.type == pyarrow.month_day_nano_interval():
+        return array
+
+    if pyarrow.types.is_list(array.type):
+        months = pyarrow.compute.list_element(array, 0)
+        microseconds = pyarrow.compute.list_element(array, 1)
+        rows = zip(months.to_pylist(), microseconds.to_pylist())
+        return _intervals_to_month_day_nano(rows)
+
+    if pyarrow.types.is_struct(array.type):
+        rows = array.to_pylist()
+        converted = []
+        for entry in rows:
+            if entry is None:
+                converted.append(None)
+                continue
+            months = entry.get("months", 0)
+            days = entry.get("days", 0)
+            nanoseconds = entry.get("nanoseconds", 0)
+            if months is None or days is None or nanoseconds is None:
+                converted.append(None)
+                continue
+            converted.append((int(months), int(days), int(nanoseconds)))
+        return pyarrow.array(converted, type=pyarrow.month_day_nano_interval())
+
+    # As a fallback, treat values as already normalised tuples.
+    return _intervals_to_month_day_nano(array.to_pylist())
 
 
 def add_months_numpy(dates, months_to_add):
@@ -52,12 +142,12 @@ def _date_plus_interval(left, left_type, right, right_type, operator):
     if left_type == OrsoTypes.INTERVAL:
         left, right = right, left
 
-    months, seconds = right[0].as_py()
+    months, microseconds = _normalise_interval_value(right[0])
 
     if hasattr(left, "to_numpy"):
         left = left.to_numpy(zero_copy_only=False)
 
-    result = left.astype("datetime64[s]") + (seconds * signum)
+    result = left.astype("datetime64[us]") + (microseconds * signum)
 
     # Handle months separately, requiring special logic
     if months:
@@ -71,10 +161,10 @@ def _simple_interval_op(left, left_type, right, right_type, operator):
     from opteryx.managers.expression.ops import _inner_filter_operations
 
     left_months = pyarrow.compute.list_element(left, 0)
-    left_seconds = pyarrow.compute.list_element(left, 1)
+    left_microseconds = pyarrow.compute.list_element(left, 1)
 
     right_months = pyarrow.compute.list_element(right, 0)
-    right_seconds = pyarrow.compute.list_element(right, 1)
+    right_microseconds = pyarrow.compute.list_element(right, 1)
 
     if (
         pyarrow.compute.any(pyarrow.compute.not_equal(left_months, 0)).as_py()
@@ -86,27 +176,9 @@ def _simple_interval_op(left, left_type, right, right_type, operator):
 
     #    months = _inner_filter_operations(left_months, operator, right_months)
     #    months_eq = _inner_filter_operations(left_months, "Eq", right_months)
-    seconds = _inner_filter_operations(left_seconds, operator, right_seconds)
+    microseconds = _inner_filter_operations(left_microseconds, operator, right_microseconds)
 
-    return seconds
-
-
-def _work_out_the_kernel(left, left_type, right, right_type, operator):
-    if left_type in (OrsoTypes._MISSING_TYPE, 0) and len(left) > 0:
-        sample = left[0]
-        if isinstance(sample, numpy.datetime64):
-            left_type = OrsoTypes.TIMESTAMP
-
-    if right_type in (OrsoTypes._MISSING_TYPE, 0) and len(right) > 0:
-        sample = right[0]
-        if isinstance(sample, numpy.datetime64):
-            right_type = OrsoTypes.TIMESTAMP
-
-    if left_type == OrsoTypes.INTERVAL and right_type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
-        return _date_plus_interval(left, left_type, right, right_type, operator)
-    if right_type == OrsoTypes.INTERVAL and left_type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
-        return _date_plus_interval(left, left_type, right, right_type, operator)
-    return _simple_interval_op(left, left_type, right, right_type, operator)
+    return microseconds
 
 
 INTERVAL_KERNELS: Dict[Tuple[OrsoTypes, OrsoTypes, str], Optional[Callable]] = {
@@ -126,21 +198,4 @@ INTERVAL_KERNELS: Dict[Tuple[OrsoTypes, OrsoTypes, str], Optional[Callable]] = {
     (OrsoTypes.TIMESTAMP, OrsoTypes.INTERVAL, "Minus"): _date_plus_interval,
     (OrsoTypes.DATE, OrsoTypes.INTERVAL, "Plus"): _date_plus_interval,
     (OrsoTypes.DATE, OrsoTypes.INTERVAL, "Minus"): _date_plus_interval,
-    # we need to type the outcome of calcs better
-    (0, OrsoTypes.INTERVAL, "Plus"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "Minus"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "Eq"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "NotEq"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "Gt"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "GtEq"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "Lt"): _work_out_the_kernel,
-    (0, OrsoTypes.INTERVAL, "LtEq"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "Plus"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "Minus"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "Eq"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "NotEq"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "Gt"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "GtEq"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "Lt"): _work_out_the_kernel,
-    (OrsoTypes.INTERVAL, 0, "LtEq"): _work_out_the_kernel,
 }

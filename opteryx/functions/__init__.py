@@ -178,7 +178,7 @@ def fixed_value_function(function, context):
     if function in ("VERSION",):
         return OrsoTypes.VARCHAR, opteryx.__version__
     if function in ("NOW", "UTC_TIMESTAMP"):
-        return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at)
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at, "us")
     if function in ("CURRENT_TIME",):
         # CURRENT_TIME is an alias for NOW, so we return the same value
         return OrsoTypes.TIME, context.connection.connected_at.time()

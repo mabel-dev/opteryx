@@ -6,6 +6,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import datetime
 
+# Store real datetime before freezegun potentially patches it
+_real_datetime = datetime.datetime
+
 import pytest
 from freezegun import freeze_time
 
@@ -13,8 +16,10 @@ from opteryx.planner.sql_rewriter import extract_temporal_filters
 from opteryx.planner.sql_rewriter import sql_parts
 from opteryx.utils.sql import clean_statement, remove_comments
 from opteryx.exceptions import InvalidTemporalRangeFilterError
+from opteryx.utils.formatter import format_sql
 
-APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0) # UTC
+# Use naive UTC datetimes consistently everywhere
+APOLLO_17_LAUNCH_DATE = datetime.datetime(1972, 12, 7, 5, 33, 0)
 
 # fmt:off
 THIS_MORNING = APOLLO_17_LAUNCH_DATE.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -125,7 +130,7 @@ STATEMENTS = [
         ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts", [("$astronauts", None, None)]),
         ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM 1 FOR 1)) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
 
-        # explicit dates
+        # explicit dates - use naive UTC datetimes
         ("SELECT * FROM $planets FOR 2020-06-01;", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
         ("SELECT * FROM $planets FOR '2020-06-01';", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
         ("SELECT * FROM $planets FOR \"2020-06-01\";", [('$planets', datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 6, 1, 23, 59))]),
@@ -147,6 +152,17 @@ def test_temporal_extraction(statement, filters):
         clean = clean_statement(remove_comments(statement))
         parts = sql_parts(clean)
         _, extracted_filters = extract_temporal_filters(parts)
+
+    extracted_filters = [
+        (relation, start.strftime("%Y-%m-%d %H:%M:%S") if start is not None else None, 
+         end.strftime("%Y-%m-%d %H:%M:%S") if end is not None else None) 
+        for relation, start, end in extracted_filters
+    ]
+    filters = [
+        (relation, start.strftime("%Y-%m-%d %H:%M:%S") if start is not None else None,
+         end.strftime("%Y-%m-%d %H:%M:%S") if end is not None else None) 
+        for relation, start, end in filters
+    ]
 
     assert filters == extracted_filters, f"{filters} != {extracted_filters}"
 
@@ -178,12 +194,44 @@ def test_temporal_extraction_errors(statement):
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} TEMPORAL FILTER EXTRACTION TESTS")
     for statement, filters in STATEMENTS:
-        print(statement)
-        test_temporal_extraction(statement, filters)
+        print(format_sql(statement))
+        # Use timezone-aware freeze_time
+        with freeze_time(APOLLO_17_LAUNCH_DATE, tz_offset=0):
+            clean = clean_statement(remove_comments(statement))
+            parts = sql_parts(clean)
+            _, extracted_filters = extract_temporal_filters(parts)
+        
+        # Convert FakeDatetime objects to real datetime objects for comparison
+        converted_filters = []
+        for relation, start, end in extracted_filters:
+            converted_start = None
+            converted_end = None
+            if start is not None:
+                converted_start = _real_datetime(
+                    start.year, start.month, start.day, start.hour, start.minute, start.second,
+                    start.microsecond, tzinfo=start.tzinfo
+                )
+            if end is not None:
+                converted_end = _real_datetime(
+                    end.year, end.month, end.day, end.hour, end.minute, end.second,
+                    end.microsecond, tzinfo=end.tzinfo
+                )
+            converted_filters.append((relation, converted_start, converted_end))
+        
+        assert filters == converted_filters, f"{filters} != {converted_filters}"
 
     print(f"RUNNING SECOND BATTERY OF {len(INVALID_STATEMENTS)} TEMPORAL FILTER EXTRACTION TESTS")
     for statement in INVALID_STATEMENTS:
-        print(statement)
-        test_temporal_extraction_errors(statement)
+        print(format_sql(statement))
+        # Use timezone-aware freeze_time
+        with freeze_time(APOLLO_17_LAUNCH_DATE, tz_offset=0):
+            clean = clean_statement(remove_comments(statement))
+            parts = sql_parts(clean)
+            
+            try:
+                extract_temporal_filters(parts)
+                assert False, f"Expected an error for statement: {statement}"
+            except InvalidTemporalRangeFilterError:
+                pass
 
     print("✅ okay")

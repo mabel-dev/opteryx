@@ -34,19 +34,27 @@ for test_file in test_files:
         continue
     
     print(f"\n{'▶ ' + test_file:─<70}")
+    start_time = time.time()
     ret = subprocess.call([sys.executable, str(test_path)])
+    elapsed = time.time() - start_time
     
     if ret != 0:
+        print(f"❌ FAILED in {elapsed:.2f}s (exit code: {ret})")
         failed_files.append(test_file)
+    else:
+        print(f"✅ PASSED in {elapsed:.2f}s")
 
 print("\n" + "=" * 70)
-print(f"✅ COMPLETED IN {time.time() - total_start:.2f}s")
+total_elapsed = time.time() - total_start
+print(f"✅ COMPLETED IN {total_elapsed:.2f}s")
 
 if failed_files:
     print(f"\n❌ FAILED FILES ({len(failed_files)}):")
     for f in failed_files:
         print(f"   - {f}")
+    print("\n💥 EXITING WITH ERROR CODE 1")
     sys.exit(1)
 else:
     print("✨ ALL TESTS PASSED")
+    print("🎉 EXITING WITH SUCCESS CODE 0")
     sys.exit(0)

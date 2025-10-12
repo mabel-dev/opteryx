@@ -15,6 +15,7 @@ from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
+from opteryx.datatypes.intervals import MICROSECONDS_PER_DAY
 from opteryx.third_party.tktech import csimdjson as simdjson
 
 # Initialize simdjson parser once
@@ -153,9 +154,12 @@ def binary_operations(
         # Arrow represents nulls as INT64_MIN
         null_mask = arr64 == numpy.iinfo(numpy.int64).min
         if arr.dtype.name == "timedelta64[D]":
-            result = [(None if is_null else (0, v * 86400)) for v, is_null in zip(arr64, null_mask)]
+            result = [
+                (None if is_null else (0, v * MICROSECONDS_PER_DAY))
+                for v, is_null in zip(arr64, null_mask)
+            ]
         else:
-            result = [(0, v) for v in arr64]
+            result = [(0, v) if not is_null else None for v, is_null in zip(arr64, null_mask)]
         return pyarrow.array(result)
 
     elif operator == "BitwiseOr" and OrsoTypes.VARCHAR in (left_type, right_type):

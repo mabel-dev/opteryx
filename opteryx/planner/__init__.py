@@ -49,6 +49,7 @@ from orso.schema import ConstantColumn
 from orso.types import OrsoTypes
 
 from opteryx import config
+from opteryx.datatypes.intervals import normalize_interval_value
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.models import PhysicalPlan
@@ -102,6 +103,8 @@ def build_literal_node(
     value_type = type(value)
     # Determine the type from the value using the mapping
     if value_type in type_mapping or suggested_type not in (OrsoTypes._MISSING_TYPE, 0, None):
+        if suggested_type == OrsoTypes.INTERVAL:
+            value = normalize_interval_value(value)
         root.value = value
         root.node_type = NodeType.LITERAL
         root.type = (
