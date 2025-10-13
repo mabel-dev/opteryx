@@ -25,13 +25,13 @@ def test_wildcard_detection():
     stats = MockStatistics()
     
     # These should be detected as wildcards
-    connector = FileConnector(dataset="path/*.parquet", statistics=stats)
+    connector = FileConnector(dataset="testdata/wildcard_test/*.parquet", statistics=stats)
     assert connector.has_wildcards is True
-    
-    connector = FileConnector(dataset="path/file?.parquet", statistics=stats)
+
+    connector = FileConnector(dataset="testdata/wildcard_test/file?.parquet", statistics=stats)
     assert connector.has_wildcards is True
-    
-    connector = FileConnector(dataset="path/file[0-9].parquet", statistics=stats)
+
+    connector = FileConnector(dataset="testdata/wildcard_test/file[0-9].parquet", statistics=stats)
     assert connector.has_wildcards is True
 
 
@@ -151,7 +151,6 @@ def test_wildcard_question_mark():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    import sys
-    
-    # Run tests
-    pytest.main([__file__, "-v"])
+    from tests import run_tests
+
+    run_tests()
