@@ -128,11 +128,11 @@ def match_wildcard(pattern: str, path: str) -> bool:
         >>> match_wildcard("bucket/path/*.parquet", "bucket/path/sub/file.parquet")
         False
     """
-    # Split pattern and path into parts
+    # Split pattern and path into parts using OS path separator for cross-platform compatibility
     pattern_parts = pattern.split(OS_SEP)
     path_parts = path.split(OS_SEP)
     
-    # Must have same number of parts for a match (unless using ** which we don't support yet)
+    # Must have same number of path parts for a match (wildcards don't cross directory boundaries)
     if len(pattern_parts) != len(path_parts):
         return False
     

@@ -55,7 +55,14 @@ def test_split_wildcard_path():
 
 
 def test_match_wildcard():
-    """Test wildcard pattern matching with glob-like semantics"""
+    """
+    Test wildcard pattern matching with glob-like semantics.
+    
+    Glob-like semantics means wildcards don't cross directory boundaries:
+    - * matches any characters except path separators
+    - ? matches single character except path separators  
+    - [range] matches character range except path separators
+    """
     # Asterisk matches multiple characters (but not path separators)
     assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/file1.parquet") is True
     assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/file2.parquet") is True
