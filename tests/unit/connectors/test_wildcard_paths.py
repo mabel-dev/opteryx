@@ -40,7 +40,7 @@ def test_wildcard_no_matches():
     stats = MockStatistics()
     
     with pytest.raises(DatasetNotFoundError):
-        FileConnector(dataset="/nonexistent/path/*.parquet", statistics=stats)
+        FileConnector(dataset="nonexistent/path/*.parquet", statistics=stats)
 
 
 def test_path_traversal_protection():

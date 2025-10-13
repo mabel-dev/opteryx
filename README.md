@@ -202,6 +202,37 @@ _this example requires a data file, [space_missions.parquet](https://storage.goo
 </details>
 
 <details>
+<summary>Query Multiple Files with Wildcards</summary>
+
+In this example, we are querying multiple files using wildcard patterns. Opteryx supports `*` (any characters), `?` (single character), and `[range]` patterns in file paths.
+
+~~~python
+# Import the Opteryx query engine.
+import opteryx
+
+# Execute a SQL query to select data from all parquet files in a directory.
+# The wildcard '*' matches any characters in the filename.
+result = opteryx.query("SELECT * FROM 'data/*.parquet' LIMIT 10;")
+
+# Display the result.
+result.head()
+~~~
+
+You can also use more specific patterns:
+
+~~~python
+# Query files matching a range pattern, e.g., file1.parquet through file9.parquet
+result = opteryx.query("SELECT COUNT(*) FROM 'data/file[1-9].parquet';")
+
+# Query files with specific naming patterns
+result = opteryx.query("SELECT * FROM 'logs/2024-01-*.jsonl';")
+~~~
+
+_Wildcards work with all supported file formats (Parquet, JSONL, CSV, etc.) and prevent path traversal for security._
+
+</details>
+
+<details>
 <summary>Query Data in SQLite</summary>
 
 In this example, we are querying a SQLite database via Opteryx. This example will not run as written because the file being queried does not exist.
