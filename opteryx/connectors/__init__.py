@@ -269,7 +269,9 @@ def connector_factory(dataset, statistics, **config):
                 connector = _lazy_import_connector(connector)
             break
     else:
-        if os.path.isfile(dataset):
+        # Check if dataset is a file or contains wildcards
+        has_wildcards = any(char in dataset for char in ['*', '?', '['])
+        if os.path.isfile(dataset) or has_wildcards:
             from opteryx.connectors import file_connector
 
             return file_connector.FileConnector(dataset=dataset, statistics=statistics)
