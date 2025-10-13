@@ -1,6 +1,10 @@
 #!/bin/bash
 set -ex
 
+# Install OpenSSL development headers inside the container
+yum install -y openssl-devel
+
+# Install Rust (required for building some Python packages with Rust extensions)
 curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
 export PATH="$HOME/.cargo/bin:$PATH"
 
@@ -11,8 +15,7 @@ cd io
 PYBIN="/opt/python/cp${PYTHON_VERSION//.}-cp${PYTHON_VERSION//.}/bin"
 
 # Install necessary packages
-"${PYBIN}/python" -m pip install -U setuptools wheel setuptools-rust numpy cython==3.1.3
-#"${PYBIN}/python" -c "import pyarrow; pyarrow.create_library_symlinks();"
+"${PYBIN}/python" -m pip install -U setuptools wheel setuptools-rust numpy cython auditwheel
 
 # Build the wheel
 "${PYBIN}/python" setup.py bdist_wheel
