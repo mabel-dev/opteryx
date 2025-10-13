@@ -106,7 +106,14 @@ def split_wildcard_path(path: str):
 
 def match_wildcard(pattern: str, path: str) -> bool:
     """
-    Match a path against a wildcard pattern.
+    Match a path against a wildcard pattern using glob-like semantics.
+    
+    Unlike fnmatch, this function treats path separators specially:
+    - '*' matches any characters EXCEPT path separators
+    - '?' matches any single character EXCEPT path separators
+    - Use '**' to match across directory boundaries (not yet supported)
+    
+    This ensures consistent behavior with glob.glob() used for local files.
     
     Args:
         pattern: Pattern with wildcards (e.g., "bucket/path/*.parquet")
@@ -114,5 +121,24 @@ def match_wildcard(pattern: str, path: str) -> bool:
         
     Returns:
         True if path matches pattern
+        
+    Examples:
+        >>> match_wildcard("bucket/path/*.parquet", "bucket/path/file.parquet")
+        True
+        >>> match_wildcard("bucket/path/*.parquet", "bucket/path/sub/file.parquet")
+        False
     """
-    return fnmatch.fnmatch(path, pattern)
+    # Split pattern and path into parts
+    pattern_parts = pattern.split(OS_SEP)
+    path_parts = path.split(OS_SEP)
+    
+    # Must have same number of parts for a match (unless using ** which we don't support yet)
+    if len(pattern_parts) != len(path_parts):
+        return False
+    
+    # Match each part using fnmatch
+    for pattern_part, path_part in zip(pattern_parts, path_parts):
+        if not fnmatch.fnmatch(path_part, pattern_part):
+            return False
+    
+    return True

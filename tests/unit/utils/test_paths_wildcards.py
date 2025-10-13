@@ -55,13 +55,16 @@ def test_split_wildcard_path():
 
 
 def test_match_wildcard():
-    """Test wildcard pattern matching"""
-    # Asterisk matches multiple characters
+    """Test wildcard pattern matching with glob-like semantics"""
+    # Asterisk matches multiple characters (but not path separators)
     assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/file1.parquet") is True
     assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/file2.parquet") is True
     assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/data.csv") is False
     
-    # Question mark matches single character
+    # Asterisk does NOT match across directory boundaries (glob-like behavior)
+    assert paths.match_wildcard("bucket/path/*.parquet", "bucket/path/subdir/file.parquet") is False
+    
+    # Question mark matches single character (but not path separators)
     assert paths.match_wildcard("bucket/path/file?.parquet", "bucket/path/file1.parquet") is True
     assert paths.match_wildcard("bucket/path/file?.parquet", "bucket/path/file2.parquet") is True
     assert paths.match_wildcard("bucket/path/file?.parquet", "bucket/path/file10.parquet") is False
@@ -70,6 +73,10 @@ def test_match_wildcard():
     assert paths.match_wildcard("bucket/path/file[0-9].parquet", "bucket/path/file1.parquet") is True
     assert paths.match_wildcard("bucket/path/file[0-9].parquet", "bucket/path/file5.parquet") is True
     assert paths.match_wildcard("bucket/path/file[0-9].parquet", "bucket/path/fileA.parquet") is False
+    
+    # Wildcard in middle of path
+    assert paths.match_wildcard("bucket/*/data.parquet", "bucket/subdir/data.parquet") is True
+    assert paths.match_wildcard("bucket/*/data.parquet", "bucket/a/b/data.parquet") is False
     
     # No wildcards - exact match
     assert paths.match_wildcard("bucket/path/data.parquet", "bucket/path/data.parquet") is True
