@@ -285,7 +285,7 @@ def connector_factory(dataset, statistics, **config):
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
     if prefix and remove_prefix and dataset.startswith(prefix):
-        dataset = dataset[len(prefix) + 1 :]
+        dataset = dataset[len(prefix):]
 
     return connector(dataset=dataset, statistics=statistics, **connector_entry)
 
