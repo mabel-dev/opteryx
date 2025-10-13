@@ -259,21 +259,26 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 if row_est is not None:
                     stats.record_count_estimate = int(row_est)
 
-                pg_stats = conn.execute(
-                    text("""
+                pg_stats = (
+                    conn.execute(
+                        text("""
                     SELECT attname, n_distinct, null_frac, histogram_bounds
                     FROM pg_stats
                     WHERE tablename = :t
                 """),
-                    {"t": table_name_only},
-                ).fetchall()
+                        {"t": table_name_only},
+                    )
+                    .mappings()
+                    .all()
+                )
 
             for row in pg_stats:
                 col = row["attname"]
                 stats.cardinality_estimate[col] = (
                     int(row["n_distinct"]) if row["n_distinct"] > 0 else 0
                 )
-                stats.null_count[col] = int(row["null_frac"] * row_est)
+                if row_est is not None:
+                    stats.null_count[col] = int(row["null_frac"] * row_est)
                 bounds = row["histogram_bounds"]
                 if bounds and isinstance(bounds, list) and len(bounds) >= 2:
                     stats.lower_bounds[col] = bounds[0]

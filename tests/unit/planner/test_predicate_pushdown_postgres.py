@@ -5,7 +5,7 @@ Test predicate pushdown using the sql connector
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import time
 
@@ -24,7 +24,7 @@ opteryx.register_store(
     "pg",
     SqlConnector,
     remove_prefix=True,
-    connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@trumpet.db.elephantsql.com/{POSTGRES_USER}",
+    connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@pg-3b7d04d1-joocer-9765.h.aivencloud.com:10067/defaultdb?sslmode=require"
 )
 
 test_cases = [

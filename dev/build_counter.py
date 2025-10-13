@@ -35,7 +35,7 @@ __version__ = "{__version__}"
 # 1) we don't load dependencies by storing it in __init__.py
 # 2) we can import it in setup.py for the same reason
 # 3) we can import it in the CLI for the same reason
-    """
+"""
 
     # Save the build number to the build.py file
     with open("opteryx/__version__.py", "w") as f:
