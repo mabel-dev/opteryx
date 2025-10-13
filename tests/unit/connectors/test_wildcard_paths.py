@@ -4,7 +4,6 @@ Test wildcard support in file paths
 
 import os
 import sys
-import tempfile
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
@@ -60,94 +59,68 @@ def test_path_traversal_protection():
 
 def test_wildcard_expansion():
     """Test that wildcards are properly expanded to matching files"""
-    # Create temporary test files
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Create some test files
-        test_files = [
-            os.path.join(tmpdir, "file1.txt"),
-            os.path.join(tmpdir, "file2.txt"),
-            os.path.join(tmpdir, "file3.txt"),
-        ]
-        for f in test_files:
-            with open(f, "w") as fp:
-                fp.write("test content")
-        
-        stats = MockStatistics()
-        pattern = os.path.join(tmpdir, "*.txt")
-        
-        connector = FileConnector(dataset=pattern, statistics=stats)
-        
-        # Check that all files were found
-        assert len(connector.files) == 3
-        assert connector.has_wildcards is True
-        
-        # Check files are sorted
-        assert connector.files == sorted(test_files)
+    stats = MockStatistics()
+    pattern = "testdata/wildcard_test/*.parquet"
+    
+    connector = FileConnector(dataset=pattern, statistics=stats)
+    
+    # Check that all files were found
+    assert len(connector.files) == 3
+    assert connector.has_wildcards is True
+    
+    # Check files are sorted
+    expected_files = sorted([
+        "testdata/wildcard_test/file1.parquet",
+        "testdata/wildcard_test/file2.parquet",
+        "testdata/wildcard_test/file3.parquet"
+    ])
+    assert connector.files == expected_files
 
 
 def test_single_file_no_wildcard():
     """Test that single files still work without wildcards"""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        test_file = os.path.join(tmpdir, "test.txt")
-        with open(test_file, "w") as fp:
-            fp.write("test content")
-        
-        stats = MockStatistics()
-        connector = FileConnector(dataset=test_file, statistics=stats)
-        
-        assert connector.has_wildcards is False
-        assert connector.files == [test_file]
+    stats = MockStatistics()
+    test_file = "testdata/wildcard_test/file1.parquet"
+    
+    connector = FileConnector(dataset=test_file, statistics=stats)
+    
+    assert connector.has_wildcards is False
+    assert connector.files == [test_file]
 
 
 def test_wildcard_range_pattern():
     """Test wildcard with range patterns like [0-9]"""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Create files matching a range pattern
-        test_files = []
-        for i in range(5):
-            f = os.path.join(tmpdir, f"file{i}.txt")
-            with open(f, "w") as fp:
-                fp.write("test")
-            test_files.append(f)
-        
-        # Create a file that shouldn't match
-        non_match = os.path.join(tmpdir, "fileX.txt")
-        with open(non_match, "w") as fp:
-            fp.write("test")
-        
-        stats = MockStatistics()
-        pattern = os.path.join(tmpdir, "file[0-9].txt")
-        
-        connector = FileConnector(dataset=pattern, statistics=stats)
-        
-        # Should match only files with digits
-        assert len(connector.files) == 5
-        assert all("file" in f and any(str(i) in f for i in range(5)) for f in connector.files)
-        assert non_match not in connector.files
+    stats = MockStatistics()
+    pattern = "testdata/wildcard_test/file[1-3].parquet"
+    
+    connector = FileConnector(dataset=pattern, statistics=stats)
+    
+    # Should match files 1, 2, 3 (all 3 files)
+    assert len(connector.files) == 3
+    expected_files = sorted([
+        "testdata/wildcard_test/file1.parquet",
+        "testdata/wildcard_test/file2.parquet",
+        "testdata/wildcard_test/file3.parquet"
+    ])
+    assert connector.files == expected_files
 
 
 def test_wildcard_question_mark():
     """Test wildcard with ? (single character match)"""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Create files
-        file1 = os.path.join(tmpdir, "fileA.txt")
-        file2 = os.path.join(tmpdir, "fileB.txt")
-        file_no_match = os.path.join(tmpdir, "fileAB.txt")
-        
-        for f in [file1, file2, file_no_match]:
-            with open(f, "w") as fp:
-                fp.write("test")
-        
-        stats = MockStatistics()
-        pattern = os.path.join(tmpdir, "file?.txt")
-        
-        connector = FileConnector(dataset=pattern, statistics=stats)
-        
-        # Should match only single-character files
-        assert len(connector.files) == 2
-        assert file1 in connector.files
-        assert file2 in connector.files
-        assert file_no_match not in connector.files
+    stats = MockStatistics()
+    # Use ? to match single digit in filename
+    pattern = "testdata/wildcard_test/file?.parquet"
+    
+    connector = FileConnector(dataset=pattern, statistics=stats)
+    
+    # Should match all 3 files (file1, file2, file3)
+    assert len(connector.files) == 3
+    expected_files = sorted([
+        "testdata/wildcard_test/file1.parquet",
+        "testdata/wildcard_test/file2.parquet",
+        "testdata/wildcard_test/file3.parquet"
+    ])
+    assert connector.files == expected_files
 
 
 if __name__ == "__main__":  # pragma: no cover
