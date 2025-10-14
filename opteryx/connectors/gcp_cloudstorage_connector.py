@@ -91,7 +91,11 @@ class GcpCloudStorageConnector(
         Asynchronous.__init__(self, **kwargs)
         Statistics.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", OS_SEP)
+        # Only convert dots to path separators if the dataset doesn't already contain slashes
+        # Dataset references like "my.dataset.table" use dots as separators
+        # File paths like "bucket/path/file.parquet" already have slashes and should not be converted
+        if OS_SEP not in self.dataset and "/" not in self.dataset:
+            self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
         
         # Check if dataset contains wildcards
