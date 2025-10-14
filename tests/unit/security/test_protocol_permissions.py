@@ -5,6 +5,7 @@ This tests that protocol prefixes are treated as table namespaces in the permiss
 allowing fine-grained control over which roles can access which storage protocols.
 """
 
+import json
 import os
 import sys
 
@@ -12,7 +13,61 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 
+from opteryx.config import RESOURCES_PATH
 from opteryx.managers.permissions import can_read_table
+
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_test_permissions():
+    """
+    Set up test permissions for protocol prefix tests.
+    These permissions define roles with different levels of access to protocols.
+    """
+    # Define test permissions
+    test_permissions = [
+        {"role": "restricted", "permission": "READ", "table": "opteryx.*"},
+        {"role": "data_analyst", "permission": "READ", "table": "opteryx.*"},
+        {"role": "data_analyst", "permission": "READ", "table": "gs://*"},
+        {"role": "data_engineer", "permission": "READ", "table": "opteryx.*"},
+        {"role": "data_engineer", "permission": "READ", "table": "file://*"},
+        {"role": "data_engineer", "permission": "READ", "table": "gs://*"},
+        {"role": "data_engineer", "permission": "READ", "table": "s3://*"},
+        {"role": "cloud_only", "permission": "READ", "table": "gs://*"},
+        {"role": "cloud_only", "permission": "READ", "table": "s3://*"},
+        {"role": "project_team", "permission": "READ", "table": "gs://project-bucket/*"},
+    ]
+    
+    # Backup original permissions file
+    permissions_file = RESOURCES_PATH / "permissions.json"
+    backup_file = RESOURCES_PATH / "permissions.json.bak"
+    
+    original_content = None
+    if permissions_file.exists():
+        with open(permissions_file, "r") as f:
+            original_content = f.read()
+    
+    # Write test permissions
+    with open(permissions_file, "w") as f:
+        for perm in test_permissions:
+            f.write(json.dumps(perm) + "\n")
+    
+    # Reload permissions module
+    from opteryx.managers import permissions as perm_module
+    perm_module.PERMISSIONS = perm_module.load_permissions()
+    
+    # Run tests
+    yield
+    
+    # Restore original permissions
+    if original_content is not None:
+        with open(permissions_file, "w") as f:
+            f.write(original_content)
+    elif backup_file.exists():
+        backup_file.unlink()
+    
+    # Reload original permissions
+    from opteryx.managers import permissions as perm_module
+    perm_module.PERMISSIONS = perm_module.load_permissions()
 
 # Test cases for protocol prefix permissions treated as table namespaces
 test_cases = [
