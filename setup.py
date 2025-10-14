@@ -11,7 +11,7 @@ import glob
 import os
 import platform
 import sys
-from distutils.sysconfig import get_config_var
+from sysconfig import get_config_var
 from typing import Any
 from typing import Dict
 

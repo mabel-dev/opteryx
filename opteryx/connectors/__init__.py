@@ -285,7 +285,10 @@ def connector_factory(dataset, statistics, **config):
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
     if prefix and remove_prefix and dataset.startswith(prefix):
-        dataset = dataset[len(prefix) + 1 :]
+        # Remove the prefix. If there's a separator (. or //) after the prefix, skip it too
+        dataset = dataset[len(prefix):]
+        if dataset.startswith(".") or dataset.startswith("//"):
+            dataset = dataset[1:] if dataset.startswith(".") else dataset[2:]
 
     return connector(dataset=dataset, statistics=statistics, **connector_entry)
 

@@ -91,9 +91,24 @@ class GcpCloudStorageConnector(
         Asynchronous.__init__(self, **kwargs)
         Statistics.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", OS_SEP)
+        # Only convert dots to path separators if the dataset doesn't already contain slashes
+        # Dataset references like "my.dataset.table" use dots as separators
+        # File paths like "bucket/path/file.parquet" already have slashes and should not be converted
+        if OS_SEP not in self.dataset and "/" not in self.dataset:
+            self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
-        self.bucket, _, _, _ = paths.get_parts(self.dataset)
+        
+        # Check if dataset contains wildcards
+        self.has_wildcards = paths.has_wildcards(self.dataset)
+        if self.has_wildcards:
+            # For wildcards, we need to split into prefix and pattern
+            # The prefix is used for listing, pattern for filtering
+            self.wildcard_prefix, self.wildcard_pattern = paths.split_wildcard_path(self.dataset)
+            self.bucket, _, _, _ = paths.get_parts(self.wildcard_prefix or self.dataset)
+        else:
+            self.wildcard_prefix = None
+            self.wildcard_pattern = None
+            self.bucket, _, _, _ = paths.get_parts(self.dataset)
 
         # we're going to cache the first blob as the schema and dataset reader
         # sometimes both start here
@@ -181,7 +196,15 @@ class GcpCloudStorageConnector(
         if prefix in self.blob_list:
             return self.blob_list[prefix]
 
-        bucket, object_path, _, _ = paths.get_parts(prefix)
+        # If we have wildcards, use the wildcard prefix for listing
+        if self.has_wildcards:
+            list_prefix = self.wildcard_prefix
+            filter_pattern = self.wildcard_pattern
+        else:
+            list_prefix = prefix
+            filter_pattern = None
+
+        bucket, object_path, _, _ = paths.get_parts(list_prefix)
         if "kh" not in bucket:
             bucket = bucket.replace("va_data", "va-data")
             bucket = bucket.replace("data_", "data-")
@@ -204,11 +227,19 @@ class GcpCloudStorageConnector(
                 raise DatasetReadError(f"Error fetching blob list: {response.text}")
 
             blob_data = response.json()
-            blob_names.extend(
-                f"{bucket}/{name}"
-                for name in (blob["name"] for blob in blob_data.get("items", []))
-                if name.endswith(TUPLE_OF_VALID_EXTENSIONS)
-            )
+            for blob in blob_data.get("items", []):
+                name = blob["name"]
+                if not name.endswith(TUPLE_OF_VALID_EXTENSIONS):
+                    continue
+                    
+                full_path = f"{bucket}/{name}"
+                
+                # If we have a wildcard pattern, filter by it
+                if filter_pattern:
+                    if paths.match_wildcard(filter_pattern, full_path):
+                        blob_names.append(full_path)
+                else:
+                    blob_names.append(full_path)
 
             page_token = blob_data.get("nextPageToken")
             if not page_token:
