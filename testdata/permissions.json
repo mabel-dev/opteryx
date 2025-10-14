@@ -1,4 +1,1 @@
 {"role":"restricted", "permission": "READ", "table": "opteryx.*"}
-{"role":"file_access", "permission": "READ", "table": "file://*"}
-{"role":"gcs_access", "permission": "READ", "table": "gs://*"}
-{"role":"s3_access", "permission": "READ", "table": "s3://*"}
