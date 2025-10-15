@@ -3,13 +3,11 @@
 # cython: cdivision=True
 # cython: initializedcheck=False
 # cython: infer_types=True
-# cython: wraparound=False
+# cython: wraparound=True
 # cython: boundscheck=False
 
 """
 Fast JSONL decoder using Cython for performance-critical operations.
-
-This decoder uses native C string operations instead of regex for better performance.
 """
 
 from libc.string cimport memchr, strlen, strstr, memcmp
