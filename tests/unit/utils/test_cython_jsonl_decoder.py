@@ -54,9 +54,9 @@ def test_cython_jsonl_decoder_basic():
     assert column_data['name'] == ['Alice', 'Bob', 'Charlie']
     assert column_data['active'] == [True, False, True]
     # Floats might have minor precision differences
-    assert abs(column_data['score'][0] - 95.5) < 0.01
-    assert abs(column_data['score'][1] - 87.3) < 0.01
-    assert abs(column_data['score'][2] - 92.1) < 0.01
+    assert abs(column_data['score'][0] - 95.5) < 0.01, column_data['score'][0]
+    assert abs(column_data['score'][1] - 87.3) < 0.01, column_data['score'][1]
+    assert abs(column_data['score'][2] - 92.1) < 0.01, column_data['score'][2]
 
 
 def test_cython_jsonl_decoder_with_nulls():
