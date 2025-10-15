@@ -161,11 +161,11 @@ cpdef tuple numpy_build_filtered_rows_indices_and_column(numpy.ndarray column_da
 
     # Handle set initialization based on element dtype
     if numpy.issubdtype(element_dtype, numpy.integer):
-        valid_values_typed = set([int(v) for v in valid_values])
+        valid_values_typed = {int(v) for v in valid_values}
     elif numpy.issubdtype(element_dtype, numpy.floating):
-        valid_values_typed = set([parse_fast_float(v) for v in valid_values])
+        valid_values_typed = {parse_fast_float(v) for v in valid_values}
     elif numpy.issubdtype(element_dtype, numpy.str_):
-        valid_values_typed = set([unicode(v) for v in valid_values])
+        valid_values_typed = {unicode(v) for v in valid_values}
     else:
         valid_values_typed = valid_values  # Fallback to generic Python set
 

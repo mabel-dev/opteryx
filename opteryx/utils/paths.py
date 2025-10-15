@@ -94,12 +94,9 @@ def split_wildcard_path(path: str):
     prefix = path[:wildcard_pos]
     last_sep = prefix.rfind(OS_SEP)
 
-    if last_sep != -1:
-        # Include the separator in the prefix
-        prefix = path[: last_sep + 1]
-    else:
-        # No separator before wildcard, prefix is empty or bucket name
-        prefix = ""
+    # Include the separator in the prefix
+    # No separator before wildcard, prefix is empty or bucket name
+    prefix = path[: last_sep + 1] if last_sep != -1 else ""
 
     return prefix, path
 

@@ -336,7 +336,25 @@ class Cursor(DataFrame):
         if isinstance(result_data, pyarrow.Table):
             return result_data
         try:
-            return pyarrow.concat_tables(result_data, promote_options="permissive")
+            # arrow allows duplicate column names, but not when concatting
+            from itertools import chain
+
+            first_table = next(result_data, None)
+            if first_table is not None:
+                column_names = first_table.column_names
+                if len(column_names) != len(set(column_names)):
+                    temporary_names = [f"col_{i}" for i in range(len(column_names))]
+                    first_table = first_table.rename_columns(temporary_names)
+                    return_table = pyarrow.concat_tables(
+                        chain(
+                            [first_table], (t.rename_columns(temporary_names) for t in result_data)
+                        ),
+                        promote_options="permissive",
+                    )
+                    return return_table.rename_columns(column_names)
+            return pyarrow.concat_tables(
+                chain([first_table], result_data), promote_options="permissive"
+            )
         except (
             pyarrow.ArrowInvalid,
             pyarrow.ArrowTypeError,
