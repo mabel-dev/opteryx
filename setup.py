@@ -250,6 +250,11 @@ if SHOULD_BUILD_EXTENSIONS:
             extra_compile_args=C_COMPILE_FLAGS,
         ),
         Extension(
+            name="opteryx.compiled.structures.jsonl_decoder",
+            sources=["opteryx/compiled/structures/jsonl_decoder.pyx"],
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
+        Extension(
             name="opteryx.compiled.table_ops.distinct",
             sources=["opteryx/compiled/table_ops/distinct.pyx"],
             include_dirs=include_dirs + ["third_party/abseil"],
