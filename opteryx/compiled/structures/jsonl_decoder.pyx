@@ -12,10 +12,6 @@ Fast JSONL decoder using Cython for performance-critical operations.
 This decoder uses native C string operations instead of regex for better performance.
 """
 
-import numpy
-cimport numpy
-numpy.import_array()
-
 from libc.string cimport memchr, strlen, strstr
 from libc.stdlib cimport strtod, strtol, atoi
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
@@ -25,7 +21,7 @@ import pyarrow
 from opteryx.third_party.tktech import csimdjson as simdjson
 
 
-cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, const char* key, Py_ssize_t key_len, Py_ssize_t* value_start, Py_ssize_t* value_len) nogil:
+cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, const char* key, Py_ssize_t key_len, Py_ssize_t* value_start, Py_ssize_t* value_len):
     """
     Find the value for a given key in a JSON line.
     
