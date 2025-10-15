@@ -10,7 +10,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import MongoDbConnector
 from tests import is_arm, is_mac, is_windows, skip_if
-from tests import populate_mongo
 
 COLLECTION_NAME = "tweets"
 MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")

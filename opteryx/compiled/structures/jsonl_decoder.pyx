@@ -10,14 +10,11 @@
 Fast JSONL decoder using Cython for performance-critical operations.
 """
 
-from libc.string cimport memchr, strlen, strstr, memcmp
-from libc.stdlib cimport strtod, strtol, atoi
+from libc.string cimport memchr, memcmp
 from libc.stddef cimport size_t
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
-from libc.stdint cimport int64_t
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
-import pyarrow
 import json
 
 
@@ -48,7 +45,7 @@ cdef inline int _column_type_code(str col_type):
 cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, const char* key, Py_ssize_t key_len, Py_ssize_t* value_start, Py_ssize_t* value_len):
     """
     Find the value for a given key in a JSON line.
-    
+
     Returns pointer to value start, or NULL if not found.
     Updates value_start and value_len with the position and length.
     """
@@ -63,7 +60,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
     cdef int bracket_count
     cdef int backslash_run
     cdef Py_ssize_t remaining
-    
+
     # Search for the key pattern: "key":
     while pos < end:
         # Find opening quote of a key
@@ -73,27 +70,25 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
         key_pos = <const char*>memchr(pos, b'"', <size_t>remaining)
         if key_pos == NULL:
             return NULL
-        
+
         key_pos += 1  # Move past the opening quote
-        
+
         # Check if this matches our key
-        if (end - key_pos >= key_len and 
-            memcmp(key_pos, key, <size_t>key_len) == 0 and
-            key_pos[key_len] == b'"'):
-            
+        if (end - key_pos >= key_len and memcmp(key_pos, key, <size_t>key_len) == 0 and key_pos[key_len] == b'"'):
+
             # Found the key, now find the colon
             value_pos = key_pos + key_len + 1  # Skip closing quote
-            
+
             # Skip whitespace and colon
             while value_pos < end and (value_pos[0] == b' ' or value_pos[0] == b'\t' or value_pos[0] == b':'):
                 value_pos += 1
-            
+
             if value_pos >= end:
                 return NULL
-            
+
             first_char = value_pos[0]
             value_start[0] = value_pos - line
-            
+
             # Determine value type and find end
             if first_char == b'"':
                 # String value - find closing quote, handling escapes
@@ -111,7 +106,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                         backslash_run = 0
                     quote_end += 1
                 return NULL
-            
+
             elif first_char == b'{':
                 # Object - count braces
                 brace_count = 1
@@ -134,7 +129,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
                 return value_pos
-            
+
             elif first_char == b'[':
                 # Array - count brackets
                 bracket_count = 1
@@ -157,28 +152,28 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
                 return value_pos
-            
+
             elif first_char == b'n':
                 # null
                 if end - value_pos >= 4 and memcmp(value_pos, b"null", 4) == 0:
                     value_len[0] = 4
                     return value_pos
                 return NULL
-            
+
             elif first_char == b't':
                 # true
                 if end - value_pos >= 4 and memcmp(value_pos, b"true", 4) == 0:
                     value_len[0] = 4
                     return value_pos
                 return NULL
-            
+
             elif first_char == b'f':
                 # false
                 if end - value_pos >= 5 and memcmp(value_pos, b"false", 5) == 0:
                     value_len[0] = 5
                     return value_pos
                 return NULL
-            
+
             else:
                 # Number - find end (space, comma, brace, bracket)
                 quote_end = value_pos + 1
@@ -190,22 +185,22 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
                 return value_pos
-        
+
         pos = key_pos
-    
+
     return NULL
 
 
 cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_types, Py_ssize_t sample_size=100):
     """
     Fast JSONL decoder that extracts values using C string operations.
-    
+
     Parameters:
         buffer: bytes - The JSONL data
         column_names: list - List of column names to extract
         column_types: dict - Dictionary mapping column names to types ('bool', 'int', 'float', 'str', etc.)
         sample_size: int - Number of lines to use for schema inference (not used if column_types provided)
-    
+
     Returns:
         tuple: (num_rows, num_cols, dict of column_name -> list of values)
     """
@@ -239,9 +234,9 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef object parsed
     cdef Py_ssize_t remaining
     cdef const char* newline_pos
-    
+
     result = {}
-    
+
     if num_cols > 0:
         type_codes = <int*>PyMem_Malloc(num_cols * sizeof(int))
         key_ptrs = <const char**>PyMem_Malloc(num_cols * sizeof(const char*))
@@ -254,7 +249,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             if key_lengths != NULL:
                 PyMem_Free(key_lengths)
             raise MemoryError()
-    
+
     try:
         for i in range(num_cols):
             col = column_names[i]
@@ -267,7 +262,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             result[col] = col_list
             col_type = column_types.get(col, 'str')
             type_codes[i] = _column_type_code(col_type)
-        
+
         while pos < end:
             line_start = pos
             remaining = end - line_start
@@ -280,27 +275,27 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             else:
                 line_end = newline_pos
                 pos = newline_pos + 1
-            
+
             line_len = line_end - line_start
             num_lines += 1
-            
+
             if line_len == 0:
                 for i in range(num_cols):
                     (<list>column_lists[i]).append(None)
                 continue
-            
+
             for i in range(num_cols):
                 col_list = <list>column_lists[i]
                 key_ptr = key_ptrs[i]
                 key_len = key_lengths[i]
                 type_code = type_codes[i]
-                
+
                 value_ptr = find_key_value(line_start, line_len, key_ptr, key_len, &value_start, &value_len)
-                
+
                 if value_ptr == NULL:
                     col_list.append(None)
                     continue
-                
+
                 if type_code == COL_BOOL:
                     if value_len == 4 and memcmp(value_ptr, b"true", 4) == 0:
                         col_list.append(True)
@@ -308,7 +303,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                         col_list.append(False)
                     else:
                         col_list.append(None)
-                
+
                 elif type_code == COL_INT:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
@@ -318,7 +313,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                             col_list.append(int(value_bytes))
                         except ValueError:
                             col_list.append(None)
-                
+
                 elif type_code == COL_FLOAT:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
@@ -328,7 +323,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                             col_list.append(float(value_bytes))
                         except ValueError:
                             col_list.append(None)
-                
+
                 elif type_code == COL_STR:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
@@ -342,7 +337,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                             col_list.append(None)
                     else:
                         col_list.append(None)
-                
+
                 else:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
@@ -356,7 +351,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                                 col_list.append(parsed)
                         except (json.JSONDecodeError, UnicodeDecodeError):
                             col_list.append(None)
-        
+
         return (num_lines, num_cols, result)
     finally:
         if type_codes != NULL:

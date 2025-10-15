@@ -35,15 +35,15 @@ cdef inline int trim_trailing_zeros(char* buf, int length) nogil:
 
 cdef inline bint is_safe_double(double d) nogil:
     """Check if a double value is safe to pass to ryu"""
-    return (isfinite(d) and 
-            d <= MAX_SAFE_DOUBLE and 
+    return (isfinite(d) and
+            d <= MAX_SAFE_DOUBLE and
             d >= MIN_SAFE_DOUBLE)
 
 cdef inline bytes safe_double_to_bytes(double d, uint32_t precision):
     """Safely convert a double to bytes, handling extreme values"""
     cdef char buf[32]
     cdef int length
-    
+
     if not is_safe_double(d):
         if isnan(d):
             return b"NaN"
@@ -55,7 +55,7 @@ cdef inline bytes safe_double_to_bytes(double d, uint32_t precision):
         else:
             # For extreme finite values, fall back to Python string conversion
             return str(d).encode('ascii')
-    
+
     length = d2fixed_buffered_n(d, precision, buf)
     length = trim_trailing_zeros(buf, length)
     return <bytes>buf[:length]

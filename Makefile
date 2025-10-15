@@ -51,6 +51,8 @@ help: ## Show this help message
 lint: ## Run all linting tools
 	$(call print_blue,"Installing linting tools...")
 	@$(PIP) install --quiet --upgrade pycln isort ruff yamllint cython-lint
+	$(call print_blue,"Removing whitespace in pyx files...")
+	@$(PYTHON) dev/fix_cython_whitespace.py
 	$(call print_blue,"Running Cython lint...")
 	@cython-lint $(SRC_DIR)/compiled/**/*.pyx || true
 	$(call print_blue,"Running Ruff checks...")

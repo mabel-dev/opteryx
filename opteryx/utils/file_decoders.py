@@ -458,13 +458,13 @@ def jsonl_decoder(
         return (num_rows, 0, 0, table)
 
     # Try fast Cython decoder for large files with no selection filters
-    if use_fast_decoder and not just_schema and not selection and len(buffer) > 10000:
+    if use_fast_decoder and not just_schema and not selection and len(buffer) > 1000:
         try:
             from opteryx.compiled.structures import jsonl_decoder as cython_decoder
 
             # Sample first 100 lines to infer schema
             parser = simdjson.Parser()
-            sample_size = min(100, buffer.count(b"\n"))
+            sample_size = min(10, buffer.count(b"\n"))
             sample_records = []
             keys_union = set()
 
@@ -481,7 +481,7 @@ def jsonl_decoder(
                         row = record.as_dict()
                         sample_records.append(row)
                         keys_union.update(row.keys())
-                    except Exception:
+                    except Exception:  # nosec
                         continue
 
             if sample_records:
