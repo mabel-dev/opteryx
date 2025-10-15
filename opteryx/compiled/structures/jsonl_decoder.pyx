@@ -15,7 +15,9 @@ from libc.stddef cimport size_t
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
-import json
+from opteryx.third_party.fastfloat.fast_float cimport c_parse_fast_float
+
+import orjson as json
 
 
 cdef enum ColumnType:
@@ -40,6 +42,44 @@ cdef inline int _column_type_code(str col_type):
         return COL_STR
     else:
         return COL_OTHER
+
+
+cdef inline long long fast_atoll(const char* c_str, Py_ssize_t length) except? -999999999999999:
+    """
+    Fast C-level string to long long integer conversion.
+
+    This is significantly faster than calling Python's int() function
+    as it avoids the Python/C boundary and works directly with char pointers.
+
+    Returns the parsed integer value.
+    Raises ValueError if the string contains invalid characters.
+    """
+    cdef long long value = 0
+    cdef int sign = 1
+    cdef Py_ssize_t j = 0
+    cdef unsigned char c
+
+    if length == 0:
+        raise ValueError("Empty string")
+
+    # Check for negative sign
+    if c_str[0] == 45:  # ASCII '-'
+        sign = -1
+        j = 1
+    elif c_str[0] == 43:  # ASCII '+'
+        j = 1
+
+    if j >= length:
+        raise ValueError("Invalid number format")
+
+    # Parse digits
+    for j in range(j, length):
+        c = c_str[j] - 48  # ASCII '0' is 48
+        if c > 9:  # Not a digit (c is unsigned, so < 0 becomes > 9)
+            raise ValueError(f"Invalid digit at position {j}")
+        value = value * 10 + c
+
+    return sign * value
 
 
 cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, const char* key, Py_ssize_t key_len, Py_ssize_t* value_start, Py_ssize_t* value_len):
@@ -308,21 +348,13 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
                     else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        try:
-                            col_list.append(int(value_bytes))
-                        except ValueError:
-                            col_list.append(None)
+                        col_list.append(fast_atoll(value_ptr, value_len))
 
                 elif type_code == COL_FLOAT:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
                     else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        try:
-                            col_list.append(float(value_bytes))
-                        except ValueError:
-                            col_list.append(None)
+                        col_list.append(c_parse_fast_float(value_bytes))
 
                 elif type_code == COL_STR:
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
@@ -344,9 +376,9 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                     else:
                         value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
                         try:
-                            parsed = json.loads(value_bytes.decode('utf-8'))
+                            parsed = json.loads(value_bytes)
                             if isinstance(parsed, dict):
-                                col_list.append(json.dumps(parsed, ensure_ascii=False))
+                                col_list.append(json.dumps(parsed))
                             else:
                                 col_list.append(parsed)
                         except (json.JSONDecodeError, UnicodeDecodeError):

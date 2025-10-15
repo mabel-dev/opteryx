@@ -252,7 +252,9 @@ if SHOULD_BUILD_EXTENSIONS:
         Extension(
             name="opteryx.compiled.structures.jsonl_decoder",
             sources=["opteryx/compiled/structures/jsonl_decoder.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
+            include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
         ),
         Extension(
             name="opteryx.compiled.table_ops.distinct",
