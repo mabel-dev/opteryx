@@ -86,13 +86,13 @@ class AwsS3Connector(
             )
 
         self.minio = Minio(end_point, access_key, secret_key, secure=secure)
-        
+
         # Only convert dots to path separators if the dataset doesn't already contain slashes
         # Dataset references like "my.dataset.table" use dots as separators
         # File paths like "bucket/path/file.parquet" already have slashes and should not be converted
         if OS_SEP not in self.dataset and "/" not in self.dataset:
             self.dataset = self.dataset.replace(".", OS_SEP)
-        
+
         # Check if dataset contains wildcards
         self.has_wildcards = paths.has_wildcards(self.dataset)
         if self.has_wildcards:
@@ -111,28 +111,28 @@ class AwsS3Connector(
         else:
             list_prefix = prefix
             filter_pattern = None
-            
+
         bucket, object_path, _, _ = paths.get_parts(list_prefix)
         blobs = self.minio.list_objects(bucket_name=bucket, prefix=object_path, recursive=True)
-        
+
         blob_list = []
         for blob in blobs:
             if blob.object_name.endswith("/"):
                 continue
-                
+
             full_path = bucket + "/" + blob.object_name
-            
+
             # Check if blob has valid extension
             if ("." + full_path.split(".")[-1].lower()) not in VALID_EXTENSIONS:
                 continue
-            
+
             # If we have a wildcard pattern, filter by it
             if filter_pattern:
                 if paths.match_wildcard(filter_pattern, full_path):
                     blob_list.append(full_path)
             else:
                 blob_list.append(full_path)
-        
+
         return sorted(blob_list)
 
     def read_dataset(

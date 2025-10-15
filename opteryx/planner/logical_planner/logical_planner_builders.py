@@ -271,12 +271,21 @@ def ceiling(value, alias: Optional[List[str]] = None, key=None):
 
 
 def compound_identifier(branch, alias: Optional[List[str]] = None, key=None):
-    return LogicalColumn(
+    column = LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
         alias=alias,  # type: ignore
         source_column=branch[-1]["value"],  # the source column
         source=".".join(p["value"] for p in branch[:-1]),  # the source relation
     )
+    alias_name = alias[0] if isinstance(alias, list) and alias else alias
+    if alias_name:
+        column.query_column = alias_name
+    else:
+        qualifier = column.source
+        column.query_column = (
+            f"{qualifier}.{column.source_column}" if qualifier else column.source_column
+        )
+    return column
 
 
 def expression_with_alias(branch, alias: Optional[List[str]] = None, key=None):
@@ -424,11 +433,14 @@ def identifier(branch, alias: Optional[List[str]] = None, key=None):
     """idenitifier doesn't have a qualifier (recorded in source)"""
     if "Identifier" in branch:
         return build(branch["Identifier"], alias=alias)
-    return LogicalColumn(
+    column = LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
         alias=alias,  # type: ignore
         source_column=branch["value"],  # the source column
     )
+    alias_name = alias[0] if isinstance(alias, list) and alias else alias
+    column.query_column = alias_name or column.source_column
+    return column
 
 
 def in_list(branch, alias: Optional[List[str]] = None, key=None):

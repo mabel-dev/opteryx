@@ -380,14 +380,7 @@ class BinderVisitor:
         # clear the derived schema
         context.schemas.pop("$derived", None)
 
-        seen = set()
-        needs_qualifier = len(context.schemas) > 1 or any(
-            column.name in seen or seen.add(column.name) is not None  # type: ignore
-            for schema in context.schemas.values()
-            for column in schema.columns
-        )
-
-        def name_column(qualifier, column):
+        def name_column(column):
             for projection_column in node.columns:
                 if (
                     projection_column.schema_column
@@ -396,20 +389,11 @@ class BinderVisitor:
                     if projection_column.alias:
                         return projection_column.alias
 
-                    if len(context.relations) > 1 or needs_qualifier:
-                        if isinstance(projection_column, LogicalColumn):
-                            if qualifier:
-                                projection_column.source = qualifier
-                            return projection_column.qualified_name
-                        return f"{qualifier}.{column.name}"
-
                     if projection_column.query_column:
                         return str(projection_column.query_column)
                     if projection_column.current_name:
                         return projection_column.current_name
 
-            if needs_qualifier:
-                return f"{qualifier}.{column.name}"
             return column.name
 
         def keep_column(column, identities):
@@ -441,15 +425,15 @@ class BinderVisitor:
                 identities.append(column.identity)
 
         columns = []
-        for qualifier, schema in context.schemas.items():
+        for _, schema in context.schemas.items():
             for column in schema.columns:
                 if keep_column(column, identities):
-                    column_name = name_column(qualifier=qualifier, column=column)
+                    column_name = name_column(column=column)
                     column_reference = LogicalColumn(
                         node_type=NodeType.IDENTIFIER,
                         source_column=column_name,
                         source=None,
-                        alias=None,
+                        alias=column_name,
                         schema_column=column,
                     )
                     columns.append(column_reference)

@@ -7,7 +7,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import IcebergConnector
 from opteryx.utils.formatter import format_sql
-from tests import is_arm, is_mac, is_windows, skip_if
 from tests import set_up_iceberg
 
 

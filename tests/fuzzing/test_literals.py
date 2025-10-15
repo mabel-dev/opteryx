@@ -15,7 +15,6 @@ import hypothesis.strategies as st
 from hypothesis import given, settings
 
 import opteryx
-from tests import is_arm, is_mac, is_windows, skip_if
 
 # allows us to run short CI and longer scheduled tests
 TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
