@@ -354,6 +354,7 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                     if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                         col_list.append(None)
                     else:
+                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
                         col_list.append(c_parse_fast_float(value_bytes))
 
                 elif type_code == COL_STR:
