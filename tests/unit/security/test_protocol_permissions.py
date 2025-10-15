@@ -160,8 +160,6 @@ if __name__ == "__main__":  # pragma: no cover
     
     # Create a temporary permissions.json for testing
     import json
-    import tempfile
-    from pathlib import Path
     
     # Create test permissions
     test_permissions = [

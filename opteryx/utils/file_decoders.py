@@ -461,13 +461,13 @@ def jsonl_decoder(
     if use_fast_decoder and not just_schema and not selection and len(buffer) > 10000:
         try:
             from opteryx.compiled.structures import jsonl_decoder as cython_decoder
-            
+
             # Sample first 100 lines to infer schema
             parser = simdjson.Parser()
             sample_size = min(100, buffer.count(b"\n"))
             sample_records = []
             keys_union = set()
-            
+
             start = 0
             for _ in range(sample_size):
                 newline = buffer.find(b"\n", start)
@@ -483,57 +483,58 @@ def jsonl_decoder(
                         keys_union.update(row.keys())
                     except Exception:
                         continue
-            
+
             if sample_records:
                 # Infer column types from sample
                 column_types = {}
                 columns_to_extract = list(keys_union)
-                
+
                 if projection:
                     # If projection specified, only extract those columns
                     columns_to_extract = [c.value for c in projection if c.value in keys_union]
-                
+
                 for key in columns_to_extract:
                     for record in sample_records:
                         if key in record and record[key] is not None:
                             val = record[key]
                             if isinstance(val, bool):
-                                column_types[key] = 'bool'
+                                column_types[key] = "bool"
                             elif isinstance(val, int):
-                                column_types[key] = 'int'
+                                column_types[key] = "int"
                             elif isinstance(val, float):
-                                column_types[key] = 'float'
+                                column_types[key] = "float"
                             elif isinstance(val, str):
-                                column_types[key] = 'str'
+                                column_types[key] = "str"
                             elif isinstance(val, list):
-                                column_types[key] = 'list'
+                                column_types[key] = "list"
                             elif isinstance(val, dict):
-                                column_types[key] = 'dict'
+                                column_types[key] = "dict"
                             break
                     if key not in column_types:
-                        column_types[key] = 'str'  # Default to string
-                
+                        column_types[key] = "str"  # Default to string
+
                 # Use Cython decoder
                 num_rows, num_cols, column_data = cython_decoder.fast_jsonl_decode_columnar(
                     buffer, columns_to_extract, column_types, sample_size
                 )
-                
+
                 # Convert to PyArrow table
                 arrays = []
                 names = []
                 for key in sorted(columns_to_extract):
                     arrays.append(pyarrow.array(column_data[key]))
                     names.append(key)
-                
+
                 if arrays:
                     table = pyarrow.Table.from_arrays(arrays, names=names)
                     if projection:
                         table = post_read_projector(table, projection)
                     return num_rows, num_cols, 0, table
-        
+
         except (ImportError, Exception) as e:
             # Fall back to standard decoder if Cython version fails
             import warnings
+
             warnings.warn(f"Fast JSONL decoder failed, using standard decoder: {e}")
 
     parser = simdjson.Parser()

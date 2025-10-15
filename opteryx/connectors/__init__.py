@@ -270,7 +270,7 @@ def connector_factory(dataset, statistics, **config):
             break
     else:
         # Check if dataset is a file or contains wildcards
-        has_wildcards = any(char in dataset for char in ['*', '?', '['])
+        has_wildcards = any(char in dataset for char in ["*", "?", "["])
         if os.path.isfile(dataset) or has_wildcards:
             from opteryx.connectors import file_connector
 
@@ -286,7 +286,7 @@ def connector_factory(dataset, statistics, **config):
     remove_prefix = connector_entry.pop("remove_prefix", False)
     if prefix and remove_prefix and dataset.startswith(prefix):
         # Remove the prefix. If there's a separator (. or //) after the prefix, skip it too
-        dataset = dataset[len(prefix):]
+        dataset = dataset[len(prefix) :]
         if dataset.startswith(".") or dataset.startswith("//"):
             dataset = dataset[1:] if dataset.startswith(".") else dataset[2:]
 
