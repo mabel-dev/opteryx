@@ -56,7 +56,7 @@ cpdef soundex(char* s):
             else:
                 # Get the soundex code for this character
                 code = soundex_map[c - 65]
-                
+
                 if code != 48:  # Not a vowel/ignored letter
                     # Only add if not the same as previous soundex code
                     if code != prev_code:
