@@ -97,7 +97,7 @@ class GcpCloudStorageConnector(
         if OS_SEP not in self.dataset and "/" not in self.dataset:
             self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
-        
+
         # Check if dataset contains wildcards
         self.has_wildcards = paths.has_wildcards(self.dataset)
         if self.has_wildcards:
@@ -231,9 +231,9 @@ class GcpCloudStorageConnector(
                 name = blob["name"]
                 if not name.endswith(TUPLE_OF_VALID_EXTENSIONS):
                     continue
-                    
+
                 full_path = f"{bucket}/{name}"
-                
+
                 # If we have a wildcard pattern, filter by it
                 if filter_pattern:
                     if paths.match_wildcard(filter_pattern, full_path):

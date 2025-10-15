@@ -136,10 +136,10 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
         if ".." in self.dataset or self.dataset[0] in ("\\", "/", "~"):
             # Don't find any datasets which look like path traversal
             raise DatasetNotFoundError(dataset=self.dataset)
-        
+
         # Check if dataset contains wildcards
-        self.has_wildcards = any(char in self.dataset for char in ['*', '?', '['])
-        
+        self.has_wildcards = any(char in self.dataset for char in ["*", "?", "["])
+
         if self.has_wildcards:
             # Expand wildcards to get list of files
             self.files = self._expand_wildcards(self.dataset)
@@ -150,43 +150,43 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
         else:
             self.files = [self.dataset]
             self.decoder = get_decoder(self.dataset)
-    
+
     def _expand_wildcards(self, pattern: str) -> List[str]:
         """
         Expand wildcard patterns in file paths while preventing path traversal.
-        
+
         Supports wildcards:
         - * matches any number of characters
-        - ? matches a single character  
+        - ? matches a single character
         - [range] matches a range of characters (e.g., [0-9], [a-z])
-        
+
         Args:
             pattern: File path pattern with wildcards
-            
+
         Returns:
             List of matching file paths
         """
         # Additional path traversal check after expansion
         if ".." in pattern:
             raise DatasetNotFoundError(dataset=pattern)
-        
+
         # Use glob to expand the pattern
         matched_files = glob.glob(pattern, recursive=False)
-        
+
         # Filter out any results that might have path traversal
         # This is an extra safety check
         safe_files = []
         for file_path in matched_files:
             if ".." not in file_path and os.path.isfile(file_path):
                 safe_files.append(file_path)
-        
+
         return sorted(safe_files)
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, limit: int = None, **kwargs
     ) -> pyarrow.Table:
         rows_read = 0
-        
+
         # Iterate over all matched files
         for file_path in self.files:
             morsel = read_blob(
@@ -221,7 +221,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
 
         # Use the first file to get the schema
         first_file = self.files[0]
-        
+
         try:
             file_descriptor = os.open(first_file, os.O_RDONLY | os.O_BINARY)
             size = os.path.getsize(first_file)

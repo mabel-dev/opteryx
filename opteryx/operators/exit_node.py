@@ -40,7 +40,7 @@ class ExitNode(BasePlanNode):
         final_names = []
         for column in self.columns:
             final_columns.append(column.schema_column.identity)
-            final_names.append(column.current_name)
+            final_names.append(column.alias)
 
         if len(final_columns) != len(set(final_columns)):  # pragma: no cover
             from collections import Counter
@@ -57,7 +57,7 @@ class ExitNode(BasePlanNode):
                 # if column.schema_column.origin:
                 #    final_names.append(f"{column.schema_column.origin[0]}.{column.current_name}")
                 # else:
-                final_names.append(column.qualified_name)
+                final_names.append(column.alias)
 
         self.final_columns = final_columns
         self.final_names = final_names
