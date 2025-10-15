@@ -656,8 +656,12 @@ def jsonl_decoder(
                 table = post_read_projector(table, projection)
             
             return num_rows, num_cols, 0, table
-        except Exception:
+        except Exception as e:
             # Fall back to traditional decoder if fast decoder fails
+            # This ensures robustness even with unexpected data
+            import warnings
+            warnings.warn(f"Fast JSONL decoder failed, falling back to standard decoder: {e}")
+            pass
             pass
 
     parser = simdjson.Parser()
