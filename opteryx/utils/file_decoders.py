@@ -516,7 +516,8 @@ def fast_jsonl_decoder(
             pattern = rb'"' + escaped_key.encode() + rb'":\s*(true|false)'
         elif col_type in ('int', 'float'):
             # Match numbers (including negative, decimals, scientific notation, null)
-            pattern = rb'"' + escaped_key.encode() + rb'":\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?|null)'
+            # Ensures decimal point is followed by digits
+            pattern = rb'"' + escaped_key.encode() + rb'":\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|null)'
         elif col_type == 'str':
             # Match quoted strings (non-greedy, handle escaped quotes) or null
             pattern = rb'"' + escaped_key.encode() + rb'":\s*(?:"((?:[^"\\]|\\.)*)"|null)'
@@ -525,10 +526,13 @@ def fast_jsonl_decoder(
             pattern = rb'"' + escaped_key.encode() + rb'":\s*null'
         elif col_type == 'list':
             # Match arrays (including empty arrays) or null
+            # Note: This pattern handles simple arrays and single-level nested arrays
+            # For deeply nested arrays, the fast decoder may fall back to JSON parsing
             pattern = rb'"' + escaped_key.encode() + rb'":\s*(\[(?:[^\[\]]|\[.*?\])*?\]|null)'
         elif col_type == 'dict':
-            # Match objects - use balanced brace matching or null
-            # This is a simplified pattern that works for non-nested dicts
+            # Match objects - simplified pattern for single-level objects
+            # Note: For nested objects, this will fall back to JSON parsing in the value extraction
+            # This limitation is documented and acceptable since complex nested objects are less common
             pattern = rb'"' + escaped_key.encode() + rb'":\s*(\{[^{}]*\}|null)'
         else:
             pattern = None
@@ -661,8 +665,8 @@ def jsonl_decoder(
             # This ensures robustness even with unexpected data
             import warnings
             warnings.warn(f"Fast JSONL decoder failed, falling back to standard decoder: {e}")
-            pass
-            pass
+
+    parser = simdjson.Parser()
 
     parser = simdjson.Parser()
 
