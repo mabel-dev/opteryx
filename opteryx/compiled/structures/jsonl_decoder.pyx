@@ -12,13 +12,12 @@ Fast JSONL decoder using Cython for performance-critical operations.
 This decoder uses native C string operations instead of regex for better performance.
 """
 
-from libc.string cimport memchr, strlen, strstr
+from libc.string cimport memchr, strlen, strstr, memcmp
 from libc.stdlib cimport strtod, strtol, atoi
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
 from libc.stdint cimport int64_t
 
 import pyarrow
-from opteryx.third_party.tktech import csimdjson as simdjson
 
 
 cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, const char* key, Py_ssize_t key_len, Py_ssize_t* value_start, Py_ssize_t* value_len):
@@ -37,11 +36,15 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
     cdef char first_char
     cdef int brace_count
     cdef int bracket_count
+    cdef Py_ssize_t remaining
     
     # Search for the key pattern: "key":
     while pos < end:
         # Find opening quote of a key
-        key_pos = <const char*>memchr(pos, b'"', end - pos)
+        remaining = end - pos
+        if remaining <= 0:
+            return NULL
+        key_pos = <const char*>memchr(pos, b'"', <size_t>remaining)
         if key_pos == NULL:
             return NULL
         
@@ -49,7 +52,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
         
         # Check if this matches our key
         if (end - key_pos >= key_len and 
-            memcmp(key_pos, key, key_len) == 0 and
+            memcmp(key_pos, key, <size_t>key_len) == 0 and
             key_pos[key_len] == b'"'):
             
             # Found the key, now find the colon
@@ -71,7 +74,13 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                 quote_start = value_pos + 1
                 quote_end = quote_start
                 while quote_end < end:
-                    if quote_end[0] == b'"' and (quote_end == quote_start or quote_end[-1] != b'\\'):
+                    if quote_end[0] == b'"':
+                        # Check if it's escaped (previous char is backslash)
+                        if quote_end > quote_start and quote_end[-1] == b'\\':
+                            # It's escaped, keep going
+                            quote_end += 1
+                            continue
+                        # Found unescaped quote
                         value_len[0] = (quote_end + 1) - value_pos
                         return value_pos
                     quote_end += 1
@@ -128,7 +137,8 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                 # Number - find end (space, comma, brace, bracket)
                 quote_end = value_pos + 1
                 while quote_end < end:
-                    if quote_end[0] in (b' ', b',', b'}', b']', b'\t', b'\n'):
+                    # Check for delimiter characters
+                    if quote_end[0] == b' ' or quote_end[0] == b',' or quote_end[0] == b'}' or quote_end[0] == b']' or quote_end[0] == b'\t' or quote_end[0] == b'\n':
                         break
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
@@ -137,10 +147,6 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
         pos = key_pos
     
     return NULL
-
-
-cdef extern from "string.h":
-    int memcmp(const void *s1, const void *s2, size_t n)
 
 
 cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_types, Py_ssize_t sample_size=100):
@@ -174,9 +180,9 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef dict result = {}
     cdef Py_ssize_t num_lines = 0
     cdef Py_ssize_t i
-    cdef char* end_ptr
     cdef bytes value_bytes
     cdef str value_str
+    cdef Py_ssize_t remaining
     
     # Initialize column data lists
     for col in column_names:
@@ -186,7 +192,10 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     # Count lines first
     cdef const char* newline_pos = pos
     while newline_pos < end:
-        newline_pos = <const char*>memchr(newline_pos, b'\n', end - newline_pos)
+        remaining = end - newline_pos
+        if remaining <= 0:
+            break
+        newline_pos = <const char*>memchr(newline_pos, b'\n', <size_t>remaining)
         if newline_pos == NULL:
             break
         num_lines += 1
@@ -201,7 +210,10 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     for i in range(num_lines):
         # Find line end
         line_start = pos
-        line_end = <const char*>memchr(line_start, b'\n', end - line_start)
+        remaining = end - line_start
+        if remaining <= 0:
+            break
+        line_end = <const char*>memchr(line_start, b'\n', <size_t>remaining)
         if line_end == NULL:
             line_end = end
         
@@ -226,6 +238,10 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                 result[col].append(None)
                 continue
             
+            # Create a safe bytes object from the C pointer
+            # This is crucial to avoid segfaults when slicing
+            value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+            
             # Parse value based on type
             if col_type == 'bool':
                 if value_len == 4 and memcmp(value_ptr, b"true", 4) == 0:
@@ -239,8 +255,6 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                 if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                     result[col].append(None)
                 else:
-                    # Use strtol for integer parsing
-                    value_bytes = value_ptr[:value_len]
                     try:
                         result[col].append(int(value_bytes))
                     except ValueError:
@@ -250,8 +264,6 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                 if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                     result[col].append(None)
                 else:
-                    # Use strtod for float parsing
-                    value_bytes = value_ptr[:value_len]
                     try:
                         result[col].append(float(value_bytes))
                     except ValueError:
@@ -260,11 +272,12 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             elif col_type == 'str':
                 if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                     result[col].append(None)
-                elif value_ptr[0] == b'"':
+                elif value_ptr[0] == b'"' and value_len >= 2:
                     # String value - extract without quotes
-                    value_bytes = value_ptr[1:value_len-1]
+                    # Safely extract the string content
+                    string_content = PyBytes_FromStringAndSize(value_ptr + 1, value_len - 2)
                     try:
-                        value_str = value_bytes.decode('utf-8')
+                        value_str = string_content.decode('utf-8')
                         # Simple unescape
                         value_str = value_str.replace('\\n', '\n').replace('\\t', '\t').replace('\\"', '"').replace('\\\\', '\\')
                         result[col].append(value_str)
@@ -275,7 +288,6 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             
             else:
                 # For other types (list, dict, null), fall back to Python
-                value_bytes = value_ptr[:value_len]
                 if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
                     result[col].append(None)
                 else:
@@ -293,3 +305,9 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
         pos = line_end + 1 if line_end < end else end
     
     return (num_lines, len(column_names), result)
+
+
+# Declare the C function we need
+cdef extern from "Python.h":
+    bytes PyBytes_FromStringAndSize(const char *v, Py_ssize_t len)
+
