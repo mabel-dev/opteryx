@@ -10,7 +10,7 @@
 Fast JSONL decoder using Cython for performance-critical operations.
 """
 
-from libc.string cimport memchr, memcmp
+from libc.string cimport memcmp
 from libc.stddef cimport size_t
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
@@ -23,17 +23,22 @@ import platform
 cdef extern from "simd_search.h":
     size_t neon_count(const char* data, size_t length, char target)
     size_t avx_count(const char* data, size_t length, char target)
+    int neon_search(const char* data, size_t length, char target)
+    int avx_search(const char* data, size_t length, char target)
 
 
 # Detect architecture at module initialization and select the appropriate SIMD function
 cdef size_t (*simd_count)(const char*, size_t, char)
+cdef int (*simd_search)(const char*, size_t, char)
 
 # Detect CPU architecture once at module load
 _arch = platform.machine().lower()
 if _arch in ('arm64', 'aarch64'):
     simd_count = neon_count
+    simd_search = neon_search
 else:
     simd_count = avx_count
+    simd_search = avx_search
 
 
 cdef enum ColumnType:
@@ -116,6 +121,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
     cdef int bracket_count
     cdef int backslash_run
     cdef Py_ssize_t remaining
+    cdef int quote_offset
 
     # Search for the key pattern: "key":
     while pos < end:
@@ -123,10 +129,13 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
         remaining = end - pos
         if remaining <= 0:
             return NULL
-        key_pos = <const char*>memchr(pos, 34, <size_t>remaining)  # '"'
-        if key_pos == NULL:
+
+        # Use SIMD search to find the quote character
+        quote_offset = simd_search(pos, <size_t>remaining, 34)  # '"'
+        if quote_offset == -1:
             return NULL
 
+        key_pos = pos + quote_offset
         key_pos += 1  # Move past the opening quote
 
         # Check if this matches our key
@@ -274,7 +283,6 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef Py_ssize_t key_len
     cdef str col_type
     cdef dict result = {}
-    cdef Py_ssize_t num_lines
     cdef Py_ssize_t i
     cdef Py_ssize_t num_cols = len(column_names)
     cdef list column_lists = []
@@ -287,10 +295,10 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef bytes value_bytes
     cdef object parsed
     cdef Py_ssize_t remaining
-    cdef const char* newline_pos
     cdef size_t line_count
     cdef size_t estimated_lines
     cdef Py_ssize_t line_index = 0
+    cdef int newline_offset
 
     result = {}
 
@@ -329,21 +337,25 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
 
         # Preallocate column lists
         for i in range(num_cols):
-            col_list = column_lists[i]
-            column_lists[i] = [None] * estimated_lines
+            col_list = [None] * estimated_lines
+            column_lists[i] = col_list
+            col = column_names[i]
+            result[col] = col_list
 
         while pos < end:
             line_start = pos
             remaining = end - line_start
             if remaining <= 0:
                 break
-            newline_pos = <const char*>memchr(line_start, 10, <size_t>remaining)  # '\n'
-            if newline_pos == NULL:
+
+            # Use SIMD search to find newline
+            newline_offset = simd_search(line_start, <size_t>remaining, 10)  # '\n'
+            if newline_offset == -1:
                 line_end = end
                 pos = end
             else:
-                line_end = newline_pos
-                pos = newline_pos + 1
+                line_end = line_start + newline_offset
+                pos = line_end + 1
 
             line_len = line_end - line_start
             # num_lines += 1  # Removed, using line_index instead
@@ -365,7 +377,11 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                     # Already None
                     continue
 
-                if type_code == COL_BOOL:
+                if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
+                    # Already None
+                    continue
+
+                elif type_code == COL_BOOL:
                     if value_len == 4 and memcmp(value_ptr, b"true", 4) == 0:
                         col_list[line_index] = True
                     elif value_len == 5 and memcmp(value_ptr, b"false", 5) == 0:
@@ -373,55 +389,38 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                     # else already None
 
                 elif type_code == COL_INT:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        # Already None
-                        pass
-                    else:
-                        col_list[line_index] = fast_atoll(value_ptr, value_len)
+                    col_list[line_index] = fast_atoll(value_ptr, value_len)
 
                 elif type_code == COL_FLOAT:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        # Already None
-                        pass
-                    else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        col_list[line_index] = c_parse_fast_float(value_bytes)
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    col_list[line_index] = c_parse_fast_float(value_bytes)
 
                 elif type_code == COL_STR:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    try:
+                        parsed = json.loads(value_bytes)
+                        if isinstance(parsed, str):
+                            col_list[line_index] = parsed
+                        # else already None
+                    except (json.JSONDecodeError, UnicodeDecodeError):
                         # Already None
                         pass
-                    else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        try:
-                            parsed = json.loads(value_bytes)
-                            if isinstance(parsed, str):
-                                col_list[line_index] = parsed
-                            # else already None
-                        except (json.JSONDecodeError, UnicodeDecodeError):
-                            # Already None
-                            pass
 
                 else:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    try:
+                        parsed = json.loads(value_bytes)
+                        if isinstance(parsed, dict):
+                            col_list[line_index] = json.dumps(parsed)
+                        else:
+                            col_list[line_index] = parsed
+                    except (json.JSONDecodeError, UnicodeDecodeError):
                         # Already None
                         pass
-                    else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        try:
-                            parsed = json.loads(value_bytes)
-                            if isinstance(parsed, dict):
-                                col_list[line_index] = json.dumps(parsed)
-                            else:
-                                col_list[line_index] = parsed
-                        except (json.JSONDecodeError, UnicodeDecodeError):
-                            # Already None
-                            pass
 
             line_index += 1
 
-        num_lines = line_index
-        return (num_lines, num_cols, result)
+        return (estimated_lines, num_cols, result)
     finally:
         if type_codes != NULL:
             PyMem_Free(type_codes)
