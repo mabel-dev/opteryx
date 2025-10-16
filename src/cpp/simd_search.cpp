@@ -1,6 +1,7 @@
 #include "simd_search.h"
 #include <cstdint>
 #include <vector>
+#include <cstring>
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
