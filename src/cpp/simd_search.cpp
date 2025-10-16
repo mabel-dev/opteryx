@@ -5,6 +5,8 @@
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
+#elif defined(__AVX2__)
+#include <immintrin.h>
 #endif
 
 // SIMD substring search (up to 16 bytes pattern)
