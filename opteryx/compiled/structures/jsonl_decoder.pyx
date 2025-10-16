@@ -10,7 +10,7 @@
 Fast JSONL decoder using Cython for performance-critical operations.
 """
 
-from libc.string cimport memchr, memcmp
+from libc.string cimport memcmp
 from libc.stddef cimport size_t
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_GET_SIZE
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
@@ -18,6 +18,27 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from opteryx.third_party.fastfloat.fast_float cimport c_parse_fast_float
 
 import orjson as json
+import platform
+
+cdef extern from "simd_search.h":
+    size_t neon_count(const char* data, size_t length, char target)
+    size_t avx_count(const char* data, size_t length, char target)
+    int neon_search(const char* data, size_t length, char target)
+    int avx_search(const char* data, size_t length, char target)
+
+
+# Detect architecture at module initialization and select the appropriate SIMD function
+cdef size_t (*simd_count)(const char*, size_t, char)
+cdef int (*simd_search)(const char*, size_t, char)
+
+# Detect CPU architecture once at module load
+_arch = platform.machine().lower()
+if _arch in ('arm64', 'aarch64'):
+    simd_count = neon_count
+    simd_search = neon_search
+else:
+    simd_count = avx_count
+    simd_search = avx_search
 
 
 cdef enum ColumnType:
@@ -100,6 +121,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
     cdef int bracket_count
     cdef int backslash_run
     cdef Py_ssize_t remaining
+    cdef int quote_offset
 
     # Search for the key pattern: "key":
     while pos < end:
@@ -107,20 +129,22 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
         remaining = end - pos
         if remaining <= 0:
             return NULL
-        key_pos = <const char*>memchr(pos, b'"', <size_t>remaining)
-        if key_pos == NULL:
+
+        # Use SIMD search to find the quote character
+        quote_offset = simd_search(pos, <size_t>remaining, 34)  # '"'
+        if quote_offset == -1:
             return NULL
 
+        key_pos = pos + quote_offset
         key_pos += 1  # Move past the opening quote
 
         # Check if this matches our key
-        if (end - key_pos >= key_len and memcmp(key_pos, key, <size_t>key_len) == 0 and key_pos[key_len] == b'"'):
-
+        if (end - key_pos >= key_len and memcmp(key_pos, key, <size_t>key_len) == 0 and key_pos[key_len] == 34):  # '"'
             # Found the key, now find the colon
             value_pos = key_pos + key_len + 1  # Skip closing quote
 
             # Skip whitespace and colon
-            while value_pos < end and (value_pos[0] == b' ' or value_pos[0] == b'\t' or value_pos[0] == b':'):
+            while value_pos < end and (value_pos[0] == 32 or value_pos[0] == 9 or value_pos[0] == 58):  # ' ', '\t', ':'
                 value_pos += 1
 
             if value_pos >= end:
@@ -130,16 +154,16 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
             value_start[0] = value_pos - line
 
             # Determine value type and find end
-            if first_char == b'"':
+            if first_char == 34:  # '"'
                 # String value - find closing quote, handling escapes
                 quote_start = value_pos + 1
                 quote_end = quote_start
                 backslash_run = 0
                 while quote_end < end:
-                    if quote_end[0] == b'\\':
+                    if quote_end[0] == 92:  # '\\'
                         backslash_run += 1
                     else:
-                        if quote_end[0] == b'"' and (backslash_run & 1) == 0:
+                        if quote_end[0] == 34 and (backslash_run & 1) == 0:  # '"'
                             # Found unescaped quote
                             value_len[0] = (quote_end + 1) - value_pos
                             return value_pos
@@ -147,67 +171,67 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                     quote_end += 1
                 return NULL
 
-            elif first_char == b'{':
+            elif first_char == 123:  # '{'
                 # Object - count braces
                 brace_count = 1
                 quote_end = value_pos + 1
                 while quote_end < end and brace_count > 0:
-                    if quote_end[0] == b'{':
+                    if quote_end[0] == 123:  # '{'
                         brace_count += 1
-                    elif quote_end[0] == b'}':
+                    elif quote_end[0] == 125:  # '}'
                         brace_count -= 1
-                    elif quote_end[0] == b'"':
+                    elif quote_end[0] == 34:  # '"'
                         # Skip string contents to avoid premature brace counting
                         quote_end += 1
                         while quote_end < end:
-                            if quote_end[0] == b'\\':
+                            if quote_end[0] == 92:  # '\'
                                 quote_end += 2
                                 continue
-                            if quote_end[0] == b'"':
+                            if quote_end[0] == 34:  # '"'
                                 break
                             quote_end += 1
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
                 return value_pos
 
-            elif first_char == b'[':
+            elif first_char == 91:  # '['
                 # Array - count brackets
                 bracket_count = 1
                 quote_end = value_pos + 1
                 while quote_end < end and bracket_count > 0:
-                    if quote_end[0] == b'[':
+                    if quote_end[0] == 91:  # '['
                         bracket_count += 1
-                    elif quote_end[0] == b']':
+                    elif quote_end[0] == 93:  # ']'
                         bracket_count -= 1
-                    elif quote_end[0] == b'"':
+                    elif quote_end[0] == 34:  # '"'
                         # Skip string contents inside arrays
                         quote_end += 1
                         while quote_end < end:
-                            if quote_end[0] == b'\\':
+                            if quote_end[0] == 92:
                                 quote_end += 2
                                 continue
-                            if quote_end[0] == b'"':
+                            if quote_end[0] == 34:  # '"'
                                 break
                             quote_end += 1
                     quote_end += 1
                 value_len[0] = quote_end - value_pos
                 return value_pos
 
-            elif first_char == b'n':
+            elif first_char == 110:  # 'n'
                 # null
                 if end - value_pos >= 4 and memcmp(value_pos, b"null", 4) == 0:
                     value_len[0] = 4
                     return value_pos
                 return NULL
 
-            elif first_char == b't':
+            elif first_char == 116:  # 't'
                 # true
                 if end - value_pos >= 4 and memcmp(value_pos, b"true", 4) == 0:
                     value_len[0] = 4
                     return value_pos
                 return NULL
 
-            elif first_char == b'f':
+            elif first_char == 102:  # 'f'
                 # false
                 if end - value_pos >= 5 and memcmp(value_pos, b"false", 5) == 0:
                     value_len[0] = 5
@@ -219,7 +243,7 @@ cdef inline const char* find_key_value(const char* line, Py_ssize_t line_len, co
                 quote_end = value_pos + 1
                 while quote_end < end:
                     # Check for delimiter characters
-                    if quote_end[0] == b' ' or quote_end[0] == b',' or quote_end[0] == b'}' or quote_end[0] == b']' or quote_end[0] == b'\t' or quote_end[0] == b'\n':
+                    if quote_end[0] == 32 or quote_end[0] == 44 or quote_end[0] == 125 or quote_end[0] == 93 or quote_end[0] == 9 or quote_end[0] == 10:  # ' ', ',', '}', ']', '\t', '\n'
                         value_len[0] = quote_end - value_pos
                         return value_pos
                     quote_end += 1
@@ -259,7 +283,6 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef Py_ssize_t key_len
     cdef str col_type
     cdef dict result = {}
-    cdef Py_ssize_t num_lines = 0
     cdef Py_ssize_t i
     cdef Py_ssize_t num_cols = len(column_names)
     cdef list column_lists = []
@@ -270,10 +293,12 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
     cdef int type_code
     cdef list col_list
     cdef bytes value_bytes
-    cdef str value_str
     cdef object parsed
     cdef Py_ssize_t remaining
-    cdef const char* newline_pos
+    cdef size_t line_count
+    cdef size_t estimated_lines
+    cdef Py_ssize_t line_index = 0
+    cdef int newline_offset
 
     result = {}
 
@@ -303,25 +328,41 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
             col_type = column_types.get(col, 'str')
             type_codes[i] = _column_type_code(col_type)
 
+        # Pre-count lines to preallocate arrays (using architecture-appropriate SIMD function)
+        line_count = simd_count(data, data_len, 10)  # Count '\n' (ASCII 10)
+        if data_len > 0 and data[data_len - 1] != 10:  # Doesn't end with '\n'
+            estimated_lines = line_count + 1
+        else:
+            estimated_lines = line_count
+
+        # Preallocate column lists
+        for i in range(num_cols):
+            col_list = [None] * estimated_lines
+            column_lists[i] = col_list
+            col = column_names[i]
+            result[col] = col_list
+
         while pos < end:
             line_start = pos
             remaining = end - line_start
             if remaining <= 0:
                 break
-            newline_pos = <const char*>memchr(line_start, b'\n', <size_t>remaining)
-            if newline_pos == NULL:
+
+            # Use SIMD search to find newline
+            newline_offset = simd_search(line_start, <size_t>remaining, 10)  # '\n'
+            if newline_offset == -1:
                 line_end = end
                 pos = end
             else:
-                line_end = newline_pos
-                pos = newline_pos + 1
+                line_end = line_start + newline_offset
+                pos = line_end + 1
 
             line_len = line_end - line_start
-            num_lines += 1
+            # num_lines += 1  # Removed, using line_index instead
 
             if line_len == 0:
-                for i in range(num_cols):
-                    (<list>column_lists[i]).append(None)
+                # Already pre-filled with None
+                line_index += 1
                 continue
 
             for i in range(num_cols):
@@ -333,59 +374,53 @@ cpdef fast_jsonl_decode_columnar(bytes buffer, list column_names, dict column_ty
                 value_ptr = find_key_value(line_start, line_len, key_ptr, key_len, &value_start, &value_len)
 
                 if value_ptr == NULL:
-                    col_list.append(None)
+                    # Already None
                     continue
 
-                if type_code == COL_BOOL:
+                if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
+                    # Already None
+                    continue
+
+                elif type_code == COL_BOOL:
                     if value_len == 4 and memcmp(value_ptr, b"true", 4) == 0:
-                        col_list.append(True)
+                        col_list[line_index] = True
                     elif value_len == 5 and memcmp(value_ptr, b"false", 5) == 0:
-                        col_list.append(False)
-                    else:
-                        col_list.append(None)
+                        col_list[line_index] = False
+                    # else already None
 
                 elif type_code == COL_INT:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        col_list.append(None)
-                    else:
-                        col_list.append(fast_atoll(value_ptr, value_len))
+                    col_list[line_index] = fast_atoll(value_ptr, value_len)
 
                 elif type_code == COL_FLOAT:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        col_list.append(None)
-                    else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        col_list.append(c_parse_fast_float(value_bytes))
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    col_list[line_index] = c_parse_fast_float(value_bytes)
 
                 elif type_code == COL_STR:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        col_list.append(None)
-                    elif value_ptr[0] == b'"' and value_len >= 2:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr + 1, value_len - 2)
-                        try:
-                            value_str = value_bytes.decode('utf-8')
-                            value_str = value_str.replace('\\n', '\n').replace('\\t', '\t').replace('\\"', '"').replace('\\\\', '\\')
-                            col_list.append(value_str)
-                        except UnicodeDecodeError:
-                            col_list.append(None)
-                    else:
-                        col_list.append(None)
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    try:
+                        parsed = json.loads(value_bytes)
+                        if isinstance(parsed, str):
+                            col_list[line_index] = parsed
+                        # else already None
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        # Already None
+                        pass
 
                 else:
-                    if value_len == 4 and memcmp(value_ptr, b"null", 4) == 0:
-                        col_list.append(None)
-                    else:
-                        value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
-                        try:
-                            parsed = json.loads(value_bytes)
-                            if isinstance(parsed, dict):
-                                col_list.append(json.dumps(parsed))
-                            else:
-                                col_list.append(parsed)
-                        except (json.JSONDecodeError, UnicodeDecodeError):
-                            col_list.append(None)
+                    value_bytes = PyBytes_FromStringAndSize(value_ptr, value_len)
+                    try:
+                        parsed = json.loads(value_bytes)
+                        if isinstance(parsed, dict):
+                            col_list[line_index] = json.dumps(parsed)
+                        else:
+                            col_list[line_index] = parsed
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        # Already None
+                        pass
 
-        return (num_lines, num_cols, result)
+            line_index += 1
+
+        return (estimated_lines, num_cols, result)
     finally:
         if type_codes != NULL:
             PyMem_Free(type_codes)
