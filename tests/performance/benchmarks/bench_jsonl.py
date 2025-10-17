@@ -107,6 +107,90 @@ def benchmark_pure_python(buffer, column_names, column_types, iterations=5):
     }
 
 
+def benchmark_pyarrow(buffer, column_names, column_types, iterations=5):
+    """Benchmark reading JSONL via pyarrow from an in-memory bytes buffer.
+
+    The function attempts to import pyarrow and uses a BufferReader so the
+    JSONL data is read from memory rather than disk. If pyarrow is not
+    available the function returns an object with mean=None and an error
+    string in 'error'.
+    """
+    # column_types is accepted for API parity but not used by pyarrow reader
+    _ = column_types
+
+    try:
+        import pyarrow as pa
+        import pyarrow.json as paj
+    except ImportError as e:
+        return {
+            'mean': None,
+            'min': None,
+            'max': None,
+            'result': None,
+            'error': str(e)
+        }
+
+    times = []
+    table = None
+    for _ in range(iterations):
+        start = time.perf_counter()
+        # Use a BufferReader so pyarrow reads from memory
+        buf = pa.py_buffer(buffer)
+        reader = pa.BufferReader(buf)
+        # Read JSON (JSON Lines) into a pyarrow Table
+        table = paj.read_json(reader)
+        end = time.perf_counter()
+        times.append(end - start)
+
+    mean = sum(times) / len(times)
+    num_rows = None
+    # table.num_rows should exist for a pyarrow.Table, but be defensive
+    if hasattr(table, 'num_rows'):
+        num_rows = table.num_rows
+    else:
+        try:
+            num_rows = len(table)
+        except TypeError:
+            num_rows = None
+
+    return {
+        'mean': mean,
+        'min': min(times),
+        'max': max(times),
+        'result': (num_rows, len(column_names), table),
+        'error': None
+    }
+
+
+def print_benchmark_table(rows):
+    """Print a compact table of benchmark rows.
+
+    Each row is a dict with keys: impl, mean_ms, min_ms, max_ms, throughput, lines, (optional) error
+    """
+    # Determine column widths
+    impl_w = max(len(r['impl']) for r in rows) + 2
+    mean_w = 12
+    min_w = 12
+    max_w = 12
+    thr_w = 12
+    lines_w = 8
+
+    header = f"{'Impl'.ljust(impl_w)} {'Mean (ms)'.rjust(mean_w)} {'Min (ms)'.rjust(min_w)} {'Max (ms)'.rjust(max_w)} {'MB/s'.rjust(thr_w)} {'Lines'.rjust(lines_w)}"
+    print('\n' + header)
+    print('-' * (impl_w + mean_w + min_w + max_w + thr_w + lines_w + 10))
+
+    for r in rows:
+        mean = f"{r['mean_ms']:.2f}" if r.get('mean_ms') is not None else 'n/a'
+        minv = f"{r['min_ms']:.2f}" if r.get('min_ms') is not None else 'n/a'
+        maxv = f"{r['max_ms']:.2f}" if r.get('max_ms') is not None else 'n/a'
+        thr = f"{r['throughput']:.2f}" if r.get('throughput') is not None else 'n/a'
+        lines = str(r.get('lines')) if r.get('lines') is not None else 'n/a'
+        print(f"{r['impl'].ljust(impl_w)} {mean.rjust(mean_w)} {minv.rjust(min_w)} {maxv.rjust(max_w)} {thr.rjust(thr_w)} {lines.rjust(lines_w)}")
+        if r.get('error'):
+            print(f"{'':{impl_w}} Error: {r.get('error')}")
+
+
+
 def run_benchmarks():
     """Run comprehensive benchmarks on JSONL decoder."""
     print("=" * 80)
@@ -148,35 +232,80 @@ def run_benchmarks():
             'score': 'float',
         }
         
-        # Benchmark Cython implementation (memchr)
-        print("\nCython Implementation (memchr):")
+        # Run benchmarks for this config
         cython_result = benchmark_current_decoder(buffer, column_names, column_types)
-        print(f"  Mean time: {cython_result['mean']*1000:.2f} ms")
-        print(f"  Min time:  {cython_result['min']*1000:.2f} ms")
-        print(f"  Max time:  {cython_result['max']*1000:.2f} ms")
-        print(f"  Throughput: {data_size_mb/cython_result['mean']:.2f} MB/s")
-        print(f"  Lines processed: {cython_result['result'][0]}")
-        
-        # Benchmark pure Python implementation
-        print("\nPure Python (json.loads):")
         python_result = benchmark_pure_python(buffer, column_names, column_types)
-        print(f"  Mean time: {python_result['mean']*1000:.2f} ms")
-        print(f"  Min time:  {python_result['min']*1000:.2f} ms")
-        print(f"  Max time:  {python_result['max']*1000:.2f} ms")
-        print(f"  Throughput: {data_size_mb/python_result['mean']:.2f} MB/s")
-        print(f"  Lines processed: {python_result['result'][0]}")
-        
-        # Calculate speedups
-        speedup_vs_cython = python_result['mean'] / cython_result['mean']
-        print(f"Cython vs Pure Python: {speedup_vs_cython:.2f}x faster")
-        
-        # Verify results match
-        cython_lines = cython_result['result'][0]
-        python_lines = python_result['result'][0]
-        if cython_lines == python_lines:
-            print("✓ Results verified: all line counts match")
+        pyarrow_result = benchmark_pyarrow(buffer, column_names, column_types)
+
+        # Prepare rows for a neat table of results
+        rows = []
+
+        def _safe_lines(res):
+            try:
+                return res['result'][0] if res and res.get('result') is not None else None
+            except (KeyError, TypeError, IndexError):
+                return None
+
+        rows.append({
+            'impl': 'Cython (memchr)',
+            'mean_ms': cython_result['mean'] * 1000 if cython_result.get('mean') is not None else None,
+            'min_ms': cython_result.get('min') * 1000 if cython_result.get('min') is not None else None,
+            'max_ms': cython_result.get('max') * 1000 if cython_result.get('max') is not None else None,
+            'throughput': (data_size_mb / cython_result['mean']) if cython_result.get('mean') else None,
+            'lines': _safe_lines(cython_result)
+        })
+
+        rows.append({
+            'impl': 'Pure Python',
+            'mean_ms': python_result['mean'] * 1000 if python_result.get('mean') is not None else None,
+            'min_ms': python_result.get('min') * 1000 if python_result.get('min') is not None else None,
+            'max_ms': python_result.get('max') * 1000 if python_result.get('max') is not None else None,
+            'throughput': (data_size_mb / python_result['mean']) if python_result.get('mean') else None,
+            'lines': _safe_lines(python_result)
+        })
+
+        rows.append({
+            'impl': 'PyArrow',
+            'mean_ms': pyarrow_result['mean'] * 1000 if pyarrow_result.get('mean') is not None else None,
+            'min_ms': pyarrow_result.get('min') * 1000 if pyarrow_result.get('min') is not None else None,
+            'max_ms': pyarrow_result.get('max') * 1000 if pyarrow_result.get('max') is not None else None,
+            'throughput': (data_size_mb / pyarrow_result['mean']) if pyarrow_result.get('mean') else None,
+            'lines': _safe_lines(pyarrow_result),
+            'error': pyarrow_result.get('error')
+        })
+
+        # Print a compact table for this config
+        print_benchmark_table(rows)
+
+        # Verify results match (line counts)
+        cython_lines = rows[0]['lines']
+        python_lines = rows[1]['lines']
+        pyarrow_lines = rows[2]['lines']
+        if cython_lines is not None and python_lines is not None and pyarrow_lines is not None:
+            if cython_lines == python_lines == pyarrow_lines:
+                print("✓ Results verified across all implementations")
+            else:
+                print(f"✗ Warning: mismatch across implementations (memchr: {cython_lines}, Python: {python_lines}, PyArrow: {pyarrow_lines})")
+
+        # Benchmark pyarrow (in-memory)
+        print("\nPyArrow (in-memory JSONL):")
+        pyarrow_result = benchmark_pyarrow(buffer, column_names, column_types)
+        if pyarrow_result.get('mean') is None:
+            print(f"  Skipped pyarrow: {pyarrow_result.get('error')}")
         else:
-            print(f"✗ Warning: line count mismatch (memchr: {cython_lines}, Python: {python_lines})")
+            print(f"  Mean time: {pyarrow_result['mean']*1000:.2f} ms")
+            print(f"  Min time:  {pyarrow_result['min']*1000:.2f} ms")
+            print(f"  Max time:  {pyarrow_result['max']*1000:.2f} ms")
+            print(f"  Throughput: {data_size_mb/pyarrow_result['mean']:.2f} MB/s")
+            pyarrow_lines = pyarrow_result['result'][0]
+            print(f"  Rows read (pyarrow): {pyarrow_lines}")
+
+            # Compare pyarrow line counts to others when available
+            if pyarrow_lines is not None:
+                if cython_lines == pyarrow_lines == python_lines:
+                    print("✓ Results verified across Cython, Python and PyArrow")
+                else:
+                    print(f"✗ Warning: mismatch across implementations (memchr: {cython_lines}, Python: {python_lines}, PyArrow: {pyarrow_lines})")
     
     print("\n" + "=" * 80)
     print("Benchmark Complete")

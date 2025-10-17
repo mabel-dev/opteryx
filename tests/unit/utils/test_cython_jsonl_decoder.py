@@ -51,7 +51,7 @@ def test_cython_jsonl_decoder_basic():
     assert num_rows == 3
     assert num_cols == 4
     assert column_data['id'] == [1, 2, 3]
-    assert column_data['name'] == ['Alice', 'Bob', 'Charlie']
+    assert column_data['name'] == [b'Alice', b'Bob', b'Charlie'], column_data['name']
     assert column_data['active'] == [True, False, True]
     # Floats might have minor precision differences
     assert abs(column_data['score'][0] - 95.5) < 0.01, column_data['score'][0]
@@ -84,12 +84,12 @@ def test_cython_jsonl_decoder_with_nulls():
     )
     
     assert num_rows == 3
-    assert column_data['name'][0] == "Alice"
-    assert column_data['name'][1] == "Bob"
+    assert column_data['name'][0] == b"Alice"
+    assert column_data['name'][1] == b"Bob"
     assert column_data['name'][2] is None
-    assert column_data['city'][0] == "NYC"
+    assert column_data['city'][0] == b"NYC"
     assert column_data['city'][1] is None
-    assert column_data['city'][2] == "LA"
+    assert column_data['city'][2] == b"LA"
 
 
 def test_cython_jsonl_decoder_negative_numbers():

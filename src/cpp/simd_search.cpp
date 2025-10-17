@@ -305,3 +305,122 @@ size_t avx_count(const char* data, size_t length, char target) {
     return count;
 }
 #endif
+
+// NEON delimiter search for ARM
+// Delimiters: space (32), comma (44), '}' (125), tab (9)
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+int neon_find_delimiter(const char* data, size_t length) {
+    size_t i = 0;
+    
+    // Create comparison vectors for all delimiters
+    uint8x16_t space_vec = vdupq_n_u8(32);   // ' '
+    uint8x16_t comma_vec = vdupq_n_u8(44);   // ','
+    uint8x16_t brace_vec = vdupq_n_u8(125);  // '}'
+    uint8x16_t tab_vec = vdupq_n_u8(9);      // '\t'
+    
+    for (; i + 16 <= length; i += 16) {
+        // Load 16 bytes
+        uint8x16_t chunk = vld1q_u8(reinterpret_cast<const uint8_t*>(data + i));
+        
+        // Compare with all delimiters
+        uint8x16_t cmp_space = vceqq_u8(chunk, space_vec);
+        uint8x16_t cmp_comma = vceqq_u8(chunk, comma_vec);
+        uint8x16_t cmp_brace = vceqq_u8(chunk, brace_vec);
+        uint8x16_t cmp_tab = vceqq_u8(chunk, tab_vec);
+        
+        // OR all comparisons together
+        uint8x16_t result = vorrq_u8(cmp_space, cmp_comma);
+        result = vorrq_u8(result, cmp_brace);
+        result = vorrq_u8(result, cmp_tab);
+        
+        // Check if any match found
+        uint8_t mask[16];
+        vst1q_u8(mask, result);
+        for (int j = 0; j < 16; j++) {
+            if (mask[j] == 0xFF) {
+                return static_cast<int>(i + j);
+            }
+        }
+    }
+    
+    // Process any leftover bytes
+    for (; i < length; i++) {
+        char c = data[i];
+        if (c == 32 || c == 44 || c == 125 || c == 9) {
+            return static_cast<int>(i);
+        }
+    }
+    
+    return -1;
+}
+#else
+// Fallback scalar implementation if NEON is not available
+int neon_find_delimiter(const char* data, size_t length) {
+    for (size_t i = 0; i < length; i++) {
+        char c = data[i];
+        if (c == 32 || c == 44 || c == 125 || c == 9) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+#endif
+
+// AVX2 delimiter search for x86
+// Delimiters: space (32), comma (44), '}' (125), tab (9)
+#ifdef __AVX2__
+int avx_find_delimiter(const char* data, size_t length) {
+    size_t i = 0;
+    
+    // Create comparison vectors for all delimiters
+    __m256i space_vec = _mm256_set1_epi8(32);   // ' '
+    __m256i comma_vec = _mm256_set1_epi8(44);   // ','
+    __m256i brace_vec = _mm256_set1_epi8(125);  // '}'
+    __m256i tab_vec = _mm256_set1_epi8(9);      // '\t'
+    
+    for (; i + 32 <= length; i += 32) {
+        // Load 32 bytes
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(data + i));
+        
+        // Compare with all delimiters
+        __m256i cmp_space = _mm256_cmpeq_epi8(chunk, space_vec);
+        __m256i cmp_comma = _mm256_cmpeq_epi8(chunk, comma_vec);
+        __m256i cmp_brace = _mm256_cmpeq_epi8(chunk, brace_vec);
+        __m256i cmp_tab = _mm256_cmpeq_epi8(chunk, tab_vec);
+        
+        // OR all comparisons together
+        __m256i result = _mm256_or_si256(cmp_space, cmp_comma);
+        result = _mm256_or_si256(result, cmp_brace);
+        result = _mm256_or_si256(result, cmp_tab);
+        
+        // Get mask of matching bytes
+        int mask = _mm256_movemask_epi8(result);
+        if (mask != 0) {
+            // Find the first set bit
+            int offset = __builtin_ctz(mask);
+            return static_cast<int>(i + offset);
+        }
+    }
+    
+    // Process remaining bytes
+    for (; i < length; i++) {
+        char c = data[i];
+        if (c == 32 || c == 44 || c == 125 || c == 9) {
+            return static_cast<int>(i);
+        }
+    }
+    
+    return -1;
+}
+#else
+// Fallback scalar implementation if AVX2 is not available
+int avx_find_delimiter(const char* data, size_t length) {
+    for (size_t i = 0; i < length; i++) {
+        char c = data[i];
+        if (c == 32 || c == 44 || c == 125 || c == 9) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+#endif
