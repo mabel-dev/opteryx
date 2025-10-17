@@ -113,6 +113,9 @@ cdef inline void extract_all_values(
     cdef int quote_offset
     cdef int i
     cdef int found_count = 0
+    cdef int key_matched = 0
+    cdef const char* dummy_ptr
+    cdef Py_ssize_t dummy_len
 
     while pos < end and found_count < num_cols:
         # Find opening quote for key
@@ -137,6 +140,7 @@ cdef inline void extract_all_values(
 
         # Check if this key matches any of our columns
         key_len = quote_offset
+        key_matched = 0
         for i in range(num_cols):
             if not found_flags[i] and key_lengths[i] == key_len:
                 if memcmp(key_start, key_ptrs[i], <size_t>key_len) == 0:
@@ -156,9 +160,27 @@ cdef inline void extract_all_values(
                     if extract_value(value_start, end - value_start, &value_ptrs[i], &value_lens[i]):
                         found_flags[i] = 1
                         found_count += 1
+                        # Advance position past the extracted value
+                        pos = value_start + value_lens[i]
+                        key_matched = 1
                     break
 
-        pos = key_start + key_len + 1
+        # If key didn't match any requested columns, skip over its value
+        if not key_matched:
+            value_start = key_start + key_len + 1  # Skip closing quote of key
+
+            # Skip whitespace and colon
+            while value_start < end and (value_start[0] in (32, 9, 13, 58)):
+                value_start += 1
+
+            if value_start < end:
+                # Extract (and discard) the value to advance position correctly
+                if extract_value(value_start, end - value_start, &dummy_ptr, &dummy_len):
+                    pos = value_start + dummy_len
+                else:
+                    pos = key_start + key_len + 1
+            else:
+                pos = key_start + key_len + 1
 
 cdef inline int extract_value(
         const char* value_start, Py_ssize_t remaining,
