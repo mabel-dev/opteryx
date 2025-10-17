@@ -51,6 +51,20 @@ size_t neon_count(const char* data, size_t length, char target);
  */
 size_t avx_count(const char* data, size_t length, char target);
 
+/**
+ * Find the first occurrence of any JSON delimiter using NEON.
+ * Delimiters: space (32), comma (44), '}' (125), ']' (93), tab (9), newline (10).
+ * Returns the index of the first delimiter or -1 if not found.
+ */
+int neon_find_delimiter(const char* data, size_t length);
+
+/**
+ * Find the first occurrence of any JSON delimiter using AVX2.
+ * Delimiters: space (32), comma (44), '}' (125), ']' (93), tab (9), newline (10).
+ * Returns the index of the first delimiter or -1 if not found.
+ */
+int avx_find_delimiter(const char* data, size_t length);
+
 #ifdef __cplusplus
 }
 #endif
