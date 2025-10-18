@@ -44,11 +44,17 @@ def check_rust_availability():  # pragma: no cover
     Raises:
         SystemExit: If Rust is not available with a helpful error message
     """
-    # Check environment variables first
-    rustc_path = os.environ.get("RUSTC") or shutil.which("rustc")
-    cargo_path = os.environ.get("CARGO") or shutil.which("cargo")
+    # Check environment variables first, treating empty strings as None
+    rustc_path = os.environ.get("RUSTC") or None
+    cargo_path = os.environ.get("CARGO") or None
     
-    # Validate that paths exist if provided via environment variables
+    # If not set via environment, check PATH
+    if not rustc_path:
+        rustc_path = shutil.which("rustc")
+    if not cargo_path:
+        cargo_path = shutil.which("cargo")
+    
+    # Validate that paths exist if provided
     if rustc_path and not os.path.isfile(rustc_path):
         print(f"\033[38;2;255;208;0mWarning:\033[0m RUSTC environment variable points to non-existent file: {rustc_path}", file=sys.stderr)
         rustc_path = None
@@ -112,15 +118,15 @@ Opteryx requires the Rust compiler (rustc) and Cargo to build native extensions.
         print(f"\033[38;2;139;233;253mFound Rust toolchain:\033[0m {rust_version}")
         print(f"\033[38;2;139;233;253mrustc path:\033[0m {rustc_path}")
         print(f"\033[38;2;139;233;253mcargo path:\033[0m {cargo_path}")
-    except subprocess.CalledProcessError:
-        pass
+    except (subprocess.CalledProcessError, OSError) as e:
+        # If we can't run rustc --version, the path might not be a valid rustc binary
+        print(f"\033[38;2;255;208;0mWarning:\033[0m Could not verify Rust installation at {rustc_path}: {e}", file=sys.stderr)
     
     # Create environment dict with explicit paths
-    rust_env = {}
-    if rustc_path:
-        rust_env["RUSTC"] = rustc_path
-    if cargo_path:
-        rust_env["CARGO"] = cargo_path
+    rust_env = {
+        "RUSTC": rustc_path,
+        "CARGO": cargo_path,
+    }
     
     return rustc_path, cargo_path, rust_env
 
