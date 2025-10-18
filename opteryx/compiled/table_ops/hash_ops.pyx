@@ -10,7 +10,7 @@ import pyarrow
 
 from libc.stdint cimport int32_t, uint8_t, uint64_t, uintptr_t
 from cpython.object cimport PyObject_Hash
-from cpython.bytes cimport PyBytes_AsString, PyBytes_Size
+from libc.string cimport memcpy
 import array
 
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
@@ -117,6 +117,7 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
     cdef Py_ssize_t byte_index
     cdef Py_ssize_t bit_index
     cdef uint64_t hash_val
+    cdef uint64_t tmp_val
     cdef list buffers = chunk.buffers()
     cdef object validity_buf = buffers[0]
     cdef object data_buf = buffers[1]
@@ -133,7 +134,9 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
     if validity is NULL:
         if item_size == 8:
             for i in range(length):
-                hash_val = (<uint64_t*>(data + ((arr_offset + i) << 3)))[0]
+                # Safe load into local to avoid unaligned access
+                memcpy(&tmp_val, data + ((arr_offset + i) << 3), 8)
+                hash_val = tmp_val
                 update_row_hash(row_hashes, row_offset + i, hash_val)
         else:
             for i in range(length):
@@ -148,7 +151,8 @@ cdef void process_primitive_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssi
                 if not (validity[byte_index] & (1 << bit_index)):
                     hash_val = NULL_HASH
                 else:
-                    hash_val = (<uint64_t*>(data + ((arr_offset + i) << 3)))[0]
+                    memcpy(&tmp_val, data + ((arr_offset + i) << 3), 8)
+                    hash_val = tmp_val
                 update_row_hash(row_hashes, row_offset + i, hash_val)
         else:
             for i in range(length):
@@ -169,70 +173,163 @@ cdef void process_list_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t 
     combining each sub-element's hash, and mixing it into `row_hashes`.
     """
 
+    # New buffer-aware fast paths for primitive and string child types
+    # Declare all C variables at function scope (Cython requirement)
     cdef:
-        const uint8_t* validity
-        const int32_t* offsets
-        Py_ssize_t i, j, length, data_size
+        const uint8_t* list_validity
+        const int32_t* list_offsets
+        const uint8_t* child_validity
+        const uint8_t* child_data_bytes
+        const char* child_data_chars
+        const int32_t* child_offsets
+        Py_ssize_t i, j, length
         Py_ssize_t start, end, sub_length
         Py_ssize_t arr_offset, child_offset
+        Py_ssize_t item_size, child_idx, bit
+        Py_ssize_t child_offset_bytes, child_buffer_len
         object child_array, sublist
-        uint64_t hash_val
-        list buffers = chunk.buffers()
+        list buffers
+        list child_buffers
+        uint64_t hash_val, elem_hash, tmp_val
         uint64_t c1 = <uint64_t>0xbf58476d1ce4e5b9U
         uint64_t c2 = <uint64_t>0x94d049bb133111ebU
-        cdef char* data_ptr
 
-    # Obtain addresses of validity bitmap and offsets buffer
-    validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
-    offsets = <int32_t*><uintptr_t>(buffers[1].address)
+    buffers = chunk.buffers()
+    # Obtain addresses of validity bitmap and offsets buffer for the list
+    list_validity = <uint8_t*><uintptr_t>(buffers[0].address) if buffers[0] else NULL
+    list_offsets = <int32_t*><uintptr_t>(buffers[1].address) if len(buffers) > 1 else NULL
 
-    # The child array holds the sub-elements of the list
+    # Child array and its metadata
     child_array = chunk.values
-
-    # Number of "top-level" list entries in this chunk
     length = len(chunk)
-
-    # Arrow can slice a chunk, so account for chunk.offset
     arr_offset = chunk.offset
-
-    # Child array can also be offset
     child_offset = child_array.offset
 
-    for i in range(length):
-        # Check validity for the i-th list in this chunk
-        if validity and not (validity[i >> 3] & (1 << (i & 7))):
-            hash_val = NULL_HASH
-        else:
-            # Properly compute start/end using arr_offset
-            start = offsets[arr_offset + i]
-            end = offsets[arr_offset + i + 1]
-            sub_length = end - start
+    # Default initializations
+    child_validity = NULL
+    child_data_bytes = NULL
+    child_data_chars = NULL
+    child_offsets = NULL
+    child_buffers = []
+    elem_hash = 0
+    tmp_val = 0
 
-            # Initialize hash with a seed
-            hash_val = SEED
+    # Decide on fast path based on child type once per chunk
+    if pyarrow.types.is_integer(child_array.type) or pyarrow.types.is_floating(child_array.type) or pyarrow.types.is_temporal(child_array.type):
+        # Buffer-aware primitive child fast-path (no Python objects in inner loop)
+        child_buffers = child_array.buffers()
+        child_validity = <const uint8_t*><uintptr_t>(child_buffers[0].address) if child_buffers[0] else NULL
+        child_data_bytes = <const uint8_t*><uintptr_t>(child_buffers[1].address)
+        item_size = child_array.type.bit_width // 8
+        child_offset_bytes = child_offset * item_size
 
-            # Handle empty list
-            if sub_length == 0:
-                hash_val = EMPTY_HASH
+        for i in range(length):
+            # list validity
+            if list_validity and not (list_validity[(arr_offset + i) >> 3] & (1 << ((arr_offset + i) & 7))):
+                hash_val = NULL_HASH
             else:
-                # Correctly slice child array by adding child_offset
-                sublist = child_array.slice(start + child_offset, sub_length)
+                start = list_offsets[arr_offset + i]
+                end = list_offsets[arr_offset + i + 1]
+                sub_length = end - start
+                hash_val = SEED
+                if sub_length == 0:
+                    hash_val = EMPTY_HASH
+                else:
+                    # iterate child elements directly from child_data
+                    for j in range(sub_length):
+                        child_idx = start + j
+                        if child_validity:
+                            bit = (child_offset + child_idx)
+                            if not (child_validity[bit >> 3] & (1 << (bit & 7))):
+                                elem_hash = NULL_HASH
+                                # mix and continue
+                                hash_val = elem_hash ^ hash_val
+                                hash_val = (hash_val ^ (hash_val >> 30)) * c1
+                                hash_val = (hash_val ^ (hash_val >> 27)) * c2
+                                hash_val = hash_val ^ (hash_val >> 31)
+                                continue
 
-                # Combine each element in the sublist
-                for j in range(sub_length):
-                    # Convert to Python string, then to UTF-8 bytes
-                    element = sublist[j].as_py().encode("utf-8")
-                    data_ptr = PyBytes_AsString(element)
-                    data_size = PyBytes_Size(element)
+                        if item_size == 8:
+                            memcpy(&tmp_val, child_data_bytes + child_offset_bytes + (child_idx << 3), 8)
+                            elem_hash = tmp_val
+                        else:
+                            elem_hash = <uint64_t>cy_xxhash3_64(child_data_bytes + child_offset_bytes + (child_idx * item_size), <size_t>item_size)
 
-                    # Combine each element's hash with a simple mix
-                    hash_val = cy_xxhash3_64(<const void*>data_ptr, <size_t>data_size) ^ hash_val
-                    hash_val = (hash_val ^ (hash_val >> 30)) * c1
-                    hash_val = (hash_val ^ (hash_val >> 27)) * c2
-                    hash_val = hash_val ^ (hash_val >> 31)
+                        # mix element hash
+                        hash_val = elem_hash ^ hash_val
+                        hash_val = (hash_val ^ (hash_val >> 30)) * c1
+                        hash_val = (hash_val ^ (hash_val >> 27)) * c2
+                        hash_val = hash_val ^ (hash_val >> 31)
 
-        # Merge this row's final list-hash into row_hashes
-        update_row_hash(row_hashes, row_offset + i, hash_val)
+            update_row_hash(row_hashes, row_offset + i, hash_val)
+
+    elif pyarrow.types.is_string(child_array.type) or pyarrow.types.is_binary(child_array.type):
+        # Buffer-aware string child fast-path
+        child_buffers = child_array.buffers()
+        child_validity = <const uint8_t*><uintptr_t>(child_buffers[0].address) if child_buffers[0] else NULL
+        child_offsets = <const int32_t*><uintptr_t>(child_buffers[1].address)
+        child_data_chars = <const char*><uintptr_t>(child_buffers[2].address)
+        child_buffer_len = child_buffers[2].size if child_buffers[2] is not None else 0
+
+        for i in range(length):
+            if list_validity and not (list_validity[(arr_offset + i) >> 3] & (1 << ((arr_offset + i) & 7))):
+                hash_val = NULL_HASH
+            else:
+                start = list_offsets[arr_offset + i]
+                end = list_offsets[arr_offset + i + 1]
+                sub_length = end - start
+                hash_val = SEED
+                if sub_length == 0:
+                    hash_val = EMPTY_HASH
+                else:
+                    for j in range(sub_length):
+                        child_idx = start + j + child_offset
+                        # check child validity
+                        if child_validity and not (child_validity[child_idx >> 3] & (1 << (child_idx & 7))):
+                            elem_hash = NULL_HASH
+                        else:
+                            s = child_offsets[child_idx]
+                            e = child_offsets[child_idx + 1]
+                            ln = e - s
+                            if ln <= 0 or (s + ln) > child_buffer_len:
+                                elem_hash = EMPTY_HASH
+                            else:
+                                elem_hash = <uint64_t>cy_xxhash3_64(child_data_chars + s, <size_t>ln)
+
+                        # mix
+                        hash_val = elem_hash ^ hash_val
+                        hash_val = (hash_val ^ (hash_val >> 30)) * c1
+                        hash_val = (hash_val ^ (hash_val >> 27)) * c2
+                        hash_val = hash_val ^ (hash_val >> 31)
+
+            update_row_hash(row_hashes, row_offset + i, hash_val)
+
+    else:
+        # Fallback: per-element Python handling (kept minimal and only for unsupported child types)
+        for i in range(length):
+            if list_validity and not (list_validity[(arr_offset + i) >> 3] & (1 << ((arr_offset + i) & 7))):
+                hash_val = NULL_HASH
+            else:
+                start = list_offsets[arr_offset + i]
+                end = list_offsets[arr_offset + i + 1]
+                sub_length = end - start
+                hash_val = SEED
+                if sub_length == 0:
+                    hash_val = EMPTY_HASH
+                else:
+                    sublist = child_array.slice(start + child_offset, sub_length)
+                    for j in range(sub_length):
+                        try:
+                            elem_hash = <uint64_t>PyObject_Hash(sublist[j]) & 0xFFFFFFFFFFFFFFFFU
+                        except Exception:
+                            elem_hash = EMPTY_HASH
+
+                        hash_val = elem_hash ^ hash_val
+                        hash_val = (hash_val ^ (hash_val >> 30)) * c1
+                        hash_val = (hash_val ^ (hash_val >> 27)) * c2
+                        hash_val = hash_val ^ (hash_val >> 31)
+
+            update_row_hash(row_hashes, row_offset + i, hash_val)
 
 
 cdef void process_boolean_chunk(object chunk, uint64_t[::1] row_hashes, Py_ssize_t row_offset):

@@ -56,8 +56,11 @@ cdef inline numpy.ndarray[int64_t, ndim=1] non_null_row_indices(object relation,
             if validity == NULL:
                 raise RuntimeError(f"Null validity buffer for column '{column_name}'")
 
+            # Account for chunk.offset when checking validity bits
+            chunk_offset = chunk.offset
             for j in range(length):
-                bit = (validity[j >> 3] >> (j & 7)) & 1
+                bit_index = chunk_offset + j
+                bit = (validity[bit_index >> 3] >> (bit_index & 7)) & 1
                 combined_nulls[offset + j] &= bit
 
             offset += length

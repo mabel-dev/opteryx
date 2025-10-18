@@ -2,7 +2,7 @@ import io
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.compiled.structures.lru_k import LRU_K
 from tests import is_windows, skip_if

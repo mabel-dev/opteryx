@@ -8,62 +8,55 @@
 # cython: boundscheck=False
 
 """
-LRU-K evicts the morsel whose K-th most recent access is furthest in the past. Note, the
-LRU doesn't evict, it has no "size", the caller decides when the cache is full, this
-could be slot/count based (100 items), or this could be volume-based (32Mb).
+Optimized LRU-K(2) implementation focused on performance.
 
-This is a basic implementation of LRU-2, which evicts entries according to the time of their
-penultimate access. The main benefit of this approach is to prevent a problem when the items being
-getted exceeds the number of items in the cache. A classic LRU will evict and repopulate the cache
-for every call. LRU-2 reduces the likelihood of this, but not preferring the MRU item to be
-retained.
-
-LRU-K should be used in conjunction with eviction limits per query - this appears to broadly be
-the solution used by Postgres. This can be supported by the calling function using the return from
-the .set call to determine if an item was evicted from the cache.
-
-This can also be used as the index for an external cache (for example in plasma), where the set()
-returns the evicted item which the calling function can then evict from the external cache.
-
-This is a variation of LRU-K, where an item has fewer than K accesses, it is not evicted unless
-all items have fewer than K accesses. Not being evicted adds an access to age out single-hit items
-from the cache. The resulting cache provides opportunity for novel items to prove their value before
-being evicted.
-
-If n+1 items are put into the cache in the same 'transaction', it acts like a FIFO - although
-the BufferPool implements limit to only evict up to 32 items per 'transaction'
+Key optimizations:
+1. Simplified data structures - removed unnecessary heap and tracking
+2. Direct dictionary access with minimal indirection
+3. Simple list-based access history (faster than deque for our use case)
+4. Reduced memory allocations and copies
+5. Minimal bookkeeping overhead
 """
 
-import heapq as py_heapq
-
+from collections import OrderedDict
 from libc.stdint cimport int64_t
-from collections import defaultdict
-from time import monotonic_ns
 
 cdef class LRU_K:
-
-    __slots__ = ("k", "slots", "access_history", "removed", "heap",
-                 "hits", "misses", "evictions", "inserts", "size")
+    __slots__ = ("k", "max_size", "max_memory", "current_memory", "slots",
+                 "access_history", "_clock", "hits", "misses",
+                 "evictions", "inserts", "size")
 
     cdef public int64_t k
-    cdef dict slots
-    cdef object access_history
-    cdef set removed
-    cdef list heap
-
+    cdef public int64_t max_size
+    cdef public int64_t max_memory
+    cdef int64_t current_memory
+    cdef object slots
+    cdef dict access_history
+    cdef int64_t _clock
     cdef int64_t hits
     cdef int64_t misses
     cdef int64_t evictions
     cdef int64_t inserts
     cdef public int64_t size
 
-    def __cinit__(self, int64_t k=2):
-        self.k = k
-        self.slots = {}
-        self.access_history = defaultdict(list)
-        self.removed = set()
-        self.heap = []
+    def __cinit__(self, int64_t k=2, int64_t max_size=0, int64_t max_memory=0):
+        """
+        Initialize LRU-K cache.
 
+        Args:
+            k: K value for LRU-K algorithm
+            max_size: Maximum number of items (0 for unlimited)
+            max_memory: Maximum memory in bytes (0 for unlimited)
+        """
+        if k < 1:
+            raise ValueError("k must be at least 1")
+        self.k = k
+        self.max_size = max_size
+        self.max_memory = max_memory
+        self.current_memory = 0
+        self.slots = OrderedDict()
+        self.access_history = {}
+        self._clock = 0
         self.hits = 0
         self.misses = 0
         self.evictions = 0
@@ -71,92 +64,202 @@ cdef class LRU_K:
         self.size = 0
 
     def __len__(self):
-        return len(self.slots)
+        return self.size
 
-    def get(self, bytes key) -> Optional[bytes]:
+    def __contains__(self, bytes key):
+        return key in self.slots
+
+    cpdef object get(self, bytes key):
+        """Get value for key, updating access history. Returns bytes or None."""
         cdef object value = self.slots.get(key)
         if value is not None:
             self.hits += 1
             self._update_access_history(key)
+            # Move to end to maintain LRU order
+            self.slots.move_to_end(key)
         else:
             self.misses += 1
         return value
 
-    def set(self, bytes key, bytes value):
+    cpdef tuple set(self, bytes key, bytes value, bint evict=True):
+        """
+        Set key-value pair, optionally evicting if needed.
+
+        Returns:
+            Evicted key-value pair if eviction occurred, else None
+        """
+        cdef bytes evicted_key = None
+        cdef bytes evicted_value = None
+        cdef bint key_exists = key in self.slots
+
         self.inserts += 1
-        if key not in self.slots:
+
+        # Calculate memory impact
+        cdef int64_t item_memory = len(key) + len(value)
+
+        if not key_exists:
             self.size += 1
+            self.current_memory += item_memory
+        else:
+            # Update memory usage for existing key
+            old_value = self.slots[key]
+            self.current_memory += len(value) - len(old_value)
+
         self.slots[key] = value
         self._update_access_history(key)
-        return None
+
+        # Move to end to maintain LRU order
+        self.slots.move_to_end(key)
+
+        # Evict if needed and requested
+        if evict:
+            evicted_key, evicted_value = self._evict_if_needed()
+
+        return evicted_key, evicted_value
 
     cdef void _update_access_history(self, bytes key):
-        cdef int64_t access_time = monotonic_ns()
-        cdef list history = self.access_history[key]
-        if len(history) == self.k:
-            old_entry = history.pop(0)
-            self.removed.add(old_entry)
-        history.append((access_time, key))
-        py_heapq.heappush(self.heap, (access_time, key))
+        """Update access history for key using a simple list (faster than deque)."""
+        cdef int64_t access_time
+        cdef list history
 
-    def evict(self, bint details=False):
-        cdef int64_t _oldest_access_time
-        cdef bytes oldest_key
-        cdef int64_t new_access_time
-        cdef tuple popped
-        while self.heap:
-            popped = py_heapq.heappop(self.heap)
-            _oldest_access_time, oldest_key = popped
-            if popped in self.removed:
-                self.removed.remove(popped)
-                continue
+        # Increment clock
+        self._clock += 1
+        access_time = self._clock
 
-            if len(self.access_history[oldest_key]) == 1:
-                # Synthetic access to give a grace period
-                new_access_time = monotonic_ns()
-                self.access_history[oldest_key].append((new_access_time, oldest_key))
-                py_heapq.heappush(self.heap, (new_access_time, oldest_key))
-                continue
+        history = self.access_history.get(key)
+        if history is None:
+            history = [access_time]
+            self.access_history[key] = history
+        else:
+            history.append(access_time)
+            # Keep only the last k entries
+            if len(history) > self.k:
+                history.pop(0)
 
-            if oldest_key not in self.slots:
-                continue
+    cdef tuple _evict_if_needed(self):
+        """Evict items if size or memory limits are exceeded."""
+        cdef bytes evicted_key = None
+        cdef bytes evicted_value = None
 
-            value = self.slots.pop(oldest_key)
-            self.access_history.pop(oldest_key)
-            self.size -= 1
-            self.evictions += 1
-            if details:
-                return oldest_key, value
-            return oldest_key
+        while self._should_evict():
+            evicted_key, evicted_value = self._evict_one()
+            if evicted_key is None:
+                break  # No more items to evict
 
-        if details:
-            return None, None
-        return None
+        return evicted_key, evicted_value
 
-    def delete(self, bytes key):
-        if key in self.slots:
-            self.slots.pop(key, None)
-            self.access_history.pop(key, None)
-            self.evictions += 1
-            self.size -= 1
+    cdef bint _should_evict(self):
+        """Check if eviction is needed."""
+        if self.max_size > 0 and self.size > self.max_size:
+            return True
+        if self.max_memory > 0 and self.current_memory > self.max_memory:
             return True
         return False
 
-    @property
-    def keys(self):
-        return list(self.slots.keys())
+    cpdef object evict(self, bint details=False):
+        """Evict one item according to LRU-K policy.
 
-    @property
-    def stats(self):
-        return self.hits, self.misses, self.evictions, self.inserts
+        If details is False (default) return the evicted key or None.
+        If details is True return a (key, value) tuple or (None, None).
+        """
+        cdef tuple result = self._evict_one(details)
+        if details:
+            return result
+        # return only the key when details is False
+        return result[0]
 
-    def reset(self, bint reset_stats=False):
+    cdef tuple _evict_one(self, bint details=False):
+        """Evict one item using simplified LRU-K algorithm."""
+        cdef bytes candidate_key = None
+        cdef bytes candidate_value = None
+        cdef int64_t oldest_kth_time = -1
+        cdef int64_t kth_time
+        cdef list history
+
+        if not self.slots:
+            if details:
+                return None, None
+            return None, None
+
+        # Find the key with the oldest kth access time
+        # For keys with < k accesses, use their first access time
+        for key in self.slots:
+            history = self.access_history.get(key)
+            if history is None:
+                # No history means never accessed, evict immediately
+                candidate_key = key
+                break
+
+            # Use the oldest (first) access time as the comparison point
+            kth_time = history[0]
+
+            if oldest_kth_time == -1 or kth_time < oldest_kth_time:
+                oldest_kth_time = kth_time
+                candidate_key = key
+
+        if candidate_key is None:
+            if details:
+                return None, None
+            return None, None
+
+        # Remove the candidate
+        candidate_value = self.slots.pop(candidate_key, None)
+
+        if candidate_key in self.access_history:
+            del self.access_history[candidate_key]
+
+        self.size -= 1
+        if candidate_value is not None:
+            self.current_memory -= (len(candidate_key) + len(candidate_value))
+        self.evictions += 1
+
+        if details:
+            return candidate_key, candidate_value
+        return candidate_key, None
+
+    cpdef bint delete(self, bytes key):
+        """Delete specific key from cache."""
+        if key in self.slots:
+            value = self.slots.pop(key)
+            if key in self.access_history:
+                del self.access_history[key]
+            self.size -= 1
+            self.current_memory -= (len(key) + len(value))
+            self.evictions += 1
+            return True
+        return False
+
+    cpdef void clear(self, bint reset_stats=False):
+        """Clear all items from cache."""
         self.slots.clear()
         self.access_history.clear()
-        self.removed.clear()
-        self.heap.clear()
+        self.size = 0
+        self.current_memory = 0
         if reset_stats:
             self.hits = 0
             self.misses = 0
             self.evictions = 0
             self.inserts = 0
+
+    @property
+    def keys(self):
+        """Get all keys in cache as a list."""
+        return list(self.slots.keys())
+
+    def items(self):
+        """Get all key-value pairs in cache."""
+        return list(self.slots.items())
+
+    @property
+    def memory_usage(self):
+        """Get current memory usage in bytes."""
+        return self.current_memory
+
+    @property
+    def stats(self):
+        """Get cache statistics as a tuple: (hits, misses, evictions, inserts)."""
+        return (self.hits, self.misses, self.evictions, self.inserts)
+
+    def reset(self, bint reset_stats=False):
+        """Alias for clear."""
+        self.clear(reset_stats)
