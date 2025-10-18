@@ -10,6 +10,8 @@ extension modules are defined for optimized data operations.
 import glob
 import os
 import platform
+import shutil
+import subprocess
 import sys
 from sysconfig import get_config_var
 from typing import Any
@@ -30,6 +32,97 @@ def is_mac():  # pragma: no cover
 
 def is_win():  # pragma: no cover
     return platform.system().lower() == "windows"
+
+
+def check_rust_availability():  # pragma: no cover
+    """
+    Check if Rust toolchain is available and return paths.
+    
+    Returns:
+        tuple: (rustc_path, cargo_path, rust_env) if available
+        
+    Raises:
+        SystemExit: If Rust is not available with a helpful error message
+    """
+    # Check environment variables first
+    rustc_path = os.environ.get("RUSTC") or shutil.which("rustc")
+    cargo_path = os.environ.get("CARGO") or shutil.which("cargo")
+    
+    # Validate that paths exist if provided via environment variables
+    if rustc_path and not os.path.isfile(rustc_path):
+        print(f"\033[38;2;255;208;0mWarning:\033[0m RUSTC environment variable points to non-existent file: {rustc_path}", file=sys.stderr)
+        rustc_path = None
+    if cargo_path and not os.path.isfile(cargo_path):
+        print(f"\033[38;2;255;208;0mWarning:\033[0m CARGO environment variable points to non-existent file: {cargo_path}", file=sys.stderr)
+        cargo_path = None
+    
+    if not rustc_path or not cargo_path:
+        error_msg = """
+\033[38;2;255;85;85m╔═══════════════════════════════════════════════════════════════════════════╗
+║                         RUST TOOLCHAIN NOT FOUND                          ║
+╚═══════════════════════════════════════════════════════════════════════════╝\033[0m
+
+Opteryx requires the Rust compiler (rustc) and Cargo to build native extensions.
+
+\033[38;2;255;208;0mWhat's missing:\033[0m
+"""
+        if not rustc_path:
+            error_msg += "  • rustc (Rust compiler) not found in PATH\n"
+        if not cargo_path:
+            error_msg += "  • cargo (Rust package manager) not found in PATH\n"
+        
+        error_msg += """
+\033[38;2;255;208;0mHow to install Rust:\033[0m
+
+  1. Visit: https://rustup.rs/
+  2. Run the installation command for your platform:
+     
+     \033[38;2;139;233;253mLinux/macOS:\033[0m
+       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+     
+     \033[38;2;139;233;253mWindows:\033[0m
+       Download and run: https://win.rustup.rs/
+  
+  3. After installation, restart your terminal or run:
+       source $HOME/.cargo/env
+  
+  4. Verify installation:
+       rustc --version
+       cargo --version
+
+\033[38;2;255;208;0mAlternative:\033[0m
+  If Rust is installed but not in PATH, you can set the CARGO and RUSTC 
+  environment variables before running setup.py:
+  
+    export CARGO=/path/to/cargo
+    export RUSTC=/path/to/rustc
+
+\033[38;2;255;85;85m═══════════════════════════════════════════════════════════════════════════\033[0m
+"""
+        print(error_msg, file=sys.stderr)
+        sys.exit(1)
+    
+    # Get Rust version for informational purposes
+    try:
+        rust_version = subprocess.check_output(
+            [rustc_path, "--version"], 
+            text=True, 
+            stderr=subprocess.STDOUT
+        ).strip()
+        print(f"\033[38;2;139;233;253mFound Rust toolchain:\033[0m {rust_version}")
+        print(f"\033[38;2;139;233;253mrustc path:\033[0m {rustc_path}")
+        print(f"\033[38;2;139;233;253mcargo path:\033[0m {cargo_path}")
+    except subprocess.CalledProcessError:
+        pass
+    
+    # Create environment dict with explicit paths
+    rust_env = {}
+    if rustc_path:
+        rust_env["RUSTC"] = rustc_path
+    if cargo_path:
+        rust_env["CARGO"] = cargo_path
+    
+    return rustc_path, cargo_path, rust_env
 
 
 REQUESTED_COMMANDS = {arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith('-')}
@@ -81,10 +174,20 @@ if SHOULD_BUILD_EXTENSIONS:
 
     print("\033[38;2;255;85;85mInclude paths:\033[0m", include_dirs)
 
+    # Check Rust availability and get paths
+    rustc_path, cargo_path, rust_env = check_rust_availability()
+
     def rust_build(setup_kwargs: Dict[str, Any]) -> None:
         setup_kwargs.update(
             {
-                "rust_extensions": [RustExtension("opteryx.compute", "Cargo.toml", debug=False)],
+                "rust_extensions": [
+                    RustExtension(
+                        "opteryx.compute", 
+                        "Cargo.toml", 
+                        debug=False,
+                        env=rust_env
+                    )
+                ],
                 "zip_safe": False,
             }
         )
