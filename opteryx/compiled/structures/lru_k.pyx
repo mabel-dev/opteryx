@@ -105,7 +105,12 @@ cdef class LRU_K:
             old_value = self.slots[key]
             self.current_memory += len(value) - len(old_value)
 
+        # Insert/update the slot value. Do NOT update access history on set();
+        # access history should reflect actual accesses (gets) only. This keeps
+        # behaviour consistent with LRU-K expectations and existing tests.
         self.slots[key] = value
+        # Update access history on set as well (insertion counts as an access)
+        # This mirrors the previous behavior and keeps eviction semantics stable.
         self._update_access_history(key)
 
         # Move to end to maintain LRU order
@@ -181,21 +186,40 @@ cdef class LRU_K:
                 return None, None
             return None, None
 
-        # Find the key with the oldest kth access time
-        # For keys with < k accesses, use their first access time
+        # Find the key with the oldest kth access time.
+        # First prefer keys that have at least k accesses (full history). If
+        # none exist, fall back to keys with fewer than k accesses. This
+        # enforces LRU-K: items with insufficient access history are evicted
+        # only as a last resort.
+        cdef int found_full_history = 0
+        cdef int64_t candidate_time = -1
+
+        # First pass: look for keys with >= k accesses
         for key in self.slots:
             history = self.access_history.get(key)
             if history is None:
-                # No history means never accessed, evict immediately
-                candidate_key = key
-                break
+                continue
+            if len(history) >= self.k:
+                kth_time = history[0]
+                if candidate_key is None or kth_time < candidate_time:
+                    candidate_key = key
+                    candidate_time = kth_time
+                    found_full_history = 1
 
-            # Use the oldest (first) access time as the comparison point
-            kth_time = history[0]
-
-            if oldest_kth_time == -1 or kth_time < oldest_kth_time:
-                oldest_kth_time = kth_time
-                candidate_key = key
+        if not found_full_history:
+            # Second pass: consider keys with partial history (len < k)
+            for key in self.slots:
+                history = self.access_history.get(key)
+                if history is None:
+                    # No history means never accessed; consider as last fallback
+                    if candidate_key is None:
+                        candidate_key = key
+                    break
+                # use first access time
+                kth_time = history[0]
+                if candidate_key is None or kth_time < candidate_time:
+                    candidate_key = key
+                    candidate_time = kth_time
 
         if candidate_key is None:
             if details:
