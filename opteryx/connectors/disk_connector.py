@@ -157,16 +157,14 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
 
             # On Linux advise the kernel that access will be sequential to improve readahead
             if IS_LINUX:
-                try:
+                # if anything goes wrong, ignore
+                with contextlib.suppress(Exception):
                     libc = ctypes.CDLL("libc.so.6")
                     # MADV_SEQUENTIAL is 2 on Linux, but don't hardcode if available
                     MADV_SEQUENTIAL = 2
                     addr = ctypes.c_void_p(ctypes.addressof(ctypes.c_char.from_buffer(_map)))
                     length = ctypes.c_size_t(size)
                     libc.madvise(addr, length, MADV_SEQUENTIAL)
-                except Exception:
-                    # best-effort: if anything goes wrong, ignore
-                    pass
 
             # pass a memoryview of the mmap to decoders - this makes intent explicit
             # and lets decoders that can accept memoryviews avoid extra copies

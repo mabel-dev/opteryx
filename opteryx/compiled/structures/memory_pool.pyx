@@ -110,10 +110,10 @@ cdef class MemoryPool:
             self._print_stats()
 
     cdef void _print_stats(self):
-        cdef int64_t total_free = 0
-        cdef int64_t total_used = 0
-        cdef int64_t fragmentation = 0
-        cdef int64_t free_blocks = 0
+    cdef int64_t total_free = 0
+    cdef int64_t total_used = 0
+    cdef double fragmentation = 0.0
+    cdef int64_t free_blocks = 0
 
         for i in range(self.segments.size()):
             if self.segments[i].is_free:
@@ -123,7 +123,12 @@ cdef class MemoryPool:
                 total_used += self.segments[i].length
 
         if total_free > 0 and free_blocks > 1:
-            fragmentation = (free_blocks - 1) * 100 / (total_free / 1024)  # Simplified fragmentation metric
+            # Avoid integer division by zero when total_free < 1024.
+            cdef double denom = total_free / 1024.0
+            if denom > 0.0:
+                fragmentation = (free_blocks - 1) * 100.0 / denom  # Simplified fragmentation metric
+            else:
+                fragmentation = 0.0
 
         print(f"Memory Pool ({self.name}) <"
               f"size={self.size}, used={total_used}, free={total_free}, "
