@@ -177,7 +177,6 @@ cdef class LRU_K:
         """Evict one item using simplified LRU-K algorithm."""
         cdef bytes candidate_key = None
         cdef bytes candidate_value = None
-        cdef int64_t oldest_kth_time = -1
         cdef int64_t kth_time
         cdef list history
 

@@ -8,9 +8,12 @@ from itertools import permutations
 from typing import Iterable
 from typing import Optional
 
+from orso.tools import single_item_cache
+
 from opteryx.third_party.mbleven import compare
 
 
+@single_item_cache
 def is_windows() -> bool:
     return platform.system().lower() == "windows"
 
