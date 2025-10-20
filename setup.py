@@ -26,6 +26,7 @@ from setuptools_rust import RustExtension
 
 LIBRARY = "opteryx"
 
+
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
@@ -37,31 +38,37 @@ def is_win():  # pragma: no cover
 def check_rust_availability():  # pragma: no cover
     """
     Check if Rust toolchain is available and return paths.
-    
+
     Returns:
         tuple: (rustc_path, cargo_path, rust_env) if available
-        
+
     Raises:
         SystemExit: If Rust is not available with a helpful error message
     """
     # Check environment variables first, treating empty strings as None
     rustc_path = os.environ.get("RUSTC") or None
     cargo_path = os.environ.get("CARGO") or None
-    
+
     # If not set via environment, check PATH
     if not rustc_path:
         rustc_path = shutil.which("rustc")
     if not cargo_path:
         cargo_path = shutil.which("cargo")
-    
+
     # Validate that paths exist if provided
     if rustc_path and not os.path.isfile(rustc_path):
-        print(f"\033[38;2;255;208;0mWarning:\033[0m RUSTC environment variable points to non-existent file: {rustc_path}", file=sys.stderr)
+        print(
+            f"\033[38;2;255;208;0mWarning:\033[0m RUSTC environment variable points to non-existent file: {rustc_path}",
+            file=sys.stderr,
+        )
         rustc_path = None
     if cargo_path and not os.path.isfile(cargo_path):
-        print(f"\033[38;2;255;208;0mWarning:\033[0m CARGO environment variable points to non-existent file: {cargo_path}", file=sys.stderr)
+        print(
+            f"\033[38;2;255;208;0mWarning:\033[0m CARGO environment variable points to non-existent file: {cargo_path}",
+            file=sys.stderr,
+        )
         cargo_path = None
-    
+
     if not rustc_path or not cargo_path:
         error_msg = """
 \033[38;2;255;85;85m╔═══════════════════════════════════════════════════════════════════════════╗
@@ -76,7 +83,7 @@ Opteryx requires the Rust compiler (rustc) and Cargo to build native extensions.
             error_msg += "  • rustc (Rust compiler) not found in PATH\n"
         if not cargo_path:
             error_msg += "  • cargo (Rust package manager) not found in PATH\n"
-        
+
         error_msg += """
 \033[38;2;255;208;0mHow to install Rust:\033[0m
 
@@ -107,31 +114,32 @@ Opteryx requires the Rust compiler (rustc) and Cargo to build native extensions.
 """
         print(error_msg, file=sys.stderr)
         sys.exit(1)
-    
+
     # Get Rust version for informational purposes
     try:
         rust_version = subprocess.check_output(
-            [rustc_path, "--version"], 
-            text=True, 
-            stderr=subprocess.STDOUT
+            [rustc_path, "--version"], text=True, stderr=subprocess.STDOUT
         ).strip()
         print(f"\033[38;2;139;233;253mFound Rust toolchain:\033[0m {rust_version}")
         print(f"\033[38;2;139;233;253mrustc path:\033[0m {rustc_path}")
         print(f"\033[38;2;139;233;253mcargo path:\033[0m {cargo_path}")
     except (subprocess.CalledProcessError, OSError) as e:
         # If we can't run rustc --version, the path might not be a valid rustc binary
-        print(f"\033[38;2;255;208;0mWarning:\033[0m Could not verify Rust installation at {rustc_path}: {e}", file=sys.stderr)
-    
+        print(
+            f"\033[38;2;255;208;0mWarning:\033[0m Could not verify Rust installation at {rustc_path}: {e}",
+            file=sys.stderr,
+        )
+
     # Create environment dict with explicit paths
     rust_env = {
         "RUSTC": rustc_path,
         "CARGO": cargo_path,
     }
-    
+
     return rustc_path, cargo_path, rust_env
 
 
-REQUESTED_COMMANDS = {arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith('-')}
+REQUESTED_COMMANDS = {arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith("-")}
 SHOULD_BUILD_EXTENSIONS = "clean" not in REQUESTED_COMMANDS
 
 if not SHOULD_BUILD_EXTENSIONS:
@@ -141,7 +149,6 @@ if not SHOULD_BUILD_EXTENSIONS:
     )
 
 if SHOULD_BUILD_EXTENSIONS:
-
     CPP_COMPILE_FLAGS = ["-O3"]
     C_COMPILE_FLAGS = ["-O3"]
     if is_mac():
@@ -187,12 +194,7 @@ if SHOULD_BUILD_EXTENSIONS:
         setup_kwargs.update(
             {
                 "rust_extensions": [
-                    RustExtension(
-                        "opteryx.compute", 
-                        "Cargo.toml", 
-                        debug=False,
-                        env=rust_env
-                    )
+                    RustExtension("opteryx.compute", "Cargo.toml", debug=False, env=rust_env)
                 ],
                 "zip_safe": False,
             }
@@ -237,20 +239,14 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.third_party.alantsd.base64",
-            sources=[
-                "opteryx/third_party/alantsd/base64.pyx", 
-                "third_party/alantsd/base64.c"
-            ],
+            sources=["opteryx/third_party/alantsd/base64.pyx", "third_party/alantsd/base64.c"],
             include_dirs=include_dirs + ["third_party/alantsd"],
             extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],
             extra_link_args=["-Lthird_party/alantsd"],
         ),
         Extension(
             name="opteryx.third_party.cyan4973.xxhash",
-            sources=[
-                "opteryx/third_party/cyan4973/xxhash.pyx", 
-                "third_party/cyan4973/xxhash.c"
-            ],
+            sources=["opteryx/third_party/cyan4973/xxhash.pyx", "third_party/cyan4973/xxhash.c"],
             include_dirs=include_dirs + ["third_party/cyan4973"],
             extra_compile_args=C_COMPILE_FLAGS,
             extra_link_args=["-Lthird_party/cyan4973"],
@@ -326,10 +322,7 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.compiled.structures.buffers",
-            sources=[
-                "opteryx/compiled/structures/buffers.pyx",
-                "src/cpp/intbuffer.cpp"
-            ],
+            sources=["opteryx/compiled/structures/buffers.pyx", "src/cpp/intbuffer.cpp"],
             include_dirs=include_dirs,
             language="c++",
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
@@ -360,10 +353,7 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.compiled.structures.jsonl_decoder",
-            sources=[
-                "opteryx/compiled/structures/jsonl_decoder.pyx",
-                "src/cpp/simd_search.cpp"
-            ],
+            sources=["opteryx/compiled/structures/jsonl_decoder.pyx", "src/cpp/simd_search.cpp"],
             include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
             language="c++",
             extra_compile_args=CPP_COMPILE_FLAGS,
@@ -411,13 +401,16 @@ if SHOULD_BUILD_EXTENSIONS:
     list_ops_file = os.path.join(list_ops_dir, "list_ops.pyx")
 
     # Find all .pyx files in the list_ops directory (excluding list_ops.pyx itself)
-    pyx_files = sorted([
-        os.path.basename(f) for f in glob.glob(os.path.join(list_ops_dir, "*.pyx"))
-        if os.path.basename(f) != "list_ops.pyx"
-    ])
+    pyx_files = sorted(
+        [
+            os.path.basename(f)
+            for f in glob.glob(os.path.join(list_ops_dir, "*.pyx"))
+            if os.path.basename(f) != "list_ops.pyx"
+        ]
+    )
 
     # Generate the list_ops.pyx file with include directives
-    with open(list_ops_file, 'w', encoding="UTF8") as f:
+    with open(list_ops_file, "w", encoding="UTF8") as f:
         f.write("""# cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
@@ -435,12 +428,14 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
 \"\"\"
 
 """)
-        
+
         # Add include directives for each .pyx file
         for pyx_file in pyx_files:
             f.write(f'include "{pyx_file}"\n')
 
-    print(f"\033[38;2;189;147;249mAuto-generated list_ops.pyx with {len(pyx_files)} includes\033[0m")
+    print(
+        f"\033[38;2;189;147;249mAuto-generated list_ops.pyx with {len(pyx_files)} includes\033[0m"
+    )
 
     # Auto-generate joins.pyx to include all individual .pyx files in the folder
     # This ensures new files are automatically included when added
@@ -448,13 +443,16 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
     joins_file = os.path.join(joins_dir, "joins.pyx")
 
     # Find all .pyx files in the joins directory (excluding joins.pyx itself)
-    joins_pyx_files = sorted([
-        os.path.basename(f) for f in glob.glob(os.path.join(joins_dir, "*.pyx"))
-        if os.path.basename(f) != "joins.pyx"
-    ])
+    joins_pyx_files = sorted(
+        [
+            os.path.basename(f)
+            for f in glob.glob(os.path.join(joins_dir, "*.pyx"))
+            if os.path.basename(f) != "joins.pyx"
+        ]
+    )
 
     # Generate the joins.pyx file with include directives
-    with open(joins_file, 'w', encoding="UTF8") as f:
+    with open(joins_file, "w", encoding="UTF8") as f:
         f.write("""# cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
@@ -472,12 +470,14 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
 \"\"\"
 
 """)
-        
+
         # Add include directives for each .pyx file
         for pyx_file in joins_pyx_files:
             f.write(f'include "{pyx_file}"\n')
 
-    print(f"\033[38;2;189;147;249mAuto-generated joins.pyx with {len(joins_pyx_files)} includes\033[0m")
+    print(
+        f"\033[38;2;189;147;249mAuto-generated joins.pyx with {len(joins_pyx_files)} includes\033[0m"
+    )
 
     # Auto-generate functions.pyx to include all individual .pyx files in the folder
     # This ensures new files are automatically included when added
@@ -485,13 +485,16 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
     functions_file = os.path.join(functions_dir, "functions.pyx")
 
     # Find all .pyx files in the functions directory (excluding functions.pyx itself)
-    functions_pyx_files = sorted([
-        os.path.basename(f) for f in glob.glob(os.path.join(functions_dir, "*.pyx"))
-        if os.path.basename(f) != "functions.pyx"
-    ])
+    functions_pyx_files = sorted(
+        [
+            os.path.basename(f)
+            for f in glob.glob(os.path.join(functions_dir, "*.pyx"))
+            if os.path.basename(f) != "functions.pyx"
+        ]
+    )
 
     # Generate the functions.pyx file with include directives
-    with open(functions_file, 'w', encoding="UTF8") as f:
+    with open(functions_file, "w", encoding="UTF8") as f:
         f.write("""# cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
@@ -509,12 +512,14 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
 \"\"\"
 
 """)
-        
+
         # Add include directives for each .pyx file
         for pyx_file in functions_pyx_files:
             f.write(f'include "{pyx_file}"\n')
 
-    print(f"\033[38;2;189;147;249mAuto-generated functions.pyx with {len(functions_pyx_files)} includes\033[0m")
+    print(
+        f"\033[38;2;189;147;249mAuto-generated functions.pyx with {len(functions_pyx_files)} includes\033[0m"
+    )
 
     list_ops_link_args = []
     if not is_mac():
@@ -523,16 +528,10 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
     extensions.append(
         Extension(
             name="opteryx.compiled.list_ops.function_definitions",
-            sources=[
-                list_ops_file,
-                "src/cpp/simd_search.cpp"
-            ],
+            sources=[list_ops_file, "src/cpp/simd_search.cpp"],
             language="c++",
-            include_dirs=include_dirs + [
-                "third_party/abseil",
-                "third_party/apache",
-                "opteryx/third_party/apache"
-            ],
+            include_dirs=include_dirs
+            + ["third_party/abseil", "third_party/apache", "opteryx/third_party/apache"],
             extra_compile_args=CPP_COMPILE_FLAGS,
             extra_link_args=list_ops_link_args,
         ),
@@ -543,10 +542,7 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
             name="opteryx.compiled.joins.join_definitions",
             sources=[joins_file],
             language="c++",
-            include_dirs=include_dirs + [
-                "third_party/abseil",
-                "third_party/fastfloat/fast_float"
-            ],
+            include_dirs=include_dirs + ["third_party/abseil", "third_party/fastfloat/fast_float"],
             extra_compile_args=CPP_COMPILE_FLAGS,
         ),
     )
@@ -560,7 +556,6 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
             extra_compile_args=CPP_COMPILE_FLAGS,
         ),
     )
-
 
     setup_config = {
         "name": LIBRARY,
@@ -581,7 +576,7 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
         },
         "package_data": {
             "": ["*.pyx", "*.pxd"],
-        }
+        },
     }
 
     rust_build(setup_config)
