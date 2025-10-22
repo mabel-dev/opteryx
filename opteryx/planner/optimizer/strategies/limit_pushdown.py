@@ -64,12 +64,18 @@ class LimitPushdownStrategy(OptimizationStrategy):
                 context.collected_limits.remove(limit_node)
 
         # Try to push limits into scans that support it
+        # Note: We only push pure LIMIT nodes into scans, not HEAPSORT nodes
+        # because HeapSort needs to perform sorting which can't be pushed to scan
         if (
             node.node_type == LogicalPlanStepType.Scan
             and LimitPushable in node.connector.__class__.mro()
         ):
             for limit_node in context.collected_limits:
-                if node.relation in limit_node.all_relations:
+                # Only push pure LIMIT nodes to scan, not HEAPSORT
+                if (
+                    limit_node.node_type == LogicalPlanStepType.Limit
+                    and node.relation in limit_node.all_relations
+                ):
                     self.statistics.optimization_limit_pushdown += 1
                     context.optimized_plan.remove_node(limit_node.nid, heal=True)
                     node.limit = limit_node.limit
