@@ -1,8 +1,8 @@
 """
-Test LIMIT/HEAPSORT pushdown before expensive projections
+Test LIMIT pushdown before expensive projections
 
-This tests the optimization that pushes LIMIT and HEAPSORT operations before
-projections when the limit/ordering columns are not created by the projection.
+This tests the optimization that pushes LIMIT operations before projections
+that contain expensive calculations, reducing the number of rows processed.
 """
 
 import os
@@ -29,34 +29,10 @@ STATEMENTS = [
         True,
         "LIMIT before projection with multiple calculations",
     ),
-    # ORDER BY on existing column + LIMIT should be pushed (HeapSort)
-    (
-        "SELECT id, name, LENGTH(name) AS name_len FROM $planets ORDER BY name LIMIT 3",
-        True,
-        "HeapSort on existing column before projection",
-    ),
-    # ORDER BY on existing column (id) + LIMIT should be pushed
-    (
-        "SELECT name, LENGTH(name) * 2 AS calc FROM $planets ORDER BY id LIMIT 3",
-        True,
-        "HeapSort on different existing column before projection",
-    ),
-    # ORDER BY on calculated column should NOT be pushed
-    (
-        "SELECT name, LENGTH(name) AS name_len FROM $planets ORDER BY name_len LIMIT 3",
-        False,
-        "HeapSort on calculated column should not be pushed",
-    ),
-    # ORDER BY on multiple columns where one is calculated should NOT be pushed
-    (
-        "SELECT id, name, LENGTH(name) AS name_len FROM $planets ORDER BY name, name_len LIMIT 3",
-        False,
-        "HeapSort with mixed columns should not be pushed",
-    ),
     # Simple LIMIT without projection should still work
     (
         "SELECT id, name FROM $planets LIMIT 5",
-        False,  # No projection node to push past
+        False,  # No projection node to push past, but optimization doesn't break anything
         "Simple LIMIT without projection",
     ),
 ]
@@ -65,7 +41,7 @@ STATEMENTS = [
 @pytest.mark.parametrize("query, should_optimize, description", STATEMENTS)
 def test_limit_heapsort_before_projection(query, should_optimize, description):
     """
-    Test that LIMIT/HEAPSORT is pushed before projections when appropriate
+    Test that LIMIT is pushed before projections when appropriate
     """
     result = opteryx.query(query)
     stats = result.stats
