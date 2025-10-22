@@ -33,6 +33,7 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets WHERE ENDS_WITH(name, 's')", "optimization_predicate_rewriter_ends_with_to_like"),
         ("SELECT name FROM $astronauts WHERE 'Apollo 13' = ANY(missions) AND 'Gemini 8' = ANY(missions)", "optimization_predicate_rewriter_anyeq_to_contains_all"),
         ("SELECT name, LENGTH(name) * 2 AS calc FROM $planets LIMIT 5", "optimization_limit_pushdown"), # LIMIT pushed before expensive projection
+        ("SELECT name, id * 2 AS doubled FROM $planets ORDER BY name LIMIT 3", "optimization_limit_pushdown"), # HeapSort pushed before projection
     ]
 # fmt:on
 
