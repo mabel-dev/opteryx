@@ -52,7 +52,7 @@ class LimitPushdownStrategy(OptimizationStrategy):
                 if self._can_push_before_projection(limit_node, node):
                     # This limit/heapsort can be pushed before the projection
                     pushable_limits.append(limit_node)
-            
+
             # Push the limits that can be pushed
             for limit_node in pushable_limits:
                 self.statistics.optimization_limit_pushdown += 1
@@ -101,28 +101,32 @@ class LimitPushdownStrategy(OptimizationStrategy):
     ) -> bool:
         """
         Determine if a LIMIT or HEAPSORT node can be pushed before a projection.
-        
+
         A LIMIT can always be pushed before a projection.
         A HEAPSORT can be pushed if all ORDER BY columns existed before the projection
         (i.e., they are not computed/created by the projection).
-        
+
         Args:
             limit_node: The LIMIT or HEAPSORT node to potentially push
             project_node: The PROJECT node to potentially push past
-            
+
         Returns:
             True if the limit/heapsort can be pushed before the projection
         """
         # LIMIT nodes can always be pushed before projections
         if limit_node.node_type == LogicalPlanStepType.Limit:
             return True
-        
+
         # For HEAPSORT, check if ORDER BY columns are from before the projection
         if limit_node.node_type == LogicalPlanStepType.HeapSort:
             # Get the columns that existed before this projection
             # (from pre_update_columns set by projection_pushdown)
-            columns_before_projection = project_node.pre_update_columns or set()
-            
+            columns_before_projection = getattr(project_node, "pre_update_columns", None)
+
+            # If we can't determine what columns existed before, don't push
+            if not columns_before_projection:
+                return False
+
             # Check if all ORDER BY columns existed before the projection
             order_by = getattr(limit_node, "order_by", [])
             for order_col, _ in order_by:
@@ -135,10 +139,10 @@ class LimitPushdownStrategy(OptimizationStrategy):
                 else:
                     # Can't determine column identity, don't push to be safe
                     return False
-            
+
             # All ORDER BY columns existed before the projection
             return True
-        
+
         return False
 
     def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:

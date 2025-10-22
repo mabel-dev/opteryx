@@ -69,10 +69,10 @@ def test_limit_heapsort_before_projection(query, should_optimize, description):
     """
     result = opteryx.query(query)
     stats = result.stats
-    
+
     # The optimization counter should be incremented when optimization happens
     optimization_count = stats.get("optimization_limit_pushdown", 0)
-    
+
     if should_optimize:
         # For queries that should be optimized, we expect at least one limit pushdown
         # Note: There might be multiple pushdowns in complex queries
@@ -86,7 +86,7 @@ def test_limit_heapsort_before_projection(query, should_optimize, description):
         # the optimization may still happen (e.g., pushing to scan)
         # We're mainly testing that the optimization doesn't break anything
         pass
-    
+
     # Verify the query returns results without error
     assert result is not None
 
@@ -124,9 +124,7 @@ if __name__ == "__main__":  # pragma: no cover
             else:
                 print()
         except Exception as err:
-            print(
-                f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m"
-            )
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m")
             print(">", err)
             failed += 1
 

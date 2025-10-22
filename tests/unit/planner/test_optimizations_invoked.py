@@ -52,6 +52,7 @@ def test_optimization_invoked(statement, flag):
 
 if __name__ == "__main__":  # pragma: no cover
     import shutil
+
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} OPTIMIZER TESTS")
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
