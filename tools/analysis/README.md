@@ -112,13 +112,22 @@ count                   3.50         3.74       +6.9%     1.07x
 cold_start            50.00       247.63     +395.3%     4.95x ⚠️ SLOWER
 ```
 
-### 5. run_clickbench.py
+### 5. ClickBench Performance Test (Existing, Enhanced)
 
-**Purpose:** Test warm query performance on real ClickBench queries.
+**Location:** `tests/performance/benchmarks/clickbench.py`
+
+**Purpose:** Test warm query performance on real ClickBench queries. This is the existing test suite adapted to support performance analysis with multiple iterations.
 
 **Usage:**
 ```bash
-python tools/analysis/run_clickbench.py
+# Original single-run mode
+python tests/performance/benchmarks/clickbench.py
+
+# Warm query testing mode (NEW - runs multiple iterations)
+python tests/performance/benchmarks/clickbench.py --warm
+
+# Custom iterations
+python tests/performance/benchmarks/clickbench.py --warm --iterations 5
 ```
 
 **What it does:**

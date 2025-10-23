@@ -76,9 +76,14 @@ ClickBench is a standard analytical database benchmark featuring:
 
 ### Step 1: Run ClickBench Benchmark
 
+The existing ClickBench test suite has been enhanced with warm query testing:
+
 ```bash
-# Tool has been created for this
-python tools/analysis/run_clickbench.py
+# Run with multiple iterations to test warm performance
+python tests/performance/benchmarks/clickbench.py --warm
+
+# Or with custom iteration count
+python tests/performance/benchmarks/clickbench.py --warm --iterations 5
 ```
 
 This will:
@@ -108,14 +113,14 @@ git checkout v0.24.0  # or appropriate tag
 pip install -e . --force-reinstall
 
 # Benchmark v0.24
-python tools/analysis/run_clickbench.py > clickbench-v0.24-results.txt
+python tests/performance/benchmarks/clickbench.py --warm > clickbench-v0.24-results.txt
 
 # Switch back to current
 git checkout main
 pip install -e . --force-reinstall
 
 # Benchmark current
-python tools/analysis/run_clickbench.py > clickbench-current-results.txt
+python tests/performance/benchmarks/clickbench.py --warm > clickbench-current-results.txt
 
 # Compare
 diff clickbench-v0.24-results.txt clickbench-current-results.txt
@@ -200,7 +205,7 @@ print(plan)
 
 ## Next Actions
 
-**Immediate:** Run `python tools/analysis/run_clickbench.py` to get baseline data
+**Immediate:** Run `python tests/performance/benchmarks/clickbench.py --warm` to get baseline data
 
 **Report Back:** Document which queries are slow and by how much
 

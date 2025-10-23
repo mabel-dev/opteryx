@@ -305,7 +305,7 @@ This would make Opteryx suitable for:
 ### Immediate Actions
 1. **Run ClickBench benchmarks** to quantify warm query performance:
    ```bash
-   python tools/analysis/run_clickbench.py
+   python tests/performance/benchmarks/clickbench.py --warm
    ```
 
 2. **Compare with v0.24** (if source available):
