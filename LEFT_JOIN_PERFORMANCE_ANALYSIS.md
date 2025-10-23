@@ -2,9 +2,68 @@
 
 ## Summary
 
-A performance regression was introduced in commit **2de359e4** (Sep 3, 2025) and fixed in commit **d5c0bc1b** (Sep 7, 2025). The regression caused LEFT JOIN operations to run at 100-200% of their original execution time (2-3x slower).
+The LEFT JOIN implementation underwent several significant changes between v0.23.0 and the current version:
 
-## Root Cause
+1. **Commit f132e132** (Jun 24, 2025) - "LEFT JOIN rewrite #2445": Major rewrite to fix edge case and add bloom filter optimization
+2. **Commit 2de359e4** (Sep 3, 2025) - "Review OUTER JOIN code": Introduced performance regression
+3. **Commit d5c0bc1b** (Sep 7, 2025) - "restore previous LEFT JOIN #2768": Fixed the regression
+
+The regression in 2de359e4 caused LEFT JOIN operations to run at 100-200% of their original execution time (2-3x slower), but it was fixed 4 days later in d5c0bc1b.
+
+## Key Commit: f132e132 - LEFT JOIN Rewrite (June 24, 2025)
+
+This was the **meaningful change** that addressed an edge case (issue #2445). The rewrite:
+
+**Major improvements:**
+- Added **bloom filter optimization** for pre-filtering right relation
+- Changed from two-part processing (matching + non-matching) to unified streaming approach
+- Better handling of edge cases (empty right relations, no matches)
+- Improved memory efficiency with chunking
+
+**What it fixed:**
+- Consolidated `left_outer_join_matching_rows_part()` and `left_outer_join_non_matching_rows_part()` into single `left_join()` function
+- Added early exit when bloom filter eliminates all right rows
+- Used `seen_left_rows` set instead of updating seen_rows in matching phase
+
+This commit **improved** performance and fixed edge cases - it was not a regression.
+
+### Code Changes in f132e132
+
+**Before (two-part approach):**
+```python
+def left_outer_join_matching_rows_part(...):
+    # Process matching rows
+    # Update seen_rows during processing
+    
+def left_outer_join_non_matching_rows_part(...):
+    # Process non-matching rows separately
+```
+
+**After (unified approach with bloom filter):**
+```python
+def left_join(left_relation, right_relation, ..., filter_index, left_hash):
+    # Apply bloom filter for early filtering
+    if filter_index:
+        possibly_matching_rows = filter_index.possibly_contains_many(...)
+        right_relation = right_relation.filter(possibly_matching_rows)
+        
+        # Early exit if no matches
+        if right_relation.num_rows == 0:
+            # Return all left rows with nulls
+    
+    # Build right hash table and process matches
+    right_hash = probe_side_hash_map(right_relation, right_columns)
+    for h, right_rows in right_hash.hash_table.items():
+        # Process all rows with same hash together
+        seen_left_rows.add(l)
+    
+    # Process unmatched left rows
+    unmatched = sorted(all_left - seen_left_rows)
+```
+
+This rewrite maintained the efficient hash table iteration approach while adding optimizations.
+
+## Performance Regression (Introduced Later)
 
 ### The Problematic Change (2de359e4 - "Review OUTER JOIN code")
 
@@ -75,15 +134,17 @@ This commit restored the original, efficient approach:
 
 ## Timeline
 
-1. **Pre-2de359e4**: Fast implementation using hash table iteration
-2. **2de359e4 (Sep 3, 2025)**: Regression introduced - switched to per-row iteration
-3. **d5c0bc1b (Sep 7, 2025)**: Fix applied - restored hash table iteration
-4. **Current**: Back to fast implementation
+1. **Pre-f132e132** (before Jun 24, 2025): Original implementation with two-part processing
+2. **f132e132 (Jun 24, 2025)**: **Meaningful rewrite** - Fixed edge case #2445, added bloom filters, improved implementation
+3. **2de359e4 (Sep 3, 2025)**: Regression introduced - switched from hash table iteration to per-row iteration
+4. **d5c0bc1b (Sep 7, 2025)**: Fix applied - restored hash table iteration from f132e132
+5. **Current**: Back to fast implementation with bloom filters and edge case fixes
 
 ## Related Issues
 
-- Issue/PR #2768: Referenced in the fix commit
-- The regression was likely noticed through benchmarking between v0.23.0 and later versions
+- **Issue/PR #2445**: Edge case that motivated the major rewrite in f132e132
+- **Issue/PR #2768**: Performance regression that was fixed in d5c0bc1b
+- The 100-200% slowdown mentioned in benchmarks was due to commit 2de359e4, not f132e132
 
 ## Lessons Learned
 
