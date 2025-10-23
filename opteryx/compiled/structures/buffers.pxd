@@ -17,6 +17,7 @@ cdef extern from "intbuffer.h" namespace "":
         CIntBuffer(size_t size_hint)
         void append(int64_t value)
         void extend(const vector[int64_t]& values)
+        void extend(const int64_t* values, size_t count)
         const int64_t* data() const
         size_t size() const
 
@@ -29,3 +30,6 @@ cdef class IntBuffer:
     cpdef void extend(self, iterable)
     cpdef numpy.ndarray[int64_t, ndim=1] to_numpy(self)
     cpdef size_t size(self)
+    cpdef void extend_numpy(self, numpy.ndarray[int64_t, ndim=1] arr)
+    cpdef void reserve(self, size_t capacity)
+    cpdef void append_batch(self, int64_t[::1] values)

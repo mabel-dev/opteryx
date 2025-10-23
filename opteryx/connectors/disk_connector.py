@@ -8,8 +8,11 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
+import contextlib
+import ctypes
 import mmap
 import os
+import platform
 import time
 from typing import Dict
 from typing import List
@@ -34,6 +37,7 @@ from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
 IS_WINDOWS = is_windows()
+IS_LINUX = platform.system() == "Linux"
 
 # Define os.O_BINARY for non-Windows platforms if it's not already defined
 if not hasattr(os, "O_BINARY"):
@@ -43,7 +47,12 @@ if not hasattr(os, "O_DIRECT"):
 
 mmap_config = {}
 if not IS_WINDOWS:
-    mmap_config["flags"] = mmap.MAP_PRIVATE
+    # prefer MAP_PRIVATE and on Linux enable MAP_POPULATE to fault pages in
+    flags = mmap.MAP_PRIVATE
+    if IS_LINUX and hasattr(mmap, "MAP_POPULATE"):
+        with contextlib.suppress(Exception):
+            flags |= mmap.MAP_POPULATE
+    mmap_config["flags"] = flags
     mmap_config["prot"] = mmap.PROT_READ
 else:
     mmap_config["access"] = mmap.ACCESS_READ
@@ -129,14 +138,40 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
+        file_descriptor = None
+        _map = None
         try:
             file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
+            # on platforms that support it give the kernel a hint about access pattern
             if hasattr(os, "posix_fadvise"):
-                os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
+                # sequential access is the common pattern for dataset reads
+                try:
+                    os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_SEQUENTIAL)
+                except OSError:
+                    # fallback to WILLNEED if SEQUENTIAL is not allowed
+                    with contextlib.suppress(Exception):
+                        os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
+
             size = os.fstat(file_descriptor).st_size
             _map = mmap.mmap(file_descriptor, length=size, **mmap_config)
+
+            # On Linux advise the kernel that access will be sequential to improve readahead
+            if IS_LINUX:
+                # if anything goes wrong, ignore
+                with contextlib.suppress(Exception):
+                    libc = ctypes.CDLL("libc.so.6")
+                    # MADV_SEQUENTIAL is 2 on Linux, but don't hardcode if available
+                    MADV_SEQUENTIAL = 2
+                    addr = ctypes.c_void_p(ctypes.addressof(ctypes.c_char.from_buffer(_map)))
+                    length = ctypes.c_size_t(size)
+                    libc.madvise(addr, length, MADV_SEQUENTIAL)
+
+            # pass a memoryview of the mmap to decoders - this makes intent explicit
+            # and lets decoders that can accept memoryviews avoid extra copies
+            buffer = memoryview(_map)
+
             result = decoder(
-                _map,
+                buffer,
                 just_schema=just_schema,
                 projection=projection,
                 selection=selection,
@@ -146,14 +181,20 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
 
             if not just_schema:
                 stats = self.read_blob_statistics(
-                    blob_name=blob_name, blob_bytes=_map, decoder=decoder
+                    blob_name=blob_name, blob_bytes=buffer, decoder=decoder
                 )
                 if self.relation_statistics is None:
                     self.relation_statistics = stats
 
             return result
         finally:
-            os.close(file_descriptor)
+            # Ensure mmap is closed before closing the file descriptor
+            with contextlib.suppress(Exception):
+                if _map is not None:
+                    _map.close()
+            with contextlib.suppress(Exception):
+                if file_descriptor is not None:
+                    os.close(file_descriptor)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:

@@ -34,7 +34,7 @@ import pytest
 
 # os.environ["OPTERYX_DEBUG"] = "1"
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from orso.tools import random_string
 
@@ -883,7 +883,5 @@ def test_repeated_latch_compact_unlatch_cycles():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
-
-    test_latch_counting()
 
     run_tests()

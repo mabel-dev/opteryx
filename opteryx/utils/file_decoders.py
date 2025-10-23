@@ -181,6 +181,7 @@ def zstd_decoder(
     else:
         stream = buffer
 
+    # zstandard.open returns a file-like which we pass directly to jsonl_decoder
     with zstandard.open(stream, "rb") as file:
         return jsonl_decoder(
             file, projection=projection, selection=selection, just_schema=just_schema
@@ -318,9 +319,17 @@ def parquet_decoder(
 
     # If we're here, we can't use rugo - we need to read the file with pyarrow
 
-    # Open the parquet file only once
+    # Open the parquet file only once. Prefer pyarrow.BufferReader with a
+    # pyarrow.Buffer when we have a memoryview to avoid creating intermediate
+    # Python bytes objects.
     if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
+        # pyarrow.py_buffer accepts buffer-protocol objects and is zero-copy
+        try:
+            pa_buf = pyarrow.py_buffer(buffer)
+            stream = pyarrow.BufferReader(pa_buf)
+        except Exception:
+            # fallback to MemoryViewStream if pyarrow can't handle this memoryview
+            stream = MemoryViewStream(buffer)
     elif isinstance(buffer, bytes):
         stream = pyarrow.BufferReader(buffer)
     else:
@@ -444,10 +453,12 @@ def jsonl_decoder(
 
     from opteryx.third_party.tktech import csimdjson as simdjson
 
+    # Normalize inputs: accept memoryview, bytes, or file-like objects.
     if isinstance(buffer, memoryview):
-        # If it's a memoryview, we need to convert it to bytes
+        # Convert to bytes once; many downstream codepaths expect a bytes object
         buffer = buffer.tobytes()
-    if not isinstance(buffer, bytes):
+    elif not isinstance(buffer, bytes) and hasattr(buffer, "read"):
+        # file-like: read once into memory
         buffer = buffer.read()
 
     # If it's COUNT(*), we don't need to create a full dataset
