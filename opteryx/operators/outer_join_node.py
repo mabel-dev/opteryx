@@ -14,17 +14,15 @@ OUTER JOIN implementations.
 """
 
 import time
-from array import array
 from typing import List
 
 import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.joins import build_side_hash_map
-from opteryx.compiled.joins import probe_side_hash_map
+from opteryx.compiled.joins import left_join_optimized
 from opteryx.compiled.joins import right_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
-from opteryx.compiled.structures.buffers import IntBuffer
 from opteryx.compiled.structures.hash_table import HashTable
 from opteryx.models import QueryProperties
 from opteryx.utils.arrow import align_tables
@@ -32,83 +30,6 @@ from opteryx.utils.arrow import align_tables
 from . import JoinNode
 
 CHUNK_SIZE: int = 50_000
-
-
-def left_join(
-    left_relation,
-    right_relation,
-    left_columns: List[str],
-    right_columns: List[str],
-    filter_index,
-    left_hash,
-):
-    """
-    Perform a LEFT OUTER JOIN using a prebuilt hash map and optional filter.
-
-    Yields:
-        pyarrow.Table chunks of the joined result.
-    """
-
-    left_indexes = IntBuffer()
-    right_indexes = IntBuffer()
-    seen_flags = array("b", [0]) * left_relation.num_rows
-
-    if filter_index:
-        # We can just dispose of rows from the right relation that don't match
-        # our bloom filter
-        possibly_matching_rows = filter_index.possibly_contains_many(right_relation, right_columns)
-        right_relation = right_relation.filter(possibly_matching_rows)
-
-        # If there's no matching rows in the right relation, we can exit early
-        if right_relation.num_rows == 0:
-            # Short circuit: no matching right rows at all
-            for i in range(0, left_relation.num_rows, CHUNK_SIZE):
-                chunk = list(range(i, min(i + CHUNK_SIZE, left_relation.num_rows)))
-                yield align_tables(
-                    source_table=left_relation,
-                    append_table=right_relation.slice(0, 0),
-                    source_indices=chunk,
-                    append_indices=[None] * len(chunk),
-                )
-            return
-
-    # Build the hash table of the right relation
-    right_hash = probe_side_hash_map(right_relation, right_columns)
-
-    for h, right_rows in right_hash.hash_table.items():
-        left_rows = left_hash.get(h)
-        if not left_rows:
-            continue
-        for l in left_rows:
-            seen_flags[l] = 1
-            left_indexes.extend([l] * len(right_rows))
-            right_indexes.extend(right_rows)
-
-    # Yield matching rows
-    if left_indexes.size() > 0:
-        yield align_tables(
-            right_relation,
-            left_relation,
-            right_indexes.to_numpy(),
-            left_indexes.to_numpy(),
-        )
-
-    # Emit unmatched left rows using null-filled right columns
-    unmatched = [i for i, seen in enumerate(seen_flags) if not seen]
-
-    if unmatched:
-        unmatched_left = left_relation.take(pyarrow.array(unmatched))
-        # Create a right-side table with zero rows, we do this because
-        # we want arrow to do the heavy lifting of adding new columns to
-        # the left relation, we do not want to add rows to the left
-        # relation - arrow is faster at adding null columns that we can be.
-        null_right = pyarrow.table(
-            [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
-            schema=right_relation.schema,
-        )
-        yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
-
-    return
 
 
 def full_join(
@@ -230,4 +151,4 @@ class OuterJoinNode(JoinNode):
                 yield None
 
 
-providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}
+providers = {"left outer": left_join_optimized, "full outer": full_join, "right outer": right_join}
