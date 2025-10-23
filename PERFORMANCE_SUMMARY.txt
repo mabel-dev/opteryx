@@ -3,10 +3,10 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ┌─ ISSUE VERIFICATION ────────────────────────────────────────────────────────┐
-│ ✅ Performance regression CONFIRMED                                         │
-│ ✅ Root cause IDENTIFIED                                                    │
-│ ✅ Warm performance is EXCELLENT                                            │
-│ ⚠️  Cold start is 72.3x SLOWER than warm                                    │
+│ ✅ Cold start regression CONFIRMED (72.3x slower)                           │
+│ ⚠️  Warm query performance needs further investigation                      │
+│ ✅ Root cause for cold start IDENTIFIED                                     │
+│ ⚠️  ClickBench queries reported slower even when warm                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─ PERFORMANCE METRICS ───────────────────────────────────────────────────────┐
@@ -17,13 +17,18 @@
 │  └─ Ratio vs warm:      72.3x  ⚠️                                           │
 │                                                                              │
 │  Warm Performance (After First Query)                                       │
-│  ├─ COUNT:                3.6ms  ✅                                          │
-│  ├─ SELECT:               3.4ms  ✅                                          │
-│  ├─ WHERE:                5.8ms  ✅                                          │
-│  ├─ Aggregation:          5.4ms  ✅                                          │
-│  ├─ GROUP BY:             4.9ms  ✅                                          │
-│  ├─ JOIN:                 8.3ms  ✅                                          │
-│  └─ String ops:           7.4ms  ✅                                          │
+│  ├─ Simple queries (small datasets):                                        │
+│  │  ├─ COUNT:                3.6ms  ✅                                       │
+│  │  ├─ SELECT:               3.4ms  ✅                                       │
+│  │  ├─ WHERE:                5.8ms  ✅                                       │
+│  │  ├─ Aggregation:          5.4ms  ✅                                       │
+│  │  ├─ GROUP BY:             4.9ms  ✅                                       │
+│  │  ├─ JOIN:                 8.3ms  ✅                                       │
+│  │  └─ String ops:           7.4ms  ✅                                       │
+│  │                                                                           │
+│  └─ ClickBench queries (real workload):                                     │
+│     └─ Performance degradation reported ⚠️                                  │
+│        (Needs comprehensive benchmarking)                                   │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -68,6 +73,7 @@
 │  ✅ performance_comparison.py    - Benchmark suite                          │
 │  ✅ detailed_profiler.py         - Deep profiling                           │
 │  ✅ compare_versions.py          - Version comparison                       │
+│  ✅ run_clickbench.py            - ClickBench warm query testing            │
 │  ✅ PERFORMANCE_ANALYSIS.md      - Detailed analysis                        │
 │  ✅ QUICK_START_PERFORMANCE_FIX.md - Implementation guide                   │
 │  ✅ tools/analysis/README.md     - Tool documentation                       │
@@ -86,17 +92,20 @@
 
 ┌─ NEXT STEPS ────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│  1. Review QUICK_START_PERFORMANCE_FIX.md                                   │
-│  2. Implement lazy loading for cache managers                               │
-│  3. Defer heavy imports (pandas, pyarrow)                                   │
-│  4. Test with: python tools/analysis/compare_versions.py                    │
-│  5. Add performance regression tests to CI                                  │
+│  1. Run ClickBench benchmarks: python tools/analysis/run_clickbench.py     │
+│  2. Compare results with v0.24 if available                                 │
+│  3. Profile slow queries to identify algorithmic issues                     │
+│  4. Implement lazy loading for cache managers (cold start fix)              │
+│  5. Defer heavy imports (pandas, pyarrow)                                   │
+│  6. Add performance regression tests to CI                                  │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  CONCLUSION: Issue verified. Warm performance excellent. Cold start needs   ║
-║  optimization via lazy loading. Estimated fix effort: 2-3 days.             ║
+║  CONCLUSION: Two issues identified:                                         ║
+║  1. Cold start issue (confirmed) - needs lazy loading fix                   ║
+║  2. Warm query performance (needs investigation) - run ClickBench suite     ║
+║  Estimated cold start fix effort: 2-3 days. Warm query investigation: TBD   ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ═══════════════════════════════════════════════════════════════════════════════

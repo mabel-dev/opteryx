@@ -112,7 +112,36 @@ count                   3.50         3.74       +6.9%     1.07x
 cold_start            50.00       247.63     +395.3%     4.95x ⚠️ SLOWER
 ```
 
-### 5. query_profiler.py
+### 5. run_clickbench.py
+
+**Purpose:** Test warm query performance on real ClickBench queries.
+
+**Usage:**
+```bash
+python tools/analysis/run_clickbench.py
+```
+
+**What it does:**
+- Runs ClickBench benchmark queries (real-world analytical queries)
+- Measures warm performance (after cold start)
+- Tests complex queries with GROUP BY, aggregations, JOINs
+- Identifies slow queries (>500ms)
+- Checks for performance variance
+
+**When to use:**
+- To verify warm query performance on realistic workloads
+- When maintainer reports ClickBench queries are slow
+- To identify algorithmic performance issues
+- To compare with previous versions
+
+**Example output:**
+```
+Query    Run 1        Run 2        Run 3        Avg         Min         Max
+Q01      15.20ms      14.80ms      14.90ms      14.97ms     14.80ms     15.20ms
+Q05      856.30ms     845.20ms     851.10ms     850.87ms    845.20ms    856.30ms ⚠️
+```
+
+### 6. query_profiler.py
 
 **Purpose:** Profile individual queries with detailed metrics.
 

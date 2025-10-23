@@ -43,22 +43,36 @@ Using `python -X importtime -c 'import opteryx'`:
 - PyArrow
 - Third-party libraries added in PR #2856
 
-### 3. Warm Query Performance ✅
+### 3. Warm Query Performance (Simple Queries)
 
-After the initial cold start, performance is very good:
+After the initial cold start, performance is very good on simple queries using virtual datasets:
 
-| Operation | Warm Time | Status |
-|-----------|-----------|--------|
-| Simple COUNT | 3.6ms | ✅ Excellent |
-| Simple SELECT | 3.4ms | ✅ Excellent |
-| WHERE clause | 5.8ms | ✅ Excellent |
-| Aggregation (AVG/MAX/MIN) | 5.4ms | ✅ Excellent |
-| GROUP BY | 4.9ms | ✅ Excellent |
-| JOIN | 8.3ms | ✅ Excellent |
-| String operations | 7.4ms | ✅ Excellent |
-| ORDER BY | 4.5ms | ✅ Excellent |
+| Operation | Warm Time | Status | Dataset |
+|-----------|-----------|--------|---------|
+| Simple COUNT | 3.6ms | ✅ Excellent | $planets (9 rows) |
+| Simple SELECT | 3.4ms | ✅ Excellent | $planets (9 rows) |
+| WHERE clause | 5.8ms | ✅ Excellent | $planets (9 rows) |
+| Aggregation (AVG/MAX/MIN) | 5.4ms | ✅ Excellent | $planets (9 rows) |
+| GROUP BY | 4.9ms | ✅ Excellent | $satellites (177 rows) |
+| JOIN | 8.3ms | ✅ Excellent | $planets ⋈ $satellites |
+| String operations | 7.4ms | ✅ Excellent | $planets (9 rows) |
+| ORDER BY | 4.5ms | ✅ Excellent | $planets (9 rows) |
 
-### 4. Compilation Status
+**⚠️ LIMITATION:** These benchmarks use small virtual datasets. Real-world performance on larger datasets (like ClickBench) may differ significantly. Further testing is needed on realistic workloads.
+
+### 4. ClickBench Performance Concern ⚠️
+
+**Note from maintainer (@joocer):** ClickBench queries show performance degradation even when warm. The simple query benchmarks above may not reflect real-world performance on complex queries with larger datasets.
+
+**Action Required:**
+- Run comprehensive ClickBench benchmark suite
+- Compare warm query times with v0.24 baseline
+- Identify which specific query patterns are slower
+- Profile slow queries to find algorithmic bottlenecks
+
+The `tools/analysis/run_clickbench.py` tool has been created to specifically test this.
+
+### 5. Compilation Status
 
 - **Compiled extensions:** 18 of 50 Cython files
 - **Missing:** Most list_ops extensions are not included in setup.py
@@ -257,11 +271,28 @@ This analysis created three diagnostic tools:
 
 ## Conclusion
 
-The performance "regression" is actually a **trade-off**:
-- ❌ **Worse:** Cold start penalty (~260ms vs likely <50ms in v0.24)
-- ✅ **Better:** Warm query performance (optimized C/C++ code)
+The analysis reveals **two distinct performance issues**:
 
-**Recommendation:** Implement lazy loading and deferred initialization to get the best of both worlds - fast cold starts AND fast warm queries.
+1. **Cold Start Issue (Confirmed)**: ~260ms initialization overhead
+   - ❌ Impact: CLI, serverless, test suites  
+   - ✅ Solution identified: Lazy loading + deferred initialization
+   - Estimated improvement: 60%+ reduction
+
+2. **Warm Query Performance (Requires Investigation)**:
+   - ✅ Simple queries on small datasets: Excellent (2-8ms)
+   - ⚠️ ClickBench queries: Maintainer reports degradation even when warm
+   - ❌ Gap: Initial analysis did not cover comprehensive real-world workloads
+   - 🔍 Action: Run ClickBench suite and compare with v0.24
+
+**Trade-off from PR #2856:**
+- ✅ **Better:** Optimized code paths (Cython/C++)
+- ❌ **Worse:** Cold start penalty + possible algorithmic regressions
+
+**Recommendations:**
+1. **Immediate**: Implement lazy loading to fix cold start
+2. **Critical**: Run ClickBench benchmarks to quantify warm query issues
+3. **Investigation**: Deep profile slow queries to identify algorithmic problems
+4. **Validation**: Compare against v0.24 baseline if available
 
 This would make Opteryx suitable for:
 - ✅ Long-running applications (already good)
@@ -271,8 +302,28 @@ This would make Opteryx suitable for:
 
 ## Next Steps
 
-1. Review and prioritize recommendations
-2. Implement lazy loading for cache managers
-3. Defer heavy imports to first use
+### Immediate Actions
+1. **Run ClickBench benchmarks** to quantify warm query performance:
+   ```bash
+   python tools/analysis/run_clickbench.py
+   ```
+
+2. **Compare with v0.24** (if source available):
+   - Checkout v0.24 tag
+   - Run same ClickBench suite
+   - Identify specific query regressions
+
+### Cold Start Fixes
+1. Implement lazy loading for cache managers
+2. Defer heavy imports to first use
+3. Lazy virtual dataset registration
+4. Re-benchmark after changes
+
+### Warm Query Investigation
+1. Profile slow ClickBench queries with detailed_profiler.py
+2. Identify algorithmic issues (O(n²) operations, etc.)
+3. Check if compiled extensions are being used
+4. Compare execution plans with v0.24
+5. Add performance regression tests to CI
 4. Re-benchmark after changes
 5. Consider adding performance regression tests to CI
