@@ -1,0 +1,105 @@
+{
+  "version": "0.26.0-beta.1676",
+  "timestamp": "2025-10-23T11:36:41.931482",
+  "total_queries": 8,
+  "successful": 8,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Simple COUNT",
+      "query": "SELECT COUNT(*) FROM $planets",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 87.28,
+      "min_time_ms": 3.86,
+      "max_time_ms": 420.79,
+      "avg_memory_delta_mb": 13.57,
+      "row_count": 1,
+      "col_count": 1
+    },
+    {
+      "name": "Simple SELECT with WHERE",
+      "query": "SELECT * FROM $planets WHERE gravity > 10",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 6.16,
+      "min_time_ms": 5.98,
+      "max_time_ms": 6.68,
+      "avg_memory_delta_mb": 0.3,
+      "row_count": 2,
+      "col_count": 20
+    },
+    {
+      "name": "Simple aggregation",
+      "query": "SELECT AVG(gravity), MAX(mass) FROM $planets",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 4.83,
+      "min_time_ms": 4.75,
+      "max_time_ms": 4.94,
+      "avg_memory_delta_mb": 0.07,
+      "row_count": 1,
+      "col_count": 2
+    },
+    {
+      "name": "GROUP BY with aggregation",
+      "query": "SELECT name, COUNT(*) FROM $satellites GROUP BY name",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 6.62,
+      "min_time_ms": 5.1,
+      "max_time_ms": 12.12,
+      "avg_memory_delta_mb": 3.04,
+      "row_count": 177,
+      "col_count": 2
+    },
+    {
+      "name": "Simple JOIN",
+      "query": "SELECT p.name, s.name FROM $planets p JOIN $satellites s ON p.id = s.planetId",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 8.15,
+      "min_time_ms": 8.02,
+      "max_time_ms": 8.39,
+      "avg_memory_delta_mb": 0.09,
+      "row_count": 177,
+      "col_count": 2
+    },
+    {
+      "name": "String functions",
+      "query": "SELECT UPPER(name), LENGTH(name) FROM $planets WHERE name LIKE 'M%'",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 7.37,
+      "min_time_ms": 6.53,
+      "max_time_ms": 10.46,
+      "avg_memory_delta_mb": 0.39,
+      "row_count": 2,
+      "col_count": 2
+    },
+    {
+      "name": "ORDER BY single column",
+      "query": "SELECT * FROM $planets ORDER BY mass DESC",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 4.83,
+      "min_time_ms": 4.78,
+      "max_time_ms": 4.97,
+      "avg_memory_delta_mb": 0.05,
+      "row_count": 9,
+      "col_count": 20
+    },
+    {
+      "name": "ORDER BY multiple columns",
+      "query": "SELECT * FROM $planets ORDER BY gravity DESC, mass ASC",
+      "status": "success",
+      "iterations": 5,
+      "avg_time_ms": 4.89,
+      "min_time_ms": 4.83,
+      "max_time_ms": 4.94,
+      "avg_memory_delta_mb": 0.05,
+      "row_count": 9,
+      "col_count": 20
+    }
+  ]
+}
