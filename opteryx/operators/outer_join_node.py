@@ -11,24 +11,16 @@ This is a SQL Query Execution Plan Node.
 PyArrow has LEFT/RIGHT/FULL OUTER JOIN implementations, but they error when the
 relations being joined contain STRUCT or ARRAY columns so we've written our own
 OUTER JOIN implementations.
-
-Performance Optimizations (LEFT OUTER JOIN):
-- Streaming processing: Right relation is processed in morsels instead of being fully buffered
-- Memory efficiency: Reduced memory footprint by avoiding full right relation buffering
-- Cython optimization: Uses optimized Cython implementation with C-level memory management
-- Numpy arrays: Uses numpy for faster seen_flags tracking vs Python arrays
-- Bloom filters: Pre-filters right relation to quickly eliminate non-matching rows
-- Early termination: Tracks matched left rows to enable potential short-circuits
 """
 
 import time
+from array import array
 from typing import List
 
 import pyarrow
 
 from opteryx import EOS
 from opteryx.compiled.joins import build_side_hash_map
-from opteryx.compiled.joins import left_join_optimized
 from opteryx.compiled.joins import probe_side_hash_map
 from opteryx.compiled.joins import right_join
 from opteryx.compiled.structures.bloom_filter import create_bloom_filter
@@ -52,22 +44,14 @@ def left_join(
 ):
     """
     Perform a LEFT OUTER JOIN using a prebuilt hash map and optional filter.
-    
-    This implementation is optimized for performance by:
-    1. Using Cython-optimized IntBuffer for index tracking
-    2. Using numpy array for seen_flags (faster than Python array)
-    3. Early termination when all left rows are matched
-    4. Efficient bloom filter pre-filtering
-    
+
     Yields:
         pyarrow.Table chunks of the joined result.
     """
-    import numpy
 
     left_indexes = IntBuffer()
     right_indexes = IntBuffer()
-    # Use numpy array instead of Python array for better performance
-    seen_flags = numpy.zeros(left_relation.num_rows, dtype=numpy.uint8)
+    seen_flags = array("b", [0]) * left_relation.num_rows
 
     if filter_index:
         # We can just dispose of rows from the right relation that don't match
@@ -91,24 +75,14 @@ def left_join(
     # Build the hash table of the right relation
     right_hash = probe_side_hash_map(right_relation, right_columns)
 
-    # Track number of matched left rows for early termination
-    matched_count = 0
-    total_left_rows = left_relation.num_rows
-
     for h, right_rows in right_hash.hash_table.items():
         left_rows = left_hash.get(h)
         if not left_rows:
             continue
         for l in left_rows:
-            if seen_flags[l] == 0:
-                seen_flags[l] = 1
-                matched_count += 1
+            seen_flags[l] = 1
             left_indexes.extend([l] * len(right_rows))
             right_indexes.extend(right_rows)
-        
-        # Early termination: if all left rows are matched, no need to continue
-        if matched_count == total_left_rows:
-            break
 
     # Yield matching rows
     if left_indexes.size() > 0:
@@ -119,22 +93,20 @@ def left_join(
             left_indexes.to_numpy(),
         )
 
-    # Only process unmatched rows if we didn't match everything
-    if matched_count < total_left_rows:
-        # Use numpy where for faster array filtering
-        unmatched = numpy.where(seen_flags == 0)[0]
+    # Emit unmatched left rows using null-filled right columns
+    unmatched = [i for i, seen in enumerate(seen_flags) if not seen]
 
-        if len(unmatched) > 0:
-            unmatched_left = left_relation.take(pyarrow.array(unmatched))
-            # Create a right-side table with zero rows, we do this because
-            # we want arrow to do the heavy lifting of adding new columns to
-            # the left relation, we do not want to add rows to the left
-            # relation - arrow is faster at adding null columns that we can be.
-            null_right = pyarrow.table(
-                [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
-                schema=right_relation.schema,
-            )
-            yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
+    if unmatched:
+        unmatched_left = left_relation.take(pyarrow.array(unmatched))
+        # Create a right-side table with zero rows, we do this because
+        # we want arrow to do the heavy lifting of adding new columns to
+        # the left relation, we do not want to add rows to the left
+        # relation - arrow is faster at adding null columns that we can be.
+        null_right = pyarrow.table(
+            [pyarrow.nulls(0, type=field.type) for field in right_relation.schema],
+            schema=right_relation.schema,
+        )
+        yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
 
     return
 
@@ -189,12 +161,10 @@ class OuterJoinNode(JoinNode):
         self.left_buffer = []
         self.left_buffer_columns = None
         self.right_buffer = []
-        self.right_schema = None  # Store right relation schema for streaming
         self.left_relation = None
         self.empty_right_relation = None
         self.left_hash = None
-        self.left_seen_flags = None  # numpy array for tracking matched rows (streaming)
-        self.matched_count = 0  # Track how many left rows have been matched (streaming)
+        self.left_seen_rows = set()
 
         self.filter_index = None
 
@@ -215,16 +185,12 @@ class OuterJoinNode(JoinNode):
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
         if join_leg == "left":
             if morsel == EOS:
-                import numpy
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
                 if self.join_type == "left outer":
                     start = time.monotonic_ns()
                     self.left_hash = build_side_hash_map(self.left_relation, self.left_columns)
                     self.statistics.time_build_hash_map += time.monotonic_ns() - start
-
-                    # Initialize seen_flags array for tracking matched rows (streaming)
-                    self.left_seen_flags = numpy.zeros(self.left_relation.num_rows, dtype=numpy.uint8)
 
                     if self.left_relation.num_rows < 16_000_001:
                         start = time.monotonic_ns()
@@ -244,97 +210,24 @@ class OuterJoinNode(JoinNode):
 
         if join_leg == "right":
             if morsel == EOS:
-                # For non-left outer joins, use the original buffering approach
-                if self.join_type != "left outer":
-                    right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
-                    self.right_buffer.clear()
+                right_relation = pyarrow.concat_tables(self.right_buffer, promote_options="none")
+                self.right_buffer.clear()
 
-                    join_provider = providers.get(self.join_type)
+                join_provider = providers.get(self.join_type)
 
-                    yield from join_provider(
-                        left_relation=self.left_relation,
-                        right_relation=right_relation,
-                        left_columns=self.left_columns,
-                        right_columns=self.right_columns,
-                        left_hash=self.left_hash,
-                        filter_index=self.filter_index,
-                    )
-                else:
-                    # For left outer join, emit unmatched left rows after all right data is processed
-                    import numpy
-                    
-                    # Only process unmatched rows if we didn't match everything
-                    if self.matched_count < self.left_relation.num_rows:
-                        unmatched = numpy.where(self.left_seen_flags == 0)[0]
-                        
-                        if len(unmatched) > 0 and self.right_schema is not None:
-                            unmatched_left = self.left_relation.take(pyarrow.array(unmatched))
-                            # Create a right-side table with zero rows using the stored schema
-                            null_right = pyarrow.table(
-                                [pyarrow.nulls(0, type=field.type) for field in self.right_schema],
-                                schema=self.right_schema,
-                            )
-                            yield pyarrow.concat_tables([unmatched_left, null_right], promote_options="permissive")
-                
+                yield from join_provider(
+                    left_relation=self.left_relation,
+                    right_relation=right_relation,
+                    left_columns=self.left_columns,
+                    right_columns=self.right_columns,
+                    left_hash=self.left_hash,
+                    filter_index=self.filter_index,
+                )
                 yield EOS
 
             else:
-                # For left outer join, process right morsels as they arrive (streaming)
-                if self.join_type == "left outer":
-                    yield from self._process_left_outer_join_morsel(morsel)
-                else:
-                    # For other join types, buffer the right relation
-                    self.right_buffer.append(morsel)
-                    yield None
-    
-    def _process_left_outer_join_morsel(self, morsel: pyarrow.Table):
-        """
-        Process a single right-side morsel for left outer join.
-        This enables streaming processing instead of buffering all right data.
-        """
-        # Store schema from first morsel for later use when emitting unmatched rows
-        if self.right_schema is None:
-            self.right_schema = morsel.schema
-        
-        # Apply bloom filter if available
-        if self.filter_index:
-            possibly_matching_rows = self.filter_index.possibly_contains_many(morsel, self.right_columns)
-            morsel = morsel.filter(possibly_matching_rows)
-            
-            # If no matches after filtering, skip this morsel
-            if morsel.num_rows == 0:
+                self.right_buffer.append(morsel)
                 yield None
-                return
-        
-        # Build hash map for this right morsel
-        right_hash = probe_side_hash_map(morsel, self.right_columns)
-        
-        left_indexes = IntBuffer()
-        right_indexes = IntBuffer()
-        
-        # Find matching rows
-        for h, right_rows in right_hash.hash_table.items():
-            left_rows = self.left_hash.get(h)
-            if not left_rows:
-                continue
-            for l in left_rows:
-                # Mark this left row as seen (only count once)
-                if self.left_seen_flags[l] == 0:
-                    self.left_seen_flags[l] = 1
-                    self.matched_count += 1
-                left_indexes.extend([l] * len(right_rows))
-                right_indexes.extend(right_rows)
-        
-        # Yield matching rows if any
-        if left_indexes.size() > 0:
-            yield align_tables(
-                morsel,
-                self.left_relation,
-                right_indexes.to_numpy(),
-                left_indexes.to_numpy(),
-            )
-        else:
-            yield None
 
 
 providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}
