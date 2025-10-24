@@ -87,7 +87,6 @@ full functionality.
 
 import os
 
-import pyarrow
 
 # Lazy imports - connectors are only loaded when actually needed
 # This significantly improves module import time from ~500ms to ~130ms
@@ -196,6 +195,7 @@ def register_df(name, frame):
     """register a orso, pandas or Polars dataframe"""
     # Lazy import ArrowConnector
     from opteryx.connectors.arrow_connector import ArrowConnector
+    import pyarrow
 
     # polars (maybe others) - the polars to arrow API is a mess
     if hasattr(frame, "_df"):  # pragma: no cover

@@ -25,9 +25,10 @@ import platform
 from pathlib import Path
 
 from decimal import getcontext
-from typing import Optional, Union, Dict, Any, List
+from typing import Optional, Union, Dict, Any, List, TYPE_CHECKING
 
-import pyarrow
+if TYPE_CHECKING:  # pragma: no cover - only for type checkers
+    import pyarrow
 
 # Set Decimal precision to 28 globally
 getcontext().prec = 28
@@ -51,16 +52,19 @@ OPTERYX_DEBUG = os.environ.get("OPTERYX_DEBUG") is not None
 
 
 # python-dotenv allows us to create an environment file to store secrets.
-try:
-    import dotenv  # type:ignore
+# Only try to import dotenv if a .env file exists to avoid paying the
+# import cost when no environment file is present.
+_env_path = Path.cwd() / ".env"
+if _env_path.exists():
+    try:
+        import dotenv  # type:ignore
 
-    _env_path = Path.cwd() / ".env"
-    if _env_path.exists() and dotenv is not None:
         dotenv.load_dotenv(dotenv_path=_env_path)
         if OPTERYX_DEBUG:
             print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
-except ImportError:  # pragma: no cover
-    pass
+    except ImportError:  # pragma: no cover
+        # dotenv is optional; if it's not installed, just continue.
+        pass
 
 
 if OPTERYX_DEBUG:  # pragma: no cover
@@ -179,7 +183,7 @@ def query_to_arrow(
     visibility_filters: Optional[Dict[str, Any]] = None,
     limit: int = None,
     **kwargs,
-) -> pyarrow.Table:
+ ) -> "pyarrow.Table":
     """
     Helper function to execute a query and return a pyarrow Table.
 

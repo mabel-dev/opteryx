@@ -12,7 +12,6 @@ A command line interface for Opteryx
 
 import argparse
 import os
-import readline
 import sys
 import threading
 import time
@@ -24,10 +23,6 @@ if True:
     from opteryx.exceptions import MissingSqlStatement
     from opteryx.utils.sql import clean_statement
     from opteryx.utils.sql import remove_comments
-
-
-if readline:
-    pass
 
 # Define ANSI color codes
 ANSI_RED = "\u001b[31m"
@@ -209,6 +204,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import readline  # pragma: no cover
     try:
         main()
     except Exception as e:
