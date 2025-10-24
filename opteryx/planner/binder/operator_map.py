@@ -279,6 +279,12 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "LongArrow"): OperatorMapType(OrsoTypes.BLOB, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.BLOB, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.BLOB, "LongArrow"): OperatorMapType(OrsoTypes.BLOB, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.BLOB, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.VARCHAR, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.VARCHAR, "LongArrow"): OperatorMapType(OrsoTypes.BLOB, None, 100.0),
+    (OrsoTypes.JSONB, OrsoTypes.VARCHAR, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
 
 }
 # fmt:on
