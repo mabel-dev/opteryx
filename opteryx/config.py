@@ -10,8 +10,6 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-import psutil
-
 _config_values: dict = {}
 
 # we need a preliminary version of this variable
@@ -30,8 +28,16 @@ def memory_allocation_calculation(allocation: Union[float, int]) -> int:
     Returns:
         int: Memory size in bytes to be allocated.
     """
-    total_memory = psutil.virtual_memory().total  # Convert bytes to megabytes
 
+    # Import psutil lazily to avoid paying the import cost at module import time.
+    # Use a small helper so tests or callers that need the value will trigger the
+    # import only when this function is called.
+    def _get_total_memory_bytes() -> int:
+        import psutil
+
+        return psutil.virtual_memory().total
+
+    total_memory = _get_total_memory_bytes()
     if 0 < allocation < 1:  # Treat as a percentage
         return int(total_memory * allocation)
     elif allocation >= 1:  # Treat as an absolute value in MB
@@ -44,9 +50,13 @@ def system_gigabytes() -> int:
     """
     Get the total system memory in gigabytes.
 
+    This imports psutil lazily to avoid paying the cost at module import time.
+
     Returns:
         int: Total system memory in gigabytes.
     """
+    import psutil
+
     return psutil.virtual_memory().total // (1024 * 1024 * 1024)
 
 
@@ -163,20 +173,67 @@ MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 2 * 1024 * 102
 MAX_CONSECUTIVE_CACHE_FAILURES: int = int(get("MAX_CONSECUTIVE_CACHE_FAILURES", 10))
 """Maximum number of consecutive cache failures before disabling cache usage."""
 
-MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
-"""Local buffer pool size in either bytes or fraction of system memory."""
+# These values are computed lazily via __getattr__ to avoid importing
+# psutil (and making expensive system calls) during module import.
+# Annotate the names so type checkers know about them, but do not assign
+# values here — __getattr__ will compute and cache them on first access.
+MAX_LOCAL_BUFFER_CAPACITY: int
+"""Local buffer pool size in either bytes or fraction of system memory (lazy)."""
 
-MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
-"""Read buffer pool size in either bytes or fraction of system memory."""
+MAX_READ_BUFFER_CAPACITY: int
+"""Read buffer pool size in either bytes or fraction of system memory (lazy)."""
 
 MAX_STATISTICS_CACHE_ITEMS: int = get("MAX_STATISTICS_CACHE_ITEMS", 10_000)
 """The number of .parquet files we cache the statistics for."""
 
-CONCURRENT_READS: int = int(get("CONCURRENT_READS", max(system_gigabytes(), 2)))
-"""Number of read workers per data source."""
+_LAZY_VALUES: dict = {}
 
-CONCURRENT_WORKERS: int = int(get("CONCURRENT_WORKERS", 2))
-"""Number of worker threads created to execute queries."""
+
+# Lazily computed configuration values. We compute certain values on first
+# access because they depend on expensive system calls (psutil) or other
+# runtime properties. Access these as attributes on the module; __getattr__
+# will compute and cache them.
+
+CONCURRENT_WORKERS_DEFAULT = int(get("CONCURRENT_WORKERS", 2))
+
+
+def _compute_MAX_LOCAL_BUFFER_CAPACITY():
+    return memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
+
+
+def _compute_MAX_READ_BUFFER_CAPACITY():
+    return memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
+
+
+def _compute_CONCURRENT_READS():
+    # default to max(system_gigabytes(), 2)
+    return int(get("CONCURRENT_READS", max(system_gigabytes(), 2)))
+
+
+def __getattr__(name: str):
+    """Lazy attribute access for computed config values."""
+    if name == "MAX_LOCAL_BUFFER_CAPACITY":
+        val = _LAZY_VALUES.get(name)
+        if val is None:
+            val = _compute_MAX_LOCAL_BUFFER_CAPACITY()
+            _LAZY_VALUES[name] = val
+        return val
+    if name == "MAX_READ_BUFFER_CAPACITY":
+        val = _LAZY_VALUES.get(name)
+        if val is None:
+            val = _compute_MAX_READ_BUFFER_CAPACITY()
+            _LAZY_VALUES[name] = val
+        return val
+    if name == "CONCURRENT_READS":
+        val = _LAZY_VALUES.get(name)
+        if val is None:
+            val = _compute_CONCURRENT_READS()
+            _LAZY_VALUES[name] = val
+        return val
+    if name == "CONCURRENT_WORKERS":
+        # simple default, no expensive computation
+        return CONCURRENT_WORKERS_DEFAULT
+    raise AttributeError(name)
 
 DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
 """Data Catalog provider."""
@@ -197,6 +254,7 @@ DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 # don't output resource (memory) utilization information
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 # size of morsels to push between steps
+# MORSEL_SIZE remains a plain constant
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
 # not GA
 PROFILE_LOCATION:str = get("PROFILE_LOCATION")

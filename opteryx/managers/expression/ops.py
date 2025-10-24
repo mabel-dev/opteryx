@@ -148,17 +148,17 @@ def _inner_filter_operations(arr, operator, value):
             value = pyarrow.array(value)
 
     if operator == "Eq":
-        return compute.equal(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.equal(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "NotEq":
-        return compute.not_equal(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.not_equal(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "Lt":
-        return compute.less(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.less(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "Gt":
-        return compute.greater(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.greater(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "LtEq":
-        return compute.less_equal(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.less_equal(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "GtEq":
-        return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "InList":
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
@@ -195,37 +195,49 @@ def _inner_filter_operations(arr, operator, value):
             matches = list_ops.list_in_list_int64(memoryview(arr), values, len(arr))
         else:
             matches = list_ops.list_in_list(arr.astype(object), values)
-        return numpy.invert(matches.astype(dtype=bool))
+        return numpy.invert(matches.astype(dtype=numpy.bool_))
     if operator == "InStr":
         needle = str(value)
-        arr = pyarrow.array(arr)
-        return numpy.asarray(list_ops.list_in_string(arr, needle), dtype=bool)
+        if not isinstance(arr, (pyarrow.Array, pyarrow.ChunkedArray)):
+            arr = pyarrow.array(arr, type=pyarrow.binary())
+        matches = list_ops.list_in_string(arr, needle)
+        return numpy.frombuffer(matches, dtype=numpy.bool_)
     if operator == "NotInStr":
         needle = str(value)
-        arr = pyarrow.array(arr)
-        matches = numpy.asarray(list_ops.list_in_string(arr, needle), dtype=bool)
+        if not isinstance(arr, (pyarrow.Array, pyarrow.ChunkedArray)):
+            arr = pyarrow.array(arr, type=pyarrow.binary())
+        matches = list_ops.list_in_string(arr, needle)
+        matches = numpy.frombuffer(matches, dtype=numpy.bool_)
         return numpy.invert(matches)
     if operator == "IInStr":
         needle = str(value)
-        arr = pyarrow.array(arr)
-        return numpy.asarray(list_ops.list_in_string_case_insensitive(arr, needle), dtype=bool)
+        if not isinstance(arr, (pyarrow.Array, pyarrow.ChunkedArray)):
+            arr = pyarrow.array(arr, type=pyarrow.binary())
+        matches = list_ops.list_in_string_case_insensitive(arr, needle)
+        return numpy.frombuffer(matches, dtype=numpy.bool_)
     if operator == "NotIInStr":
         needle = str(value)
-        arr = pyarrow.array(arr)
-        matches = numpy.asarray(list_ops.list_in_string_case_insensitive(arr, needle), dtype=bool)
+        if not isinstance(arr, (pyarrow.Array, pyarrow.ChunkedArray)):
+            arr = pyarrow.array(arr, type=pyarrow.binary())
+        matches = list_ops.list_in_string_case_insensitive(arr, needle)
+        matches = numpy.frombuffer(matches, dtype=numpy.bool_)
         return numpy.invert(matches)
     if operator == "Like":
-        return compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.match_like(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "NotLike":
-        matches = compute.match_like(arr, value).to_numpy(False).astype(dtype=bool)
+        matches = compute.match_like(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
         return numpy.invert(matches)
     if operator == "ILike":
-        return compute.match_like(arr, value, ignore_case=True).to_numpy(False).astype(dtype=bool)
+        return (
+            compute.match_like(arr, value, ignore_case=True)
+            .to_numpy(False)
+            .astype(dtype=numpy.bool_)
+        )
     if operator == "NotILike":
         matches = compute.match_like(arr, value, ignore_case=True)
         return numpy.invert(matches)
     if operator == "RLike":
-        return compute.match_substring_regex(arr, value).to_numpy(False).astype(dtype=bool)
+        return compute.match_substring_regex(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "NotRLike":
         matches = compute.match_substring_regex(arr, value)  # [#325]
         return numpy.invert(matches)
@@ -321,9 +333,9 @@ def _inner_filter_operations(arr, operator, value):
             arr = to_numpy(zero_copy_only=False)
 
         if len(arr) == 0:
-            return numpy.array([], dtype=bool)
+            return numpy.array([], dtype=numpy.bool_)
         if len(arr) == 1:
-            return numpy.array([set(arr[0]).intersection(value)], dtype=bool)
+            return numpy.array([set(arr[0]).intersection(value)], dtype=numpy.bool_)
 
         return list_contains_any(arr, set(value))
 

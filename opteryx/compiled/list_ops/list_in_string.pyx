@@ -33,7 +33,7 @@ numpy.import_array()
 
 from cpython.bytes cimport PyBytes_AsString
 from libc.stdint cimport int32_t, uint8_t, uintptr_t
-from libc.string cimport memchr
+from libc.string cimport memchr, memcpy
 import platform
 
 
@@ -65,12 +65,18 @@ init_searcher()
 
 
 cdef inline int fast_memcmp_short(const char *a, const char *b, size_t n):
-    """Optimized memcmp for short strings (<= 8 bytes)"""
-    cdef size_t i
-    for i in range(n):
-        if a[i] != b[i]:
-            return 1
-    return 0
+    cdef uint64_t aval = 0, bval = 0
+    cdef uint64_t mask
+
+    if n == 0:
+        return 0
+    elif n <= 8:
+        mask = ((<uint64_t>1) << (8 * n)) - 1
+        memcpy(&aval, a, n)
+        memcpy(&bval, b, n)
+        return (aval & mask) != (bval & mask)
+    else:
+        return memcmp(a, b, n) != 0
 
 
 cdef inline int boyer_moore_horspool(const char *haystack, size_t haystacklen,
@@ -146,7 +152,9 @@ cdef inline int boyer_moore_horspool_with_table(const char *haystack, size_t hay
     """BMH with precomputed table - optimized version"""
     cdef size_t i = 0
     cdef size_t tail_index
+    cdef size_t needlelen_sub1 = needlelen - 1
     cdef unsigned char last_char
+    cdef unsigned char tail_char
 
     if needlelen == 0 or haystacklen < needlelen:
         return 0
@@ -155,20 +163,24 @@ cdef inline int boyer_moore_horspool_with_table(const char *haystack, size_t hay
     if needlelen == 1:
         return memchr(haystack, needle[0], haystacklen) != NULL
 
-    last_char = <unsigned char>needle[needlelen - 1]
+    last_char = <unsigned char>needle[needlelen_sub1]
+    cdef size_t end_index = haystacklen - needlelen
 
-    while i <= haystacklen - needlelen:
+    while i <= end_index:
+        tail_index = i + needlelen_sub1
+        tail_char = <unsigned char>haystack[tail_index]
+
         # Check last character first
-        if haystack[i + needlelen - 1] == last_char:
-            if needlelen <= 8:
-                if fast_memcmp_short(&haystack[i], needle, needlelen) == 0:
-                    return 1
-            else:
-                if memcmp(&haystack[i], needle, needlelen) == 0:
-                    return 1
+        if tail_char == last_char:
+            if haystack[i] == needle[0]:
+                if needlelen <= 8:
+                    if fast_memcmp_short(&haystack[i], needle, needlelen) == 0:
+                        return 1
+                else:
+                    if memcmp(&haystack[i], needle, needlelen) == 0:
+                        return 1
 
-        tail_index = i + needlelen - 1
-        i += skip[<unsigned char>haystack[tail_index]]
+        i += skip[tail_char]
 
     return 0
 
