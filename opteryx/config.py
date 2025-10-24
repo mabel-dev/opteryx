@@ -28,6 +28,7 @@ def memory_allocation_calculation(allocation: Union[float, int]) -> int:
     Returns:
         int: Memory size in bytes to be allocated.
     """
+
     # Import psutil lazily to avoid paying the import cost at module import time.
     # Use a small helper so tests or callers that need the value will trigger the
     # import only when this function is called.

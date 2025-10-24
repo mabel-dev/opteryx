@@ -51,4 +51,11 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ("CacheManager", "get_cache_manager", "MemcachedCache", "RedisCache", "ValkeyCache", "NullCache")
+__all__ = (
+    "CacheManager",
+    "get_cache_manager",
+    "MemcachedCache",
+    "RedisCache",
+    "ValkeyCache",
+    "NullCache",
+)

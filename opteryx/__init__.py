@@ -183,7 +183,7 @@ def query_to_arrow(
     visibility_filters: Optional[Dict[str, Any]] = None,
     limit: int = None,
     **kwargs,
- ) -> "pyarrow.Table":
+) -> "pyarrow.Table":
     """
     Helper function to execute a query and return a pyarrow Table.
 

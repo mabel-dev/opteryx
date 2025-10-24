@@ -67,7 +67,7 @@ init_searcher()
 cdef inline int fast_memcmp_short(const char *a, const char *b, size_t n):
     cdef uint64_t aval = 0, bval = 0
     cdef uint64_t mask
-    
+
     if n == 0:
         return 0
     elif n <= 8:

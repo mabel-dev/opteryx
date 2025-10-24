@@ -205,6 +205,7 @@ def main():
 
 if __name__ == "__main__":
     import readline  # pragma: no cover
+
     try:
         main()
     except Exception as e:

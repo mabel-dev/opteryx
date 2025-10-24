@@ -12,12 +12,12 @@ $planets, $astronauts, and $satellites.
 """
 
 import datetime
+import importlib
 import typing
+from typing import Tuple
 
 from orso.schema import RelationSchema
 
-import importlib
-from typing import Tuple
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.connectors.capabilities import Partitionable
