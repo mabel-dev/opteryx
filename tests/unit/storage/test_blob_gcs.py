@@ -86,6 +86,8 @@ def test_gcs_storage(test_case):
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute(test_case.query)
+    # DEBUG: show stats observed during test run
+    print("DEBUG cur.stats:", cur.stats)
 
     # Assertions for rowcount and columncount
     assert (

@@ -62,6 +62,7 @@ from opteryx.config import DISABLE_OPTIMIZER
 from opteryx.models import QueryStatistics
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.optimizer.strategies import *
+from opteryx.planner.optimizer.strategies.join_groupby_pushdown import JoinGroupByPushdownStrategy
 
 from .strategies.optimization_strategy import OptimizerContext
 
@@ -83,6 +84,7 @@ class OptimizerVisitor:
             PredicatePushdownStrategy(statistics),
             ProjectionPushdownStrategy(statistics),
             JoinRewriteStrategy(statistics),
+            JoinGroupByPushdownStrategy(statistics),
             JoinOrderingStrategy(statistics),
             DistinctPushdownStrategy(statistics),
             OperatorFusionStrategy(statistics),

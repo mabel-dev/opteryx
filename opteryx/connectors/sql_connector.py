@@ -137,20 +137,34 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         self.chunk_size = chunk_size
         result_schema = self.schema
 
-        query_builder = Query().FROM(self.dataset)
+        # If the optimizer pushed an entire SQL fragment, use it directly.
+        # `pushed_sql` should be a full SELECT ... FROM ... [WHERE ...] string
+        # and `pushed_params` a dict of parameters.
+        pushed_sql = getattr(self, "pushed_sql", None)
+        pushed_params = getattr(self, "pushed_params", None) or {}
+
+        if pushed_sql is not None:
+            # When pushed_sql is present we ignore columns/predicates/limit
+            # because the optimizer is responsible for correctness. We still
+            # use the relation schema for conversion.
+            query_builder = None
+            sql_text = pushed_sql
+        else:
+            query_builder = Query().FROM(self.dataset)
 
         # Update the SQL and the target morsel schema if we've pushed a projection
-        if columns:
-            column_names = [col.schema_column.name for col in columns]
-            query_builder.add("SELECT", *column_names)
-            result_schema.columns = [  # type:ignore
-                col
-                for col in self.schema.columns  # type:ignore
-                if col.name in column_names  # type:ignore
-            ]
-        else:
-            query_builder.add("SELECT", "1")
-            self.schema.columns = [ConstantColumn(name="1", value=1)]  # type:ignore
+        if pushed_sql is None:
+            if columns:
+                column_names = [col.schema_column.name for col in columns]
+                query_builder.add("SELECT", *column_names)
+                result_schema.columns = [  # type:ignore
+                    col
+                    for col in self.schema.columns  # type:ignore
+                    if col.name in column_names  # type:ignore
+                ]
+            else:
+                query_builder.add("SELECT", "1")
+                self.schema.columns = [ConstantColumn(name="1", value=1)]  # type:ignore
 
         # Update SQL if we've pushed predicates
         parameters: dict = {}
@@ -172,7 +186,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
                 query_builder.WHERE(f"{left_value} {operator} {right_value}")
 
-        if limit is not None:
+        if pushed_sql is None and limit is not None:
             query_builder.LIMIT(str(limit))
 
         at_least_once = False
@@ -183,9 +197,17 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
             # DEBUG: print("READ DATASET\n", str(query_builder))
             # DEBUG: print("PARAMETERS\n", parameters)
             # Execution Options allows us to handle datasets larger than memory
-            result = conn.execution_options(stream_results=True, max_row_buffer=25000).execute(
-                text(str(query_builder)), parameters=parameters
-            )
+            if pushed_sql is not None:
+                # Use the optimizer-provided SQL and parameters.
+                # We allow the optimizer to have provided parameter placeholders
+                # compatible with SQLAlchemy text().
+                result = conn.execution_options(stream_results=True, max_row_buffer=25000).execute(
+                    text(sql_text), parameters=pushed_params
+                )
+            else:
+                result = conn.execution_options(stream_results=True, max_row_buffer=25000).execute(
+                    text(str(query_builder)), parameters=parameters
+                )
 
             while True:
                 t = time.monotonic_ns()

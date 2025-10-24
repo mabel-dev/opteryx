@@ -10,6 +10,7 @@ from typing import Optional
 
 from orso.tools import single_item_cache
 
+from opteryx.compiled.functions.strings import count_instances
 from opteryx.third_party.mbleven import compare
 
 

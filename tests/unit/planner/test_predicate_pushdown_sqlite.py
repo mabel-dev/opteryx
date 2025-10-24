@@ -6,7 +6,7 @@ import os
 import sys
 import time
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector

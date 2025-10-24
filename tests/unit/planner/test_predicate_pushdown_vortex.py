@@ -5,7 +5,7 @@ Test predicate pushdown using the vortex reader (we don't actually push into the
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from tests import is_arm, is_mac, is_windows, skip_if

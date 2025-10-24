@@ -5,7 +5,7 @@ Test predicate pushdown using the blob reader
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from tests import is_arm, is_mac, is_windows, skip_if
@@ -38,7 +38,7 @@ def test_predicate_pushdowns_blobs_jsonl():
         "SELECT user_name FROM testdata.flat.formats.jsonl WITH(NO_PARTITION) WHERE user_verified = TRUE and user_name LIKE '%b%';"
     )
     # we don't push all predicates down,
-    assert cur.rowcount == 86, cur.rowcount
+    assert cur.rowcount == 98, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     conn.close()

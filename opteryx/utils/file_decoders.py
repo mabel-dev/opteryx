@@ -174,17 +174,26 @@ def zstd_decoder(
 
     import zstandard
 
+    # zstandard.open expects a file-like; we open on a BytesIO constructed from
+    # the provided buffer and then pass the decompressed bytes as a memoryview
     if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
+        buf_bytes = buffer.tobytes()
     elif isinstance(buffer, bytes):
-        stream: BinaryIO = io.BytesIO(buffer)
+        buf_bytes = buffer
     else:
-        stream = buffer
+        # fallback, try to read
+        try:
+            buf_bytes = buffer.read()
+        except Exception:
+            buf_bytes = bytes(buffer)
 
-    # zstandard.open returns a file-like which we pass directly to jsonl_decoder
-    with zstandard.open(stream, "rb") as file:
+    with zstandard.open(io.BytesIO(buf_bytes), "rb") as file:
+        decompressed = file.read()
         return jsonl_decoder(
-            file, projection=projection, selection=selection, just_schema=just_schema
+            memoryview(decompressed),
+            projection=projection,
+            selection=selection,
+            just_schema=just_schema,
         )
 
 
@@ -205,16 +214,24 @@ def lzma_decoder(
 
     import lzma
 
+    # similar to zstd path: read bytes and pass decompressed data as memoryview
     if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
+        buf_bytes = buffer.tobytes()
     elif isinstance(buffer, bytes):
-        stream: BinaryIO = io.BytesIO(buffer)
+        buf_bytes = buffer
     else:
-        stream = buffer
+        try:
+            buf_bytes = buffer.read()
+        except Exception:
+            buf_bytes = bytes(buffer)
 
-    with lzma.open(stream, "rb") as file:
+    with lzma.open(io.BytesIO(buf_bytes), "rb") as file:
+        decompressed = file.read()
         return jsonl_decoder(
-            file, projection=projection, selection=selection, just_schema=just_schema
+            memoryview(decompressed),
+            projection=projection,
+            selection=selection,
+            just_schema=just_schema,
         )
 
 
@@ -445,167 +462,94 @@ def jsonl_decoder(
     selection: Optional[list] = None,
     just_schema: bool = False,
     just_statistics: bool = False,
-    use_fast_decoder: bool = True,
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
+    # rugo is our own library for fast jsonl reading
+    import rugo.jsonl as rj
+    from orso.schema import convert_orso_schema_to_arrow_schema
+    from rugo.converters.orso import jsonl_to_orso_schema
+
+    from opteryx.utils import count_instances
+
     if just_statistics:
         return None
 
-    from opteryx.third_party.tktech import csimdjson as simdjson
+    if not isinstance(buffer, memoryview):
+        buffer = memoryview(buffer)
 
-    # Normalize inputs: accept memoryview, bytes, or file-like objects.
-    if isinstance(buffer, memoryview):
-        # Convert to bytes once; many downstream codepaths expect a bytes object
-        buffer = buffer.tobytes()
-    elif not isinstance(buffer, bytes) and hasattr(buffer, "read"):
-        # file-like: read once into memory
-        buffer = buffer.read()
+    # count newline occurrences in the provided buffer to get the number of rows
+    num_rows = count_instances(buffer)
 
     # If it's COUNT(*), we don't need to create a full dataset
     # We have a handler later to sum up the $COUNT(*) column
     if projection == [] and selection == [] and not just_schema and not just_statistics:
-        num_rows = buffer.count(b"\n")
+        # Try to use the SIMD-optimized counter from the cython module if available
         table = pyarrow.Table.from_arrays([[num_rows]], names=["$COUNT(*)"])
-        return (num_rows, 0, 0, table)
+        return (num_rows, 0, len(buffer), table)
 
-    # Try fast Cython decoder for large files with no selection filters
-    if use_fast_decoder and not just_schema and not selection and len(buffer) > 1000:
-        try:
-            from opteryx.compiled.structures import jsonl_decoder as cython_decoder
-
-            # Sample first 100 lines to infer schema
-            parser = simdjson.Parser()
-            sample_size = min(10, buffer.count(b"\n"))
-            sample_records = []
-            keys_union = set()
-
-            start = 0
-            for _ in range(sample_size):
-                newline = buffer.find(b"\n", start)
-                if newline == -1:
-                    break
-                line = buffer[start:newline]
-                start = newline + 1
-                if line:
-                    try:
-                        record = parser.parse(line)
-                        row = record.as_dict()
-                        sample_records.append(row)
-                        keys_union.update(row.keys())
-                    except Exception:  # nosec
-                        continue
-
-            if sample_records:
-                # Infer column types from sample
-                column_types = {}
-                columns_to_extract = list(keys_union)
-
-                if projection:
-                    # If projection specified, only extract those columns
-                    columns_to_extract = [c.value for c in projection if c.value in keys_union]
-
-                for key in columns_to_extract:
-                    for record in sample_records:
-                        if key in record and record[key] is not None:
-                            val = record[key]
-                            if isinstance(val, bool):
-                                column_types[key] = "bool"
-                            elif isinstance(val, int):
-                                column_types[key] = "int"
-                            elif isinstance(val, float):
-                                column_types[key] = "float"
-                            elif isinstance(val, str):
-                                column_types[key] = "str"
-                            elif isinstance(val, list):
-                                column_types[key] = "list"
-                            elif isinstance(val, dict):
-                                column_types[key] = "dict"
-                            break
-                    if key not in column_types:
-                        column_types[key] = "str"  # Default to string
-
-                # Use Cython decoder
-                num_rows, num_cols, column_data = cython_decoder.fast_jsonl_decode_columnar(
-                    buffer, columns_to_extract, column_types, sample_size
-                )
-
-                # Convert to PyArrow table
-                arrays = []
-                names = []
-                for key in sorted(columns_to_extract):
-                    arrays.append(pyarrow.array(column_data[key]))
-                    names.append(key)
-
-                if arrays:
-                    table = pyarrow.Table.from_arrays(arrays, names=names)
-                    if projection:
-                        table = post_read_projector(table, projection)
-                    return num_rows, num_cols, 0, table
-
-        except (ImportError, Exception) as e:
-            # Fall back to standard decoder if Cython version fails
-            import warnings
-
-            warnings.warn(f"Fast JSONL decoder failed, using standard decoder: {e}")
-
-    parser = simdjson.Parser()
-
-    # preallocate and reuse dicts
-    rows = []
-    keys_union = set()
-
-    if projection:
-        # If projection is specified, we only need to ensure we keep the projected keys
-        keys_union = {c.value for c in projection}
-
-    start = 0
-    end = len(buffer)
-
-    while start < end:
-        newline = buffer.find(b"\n", start)
-        if newline == -1:
-            newline = end
-        line = buffer[start:newline]
-        start = newline + 1
-
-        if not line:
-            continue
-
-        record = parser.parse(line)
-
-        # convert nested objects to string
-        row = record.as_dict()
-        # keep track of all keys for schema padding
-        if not projection:
-            keys_union.update(row.keys())
-
-        for key in keys_union:
-            if isinstance(row.get(key), dict):
-                row[key] = record[key].mini
-        rows.append(row)
-        record = None
-
-    # ensure all dicts have all keys to fix Arrow schema issue
-    if rows:  # Only process if we have rows
-        missing_keys = keys_union - set(rows[0].keys())  # may still be missing from first row
-        if missing_keys:
-            for row in rows:
-                for key in missing_keys:
-                    row.setdefault(key, None)
-
-    table = pyarrow.Table.from_pylist(rows)
+    orso_schema = jsonl_to_orso_schema(rj.get_jsonl_schema(buffer))
 
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(table.schema)
+        return orso_schema
 
-    full_shape = table.shape
+    # Determine the columns needed for projection and filtering
+    projection_set = set(p.source_column for p in projection or [])
+    filter_columns = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
+    selected_columns = list(
+        projection_set.union(filter_columns).intersection(orso_schema.column_names)
+    )
+
+    table = rj.read_jsonl(
+        buffer,
+        columns=selected_columns,
+        parse_objects=False,
+    )
+
+    # Convert the returned columns into PyArrow arrays using the Arrow schema
+    # derived from the Orso schema. Doing this per-field ensures that Python
+    # lists (JSON arrays) are converted into Arrow ListArray types and that
+    # bytes/strings/etc. are coerced to the expected Arrow types. If a direct
+    arrow_schema = convert_orso_schema_to_arrow_schema(orso_schema)
+
+    arrays = []
+    final_fields = []
+
+    for idx, name in enumerate(table["column_names"]):
+        field = arrow_schema.field(name)
+        col = table["columns"][idx]
+        try:
+            # First attempt to build the array using the declared type.
+            arr = pyarrow.array(col, type=field.type)
+        except Exception:
+            # If that fails, infer the best array type from the data.
+            print(
+                f"Warning: could not convert column '{name}' to type {field.type}, inferring type."
+            )
+            print(f"Data sample: {col[:5]}")
+            print(set(type(t) for t in col))
+            arr = pyarrow.array(col)
+
+        arrays.append(arr)
+
+        # If inference produced a different type (e.g. list<...> instead of
+        # binary) use that type in the final schema so Table construction
+        # doesn't try to coerce incompatible arrays and raise errors like
+        # "Expected bytes, got list". We deliberately do not coerce lists
+        # into strings here — leave string columns alone as requested.
+        if arr.type != field.type:
+            final_fields.append(pyarrow.field(field.name, arr.type))
+        else:
+            final_fields.append(field)
+
+    final_schema = pyarrow.schema(final_fields)
+    arrow_table = pyarrow.Table.from_arrays(arrays, schema=final_schema)
 
     if selection:
-        table = filter_records(selection, table)
+        arrow_table = filter_records(selection, arrow_table)
     if projection:
-        table = post_read_projector(table, projection)
+        arrow_table = post_read_projector(arrow_table, projection)
 
-    return *full_shape, 0, table
+    return num_rows, len(table["column_names"]), len(buffer), arrow_table
 
 
 def csv_decoder(

@@ -383,6 +383,7 @@ We’re actively adding features and improving performance.
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[draken](https://github.com/mabel-dev/draken)** Cython bindings for Arrow
+- **[rugo](https://github.com/mabel-dev/rugo)** File Reader
 
 <!---
 ## Thank You

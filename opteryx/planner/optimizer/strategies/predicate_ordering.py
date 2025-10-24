@@ -43,6 +43,7 @@ from .optimization_strategy import get_nodes_of_type_from_logical_plan
 BASIC_COMPARISON_COSTS = {
     OrsoTypes.ARRAY: 10.00,  # expensive
     OrsoTypes.BLOB: 0.06,  # varies based on length, this is 50 bytes
+    OrsoTypes.JSONB: 10.00,  # JSONB (treat as expensive)
     OrsoTypes.BOOLEAN: 0.004,
     OrsoTypes.DATE: 0.01,
     OrsoTypes.DECIMAL: 2.35,

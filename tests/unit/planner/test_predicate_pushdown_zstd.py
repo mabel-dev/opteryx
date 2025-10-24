@@ -6,6 +6,7 @@ import os
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../../rugo"))
 
 import opteryx
 
@@ -49,4 +50,5 @@ def test_predicate_pushdowns_blobs_zstd():
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
 
+    test_predicate_pushdowns_blobs_zstd()
     run_tests()
