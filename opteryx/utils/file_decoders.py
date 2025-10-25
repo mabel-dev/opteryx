@@ -509,30 +509,14 @@ def jsonl_decoder(
 
     for idx, name in enumerate(table["column_names"]):
         field = arrow_schema.field(name)
-        col = table["columns"][idx]
-        try:
-            # First attempt to build the array using the declared type.
-            arr = pyarrow.array(col, type=field.type)
-        except Exception:
-            # If that fails, infer the best array type from the data.
-            print(
-                f"Warning: could not convert column '{name}' to type {field.type}, inferring type."
-            )
-            print(f"Data sample: {col[:5]}")
-            print(set(type(t) for t in col))
-            arr = pyarrow.array(col)
-
-        arrays.append(arr)
-
-        # If inference produced a different type (e.g. list<...> instead of
-        # binary) use that type in the final schema so Table construction
-        # doesn't try to coerce incompatible arrays and raise errors like
-        # "Expected bytes, got list". We deliberately do not coerce lists
-        # into strings here — leave string columns alone as requested.
-        if arr.type != field.type:
-            final_fields.append(pyarrow.field(field.name, arr.type))
+        column = table["columns"][idx]
+        if hasattr(column, "to_arrow"):
+            # rugo returns draken vectors; convert to pyarrow arrays
+            arrays.append(column.to_arrow())
         else:
-            final_fields.append(field)
+            # fallback: convert using pyarrow array constructor
+            arrays.append(pyarrow.array(column, type=field.type))
+        final_fields.append(field)
 
     final_schema = pyarrow.schema(final_fields)
     arrow_table = pyarrow.Table.from_arrays(arrays, schema=final_schema)

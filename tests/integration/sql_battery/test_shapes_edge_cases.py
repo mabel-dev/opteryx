@@ -611,6 +611,8 @@ if __name__ == "__main__":  # pragma: no cover
             print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ {failed}\033[0m")
             print(">", err)
             failures.append((statement, err))
+            if not isinstance(err, AssertionError):
+                raise err
 
     print("--- ✅ \033[0;32mdone\033[0m")
 
