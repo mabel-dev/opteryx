@@ -188,7 +188,7 @@ class ReaderNode(BasePlanNode):
             mermaid = f'NODE_{nid}[("**{self.node_type.upper()} (FUNCTION)**<br />'
             mermaid += f"{self.function}<br />"
         else:
-            mermaid = f'NODE_{nid}[(**"{self.node_type.upper()} ({self.connector.__type__})**<br />'
+            mermaid = f'NODE_{nid}[("**{self.node_type.upper()} ({self.connector.__type__})**<br />'
             mermaid += f"{self.connector.dataset}<br />"
         mermaid += BAR
         if self.columns:
@@ -259,7 +259,9 @@ class ReaderNode(BasePlanNode):
         arrow_schema = None
         start_clock = time.monotonic_ns()
         reader = self.connector.read_dataset(
-            columns=self.columns, predicates=self.predicates, limit=self.limit
+            columns=self.columns,
+            predicates=self.predicates,
+            limit=self.limit,
         )
         for morsel in reader:
             # try to make each morsel have the same schema

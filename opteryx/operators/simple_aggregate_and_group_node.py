@@ -59,7 +59,7 @@ def build_finalizer_aggregations(aggregators):
 
 
 class SimpleAggregateAndGroupNode(BasePlanNode):
-    SIMPLE_AGGREGATES = {"SUM", "MIN", "MAX", "COUNT"}
+    SIMPLE_AGGREGATES = {"SUM", "MIN", "MAX", "COUNT", "AVG", "COUNT_DISTINCT"}
 
     def __init__(self, properties: QueryProperties, **parameters):
         BasePlanNode.__init__(self, properties=properties, **parameters)
