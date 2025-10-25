@@ -228,11 +228,7 @@ def _inner_filter_operations(arr, operator, value):
         matches = compute.match_like(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
         return numpy.invert(matches)
     if operator == "ILike":
-        return (
-            compute.match_like(arr, value, ignore_case=True)
-            .to_numpy(False)
-            .astype(dtype=numpy.bool_)
-        )
+        return compute.match_like(arr, value, ignore_case=True).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "NotILike":
         matches = compute.match_like(arr, value, ignore_case=True)
         return numpy.invert(matches)

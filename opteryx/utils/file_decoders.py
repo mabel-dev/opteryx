@@ -340,19 +340,15 @@ def parquet_decoder(
     # pyarrow.Buffer when we have a memoryview to avoid creating intermediate
     # Python bytes objects.
     if isinstance(buffer, memoryview):
-        # pyarrow.py_buffer accepts buffer-protocol objects and is zero-copy
-        try:
-            pa_buf = pyarrow.py_buffer(buffer)
-            stream = pyarrow.BufferReader(pa_buf)
-        except Exception:
-            # fallback to MemoryViewStream if pyarrow can't handle this memoryview
-            stream = MemoryViewStream(buffer)
+        pa_buf = pyarrow.py_buffer(buffer)
+        stream = pyarrow.BufferReader(pa_buf)
     elif isinstance(buffer, bytes):
         stream = pyarrow.BufferReader(buffer)
     else:
         stream = pyarrow.input_stream(buffer)
 
-    parquet_file = parquet.ParquetFile(stream)
+    pq_meta = parquet.read_metadata(stream)
+    stream.seek(0)
 
     # we need to work out if we have a selection which may force us
     # fetching columns just for filtering
@@ -366,7 +362,7 @@ def parquet_decoder(
         c.value for c in get_all_nodes_of_type(processed_selection, (NodeType.IDENTIFIER,))
     }
     selected_columns = list(
-        projection_set.union(filter_columns).intersection(parquet_file.schema_arrow.names)
+        projection_set.union(filter_columns).intersection(pq_meta.schema.names)
     )
 
     # Read all columns if none are selected, unless force_read is set
@@ -376,18 +372,18 @@ def parquet_decoder(
     # get the full data size of the file to see how effective projection/selection is
     uncompressed_size = sum(
         row_group.column(j).total_uncompressed_size
-        for i in range(parquet_file.metadata.num_row_groups)
-        for row_group in [parquet_file.metadata.row_group(i)]
+        for i in range(pq_meta.num_row_groups)
+        for row_group in [pq_meta.row_group(i)]
         for j in range(row_group.num_columns)
     )
 
     # If it's COUNT(*), we don't need to create a full dataset
     # We have a handler later to sum up the $COUNT(*) column
     if projection == [] and selection == []:
-        table = pyarrow.Table.from_arrays([[parquet_file.metadata.num_rows]], names=["$COUNT(*)"])
+        table = pyarrow.Table.from_arrays([[pq_meta.num_rows]], names=["$COUNT(*)"])
         return (
-            parquet_file.metadata.num_rows,
-            parquet_file.metadata.num_columns,
+            pq_meta.num_rows,
+            pq_meta.num_columns,
             uncompressed_size,
             table,
         )
@@ -400,7 +396,6 @@ def parquet_decoder(
         filters=dnf_filter,
         use_threads=use_threads,
         use_pandas_metadata=False,
-        schema=parquet_file.schema_arrow,
     )
 
     # Any filters we couldn't push to PyArrow to read we run here
@@ -408,8 +403,8 @@ def parquet_decoder(
         table = filter_records(processed_selection, table)
 
     return (
-        parquet_file.metadata.num_rows,
-        parquet_file.metadata.num_columns,
+        pq_meta.num_rows,
+        pq_meta.num_columns,
         uncompressed_size,
         table,
     )
