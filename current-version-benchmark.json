@@ -1,0 +1,47 @@
+{
+  "version": "0.26.0-beta.1676",
+  "git": {
+    "commit": "8baa8f958c93",
+    "branch": "copilot/verify-performance-difference",
+    "message": "Add performance analysis tools and identify cold start issue"
+  },
+  "timestamp": "2025-10-23T11:44:54.559719",
+  "benchmarks": {
+    "cold_start_ms": 247.63,
+    "count": {
+      "avg_ms": 3.74,
+      "min_ms": 3.64,
+      "max_ms": 3.97
+    },
+    "select_all": {
+      "avg_ms": 3.4,
+      "min_ms": 3.35,
+      "max_ms": 3.48
+    },
+    "where": {
+      "avg_ms": 5.83,
+      "min_ms": 5.65,
+      "max_ms": 6.28
+    },
+    "aggregation": {
+      "avg_ms": 5.41,
+      "min_ms": 5.33,
+      "max_ms": 5.53
+    },
+    "group_by": {
+      "avg_ms": 6.32,
+      "min_ms": 4.69,
+      "max_ms": 11.99
+    },
+    "join": {
+      "avg_ms": 8.41,
+      "min_ms": 8.21,
+      "max_ms": 8.67
+    },
+    "order_by": {
+      "avg_ms": 4.62,
+      "min_ms": 4.55,
+      "max_ms": 4.74
+    }
+  }
+}

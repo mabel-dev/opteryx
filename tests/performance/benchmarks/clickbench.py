@@ -89,10 +89,17 @@ def test_sql_battery(statement:str, exception: Optional[Exception]):
 if __name__ == "__main__":  # pragma: no cover
     # Running in the IDE we do some formatting - it's not functional but helps when reading the outputs.
 
+    import argparse
+    import gc
     import shutil
     import time
 
     from tests import trunc_printable
+
+    parser = argparse.ArgumentParser(description="ClickBench Performance Test")
+    parser.add_argument('--warm', action='store_true', help='Run warm queries (3 iterations per query)')
+    parser.add_argument('--iterations', type=int, default=3, help='Number of iterations for warm queries (default: 3)')
+    args = parser.parse_args()
 
     start_suite = time.monotonic_ns()
     width = shutil.get_terminal_size((80, 20))[0] - 18
@@ -100,37 +107,105 @@ if __name__ == "__main__":  # pragma: no cover
     failed:int = 0
     nl:str = "\n"
     failures = []
+    warm_results = []
+
+    if args.warm:
+        print(f"{'='*80}")
+        print(f"CLICKBENCH WARM PERFORMANCE BENCHMARK")
+        print(f"Version: {opteryx.__version__}")
+        print(f"Iterations per query: {args.iterations}")
+        print(f"{'='*80}\n")
+        
+        # Cold start
+        print("Warming up (cold start)...")
+        start = time.monotonic_ns()
+        try:
+            opteryx.query_to_arrow("SELECT 1")
+            cold_time_ms = (time.monotonic_ns() - start) / 1e6
+            print(f"Cold start: {cold_time_ms:.2f}ms\n")
+        except Exception as e:
+            print(f"Cold start failed: {e}\n")
+        
+        print(f"{'Query':<8} {'Iteration 1':<14} {'Iteration 2':<14} {'Iteration 3':<14} {'Avg':<12} {'Min':<12} {'Max':<12}")
+        print("-" * 92)
 
     print(f"RUNNING CLICKBENCH BATTERY OF {len(STATEMENTS)} QUERIES\n")
     for index, (statement, err) in enumerate(STATEMENTS):
         statement = statement.replace("testdata.clickbench_tiny", "hits")
         printable = statement
-        print(
-            f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
-            f" {trunc_printable(format_sql(printable), width - 1)}",
-            end="",
-            flush=True,
-        )
-        try:
-            start = time.monotonic_ns()
-            test_sql_battery(statement, err)
-            print(
-                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",
-                end="",
-            )
-            passed += 1
-            if failed > 0:
-                print(f" \033[0;31m{failed}\033[0m")
-            else:
-                print()
-        except Exception as err:
-            failed += 1
-            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ {failed}\033[0m")
-            print(">", err)
-            failures.append((statement, err))
+        query_num = f"Q{(index + 1):02d}"
+        
+        if args.warm:
+            # Run multiple iterations for warm query testing
+            times = []
+            query_failed = False
             
-            #print(opteryx.query(statement))
-            #raise err
+            for iteration in range(args.iterations):
+                gc.collect()
+                try:
+                    start = time.monotonic_ns()
+                    result = opteryx.query_to_arrow(statement)
+                    elapsed_ms = (time.monotonic_ns() - start) / 1e6
+                    times.append(elapsed_ms)
+                except Exception as e:
+                    query_failed = True
+                    print(f"{query_num:<8} ERROR: {str(e)[:60]}")
+                    failures.append((statement, e))
+                    failed += 1
+                    break
+            
+            if not query_failed and times:
+                avg_time = sum(times) / len(times)
+                min_time = min(times)
+                max_time = max(times)
+                
+                # Format iteration times
+                iter_strs = [f"{t:.2f}ms" for t in times]
+                while len(iter_strs) < 3:
+                    iter_strs.append("-")
+                
+                status = ""
+                if avg_time > 1000:
+                    status = " ⚠️ VERY SLOW"
+                elif avg_time > 500:
+                    status = " ⚠️ SLOW"
+                
+                print(f"{query_num:<8} {iter_strs[0]:<14} {iter_strs[1]:<14} {iter_strs[2]:<14} "
+                      f"{avg_time:>7.2f}ms   {min_time:>7.2f}ms   {max_time:>7.2f}ms{status}")
+                
+                warm_results.append({
+                    'query': query_num,
+                    'avg': avg_time,
+                    'min': min_time,
+                    'max': max_time,
+                    'times': times
+                })
+                passed += 1
+        else:
+            # Original single-run mode
+            print(
+                f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
+                f" {trunc_printable(format_sql(printable), width - 1)}",
+                end="",
+                flush=True,
+            )
+            try:
+                start = time.monotonic_ns()
+                test_sql_battery(statement, err)
+                print(
+                    f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",
+                    end="",
+                )
+                passed += 1
+                if failed > 0:
+                    print(f" \033[0;31m{failed}\033[0m")
+                else:
+                    print()
+            except Exception as err:
+                failed += 1
+                print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ {failed}\033[0m")
+                print(">", err)
+                failures.append((statement, err))
 
     print("--- ✅ \033[0;32mdone\033[0m")
 
@@ -144,3 +219,51 @@ if __name__ == "__main__":  # pragma: no cover
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
+    
+    # Analysis for warm mode
+    if args.warm and warm_results:
+        print(f"\n{'='*80}")
+        print("PERFORMANCE ANALYSIS")
+        print(f"{'='*80}\n")
+        
+        # Find slow queries
+        very_slow = [r for r in warm_results if r['avg'] > 1000]
+        slow = [r for r in warm_results if 500 < r['avg'] <= 1000]
+        moderate = [r for r in warm_results if 100 < r['avg'] <= 500]
+        
+        if very_slow:
+            print(f"⚠️  VERY SLOW queries (>1000ms):")
+            for r in sorted(very_slow, key=lambda x: x['avg'], reverse=True):
+                print(f"  {r['query']}: {r['avg']:.2f}ms")
+        
+        if slow:
+            print(f"\n⚠️  Slow queries (>500ms):")
+            for r in sorted(slow, key=lambda x: x['avg'], reverse=True):
+                print(f"  {r['query']}: {r['avg']:.2f}ms")
+        
+        if moderate:
+            print(f"\n⚠️  Moderate queries (>100ms):")
+            for r in sorted(moderate, key=lambda x: x['avg'], reverse=True):
+                print(f"  {r['query']}: {r['avg']:.2f}ms")
+        
+        if not (very_slow or slow or moderate):
+            print("✅ All queries completed in good time (<100ms)")
+        
+        # Check variance
+        high_variance = []
+        for r in warm_results:
+            if r['min'] > 0 and r['max'] / r['min'] > 2.0:
+                high_variance.append((r['query'], r['min'], r['max'], r['max'] / r['min']))
+        
+        if high_variance:
+            print(f"\n⚠️  High variance queries (max/min > 2x):")
+            for query, min_t, max_t, ratio in sorted(high_variance, key=lambda x: x[3], reverse=True):
+                print(f"  {query}: {min_t:.2f}ms - {max_t:.2f}ms (ratio: {ratio:.1f}x)")
+        
+        # Overall stats
+        all_times = [r['avg'] for r in warm_results]
+        if all_times:
+            avg_overall = sum(all_times) / len(all_times)
+            print(f"\nOverall average time: {avg_overall:.2f}ms")
+            print(f"Fastest query: {min(all_times):.2f}ms")
+            print(f"Slowest query: {max(all_times):.2f}ms")
