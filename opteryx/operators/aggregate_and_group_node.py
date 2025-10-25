@@ -68,6 +68,7 @@ class AggregateAndGroupNode(BasePlanNode):
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
         self.buffer = []
+        self.max_buffer_size = 50  # Process in chunks to avoid excessive memory usage
 
     @property
     def config(self):  # pragma: no cover
@@ -85,18 +86,19 @@ class AggregateAndGroupNode(BasePlanNode):
                 yield EOS
                 return
 
-            # merge all the morsels together into one table, selecting only the columns
-            # we're pretty sure we're going to use - this will fail for datasets
-            # larger than memory
-            table = pyarrow.concat_tables(
-                self.buffer,
-                promote_options="permissive",
-            )
+            # If we have partial results in buffer, do final aggregation
+            if len(self.buffer) > 0:
+                table = pyarrow.concat_tables(
+                    self.buffer,
+                    promote_options="permissive",
+                )
+                table = table.combine_chunks()
+                groups = table.group_by(self.group_by_columns)
+                groups = groups.aggregate(self.aggregate_functions)
+                self.buffer = [groups]  # Replace buffer with final result
 
-            # do the group by and aggregates
-            table = table.combine_chunks()
-            groups = table.group_by(self.group_by_columns)
-            groups = groups.aggregate(self.aggregate_functions)
+            # Now buffer has the final aggregated result
+            groups = self.buffer[0]
 
             # do the secondary activities for ARRAY_AGG
             for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.AGGREGATOR,)):
@@ -135,4 +137,16 @@ class AggregateAndGroupNode(BasePlanNode):
         morsel = evaluate_and_append(self.groups, morsel)
 
         self.buffer.append(morsel)
+
+        # If buffer is full, do partial aggregation
+        if len(self.buffer) >= self.max_buffer_size:
+            table = pyarrow.concat_tables(
+                self.buffer,
+                promote_options="permissive",
+            )
+            table = table.combine_chunks()
+            groups = table.group_by(self.group_by_columns)
+            groups = groups.aggregate(self.aggregate_functions)
+            self.buffer = [groups]  # Replace buffer with partial result
+
         yield None

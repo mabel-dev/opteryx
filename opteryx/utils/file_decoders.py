@@ -361,9 +361,7 @@ def parquet_decoder(
     filter_columns = {
         c.value for c in get_all_nodes_of_type(processed_selection, (NodeType.IDENTIFIER,))
     }
-    selected_columns = list(
-        projection_set.union(filter_columns).intersection(pq_meta.schema.names)
-    )
+    selected_columns = list(projection_set.union(filter_columns).intersection(pq_meta.schema.names))
 
     # Read all columns if none are selected, unless force_read is set
     if not selected_columns and not force_read:
