@@ -127,73 +127,37 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
-        # Hybrid strategy: choose mmap or read+memoryview depending on OS
-        # macOS -> mmap, Linux -> read.
+        from opteryx.compiled.io.disk_reader import read_file_mmap
+        from opteryx.compiled.io.disk_reader import unmap_memory
 
-        # helper to use mmap path
-        def _use_mmap():
-            fd = os.open(blob_name, os.O_RDONLY)
-            try:
-                if hasattr(os, "posix_fadvise"):
-                    with contextlib.suppress(Exception):
-                        os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
-                size = os.fstat(fd).st_size
-                _map = mmap.mmap(fd, length=size, **mmap_config)
-                result = decoder(
-                    _map,
-                    just_schema=just_schema,
-                    projection=projection,
-                    selection=selection,
-                    use_threads=True,
+        # Read using mmap for maximum speed
+        mmap_obj = read_file_mmap(blob_name)
+
+        try:
+            # Create memoryview for the decoder
+            mv = memoryview(mmap_obj)
+
+            result = decoder(
+                mv,
+                just_schema=just_schema,
+                projection=projection,
+                selection=selection,
+                use_threads=True,
+            )
+
+            self.statistics.bytes_read += len(mv)
+
+            if not just_schema:
+                stats = self.read_blob_statistics(
+                    blob_name=blob_name, blob_bytes=mv, decoder=decoder
                 )
+                if self.relation_statistics is None:
+                    self.relation_statistics = stats
 
-                self.statistics.bytes_read += size
-
-                if not just_schema:
-                    stats = self.read_blob_statistics(
-                        blob_name=blob_name, blob_bytes=_map, decoder=decoder
-                    )
-                    if self.relation_statistics is None:
-                        self.relation_statistics = stats
-
-                return result
-            finally:
-                os.close(fd)
-
-        # helper to use read()+memoryview path
-        def _use_read():
-            with open(blob_name, "rb") as f:
-                if hasattr(os, "posix_fadvise"):
-                    with contextlib.suppress(Exception):
-                        os.posix_fadvise(f.fileno(), 0, 0, os.POSIX_FADV_WILLNEED)
-
-                data = f.read()
-                size = len(data)
-                buf = memoryview(data)
-
-                result = decoder(
-                    buf,
-                    just_schema=just_schema,
-                    projection=projection,
-                    selection=selection,
-                    use_threads=True,
-                )
-
-                self.statistics.bytes_read += size
-
-                if not just_schema:
-                    stats = self.read_blob_statistics(
-                        blob_name=blob_name, blob_bytes=buf, decoder=decoder
-                    )
-                    if self.relation_statistics is None:
-                        self.relation_statistics = stats
-
-                return result
-
-        # macOS: use mmap; Linux: prefer read (observed faster on some Linux setups)
-        if platform.system() == "Darwin":
-            return _use_mmap()
-        return _use_read()
+            return result
+        finally:
+            # CRITICAL: Clean up the memory mapping
+            unmap_memory(mmap_obj)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:

@@ -249,6 +249,13 @@ if SHOULD_BUILD_EXTENSIONS:
             extra_compile_args=C_COMPILE_FLAGS,
         ),
         Extension(
+            name="opteryx.compiled.io.disk_reader",
+            sources=["opteryx/compiled/io/disk_reader.pyx", "src/cpp/disk_io.cpp"],
+            include_dirs=include_dirs + ["src/cpp"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
             name="opteryx.compiled.table_ops.distinct",
             sources=["opteryx/compiled/table_ops/distinct.pyx"],
             include_dirs=include_dirs + ["third_party/abseil"],
