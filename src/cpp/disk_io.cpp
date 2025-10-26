@@ -167,6 +167,15 @@ int read_all_mmap(const char* path, uint8_t** dst, size_t* out_len) {
     }
 
     size_t size = static_cast<size_t>(st.st_size);
+    
+    // Handle empty files - mmap doesn't work with size 0
+    if (size == 0) {
+        close(fd);
+        *dst = nullptr;
+        *out_len = 0;
+        return 0;
+    }
+    
     void* mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
     close(fd);
 
@@ -191,6 +200,15 @@ int read_all_mmap(const char* path, uint8_t** dst, size_t* out_len) {
     }
 
     size_t size = static_cast<size_t>(st.st_size);
+    
+    // Handle empty files - mmap doesn't work with size 0
+    if (size == 0) {
+        close(fd);
+        *dst = nullptr;
+        *out_len = 0;
+        return 0;
+    }
+    
     void* mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
@@ -213,6 +231,14 @@ int read_all_mmap(const char* path, uint8_t** dst, size_t* out_len) {
     DWORD sizeHigh = 0;
     DWORD sizeLow = GetFileSize(hFile, &sizeHigh);
     size_t size = (static_cast<size_t>(sizeHigh) << 32) | sizeLow;
+
+    // Handle empty files
+    if (size == 0) {
+        CloseHandle(hFile);
+        *dst = nullptr;
+        *out_len = 0;
+        return 0;
+    }
 
     HANDLE hMapping = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     if (!hMapping) {
