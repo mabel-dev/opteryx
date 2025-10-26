@@ -111,195 +111,170 @@ if SHOULD_BUILD_EXTENSIONS:
     with open("README.md", mode="r", encoding="UTF8") as rm:
         long_description = rm.read()
 
-    extensions = []
-
-    # io_uring (liburing/axboe) is Linux-only. Skip building the vendored
-    # `opteryx.io.iouring` extension on non-Linux platforms (macOS/Windows)
-    # to avoid compilation errors like missing Linux headers (e.g. linux/swab.h).
-    if is_linux():
-        extensions.append(
-            Extension(
-                name="opteryx.io.iouring",
-                sources=[
-                    "opteryx/compiled/io/iouring.pyx",
-                ],
-                include_dirs=include_dirs + ["third_party/axboe"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS + ["-fno-plt", "-fvisibility=hidden"],
-            )
-        )
-    else:
-        print(
-            "\033[38;2;255;85;85mSkipping opteryx.io.iouring build: "
-            "io_uring is only supported on Linux.\033[0m"
-        )
-
-    extensions.extend(
-        [
-            Extension(
-                name="opteryx.third_party.abseil.containers",
-                sources=[
-                    "opteryx/third_party/abseil/containers.pyx",
-                    "third_party/abseil/absl/hash/internal/hash.cc",
-                    "third_party/abseil/absl/hash/internal/city.cc",
-                    "third_party/abseil/absl/container/internal/raw_hash_set.cc",
-                    "third_party/abseil/absl/hash/internal/low_level_hash.cc",
-                    "third_party/abseil/absl/base/internal/raw_logging.cc",
-                    "third_party/abseil/absl/base/internal/strerror.cc",
-                    "third_party/abseil/absl/base/internal/sysinfo.cc",
-                    "third_party/abseil/absl/base/internal/spinlock_wait.cc",
-                ],
-                include_dirs=include_dirs + ["third_party/abseil"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-                extra_link_args=["-Lthird_party/abseil"],
-            ),
-            Extension(
-                name="opteryx.third_party.alantsd.base64",
-                sources=["opteryx/third_party/alantsd/base64.pyx", "third_party/alantsd/base64.c"],
-                include_dirs=include_dirs + ["third_party/alantsd"],
-                extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],
-                extra_link_args=["-Lthird_party/alantsd"],
-            ),
-            Extension(
-                name="opteryx.third_party.cyan4973.xxhash",
-                sources=[
-                    "opteryx/third_party/cyan4973/xxhash.pyx",
-                    "third_party/cyan4973/xxhash.c",
-                ],
-                include_dirs=include_dirs + ["third_party/cyan4973"],
-                extra_compile_args=C_COMPILE_FLAGS,
-                extra_link_args=["-Lthird_party/cyan4973"],
-            ),
-            Extension(
-                name="opteryx.third_party.fastfloat.fast_float",
-                sources=[
-                    "opteryx/third_party/fastfloat/fast_float.pyx",
-                ],
-                include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-                extra_link_args=["-Lthird_party/fastfloat/fast_float"],
-            ),
-            Extension(
-                name="opteryx.third_party.tktech.csimdjson",
-                sources=[
-                    "opteryx/third_party/tktech/csimdjson.pyx",
-                    "third_party/tktech/simdjson/simdjson.cpp",
-                    "third_party/tktech/simdjson/util.cpp",
-                ],
-                include_dirs=include_dirs + ["third_party/tktech/simdjson"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.third_party.ulfjack.ryu",
-                sources=[
-                    "opteryx/third_party/ulfjack/ryu.pyx",
-                    "third_party/ulfjack/ryu/d2fixed.c",
-                ],
-                include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
-                extra_compile_args=C_COMPILE_FLAGS,
-                extra_link_args=["-Lthird_party/ulfjack/ryu"],
-            ),
-            Extension(
-                name="opteryx.compiled.functions.strings",
-                sources=["opteryx/compiled/functions/strings.pyx", "src/cpp/simd_search.cpp"],
-                include_dirs=include_dirs,
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.functions.timestamp",
-                sources=["opteryx/compiled/functions/timestamp.pyx"],
-                extra_compile_args=C_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.functions.vectors",
-                sources=["opteryx/compiled/functions/vectors.pyx"],
-                include_dirs=include_dirs,
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.aggregations.count_distinct",
-                sources=["opteryx/compiled/aggregations/count_distinct.pyx"],
-                language="c++",
-                include_dirs=include_dirs + ["third_party/abseil"],
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.hash_table",
-                sources=["opteryx/compiled/structures/hash_table.pyx"],
-                include_dirs=include_dirs,
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.bloom_filter",
-                sources=["opteryx/compiled/structures/bloom_filter.pyx"],
-                include_dirs=include_dirs,
-                extra_compile_args=C_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.buffers",
-                sources=["opteryx/compiled/structures/buffers.pyx", "src/cpp/intbuffer.cpp"],
-                include_dirs=include_dirs,
-                language="c++",
-                define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-                extra_compile_args=CPP_COMPILE_FLAGS + ["-Wall", "-shared"],
-            ),
-            Extension(
-                name="opteryx.compiled.structures.lru_k",
-                sources=["opteryx/compiled/structures/lru_k.pyx"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.memory_pool",
-                sources=["opteryx/compiled/structures/memory_pool.pyx"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.relation_statistics",
-                sources=["opteryx/compiled/structures/relation_statistics.pyx"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.structures.node",
-                sources=["opteryx/compiled/structures/node.pyx"],
-                extra_compile_args=C_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.table_ops.distinct",
-                sources=["opteryx/compiled/table_ops/distinct.pyx"],
-                include_dirs=include_dirs + ["third_party/abseil"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.table_ops.hash_ops",
-                sources=["opteryx/compiled/table_ops/hash_ops.pyx"],
-                include_dirs=include_dirs + ["third_party/abseil"],
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.compiled.table_ops.null_avoidant_ops",
-                sources=["opteryx/compiled/table_ops/null_avoidant_ops.pyx"],
-                include_dirs=include_dirs,
-                language="c++",
-                extra_compile_args=CPP_COMPILE_FLAGS,
-            ),
-            Extension(
-                name="opteryx.third_party.fuzzy",
-                sources=["opteryx/third_party/fuzzy/soundex.pyx"],
-                extra_compile_args=C_COMPILE_FLAGS,
-            ),
-        ]
-    )
+    extensions = [
+        Extension(
+            name="opteryx.third_party.abseil.containers",
+            sources=[
+                "opteryx/third_party/abseil/containers.pyx",
+                "third_party/abseil/absl/hash/internal/hash.cc",
+                "third_party/abseil/absl/hash/internal/city.cc",
+                "third_party/abseil/absl/container/internal/raw_hash_set.cc",
+                "third_party/abseil/absl/hash/internal/low_level_hash.cc",
+                "third_party/abseil/absl/base/internal/raw_logging.cc",
+                "third_party/abseil/absl/base/internal/strerror.cc",
+                "third_party/abseil/absl/base/internal/sysinfo.cc",
+                "third_party/abseil/absl/base/internal/spinlock_wait.cc",
+            ],
+            include_dirs=include_dirs + ["third_party/abseil"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+            extra_link_args=["-Lthird_party/abseil"],
+        ),
+        Extension(
+            name="opteryx.third_party.alantsd.base64",
+            sources=["opteryx/third_party/alantsd/base64.pyx", "third_party/alantsd/base64.c"],
+            include_dirs=include_dirs + ["third_party/alantsd"],
+            extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],
+            extra_link_args=["-Lthird_party/alantsd"],
+        ),
+        Extension(
+            name="opteryx.third_party.cyan4973.xxhash",
+            sources=[
+                "opteryx/third_party/cyan4973/xxhash.pyx",
+                "third_party/cyan4973/xxhash.c",
+            ],
+            include_dirs=include_dirs + ["third_party/cyan4973"],
+            extra_compile_args=C_COMPILE_FLAGS,
+            extra_link_args=["-Lthird_party/cyan4973"],
+        ),
+        Extension(
+            name="opteryx.third_party.fastfloat.fast_float",
+            sources=[
+                "opteryx/third_party/fastfloat/fast_float.pyx",
+            ],
+            include_dirs=include_dirs + ["third_party/fastfloat/fast_float"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+            extra_link_args=["-Lthird_party/fastfloat/fast_float"],
+        ),
+        Extension(
+            name="opteryx.third_party.tktech.csimdjson",
+            sources=[
+                "opteryx/third_party/tktech/csimdjson.pyx",
+                "third_party/tktech/simdjson/simdjson.cpp",
+                "third_party/tktech/simdjson/util.cpp",
+            ],
+            include_dirs=include_dirs + ["third_party/tktech/simdjson"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.third_party.ulfjack.ryu",
+            sources=[
+                "opteryx/third_party/ulfjack/ryu.pyx",
+                "third_party/ulfjack/ryu/d2fixed.c",
+            ],
+            include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
+            extra_compile_args=C_COMPILE_FLAGS,
+            extra_link_args=["-Lthird_party/ulfjack/ryu"],
+        ),
+        Extension(
+            name="opteryx.compiled.functions.strings",
+            sources=["opteryx/compiled/functions/strings.pyx", "src/cpp/simd_search.cpp"],
+            include_dirs=include_dirs,
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.functions.timestamp",
+            sources=["opteryx/compiled/functions/timestamp.pyx"],
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.functions.vectors",
+            sources=["opteryx/compiled/functions/vectors.pyx"],
+            include_dirs=include_dirs,
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.aggregations.count_distinct",
+            sources=["opteryx/compiled/aggregations/count_distinct.pyx"],
+            language="c++",
+            include_dirs=include_dirs + ["third_party/abseil"],
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.hash_table",
+            sources=["opteryx/compiled/structures/hash_table.pyx"],
+            include_dirs=include_dirs,
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.bloom_filter",
+            sources=["opteryx/compiled/structures/bloom_filter.pyx"],
+            include_dirs=include_dirs,
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.buffers",
+            sources=["opteryx/compiled/structures/buffers.pyx", "src/cpp/intbuffer.cpp"],
+            include_dirs=include_dirs,
+            language="c++",
+            define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+            extra_compile_args=CPP_COMPILE_FLAGS + ["-Wall", "-shared"],
+        ),
+        Extension(
+            name="opteryx.compiled.structures.lru_k",
+            sources=["opteryx/compiled/structures/lru_k.pyx"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.memory_pool",
+            sources=["opteryx/compiled/structures/memory_pool.pyx"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.relation_statistics",
+            sources=["opteryx/compiled/structures/relation_statistics.pyx"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.structures.node",
+            sources=["opteryx/compiled/structures/node.pyx"],
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.table_ops.distinct",
+            sources=["opteryx/compiled/table_ops/distinct.pyx"],
+            include_dirs=include_dirs + ["third_party/abseil"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.table_ops.hash_ops",
+            sources=["opteryx/compiled/table_ops/hash_ops.pyx"],
+            include_dirs=include_dirs + ["third_party/abseil"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.compiled.table_ops.null_avoidant_ops",
+            sources=["opteryx/compiled/table_ops/null_avoidant_ops.pyx"],
+            include_dirs=include_dirs,
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
+        Extension(
+            name="opteryx.third_party.fuzzy",
+            sources=["opteryx/third_party/fuzzy/soundex.pyx"],
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
+    ]
 
     # Add SIMD support flags
     machine = platform.machine().lower()
