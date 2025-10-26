@@ -30,31 +30,21 @@ from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
-from opteryx.utils import is_windows
 from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
-IS_WINDOWS = is_windows()
 IS_LINUX = platform.system() == "Linux"
 
-# Define os.O_BINARY for non-Windows platforms if it's not already defined
-if not hasattr(os, "O_BINARY"):
-    os.O_BINARY = 0  # Value has no effect on non-Windows platforms
-if not hasattr(os, "O_DIRECT"):
-    os.O_DIRECT = 0  # Value has no effect on non-Windows platforms
 
+# prefer MAP_PRIVATE and on Linux enable MAP_POPULATE to fault pages in
+flags = mmap.MAP_PRIVATE
+if IS_LINUX:
+    with contextlib.suppress(Exception):
+        flags |= getattr(mmap, "MAP_POPULATE", 0)
 mmap_config = {}
-if not IS_WINDOWS:
-    # prefer MAP_PRIVATE and on Linux enable MAP_POPULATE to fault pages in
-    flags = mmap.MAP_PRIVATE
-    if IS_LINUX and hasattr(mmap, "MAP_POPULATE"):
-        with contextlib.suppress(Exception):
-            flags |= mmap.MAP_POPULATE
-    mmap_config["flags"] = flags
-    mmap_config["prot"] = mmap.PROT_READ
-else:
-    mmap_config["access"] = mmap.ACCESS_READ
+mmap_config["flags"] = flags
+mmap_config["prot"] = mmap.PROT_READ
 
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
@@ -137,31 +127,73 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
-        try:
-            file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
-            if hasattr(os, "posix_fadvise"):
-                os.posix_fadvise(file_descriptor, 0, 0, os.POSIX_FADV_WILLNEED)
-            size = os.fstat(file_descriptor).st_size
-            _map = mmap.mmap(file_descriptor, length=size, **mmap_config)
-            result = decoder(
-                _map,
-                just_schema=just_schema,
-                projection=projection,
-                selection=selection,
-                use_threads=True,
-            )
-            self.statistics.bytes_read += size
+        # Hybrid strategy: choose mmap or read+memoryview depending on OS
+        # macOS -> mmap, Linux -> read.
 
-            if not just_schema:
-                stats = self.read_blob_statistics(
-                    blob_name=blob_name, blob_bytes=_map, decoder=decoder
+        # helper to use mmap path
+        def _use_mmap():
+            fd = os.open(blob_name, os.O_RDONLY)
+            try:
+                if hasattr(os, "posix_fadvise"):
+                    with contextlib.suppress(Exception):
+                        os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
+                size = os.fstat(fd).st_size
+                _map = mmap.mmap(fd, length=size, **mmap_config)
+                result = decoder(
+                    _map,
+                    just_schema=just_schema,
+                    projection=projection,
+                    selection=selection,
+                    use_threads=True,
                 )
-                if self.relation_statistics is None:
-                    self.relation_statistics = stats
 
-            return result
-        finally:
-            os.close(file_descriptor)
+                self.statistics.bytes_read += size
+
+                if not just_schema:
+                    stats = self.read_blob_statistics(
+                        blob_name=blob_name, blob_bytes=_map, decoder=decoder
+                    )
+                    if self.relation_statistics is None:
+                        self.relation_statistics = stats
+
+                return result
+            finally:
+                os.close(fd)
+
+        # helper to use read()+memoryview path
+        def _use_read():
+            with open(blob_name, "rb") as f:
+                if hasattr(os, "posix_fadvise"):
+                    with contextlib.suppress(Exception):
+                        os.posix_fadvise(f.fileno(), 0, 0, os.POSIX_FADV_WILLNEED)
+
+                data = f.read()
+                size = len(data)
+                buf = memoryview(data)
+
+                result = decoder(
+                    buf,
+                    just_schema=just_schema,
+                    projection=projection,
+                    selection=selection,
+                    use_threads=True,
+                )
+
+                self.statistics.bytes_read += size
+
+                if not just_schema:
+                    stats = self.read_blob_statistics(
+                        blob_name=blob_name, blob_bytes=buf, decoder=decoder
+                    )
+                    if self.relation_statistics is None:
+                        self.relation_statistics = stats
+
+                return result
+
+        # macOS: use mmap; Linux: prefer read (observed faster on some Linux setups)
+        if platform.system() == "Darwin":
+            return _use_mmap()
+        return _use_read()
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
