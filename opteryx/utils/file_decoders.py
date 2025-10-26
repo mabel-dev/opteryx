@@ -243,7 +243,7 @@ def parquet_decoder(
     just_schema: bool = False,
     just_statistics: bool = False,
     force_read: bool = False,
-    use_threads: bool = False,
+    use_threads: bool = True,
     statistics: Optional[RelationStatistics] = None,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -334,21 +334,28 @@ def parquet_decoder(
 
         return statistics
 
-    # If we're here, we can't use rugo - we need to read the file with pyarrow
-
-    # Open the parquet file only once. Prefer pyarrow.BufferReader with a
-    # pyarrow.Buffer when we have a memoryview to avoid creating intermediate
-    # Python bytes objects.
+    # Use rugo's lightweight metadata reader first (faster than pyarrow)
     if isinstance(buffer, memoryview):
-        pa_buf = pyarrow.py_buffer(buffer)
-        stream = pyarrow.BufferReader(pa_buf)
-    elif isinstance(buffer, bytes):
-        stream = pyarrow.BufferReader(buffer)
+        rmeta = parquet_meta.read_metadata_from_memoryview(buffer)
     else:
-        stream = pyarrow.input_stream(buffer)
+        rmeta = parquet_meta.read_metadata_from_memoryview(memoryview(buffer))
 
-    pq_meta = parquet.read_metadata(stream)
-    stream.seek(0)
+    # Build the pieces we need from the rugo metadata
+    # schema names (parquet has same columns across row groups usually)
+    if rmeta.get("row_groups"):
+        schema_names = [c["name"] for c in rmeta["row_groups"][0]["columns"]]
+    else:
+        schema_names = []
+
+    num_rows = rmeta.get("num_rows")
+    # number of columns - try to derive, fallback to length of schema_names
+    num_columns = rmeta.get("num_columns") or len(schema_names)
+
+    # total uncompressed size (rugo uses total_byte_size)
+    uncompressed_size = sum(
+        sum(col.get("total_byte_size", 0) for col in rg.get("columns", []))
+        for rg in rmeta.get("row_groups", [])
+    )
 
     # we need to work out if we have a selection which may force us
     # fetching columns just for filtering
@@ -361,36 +368,21 @@ def parquet_decoder(
     filter_columns = {
         c.value for c in get_all_nodes_of_type(processed_selection, (NodeType.IDENTIFIER,))
     }
-    selected_columns = list(projection_set.union(filter_columns).intersection(pq_meta.schema.names))
+    selected_columns = list(projection_set.union(filter_columns).intersection(schema_names))
 
     # Read all columns if none are selected, unless force_read is set
     if not selected_columns and not force_read:
         selected_columns = []
 
-    # get the full data size of the file to see how effective projection/selection is
-    uncompressed_size = sum(
-        row_group.column(j).total_uncompressed_size
-        for i in range(pq_meta.num_row_groups)
-        for row_group in [pq_meta.row_group(i)]
-        for j in range(row_group.num_columns)
-    )
-
-    # If it's COUNT(*), we don't need to create a full dataset
-    # We have a handler later to sum up the $COUNT(*) column
-    if projection == [] and selection == []:
-        table = pyarrow.Table.from_arrays([[pq_meta.num_rows]], names=["$COUNT(*)"])
-        return (
-            pq_meta.num_rows,
-            pq_meta.num_columns,
-            uncompressed_size,
-            table,
-        )
+    # Open the parquet file only once. Fake a file-like object around the buffer
+    if isinstance(buffer, memoryview):
+        buffer = MemoryViewStream(buffer)
 
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
-        stream,
+        buffer,
         columns=selected_columns,
-        pre_buffer=False,
+        pre_buffer=True,
         filters=dnf_filter,
         use_threads=use_threads,
         use_pandas_metadata=False,
@@ -401,8 +393,8 @@ def parquet_decoder(
         table = filter_records(processed_selection, table)
 
     return (
-        pq_meta.num_rows,
-        pq_meta.num_columns,
+        num_rows,
+        num_columns,
         uncompressed_size,
         table,
     )

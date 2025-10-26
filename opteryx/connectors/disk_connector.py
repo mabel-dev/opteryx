@@ -9,7 +9,6 @@ given as a folder on local disk
 """
 
 import contextlib
-import ctypes
 import mmap
 import os
 import platform
