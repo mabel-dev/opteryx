@@ -281,6 +281,12 @@ if SHOULD_BUILD_EXTENSIONS:
             sources=["opteryx/third_party/fuzzy/soundex.pyx"],
             extra_compile_args=C_COMPILE_FLAGS,
         ),
+        Extension(
+            name="opteryx.compiled.structures.memory_view_stream",
+            sources=["opteryx/compiled/structures/memory_view_stream.pyx"],
+            include_dirs=include_dirs,
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
     ]
 
     # Add SIMD support flags
