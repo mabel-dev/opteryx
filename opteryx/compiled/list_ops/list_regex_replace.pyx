@@ -19,6 +19,11 @@ import numpy
 cimport numpy
 numpy.import_array()
 
+# Cache for compiled regex patterns to avoid recompiling the same pattern
+# This is especially beneficial when the same pattern is used multiple times
+# in a query (e.g., in both SELECT and GROUP BY clauses)
+_pattern_cache = {}
+
 
 cpdef numpy.ndarray list_regex_replace(numpy.ndarray data, object pattern, object replacement):
     """
@@ -59,11 +64,21 @@ cpdef numpy.ndarray list_regex_replace(numpy.ndarray data, object pattern, objec
     
     # Determine if we're working with bytes or strings
     # Check the pattern type
+    cdef object cache_key
     if isinstance(pattern, bytes):
         is_bytes_mode = True
-        compiled_pattern = re.compile(pattern)
+        cache_key = pattern
     else:
-        compiled_pattern = re.compile(str(pattern))
+        cache_key = str(pattern)
+    
+    # Check cache for compiled pattern
+    if cache_key in _pattern_cache:
+        compiled_pattern = _pattern_cache[cache_key]
+    else:
+        compiled_pattern = re.compile(cache_key)
+        # Limit cache size to prevent memory issues
+        if len(_pattern_cache) < 100:
+            _pattern_cache[cache_key] = compiled_pattern
     
     # Ensure replacement is the right type
     cdef object replacement_val
@@ -105,3 +120,14 @@ cpdef numpy.ndarray list_regex_replace(numpy.ndarray data, object pattern, objec
             result[i] = value
     
     return result
+
+
+def clear_regex_cache():
+    """
+    Clear the compiled regex pattern cache.
+    
+    This can be called to free memory if many different patterns have been used.
+    The cache is automatically limited to 100 patterns, but this allows manual clearing.
+    """
+    global _pattern_cache
+    _pattern_cache.clear()
