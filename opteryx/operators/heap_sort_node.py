@@ -108,7 +108,9 @@ class HeapSortNode(BasePlanNode):
                     indices = pyarrow.compute.sort_indices(column)
                 else:
                     indices = pyarrow.compute.sort_indices(column)[::-1]
-                return table.take(indices.slice(0, self.limit))
+                # Take min of limit and available indices to avoid index errors
+                take_count = min(self.limit, len(indices))
+                return table.take(indices.slice(0, take_count))
 
             np_column = column.to_numpy()
             if use_decimal:

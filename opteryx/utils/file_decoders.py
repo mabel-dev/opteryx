@@ -174,20 +174,12 @@ def zstd_decoder(
 
     import zstandard
 
-    # zstandard.open expects a file-like; we open on a BytesIO constructed from
-    # the provided buffer and then pass the decompressed bytes as a memoryview
-    if isinstance(buffer, memoryview):
-        buf_bytes = buffer.tobytes()
-    elif isinstance(buffer, bytes):
-        buf_bytes = buffer
-    else:
-        # fallback, try to read
-        try:
-            buf_bytes = buffer.read()
-        except Exception:
-            buf_bytes = bytes(buffer)
+    # zstandard.open expects a file-like
+    if not isinstance(buffer, memoryview):
+        buffer = memoryview(buffer)
+    buffer = MemoryViewStream(buffer)
 
-    with zstandard.open(io.BytesIO(buf_bytes), "rb") as file:
+    with zstandard.open(buffer, "rb") as file:
         decompressed = file.read()
         return jsonl_decoder(
             memoryview(decompressed),
@@ -215,17 +207,12 @@ def lzma_decoder(
     import lzma
 
     # similar to zstd path: read bytes and pass decompressed data as memoryview
-    if isinstance(buffer, memoryview):
-        buf_bytes = buffer.tobytes()
-    elif isinstance(buffer, bytes):
-        buf_bytes = buffer
-    else:
-        try:
-            buf_bytes = buffer.read()
-        except Exception:
-            buf_bytes = bytes(buffer)
+    # zstandard.open expects a file-like
+    if not isinstance(buffer, memoryview):
+        buffer = memoryview(buffer)
+    buffer = MemoryViewStream(buffer)
 
-    with lzma.open(io.BytesIO(buf_bytes), "rb") as file:
+    with lzma.open(buffer, "rb") as file:
         decompressed = file.read()
         return jsonl_decoder(
             memoryview(decompressed),
