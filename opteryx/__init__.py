@@ -19,6 +19,7 @@ For more information check out https://opteryx.dev.
 
 import datetime
 import os
+import random
 import time
 import warnings
 import platform
@@ -34,7 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover - only for type checkers
 getcontext().prec = 28
 
 # end-of-stream marker
-EOS: int = 0
+EOS: int = random.randint(-(2**63), 2**63 - 1)
 
 
 def is_mac() -> bool:  # pragma: no cover

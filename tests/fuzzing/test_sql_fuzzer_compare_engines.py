@@ -168,7 +168,7 @@ def test_sql_fuzzing_connector_comparisons(i):
 
     try:
         duck_statement = statement.replace(table_name, table["duckdb_name"])
-        duck_result = conn.query(duck_statement).arrow()
+        duck_result = conn.query(duck_statement).arrow().read_all()
         opteryx_statement = statement.replace(table_name, table["opteryx_name"])
         opteryx_result = opteryx.query(opteryx_statement).arrow()
 
