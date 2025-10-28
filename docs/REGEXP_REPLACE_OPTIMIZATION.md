@@ -119,6 +119,19 @@ clear_regex_cache()
 
 Note: The cache is thread-safe and limited to 100 patterns by default.
 
+## Security Considerations
+
+### ReDoS (Regular Expression Denial of Service)
+Like the original PyArrow implementation, this optimized version uses standard regex engines that can be vulnerable to ReDoS attacks with certain pathological patterns. This is an inherent characteristic of regex engines, not specific to this optimization.
+
+**Mitigation**:
+- Patterns are defined in SQL queries by developers/analysts, not end users
+- This is the same security profile as the original implementation
+- Consider adding query timeouts for additional protection
+
+### Thread Safety
+The pattern cache is protected with `threading.Lock()` to ensure thread-safe concurrent access.
+
 ## Future Enhancements
 
 Potential future improvements:
