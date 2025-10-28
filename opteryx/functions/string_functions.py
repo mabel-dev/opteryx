@@ -289,4 +289,21 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
+    """
+    Optimized regex replacement using Cython implementation.
+    Falls back to PyArrow if the optimized version is not available.
+    """
+    try:
+        # Use optimized Cython implementation
+        from opteryx.compiled.list_ops import list_regex_replace
+        
+        # Convert to numpy array if needed
+        if hasattr(array, "to_numpy"):
+            arr = array.to_numpy(zero_copy_only=False)
+        else:
+            arr = numpy.asarray(array, dtype=object)
+        
+        return list_regex_replace(arr, _pattern[0], _replacement[0])
+    except ImportError:
+        # Fall back to PyArrow implementation if compiled version not available
+        return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
