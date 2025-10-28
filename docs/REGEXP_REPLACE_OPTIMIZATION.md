@@ -107,9 +107,17 @@ FROM my_table;
 The pattern cache is managed automatically, but can be cleared if needed:
 
 ```python
+# After the module is built, the function is available from:
+from opteryx.compiled.list_ops.function_definitions import clear_regex_cache
+
+# Or if using the compiled module directly:
 from opteryx.compiled.list_ops import clear_regex_cache
+
+# Clear the cache
 clear_regex_cache()
 ```
+
+Note: The cache is thread-safe and limited to 100 patterns by default.
 
 ## Future Enhancements
 

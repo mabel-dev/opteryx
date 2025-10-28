@@ -15,6 +15,7 @@ are constant across all strings (as in GROUP BY clauses).
 """
 
 import re
+import threading
 import numpy
 cimport numpy
 numpy.import_array()
@@ -22,7 +23,9 @@ numpy.import_array()
 # Cache for compiled regex patterns to avoid recompiling the same pattern
 # This is especially beneficial when the same pattern is used multiple times
 # in a query (e.g., in both SELECT and GROUP BY clauses)
+# Thread-safe using a lock
 _pattern_cache = {}
+_cache_lock = threading.Lock()
 
 
 cpdef numpy.ndarray list_regex_replace(numpy.ndarray data, object pattern, object replacement):
@@ -71,14 +74,23 @@ cpdef numpy.ndarray list_regex_replace(numpy.ndarray data, object pattern, objec
     else:
         cache_key = str(pattern)
     
-    # Check cache for compiled pattern
-    if cache_key in _pattern_cache:
-        compiled_pattern = _pattern_cache[cache_key]
-    else:
+    # Check cache for compiled pattern (thread-safe)
+    with _cache_lock:
+        if cache_key in _pattern_cache:
+            compiled_pattern = _pattern_cache[cache_key]
+        else:
+            # Compile pattern outside the critical section for better concurrency
+            compiled_pattern = None
+    
+    # Compile pattern if not found in cache
+    if compiled_pattern is None:
         compiled_pattern = re.compile(cache_key)
-        # Limit cache size to prevent memory issues
-        if len(_pattern_cache) < 100:
-            _pattern_cache[cache_key] = compiled_pattern
+        # Add to cache with thread safety
+        with _cache_lock:
+            # Check cache size and add only if there's room
+            # This prevents unbounded memory growth
+            if len(_pattern_cache) < 100:
+                _pattern_cache[cache_key] = compiled_pattern
     
     # Ensure replacement is the right type
     cdef object replacement_val
@@ -128,6 +140,9 @@ def clear_regex_cache():
     
     This can be called to free memory if many different patterns have been used.
     The cache is automatically limited to 100 patterns, but this allows manual clearing.
+    
+    Thread-safe operation.
     """
     global _pattern_cache
-    _pattern_cache.clear()
+    with _cache_lock:
+        _pattern_cache.clear()
