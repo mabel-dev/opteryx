@@ -289,4 +289,63 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
+    """
+    Optimized regex replacement using google-re2 when available.
+    
+    google-re2 provides Python bindings to Google's RE2 C++ library, which is
+    significantly faster than Python's standard re module for large-scale operations.
+    Falls back to PyArrow's implementation if google-re2 is not available.
+    """
+    try:
+        # Use google-re2 for significantly better performance
+        import re2
+        
+        # Convert to list for processing
+        if hasattr(array, "to_pylist"):
+            data = array.to_pylist()
+        elif hasattr(array, "to_numpy"):
+            data = array.to_numpy(zero_copy_only=False).tolist()
+        else:
+            data = list(array)
+        
+        pattern = _pattern[0]
+        replacement = _replacement[0]
+        
+        # Handle bytes vs string patterns
+        if isinstance(pattern, bytes):
+            # Compile pattern once for all replacements
+            compiled = re2.compile(pattern)
+            if not isinstance(replacement, bytes):
+                replacement = str(replacement).encode('utf-8')
+            
+            # Apply replacement
+            result = []
+            for item in data:
+                if item is None:
+                    result.append(None)
+                elif isinstance(item, bytes):
+                    result.append(compiled.sub(replacement, item))
+                else:
+                    # Convert to bytes, replace, keep as bytes
+                    result.append(compiled.sub(replacement, str(item).encode('utf-8')))
+        else:
+            # String pattern
+            compiled = re2.compile(str(pattern))
+            replacement = str(replacement)
+            
+            # Apply replacement
+            result = []
+            for item in data:
+                if item is None:
+                    result.append(None)
+                elif isinstance(item, bytes):
+                    # Convert bytes to string, replace, convert back
+                    result.append(compiled.sub(replacement, item.decode('utf-8')).encode('utf-8'))
+                else:
+                    result.append(compiled.sub(replacement, str(item)))
+        
+        return result
+        
+    except ImportError:
+        # Fallback to PyArrow if google-re2 not available
+        return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
