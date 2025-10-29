@@ -8,7 +8,6 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
-import mmap
 import os
 import time
 from typing import Dict
@@ -115,7 +114,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                 If an I/O error occurs while reading the file.
         """
         from opteryx.compiled.io.disk_reader import read_file_mmap
-        from opteryx.compiled.io.disk_reader import unmap_memory
+        #from opteryx.compiled.io.disk_reader import unmap_memory
 
         # Read using mmap for maximum speed
         mmap_obj = read_file_mmap(blob_name)
