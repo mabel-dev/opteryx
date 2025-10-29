@@ -8,10 +8,8 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
-import contextlib
 import mmap
 import os
-import platform
 import time
 from typing import Dict
 from typing import List
@@ -34,17 +32,6 @@ from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
-IS_LINUX = platform.system() == "Linux"
-
-
-# prefer MAP_PRIVATE and on Linux enable MAP_POPULATE to fault pages in
-flags = mmap.MAP_PRIVATE
-if IS_LINUX:
-    with contextlib.suppress(Exception):
-        flags |= getattr(mmap, "MAP_POPULATE", 0)
-mmap_config = {}
-mmap_config["flags"] = flags
-mmap_config["prot"] = mmap.PROT_READ
 
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
@@ -157,7 +144,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             return result
         finally:
             # CRITICAL: Clean up the memory mapping
-            unmap_memory(mmap_obj)
+            pass
+            # unmap_memory(mmap_obj)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -219,7 +207,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             decoder = get_decoder(blob_name)
             try:
                 if not just_schema:
-                    num_rows, _, raw_bytes, decoded = self.read_blob(
+                    num_rows, _, raw_size, decoded = self.read_blob(
                         blob_name=blob_name,
                         decoder=decoder,
                         just_schema=False,
@@ -234,8 +222,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
 
                     self.statistics.rows_seen += num_rows
                     self.rows_seen += num_rows
-                    self.statistics.bytes_raw += raw_bytes
                     self.blobs_seen += 1
+                    self.statistics.bytes_raw += raw_size
                     yield decoded
 
                     # if we have read all the rows we need to stop
@@ -247,14 +235,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                         decoder=decoder,
                         just_schema=True,
                     )
-                    # Some decoders may return None for schema (e.g. unreadable
-                    # or undecidable schema). Skip those and continue with the
-                    # next blob instead of trying to access attributes on None.
-                    if schema is None:
-                        continue
                     # if we have more than one blob we need to estimate the row count
                     blob_count = len(blob_names)
-                    if getattr(schema, "row_count_metric", None) and blob_count > 1:
+                    if schema.row_count_metric and blob_count > 1:
                         schema.row_count_estimate = schema.row_count_metric * blob_count
                         schema.row_count_metric = None
                         self.statistics.estimated_row_count += schema.row_count_estimate
