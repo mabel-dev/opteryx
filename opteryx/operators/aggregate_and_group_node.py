@@ -92,10 +92,6 @@ class AggregateAndGroupNode(BasePlanNode):
                 self.buffer,
                 promote_options="permissive",
             )
-            # Only combine chunks if we haven't done partial aggregation yet
-            # combine_chunks can fail after partial aggregation due to buffer structure
-            if not self._partial_aggregated:
-                table = table.combine_chunks()
 
             # If we've done partial aggregations, the aggregate functions need adjusting
             # because columns like "*" have been renamed to "*_count"
@@ -230,8 +226,7 @@ class AggregateAndGroupNode(BasePlanNode):
                 self.buffer,
                 promote_options="permissive",
             )
-            # Only combine chunks once before aggregation
-            table = table.combine_chunks()
+
             groups = table.group_by(self.group_by_columns)
             groups = groups.aggregate(self.aggregate_functions)
             self.buffer = [groups]  # Replace buffer with partial result
