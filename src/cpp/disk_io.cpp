@@ -176,7 +176,7 @@ int read_all_mmap(const char* path, uint8_t** dst, size_t* out_len) {
         return 0;
     }
     
-    void* mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    void* mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
     if (mapped == MAP_FAILED) {
