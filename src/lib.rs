@@ -55,10 +55,10 @@ fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<Py<PyAny>> {
 #[pyo3(text_signature = "(data, pattern, replacement)")]
 fn regex_replace_rust(
     py: Python,
-    data: Vec<Option<PyObject>>,
-    pattern: PyObject,
-    replacement: PyObject,
-) -> PyResult<Vec<Option<PyObject>>> {
+    data: Vec<Option<Py<PyAny>>>,
+    pattern: Py<PyAny>,
+    replacement: Py<PyAny>,
+) -> PyResult<Vec<Option<Py<PyAny>>>> {
     // Check if we're working with bytes or strings
     let is_bytes = pattern.bind(py).is_instance_of::<PyBytes>();
     
