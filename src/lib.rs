@@ -3,7 +3,6 @@ use pythonize::pythonize;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
-use pyo3::IntoPy;
 
 use sqlparser::parser::Parser;
 use regex::bytes::Regex as BytesRegex;
@@ -112,7 +111,8 @@ fn regex_replace_rust(
                         // Item is string
                         let item_str: String = item.extract(py)?;
                         let replaced = re.replace_all(&item_str, &replacement_str);
-                        result.push(Some(replaced.to_string().into_py(py)));
+                        // Convert to bytes since PyBytes::new() is working correctly
+                        result.push(Some(PyBytes::new(py, replaced.as_bytes()).into()));
                     }
                 }
             }
