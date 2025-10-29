@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 [dependencies]
 pythonize = "0.26"
 serde = "1.0.171"
+regex = "1.10"
 
 [dependencies.pyo3]
 version = "0.26"

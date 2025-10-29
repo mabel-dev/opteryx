@@ -289,4 +289,28 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-    return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
+    """
+    Optimized regex replacement using Rust's regex crate.
+    
+    Uses a custom Rust implementation that compiles the pattern once and
+    processes the entire array efficiently. Falls back to PyArrow if the
+    Rust implementation is not available.
+    """
+    try:
+        # Use Rust implementation for maximum performance
+        from opteryx.compute import regex_replace_rust
+        
+        # Convert to list for processing
+        if hasattr(array, "to_pylist"):
+            data = array.to_pylist()
+        elif hasattr(array, "to_numpy"):
+            data = array.to_numpy(zero_copy_only=False).tolist()
+        else:
+            data = list(array)
+        
+        # Call Rust function
+        return regex_replace_rust(data, _pattern[0], _replacement[0])
+        
+    except (ImportError, AttributeError):
+        # Fallback to PyArrow if Rust implementation not available
+        return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
