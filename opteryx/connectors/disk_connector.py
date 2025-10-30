@@ -237,10 +237,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             return
 
         remaining_rows = limit if limit is not None else float("inf")
-        last_morsel = None
 
         def process_result(num_rows, raw_size, decoded):
-            nonlocal remaining_rows, last_morsel
+            nonlocal remaining_rows
             if decoded.num_rows > remaining_rows:
                 decoded = decoded.slice(0, remaining_rows)
             remaining_rows -= decoded.num_rows
@@ -249,7 +248,6 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             self.rows_seen += num_rows
             self.blobs_seen += 1
             self.statistics.bytes_raw += raw_size
-            last_morsel = decoded
             return decoded
 
         max_workers = min(self._max_workers, len(blob_names)) or 1
@@ -340,12 +338,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                     if remaining_rows <= 0:
                         break
 
-        if last_morsel is not None:
-            self.statistics.columns_read += last_morsel.num_columns
-        elif columns:
-            self.statistics.columns_read += len(columns)
-        elif self.schema:
-            self.statistics.columns_read += len(self.schema.columns)
+        # column-level statistics are recorded by the read node after morsels
+        # leave connector-level accounting to avoid double counting
 
     def _read_blob_task(self, blob_name: str, columns, predicates):
         decoder = get_decoder(blob_name)
