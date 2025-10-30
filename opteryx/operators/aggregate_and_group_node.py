@@ -68,7 +68,9 @@ class AggregateAndGroupNode(BasePlanNode):
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
         self.buffer = []
-        self.max_buffer_size = 250  # Buffer size before partial aggregation (kept for future parallelization)
+        self.max_buffer_size = (
+            250  # Buffer size before partial aggregation (kept for future parallelization)
+        )
         self._partial_aggregated = False  # Track if we've done a partial aggregation
         self._disable_partial_agg = False  # Can disable if partial agg isn't helping
 
@@ -231,7 +233,7 @@ class AggregateAndGroupNode(BasePlanNode):
 
             groups = table.group_by(self.group_by_columns)
             groups = groups.aggregate(self.aggregate_functions)
-            
+
             # Check if partial aggregation is effective
             # If we're not reducing the row count significantly, stop doing partial aggs
             reduction_ratio = groups.num_rows / table.num_rows if table.num_rows > 0 else 1

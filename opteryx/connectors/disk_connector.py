@@ -8,8 +8,13 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
+import importlib
 import os
+import threading
 import time
+from concurrent.futures import FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait
 from typing import Dict
 from typing import List
 
@@ -79,6 +84,9 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         self.blob_list = {}
         self.rows_seen = 0
         self.blobs_seen = 0
+        self._stats_lock = threading.Lock()
+        cpu_count = os.cpu_count() or 1
+        self._max_workers = max(1, min(8, (cpu_count + 1) // 2))
 
     def read_blob(
         self, *, blob_name: str, decoder, just_schema=False, projection=None, selection=None
@@ -113,7 +121,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
-        from opteryx.compiled.io.disk_reader import read_file_mmap
+        disk_reader = importlib.import_module("opteryx.compiled.io.disk_reader")
+        read_file_mmap = getattr(disk_reader, "read_file_mmap")
 
         # from opteryx.compiled.io.disk_reader import unmap_memory
         # Read using mmap for maximum speed
@@ -131,14 +140,17 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                 use_threads=True,
             )
 
-            self.statistics.bytes_read += len(mv)
+            with self._stats_lock:
+                self.statistics.bytes_read += len(mv)
 
             if not just_schema:
                 stats = self.read_blob_statistics(
                     blob_name=blob_name, blob_bytes=mv, decoder=decoder
                 )
-                if self.relation_statistics is None:
-                    self.relation_statistics = stats
+                if stats is not None:
+                    with self._stats_lock:
+                        if self.relation_statistics is None:
+                            self.relation_statistics = stats
 
             return result
         finally:
@@ -200,54 +212,150 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             )
             self.statistics.time_pruning_blobs += time.monotonic_ns() - start
 
-        remaining_rows = limit if limit is not None else float("inf")
-
-        for blob_name in blob_names:
-            decoder = get_decoder(blob_name)
-            try:
-                if not just_schema:
-                    num_rows, _, raw_size, decoded = self.read_blob(
-                        blob_name=blob_name,
-                        decoder=decoder,
-                        just_schema=False,
-                        projection=columns,
-                        selection=predicates,
-                    )
-
-                    # push limits to the reader
-                    if decoded.num_rows > remaining_rows:
-                        decoded = decoded.slice(0, remaining_rows)
-                    remaining_rows -= decoded.num_rows
-
-                    self.statistics.rows_seen += num_rows
-                    self.rows_seen += num_rows
-                    self.blobs_seen += 1
-                    self.statistics.bytes_raw += raw_size
-                    yield decoded
-
-                    # if we have read all the rows we need to stop
-                    if remaining_rows <= 0:
-                        break
-                else:
+        if just_schema:
+            for blob_name in blob_names:
+                try:
+                    decoder = get_decoder(blob_name)
                     schema = self.read_blob(
                         blob_name=blob_name,
                         decoder=decoder,
                         just_schema=True,
                     )
-                    # if we have more than one blob we need to estimate the row count
                     blob_count = len(blob_names)
                     if schema.row_count_metric and blob_count > 1:
                         schema.row_count_estimate = schema.row_count_metric * blob_count
                         schema.row_count_metric = None
                         self.statistics.estimated_row_count += schema.row_count_estimate
                     yield schema
+                except UnsupportedFileTypeError:
+                    continue
+                except pyarrow.ArrowInvalid:
+                    with self._stats_lock:
+                        self.statistics.unreadable_data_blobs += 1
+                except Exception as err:
+                    raise DataError(f"Unable to read file {blob_name} ({err})") from err
+            return
 
-            except UnsupportedFileTypeError:
-                pass  # Skip unsupported file types
-            except pyarrow.ArrowInvalid:
-                self.statistics.unreadable_data_blobs += 1
-            except Exception as err:
-                raise DataError(f"Unable to read file {blob_name} ({err})") from err
+        remaining_rows = limit if limit is not None else float("inf")
+        last_morsel = None
+
+        def process_result(num_rows, raw_size, decoded):
+            nonlocal remaining_rows, last_morsel
+            if decoded.num_rows > remaining_rows:
+                decoded = decoded.slice(0, remaining_rows)
+            remaining_rows -= decoded.num_rows
+
+            self.statistics.rows_seen += num_rows
+            self.rows_seen += num_rows
+            self.blobs_seen += 1
+            self.statistics.bytes_raw += raw_size
+            last_morsel = decoded
+            return decoded
+
+        max_workers = min(self._max_workers, len(blob_names)) or 1
+
+        if max_workers <= 1:
+            for blob_name in blob_names:
+                try:
+                    num_rows, _, raw_size, decoded = self._read_blob_task(
+                        blob_name,
+                        columns,
+                        predicates,
+                    )
+                except UnsupportedFileTypeError:
+                    continue
+                except pyarrow.ArrowInvalid:
+                    with self._stats_lock:
+                        self.statistics.unreadable_data_blobs += 1
+                    continue
+                except Exception as err:
+                    raise DataError(f"Unable to read file {blob_name} ({err})") from err
+
+                if remaining_rows <= 0:
+                    break
+
+                decoded = process_result(num_rows, raw_size, decoded)
+                yield decoded
+
+                if remaining_rows <= 0:
+                    break
+        else:
+            blob_iter = iter(blob_names)
+            pending = {}
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                for _ in range(max_workers):
+                    try:
+                        blob_name = next(blob_iter)
+                    except StopIteration:
+                        break
+                    future = executor.submit(
+                        self._read_blob_task,
+                        blob_name,
+                        columns,
+                        predicates,
+                    )
+                    pending[future] = blob_name
+
+                while pending:
+                    done, _ = wait(pending.keys(), return_when=FIRST_COMPLETED)
+                    for future in done:
+                        blob_name = pending.pop(future)
+                        try:
+                            num_rows, _, raw_size, decoded = future.result()
+                        except UnsupportedFileTypeError:
+                            pass
+                        except pyarrow.ArrowInvalid:
+                            with self._stats_lock:
+                                self.statistics.unreadable_data_blobs += 1
+                        except Exception as err:
+                            for remaining_future in list(pending):
+                                remaining_future.cancel()
+                            raise DataError(f"Unable to read file {blob_name} ({err})") from err
+                        else:
+                            if remaining_rows > 0:
+                                decoded = process_result(num_rows, raw_size, decoded)
+                                yield decoded
+                                if remaining_rows <= 0:
+                                    for remaining_future in list(pending):
+                                        remaining_future.cancel()
+                                    pending.clear()
+                                    break
+
+                        if remaining_rows <= 0:
+                            break
+
+                        try:
+                            next_blob = next(blob_iter)
+                        except StopIteration:
+                            continue
+                        future = executor.submit(
+                            self._read_blob_task,
+                            next_blob,
+                            columns,
+                            predicates,
+                        )
+                        pending[future] = next_blob
+
+                    if remaining_rows <= 0:
+                        break
+
+        if last_morsel is not None:
+            self.statistics.columns_read += last_morsel.num_columns
+        elif columns:
+            self.statistics.columns_read += len(columns)
+        elif self.schema:
+            self.statistics.columns_read += len(self.schema.columns)
+
+    def _read_blob_task(self, blob_name: str, columns, predicates):
+        decoder = get_decoder(blob_name)
+        return self.read_blob(
+            blob_name=blob_name,
+            decoder=decoder,
+            just_schema=False,
+            projection=columns,
+            selection=predicates,
+        )
 
     def get_dataset_schema(self) -> RelationSchema:
         """
