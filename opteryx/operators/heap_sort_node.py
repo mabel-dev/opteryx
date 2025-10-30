@@ -16,22 +16,13 @@ This is faster, particularly when working with large datasets even though we're 
 sorting smaller chunks over and over again.
 """
 
-import decimal
-
-import numpy
 import pyarrow
-import pyarrow.compute
+import pyarrow.compute as pc
 from pyarrow import concat_tables
 
 from opteryx import EOS
 from opteryx.exceptions import ColumnNotFoundError
-from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import format_expression
-from opteryx.managers.expression.binary_operators import BINARY_OPERATORS
-from opteryx.models import LogicalColumn
-from opteryx.models import Node
 from opteryx.models import QueryProperties
-from opteryx.planner import build_literal_node
 
 from . import BasePlanNode
 
@@ -49,8 +40,7 @@ class HeapSortNode(BasePlanNode):
             except ColumnNotFoundError as cnfe:
                 raise ColumnNotFoundError(
                     f"`ORDER BY` must reference columns from `SELECT`. {cnfe}"
-                )
-
+                ) from cnfe
         self.table = None
 
     @property
@@ -65,7 +55,20 @@ class HeapSortNode(BasePlanNode):
         return "Heap Sort"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
+        _ = kwargs  # kwargs are part of the execution contract
         if morsel is EOS:
+            if self.table is None:
+                yield EOS
+                return
+
+            if (self.limit is None or self.limit <= 0) and self.mapped_order:
+                self.table = self.table.sort_by(self.mapped_order)
+            elif self.limit and self.limit > 0 and self.mapped_order:
+                # Ensure sorted output for the final chunk
+                self.table = self.table.sort_by(self.mapped_order)
+                if self.table.num_rows > self.limit:
+                    self.table = self.table.slice(0, self.limit)
+
             yield self.table
             yield EOS
             return
@@ -74,73 +77,48 @@ class HeapSortNode(BasePlanNode):
             yield None
             return
 
-        morsel = self._sort_and_slice(morsel)
-
-        if self.table:
-            self.table = concat_tables([self.table, morsel], promote_options="permissive")
-            self.table = self.table.sort_by(self.mapped_order).slice(0, self.limit)
+        if self.limit and self.limit > 0:
+            morsel = self._top_n(morsel)
+            if self.table is None:
+                self.table = morsel
+            else:
+                combined = concat_tables([self.table, morsel], promote_options="permissive")
+                self.table = self._top_n(combined)
         else:
-            self.table = morsel
+            if self.table is None:
+                self.table = morsel
+            else:
+                self.table = concat_tables([self.table, morsel], promote_options="permissive")
 
         yield None
 
-    def _sort_and_slice(self, table: pyarrow.Table) -> pyarrow.Table:
+    def _top_n(self, table: pyarrow.Table) -> pyarrow.Table:
+        if self.limit is None or self.limit <= 0:
+            return table
+
+        k = min(self.limit, table.num_rows)
+        if k == 0:
+            return table.slice(0, 0)
+
         if not self.mapped_order:
-            return table.slice(0, self.limit)
+            return table.slice(0, k)
 
-        # Detect column types
-        use_arrow = any(
-            pyarrow.types.is_string(table.column(col).type)
-            or pyarrow.types.is_binary(table.column(col).type)
-            for col, _ in self.mapped_order
-        )
-        use_decimal = any(
-            pyarrow.types.is_decimal(table.column(col).type) for col, _ in self.mapped_order
-        )
+        if k < table.num_rows:
+            try:
+                indices = pc.select_k_unstable(  # type: ignore[attr-defined]
+                    table,
+                    k=k,
+                    sort_keys=self.mapped_order,
+                )
+            except AttributeError:
+                limited = table.sort_by(self.mapped_order).slice(0, k)
+            except (TypeError, ValueError, NotImplementedError):
+                limited = table.sort_by(self.mapped_order).slice(0, k)
+            else:
+                limited = table.take(indices)
+                return limited.sort_by(self.mapped_order)
 
-        # Case 1: Single column, Arrow sort
-        if len(self.mapped_order) == 1:
-            col_name, direction = self.mapped_order[0]
-            column = table.column(col_name)
+            return limited
 
-            if use_arrow:
-                if direction == "ascending":
-                    indices = pyarrow.compute.sort_indices(column)
-                else:
-                    indices = pyarrow.compute.sort_indices(column)[::-1]
-                # Take min of limit and available indices to avoid index errors
-                take_count = min(self.limit, len(indices))
-                return table.take(indices.slice(0, take_count))
-
-            np_column = column.to_numpy()
-            if use_decimal:
-                np_column = [decimal.Decimal("-Infinity") if v is None else v for v in np_column]
-
-            indices = numpy.argsort(np_column)
-            if direction == "descending":
-                indices = indices[::-1]
-
-            return self._safe_take(table, indices)
-
-        # Case 2: Multi-column sort
-        if use_arrow:
-            return table.sort_by(self.mapped_order).slice(0, self.limit)
-
-        # Fallback to numpy.lexsort
-        sort_arrays = []
-        for col_name, direction in self.mapped_order:
-            arr = table.column(col_name).to_numpy()
-            if direction == "descending":
-                arr = arr[::-1]
-            sort_arrays.append(arr)
-
-        indices = numpy.lexsort(sort_arrays[::-1])
-        return self._safe_take(table, indices)
-
-    def _safe_take(self, table: pyarrow.Table, indices: numpy.ndarray) -> pyarrow.Table:
-        try:
-            return table.take(indices[: self.limit])
-        except Exception:
-            mask = numpy.zeros(len(table), dtype=bool)
-            mask[indices[: self.limit]] = True
-            return table.filter(mask)
+        sorted_table = table.sort_by(self.mapped_order)
+        return sorted_table.slice(0, k)
