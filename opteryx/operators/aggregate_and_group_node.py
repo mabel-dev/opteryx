@@ -68,8 +68,9 @@ class AggregateAndGroupNode(BasePlanNode):
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
         self.buffer = []
-        self.max_buffer_size = 100  # Process in chunks to avoid excessive memory usage
+        self.max_buffer_size = 250  # Buffer size before partial aggregation (kept for future parallelization)
         self._partial_aggregated = False  # Track if we've done a partial aggregation
+        self._disable_partial_agg = False  # Can disable if partial agg isn't helping
 
     @property
     def config(self):  # pragma: no cover
@@ -221,7 +222,8 @@ class AggregateAndGroupNode(BasePlanNode):
         self.buffer.append(morsel)
 
         # If buffer is full, do partial aggregation
-        if len(self.buffer) >= self.max_buffer_size:
+        # BUT: Skip partial aggregation if it's not reducing data effectively
+        if len(self.buffer) >= self.max_buffer_size and not self._disable_partial_agg:
             table = pyarrow.concat_tables(
                 self.buffer,
                 promote_options="permissive",
@@ -229,7 +231,17 @@ class AggregateAndGroupNode(BasePlanNode):
 
             groups = table.group_by(self.group_by_columns)
             groups = groups.aggregate(self.aggregate_functions)
-            self.buffer = [groups]  # Replace buffer with partial result
-            self._partial_aggregated = True  # Mark that we've done a partial aggregation
+            
+            # Check if partial aggregation is effective
+            # If we're not reducing the row count significantly, stop doing partial aggs
+            reduction_ratio = groups.num_rows / table.num_rows if table.num_rows > 0 else 1
+            if reduction_ratio > 0.75:  # Kept more than 75% of rows - high cardinality!
+                # Partial aggregation isn't helping, disable it and keep buffering
+                self._disable_partial_agg = True
+                # Don't replace buffer with partial result, keep accumulating
+            else:
+                # Good reduction, keep using partial aggregation
+                self.buffer = [groups]  # Replace buffer with partial result
+                self._partial_aggregated = True  # Mark that we've done a partial aggregation
 
         yield None
