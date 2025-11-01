@@ -99,7 +99,7 @@ if __name__ == "__main__":  # pragma: no cover
     from tests import trunc_printable
 
     parser = argparse.ArgumentParser(description="ClickBench Performance Test")
-    parser.add_argument('--warm', action='store_true', help='Run warm queries (3 iterations per query)')
+    parser.add_argument('--warm', action='store_true', default=True, help='Run warm queries (3 iterations per query)')
     parser.add_argument('--iterations', type=int, default=3, help='Number of iterations for warm queries (default: 3)')
     args = parser.parse_args()
 
@@ -122,14 +122,14 @@ if __name__ == "__main__":  # pragma: no cover
         print("Warming up (cold start)...")
         start = time.monotonic_ns()
         try:
-            opteryx.query_to_arrow("SELECT 1")
+            opteryx.query_to_arrow("SELECT COUNT(*) FROM hits;")
             cold_time_ms = (time.monotonic_ns() - start) / 1e6
             print(f"Cold start: {cold_time_ms:.2f}ms\n")
         except Exception as e:
             print(f"Cold start failed: {e}\n")
         
-        print(f"{'Query':<8} {'Iteration 1':<14} {'Iteration 2':<14} {'Iteration 3':<14} {'Avg':<12} {'Min':<12} {'Max':<12}")
-        print("-" * 92)
+        print(f"{'Query':<8} {'Iteration 1':<16} {'Iteration 2':<16} {'Iteration 3':<16}         {'Avg':<13} {'Min':<13} {'Max':<13}")
+        print("-" * 102)
 
     print(f"RUNNING CLICKBENCH BATTERY OF {len(STATEMENTS)} QUERIES\n")
     for index, (statement, err) in enumerate(STATEMENTS):
@@ -167,13 +167,13 @@ if __name__ == "__main__":  # pragma: no cover
                     iter_strs.append("-")
                 
                 status = ""
-                if avg_time > 1000:
+                if avg_time > 5000:
                     status = " ⚠️ VERY SLOW"
-                elif avg_time > 500:
+                elif avg_time > 2000:
                     status = " ⚠️ SLOW"
-                
-                print(f"{query_num:<8} {iter_strs[0]:<14} {iter_strs[1]:<14} {iter_strs[2]:<14} "
-                      f"{avg_time:>7.2f}ms   {min_time:>7.2f}ms   {max_time:>7.2f}ms{status}")
+
+                print(f"{query_num:<8} {iter_strs[0]:<16} {iter_strs[1]:<16} {iter_strs[2]:<16} "
+                      f"{avg_time:>9.2f}ms   {min_time:>9.2f}ms   {max_time:>9.2f}ms{status}")
                 
                 warm_results.append({
                     'query': query_num,

@@ -33,6 +33,9 @@ class OptimizerContext:
         self.seen_distincts: int = 0
         self.seen_projects_since_distinct: int = 0
 
+        self.false_filters: list = []
+        """We collect FILTER(FALSE) nodes for later rewriting"""
+
         self.collected_predicates: list = []
         """We collect predicates we should be able to push to reads and joins"""
 
