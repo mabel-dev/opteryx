@@ -23,6 +23,7 @@ cdef extern from "intbuffer.h":
         void extend(const int64_t* data, size_t count) nogil
         const int64_t* data() nogil
         size_t size() nogil
+        void append_repeated(int64_t value, size_t count) nogil
 
 cdef class IntBuffer:
 

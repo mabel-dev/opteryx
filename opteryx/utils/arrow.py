@@ -14,7 +14,6 @@ from typing import Union
 
 import pyarrow
 from pyarrow import Table
-from pyarrow import array
 from pyarrow import nulls
 
 
@@ -29,7 +28,10 @@ def limit_records(
     rows_left_to_skip = max(0, offset)
     at_least_one = False
 
+    last_morsel: Optional[pyarrow.Table] = None
+
     for morsel in morsels:
+        last_morsel = morsel
         if rows_left_to_skip > 0:
             if rows_left_to_skip >= morsel.num_rows:
                 rows_left_to_skip -= morsel.num_rows
@@ -52,9 +54,9 @@ def limit_records(
         if remaining_rows <= 0:
             break
 
-    if not at_least_one:
+    if not at_least_one and last_morsel is not None:
         # make sure we return at least an empty morsel from this function
-        yield morsel.slice(offset=0, length=0)
+        yield last_morsel.slice(offset=0, length=0)
         at_least_one = True
 
     if not remaining_rows:
@@ -146,12 +148,11 @@ def align_tables(
     new_cols = []
     new_fields = []
 
+    taken_right = append_table.take(append_indices)
+
     for name, field in zip(append_table.schema.names, append_table.schema):
         if name not in source_names:
-            if append_all_nulls:
-                col = nulls(len_src, type=field.type)
-            else:
-                col = append_table.column(name).take(append_indices)
+            col = nulls(len_src, type=field.type) if append_all_nulls else taken_right.column(name)
             new_cols.append(col)
             new_fields.append(field)
 

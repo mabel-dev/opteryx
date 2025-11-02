@@ -13,6 +13,7 @@ public:
     void append(int64_t value1, int64_t value2);
     void append(const int64_t* values, size_t count);
     void append_optimized(int64_t value);
+    void append_repeated(int64_t value, size_t count);
 
     void extend(const std::vector<int64_t>& values);
     void extend(const int64_t* values, size_t count);
