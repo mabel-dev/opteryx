@@ -1,6 +1,8 @@
 // intbuffer.cpp
 #include "intbuffer.h"
 
+#include <algorithm>
+
 // Fallback constants for buffer growth strategy.
 #ifndef INITIAL_CAPACITY
 #define INITIAL_CAPACITY 1024
@@ -42,6 +44,21 @@ void CIntBuffer::append_optimized(int64_t value) {
         buffer.reserve(buffer.capacity() * GROWTH_FACTOR + 1024); // Extra padding
     }
     buffer.push_back(value);
+}
+
+void CIntBuffer::append_repeated(int64_t value, size_t count) {
+    if (count == 0) {
+        return;
+    }
+
+    const size_t new_size = buffer.size() + count;
+    if (new_size > buffer.capacity()) {
+        const size_t current_capacity = buffer.capacity();
+        const size_t growth_candidate = current_capacity > 0 ? current_capacity * GROWTH_FACTOR : new_size;
+        buffer.reserve(std::max(new_size, growth_candidate));
+    }
+
+    buffer.insert(buffer.end(), count, value);
 }
 
 void CIntBuffer::extend(const std::vector<int64_t>& values) {

@@ -11,11 +11,37 @@ cimport numpy
 numpy.import_array()
 
 from libc.stdint cimport int64_t, uint64_t
+from libc.stddef cimport size_t
+from libcpp.vector cimport vector
 
-from opteryx.third_party.abseil.containers cimport FlatHashMap
-from opteryx.compiled.structures.buffers cimport IntBuffer
+from time import perf_counter_ns
+
+from opteryx.third_party.abseil.containers cimport (
+    FlatHashMap,
+    IdentityHash,
+    flat_hash_map,
+)
+from opteryx.compiled.structures.buffers cimport CIntBuffer, IntBuffer
 from opteryx.compiled.table_ops.hash_ops cimport compute_row_hashes
 from opteryx.compiled.table_ops.null_avoidant_ops cimport non_null_row_indices
+
+cdef extern from "join_kernels.h":
+    void inner_join_probe(
+        flat_hash_map[uint64_t, vector[int64_t], IdentityHash]* left_map,
+        const int64_t* non_null_indices,
+        size_t non_null_count,
+        const uint64_t* row_hashes,
+        size_t row_hash_count,
+        CIntBuffer* left_out,
+        CIntBuffer* right_out
+    ) nogil
+
+cdef public long long last_hash_time_ns = 0
+cdef public long long last_probe_time_ns = 0
+cdef public long long last_materialize_time_ns = 0
+cdef public Py_ssize_t last_rows_hashed = 0
+cdef public Py_ssize_t last_candidate_rows = 0
+cdef public Py_ssize_t last_result_rows = 0
 
 
 cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap left_hash_table):
@@ -23,35 +49,67 @@ cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap lef
     Perform an inner join between a right-hand relation and a pre-built left-side hash table.
     This function uses precomputed hashes and avoids null rows for optimal speed.
     """
+    global last_hash_time_ns, last_probe_time_ns, last_materialize_time_ns
+    global last_rows_hashed, last_candidate_rows, last_result_rows
     cdef IntBuffer left_indexes = IntBuffer()
     cdef IntBuffer right_indexes = IntBuffer()
     cdef int64_t num_rows = right_relation.num_rows
     cdef int64_t[::1] non_null_indices = non_null_row_indices(right_relation, join_columns)
+    cdef Py_ssize_t candidate_count = non_null_indices.shape[0]
+
+    if candidate_count == 0 or num_rows == 0:
+        last_hash_time_ns = 0
+        last_probe_time_ns = 0
+        last_rows_hashed = num_rows
+        last_candidate_rows = candidate_count
+        last_result_rows = 0
+        last_materialize_time_ns = 0
+        return numpy.empty(0, dtype=numpy.int64), numpy.empty(0, dtype=numpy.int64)
+
     cdef uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
-    cdef int64_t i, row_idx
-    cdef uint64_t hash_val
-    cdef size_t match_count
-    cdef int j
+    cdef long long t_start = perf_counter_ns()
 
     # Precompute hashes for right relation
     compute_row_hashes(right_relation, join_columns, row_hashes)
+    cdef long long t_after_hash = perf_counter_ns()
+    last_hash_time_ns = t_after_hash - t_start
 
-    for i in range(non_null_indices.shape[0]):
-        row_idx = non_null_indices[i]
-        hash_val = row_hashes[row_idx]
-
-        # Probe the left-side hash table
-        left_matches = left_hash_table.get(hash_val)
-        match_count = left_matches.size()
-        if match_count == 0:
-            continue
-
-        for j in range(match_count):
-            left_indexes.append(left_matches[j])
-            right_indexes.append(row_idx)
+    with nogil:
+        inner_join_probe(
+            &left_hash_table._map,
+            &non_null_indices[0],
+            <size_t>candidate_count,
+            &row_hashes[0],
+            <size_t>num_rows,
+            left_indexes.c_buffer,
+            right_indexes.c_buffer,
+        )
+    cdef long long t_after_probe = perf_counter_ns()
+    last_probe_time_ns = t_after_probe - t_after_hash
+    last_rows_hashed = num_rows
+    last_candidate_rows = candidate_count
 
     # Return matched row indices from both sides
-    return left_indexes.to_numpy(), right_indexes.to_numpy()
+    cdef long long t_before_numpy = perf_counter_ns()
+    cdef numpy.ndarray[int64_t, ndim=1] left_np = left_indexes.to_numpy()
+    cdef numpy.ndarray[int64_t, ndim=1] right_np = right_indexes.to_numpy()
+    cdef long long t_after_numpy = perf_counter_ns()
+    last_result_rows = left_np.shape[0]
+    last_materialize_time_ns = t_after_numpy - t_before_numpy
+
+    return left_np, right_np
+
+
+cpdef tuple get_last_inner_join_metrics():
+    """Return instrumentation captured during the most recent inner join call."""
+    return (
+        last_hash_time_ns,
+        last_probe_time_ns,
+        last_rows_hashed,
+        last_candidate_rows,
+        last_result_rows,
+        last_materialize_time_ns,
+    )
 
 
 cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
@@ -72,42 +130,3 @@ cpdef FlatHashMap build_side_hash_map(object relation, list join_columns):
         ht.insert(row_hashes[row_idx], row_idx)
 
     return ht
-
-
-cpdef tuple nested_loop_join(left_relation, right_relation, list left_columns, list right_columns):
-    """
-    A buffer-aware nested loop join using direct Arrow buffer access and hash computation.
-    Only intended for small relations (<1000 rows), primarily used for correctness testing or fallbacks.
-    """
-    # determine the rows we're going to try to join on
-    cdef int64_t[::1] left_non_null_indices = non_null_row_indices(left_relation, left_columns)
-    cdef int64_t[::1] right_non_null_indices = non_null_row_indices(right_relation, right_columns)
-
-    cdef int64_t nl = left_non_null_indices.shape[0]
-    cdef int64_t nr = right_non_null_indices.shape[0]
-    cdef IntBuffer left_indexes = IntBuffer()
-    cdef IntBuffer right_indexes = IntBuffer()
-    cdef int64_t left_non_null_idx, right_non_null_idx, left_record_idx, right_record_idx
-
-    cdef uint64_t[::1] left_hashes = numpy.empty(nl, dtype=numpy.uint64)
-    cdef uint64_t[::1] right_hashes = numpy.empty(nr, dtype=numpy.uint64)
-
-    # remove the rows from the relations
-    left_relation = left_relation.select(sorted(set(left_columns))).drop_null()
-    right_relation = right_relation.select(sorted(set(right_columns))).drop_null()
-
-    # build hashes for the columns we're joining on
-    compute_row_hashes(left_relation, left_columns, left_hashes)
-    compute_row_hashes(right_relation, right_columns, right_hashes)
-
-    # Compare each pair of rows (naive quadratic approach)
-    for left_non_null_idx in range(nl):
-        for right_non_null_idx in range(nr):
-            # if we have a match, look up the offset in the original table
-            if left_hashes[left_non_null_idx] == right_hashes[right_non_null_idx]:
-                left_record_idx = left_non_null_indices[left_non_null_idx]
-                right_record_idx = right_non_null_indices[right_non_null_idx]
-                left_indexes.append(left_record_idx)
-                right_indexes.append(right_record_idx)
-
-    return (left_indexes.to_numpy(), right_indexes.to_numpy())

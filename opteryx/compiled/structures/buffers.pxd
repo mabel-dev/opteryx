@@ -20,6 +20,7 @@ cdef extern from "intbuffer.h" namespace "":
         void extend(const int64_t* values, size_t count)
         const int64_t* data() const
         size_t size() const
+    void append_repeated(int64_t value, size_t count)
 
 
 cdef class IntBuffer:

@@ -18,7 +18,7 @@ from opteryx.third_party.abseil.containers cimport FlatHashSet
 cpdef FlatHashSet filter_join_set(table, list columns=None, FlatHashSet seen_hashes=None):
     cdef:
         Py_ssize_t num_rows = table.num_rows
-        uint64_t[::1] row_hashes = numpy.zeros(num_rows, dtype=numpy.uint64)
+        uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
         list columns_of_interest = columns if columns else table.column_names
         Py_ssize_t row_idx
 
@@ -37,7 +37,7 @@ cpdef semi_join(object relation, list join_columns, FlatHashSet seen_hashes):
     cdef:
         Py_ssize_t num_rows = relation.num_rows
         Py_ssize_t row_idx, count = 0
-        uint64_t[::1] row_hashes = numpy.zeros(num_rows, dtype=numpy.uint64)
+        uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
         numpy.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
 
     compute_row_hashes(relation, join_columns, row_hashes)
@@ -53,7 +53,7 @@ cpdef anti_join(object relation, list join_columns, FlatHashSet seen_hashes):
     cdef:
         Py_ssize_t num_rows = relation.num_rows
         Py_ssize_t row_idx, count = 0
-        uint64_t[::1] row_hashes = numpy.zeros(num_rows, dtype=numpy.uint64)
+        uint64_t[::1] row_hashes = numpy.empty(num_rows, dtype=numpy.uint64)
         numpy.ndarray[int64_t, ndim=1] index_buffer = numpy.empty(num_rows, dtype=numpy.int64)
 
     compute_row_hashes(relation, join_columns, row_hashes)

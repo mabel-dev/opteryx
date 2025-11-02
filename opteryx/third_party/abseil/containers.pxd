@@ -11,14 +11,7 @@ from libcpp.vector cimport vector
 
 # Identity Hash Definition - not part of abseil but used by our implementation
 # We prehash the values before putting them into the Map & Set, so don't rehash
-cdef extern from *:
-    """
-    struct IdentityHash {
-        inline size_t operator()(uint64_t value) const {
-            return value;  // Identity function
-        }
-    };
-    """
+cdef extern from "identity_hash.h":
     cdef cppclass IdentityHash:
         size_t operator()(uint64_t value) const
 
