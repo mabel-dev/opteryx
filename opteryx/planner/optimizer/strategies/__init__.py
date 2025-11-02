@@ -6,6 +6,7 @@ from .join_ordering import JoinOrderingStrategy
 from .join_rewriter import JoinRewriteStrategy
 from .limit_pushdown import LimitPushdownStrategy
 from .operator_fusion import OperatorFusionStrategy
+from .predicate_compaction import PredicateCompactionStrategy
 from .predicate_ordering import PredicateOrderingStrategy
 from .predicate_pushdown import PredicatePushdownStrategy
 from .predicate_rewriter import PredicateRewriteStrategy
@@ -22,6 +23,7 @@ __all__ = [
     "JoinRewriteStrategy",
     "LimitPushdownStrategy",
     "OperatorFusionStrategy",
+    "PredicateCompactionStrategy",
     "PredicateOrderingStrategy",
     "PredicatePushdownStrategy",
     "PredicateRewriteStrategy",

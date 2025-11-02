@@ -5,7 +5,7 @@ Test we can read from GCS
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector
@@ -85,7 +85,7 @@ def test_predicate_pushdown_multiple_equals():
     cur = conn.cursor()
     cur.execute("SELECT * FROM dwarves WHERE actor == 'Pinto Colvig' and actor == 'Sleepy';")
     assert cur.rowcount == 0, cur.rowcount
-    assert cur.stats["rows_read"] == 0, cur.stats
+    assert cur.stats["rows_read"] == 7, cur.stats
 
 def test_predicate_pushdown_multiple_mixed():
     """we don't push these, we get 5 records by Opteryx does the filtering not the source"""

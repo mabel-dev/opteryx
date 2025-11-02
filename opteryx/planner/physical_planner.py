@@ -72,7 +72,11 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             node = operators.ProjectionNode(query_properties, projection=logical_node.columns, **{k:v for k,v in node_config.items() if k in ("projection", "all_relations")})
         elif node_type == LogicalPlanStepType.Scan:
             connector = node_config.get("connector")
-            if connector and hasattr(connector, "async_read_blob"):
+            if connector == "__null__":
+                # This is a Scan marked for empty result (contradictory predicates)
+                # Use NullReaderNode to return empty table with correct schema
+                node = operators.NullReaderNode(query_properties, **node_config)
+            elif connector and hasattr(connector, "async_read_blob"):
                 node = operators.AsyncReaderNode(query_properties, **node_config)
             else:
                 node = operators.ReaderNode(properties=query_properties, **node_config)
@@ -92,7 +96,9 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
         elif node_type == LogicalPlanStepType.Unnest:
             node = operators.UnnestJoinNode(query_properties, **node_config)
         else:  # pragma: no cover
-            raise Exception(f"something unexpected happed - {node_type.name}")
+            raise InvalidInternalStateError(
+                f"Unexpected logical node encountered during physical planning: {node_type.name}"
+            )
         # fmt: on
 
         plan.add_node(nid, node)

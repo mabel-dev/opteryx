@@ -50,14 +50,37 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
 
     The core of this action takes advantage of the following:
 
-        Demorgan's Law
+        Demorgan's Laws (Binary)
             not (A or B) = (not A) and (not B)
+
+        De Morgan's Laws (N-ary Extension)
+            not (A or B or C ...) = (not A) and (not B) and (not C) ...
+            Creates multiple AND conditions for better predicate pushdown
+
+        De Morgan's for IN Lists
+            not (col IN (a, b, c)) = col != a and col != b and col != c
+            Expands IN predicates to multiple AND-ed conditions
 
         Negative Reduction:
             not (A = B) = A != B
             not (A != B) = A = B
             not (not (A)) = A
 
+        Constant Folding:
+            A AND TRUE => A
+            A AND FALSE => FALSE
+            A OR TRUE => TRUE
+            A OR FALSE => A
+
+        AND Chain Flattening:
+            ((A AND B) AND C) => (A AND (B AND C))
+
+        Redundant Condition Removal:
+            A AND A => A
+
+    These simplifications help prepare conditions for predicate pushdown by creating
+    simple chains of AND conditions that can be more easily pushed down through the
+    query plan.
     """
 
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
@@ -81,6 +104,86 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
         return len(candidates) > 0
 
 
+def _is_literal_true(node: LogicalPlanNode) -> bool:
+    """Check if a node is a literal TRUE value."""
+    if node is None:
+        return False
+    if node.node_type == NodeType.LITERAL:
+        return node.value is True
+    return False
+
+
+def _is_literal_false(node: LogicalPlanNode) -> bool:
+    """Check if a node is a literal FALSE value."""
+    if node is None:
+        return False
+    if node.node_type == NodeType.LITERAL:
+        return node.value is False
+    return False
+
+
+def _flatten_and_chain(node: LogicalPlanNode, statistics: QueryStatistics) -> list:
+    """
+    Flatten nested AND chains into a list of conditions.
+    e.g., ((A AND B) AND C) becomes [A, B, C]
+    """
+    if node is None:
+        return []
+    if node.node_type != NodeType.AND:
+        return [node]
+
+    left_conditions = _flatten_and_chain(node.left, statistics)
+    right_conditions = _flatten_and_chain(node.right, statistics)
+    return left_conditions + right_conditions
+
+
+def _rebuild_and_chain(conditions: list) -> LogicalPlanNode:
+    """
+    Rebuild AND chain from a list of conditions.
+    [A, B, C] becomes ((A AND B) AND C)
+    """
+    if not conditions:
+        return None
+    if len(conditions) == 1:
+        return conditions[0]
+
+    result = conditions[0]
+    for condition in conditions[1:]:
+        result = Node(NodeType.AND, left=result, right=condition)
+    return result
+
+
+def _flatten_or_chain(node: LogicalPlanNode) -> list:
+    """
+    Flatten nested OR chains into a list of conditions.
+    e.g., ((A OR B) OR C) becomes [A, B, C]
+    """
+    if node is None:
+        return []
+    if node.node_type != NodeType.OR:
+        return [node]
+
+    left_conditions = _flatten_or_chain(node.left)
+    right_conditions = _flatten_or_chain(node.right)
+    return left_conditions + right_conditions
+
+
+def _rebuild_or_chain(conditions: list) -> LogicalPlanNode:
+    """
+    Rebuild OR chain from a list of conditions.
+    [A, B, C] becomes ((A OR B) OR C)
+    """
+    if not conditions:
+        return None
+    if len(conditions) == 1:
+        return conditions[0]
+
+    result = conditions[0]
+    for condition in conditions[1:]:
+        result = Node(NodeType.OR, left=result, right=condition)
+    return result
+
+
 def update_expression_tree(node: LogicalPlanNode, statistics: QueryStatistics):
     # break out of nests
     if node.node_type == NodeType.NESTED:
@@ -94,19 +197,65 @@ def update_expression_tree(node: LogicalPlanNode, statistics: QueryStatistics):
         if centre_node.node_type == NodeType.NESTED:
             centre_node = centre_node.centre
 
-        # NOT (A OR B) => (NOT A) AND (NOT B)
+        # De Morgan's n-ary: NOT (A OR B OR C ...) => (NOT A) AND (NOT B) AND (NOT C) ...
+        # This creates more AND conditions that can be pushed down
         if centre_node.node_type == NodeType.OR:
-            # rewrite to (not A) and (not B)
-            a_side = Node(NodeType.NOT, centre=centre_node.left)
-            b_side = Node(NodeType.NOT, centre=centre_node.right)
-            statistics.optimization_boolean_rewrite_demorgan += 1
-            return update_expression_tree(Node(NodeType.AND, left=a_side, right=b_side), statistics)
+            # Flatten the OR chain to handle all conditions
+            or_conditions = _flatten_or_chain(centre_node)
+
+            # If we have 2+ conditions, apply De Morgan's to all
+            if len(or_conditions) >= 2:
+                # Create NOT of each condition
+                not_conditions = [
+                    Node(NodeType.NOT, centre=condition) for condition in or_conditions
+                ]
+
+                # Rebuild as AND chain (highly pushable!)
+                result = not_conditions[0]
+                for condition in not_conditions[1:]:
+                    result = Node(NodeType.AND, left=result, right=condition)
+
+                # Track statistic based on chain length
+                if len(or_conditions) > 2:
+                    statistics.optimization_boolean_rewrite_demorgan_nary += 1
+                else:
+                    statistics.optimization_boolean_rewrite_demorgan += 1
+
+                return update_expression_tree(result, statistics)
 
         # NOT(A = B) => A != B
         if centre_node.value in INVERSIONS:
             centre_node.value = INVERSIONS[centre_node.value]
             statistics.optimization_boolean_rewrite_inversion += 1
             return update_expression_tree(centre_node, statistics)
+
+        # De Morgan's for NOT IN: NOT(col IN (a,b,c)) => col != a AND col != b AND col != c
+        # This expands a single predicate into multiple AND-ed conditions for better pushdown
+        if centre_node.node_type == NodeType.COMPARISON_OPERATOR and centre_node.value == "InList":
+            in_list_values = centre_node.right.value  # Should be tuple/list
+
+            # Only expand if we have 2+ values (1 value is better as NOT EQ)
+            if isinstance(in_list_values, (tuple, list)) and len(in_list_values) > 1:
+                col = centre_node.left
+
+                # Create != (NOT EQ) predicates for each value
+                ne_predicates = []
+                for value in in_list_values:
+                    ne_pred = Node(
+                        NodeType.COMPARISON_OPERATOR,
+                        value="NotEq",
+                        left=col,
+                        right=Node(NodeType.LITERAL, value=value),
+                    )
+                    ne_predicates.append(ne_pred)
+
+                # Rebuild as AND chain
+                result = ne_predicates[0]
+                for pred in ne_predicates[1:]:
+                    result = Node(NodeType.AND, left=result, right=pred)
+
+                statistics.optimization_boolean_rewrite_demorgan_in_expansion += 1
+                return update_expression_tree(result, statistics)
 
         # NOT(NOT(A)) => A
         if centre_node.node_type == NodeType.NOT:
@@ -124,5 +273,54 @@ def update_expression_tree(node: LogicalPlanNode, statistics: QueryStatistics):
             else update_expression_tree(parameter, statistics)
             for parameter in node.parameters
         ]
+
+    # Additional AND simplifications for predicate pushdown
+    if node.node_type == NodeType.AND:
+        # A AND TRUE => A
+        if _is_literal_true(node.right):
+            statistics.optimization_boolean_rewrite_and_true += 1
+            return node.left
+        if _is_literal_true(node.left):
+            statistics.optimization_boolean_rewrite_and_true += 1
+            return node.right
+
+        # A AND FALSE => FALSE
+        if _is_literal_false(node.right):
+            statistics.optimization_boolean_rewrite_and_false += 1
+            return node.right
+        if _is_literal_false(node.left):
+            statistics.optimization_boolean_rewrite_and_false += 1
+            return node.left
+
+        # Flatten nested AND chains to prepare for predicate pushdown
+        # Only flatten chains with more than 2 conditions to enable better pushdown
+        # ((A AND B) AND C) => (A AND (B AND C))
+        conditions = _flatten_and_chain(node, statistics)
+
+        # Only proceed with flattening if we have more than 2 conditions
+        if len(conditions) > 2:
+            # Remove duplicate conditions from the chain
+            # A AND A => A
+            unique_conditions = []
+            for condition in conditions:
+                is_duplicate = False
+                for existing in unique_conditions:
+                    # Simple check: compare node structure (UUIDs should be same for duplicates)
+                    if (
+                        hasattr(condition, "uuid")
+                        and hasattr(existing, "uuid")
+                        and condition.uuid == existing.uuid
+                    ):
+                        statistics.optimization_boolean_rewrite_and_redundant += 1
+                        is_duplicate = True
+                        break
+                if not is_duplicate:
+                    unique_conditions.append(condition)
+
+            # Rebuild the chain for better pushdown
+            # This creates a left-associative chain that's easier to traverse
+            if len(unique_conditions) < len(conditions) or len(unique_conditions) > 2:
+                statistics.optimization_boolean_rewrite_and_flatten += 1
+                return _rebuild_and_chain(unique_conditions)
 
     return node

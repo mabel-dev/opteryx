@@ -32,6 +32,15 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets WHERE STARTS_WITH(name, 'M')", "optimization_predicate_rewriter_starts_with_to_like"),
         ("SELECT COUNT(*) FROM $planets WHERE ENDS_WITH(name, 's')", "optimization_predicate_rewriter_ends_with_to_like"),
         ("SELECT name FROM $astronauts WHERE 'Apollo 13' = ANY(missions) AND 'Gemini 8' = ANY(missions)", "optimization_predicate_rewriter_anyeq_to_contains_all"),
+        # New boolean simplification tests
+        ("SELECT * FROM $planets WHERE id > 5 AND name = 'Earth' AND id < 10", "optimization_boolean_rewrite_and_flatten"),  # AND chain flattening
+        # De Morgan's n-ary tests (NOT of multiple OR conditions) - creates multiple AND predicates for pushdown
+        ("SELECT * FROM $planets WHERE NOT(id = 1 OR id = 2 OR id = 3)", "optimization_boolean_rewrite_demorgan_nary"),  # NOT(A OR B OR C) => A!=1 AND A!=2 AND A!=3
+        ("SELECT * FROM $planets WHERE NOT(id = 1 OR id = 2 OR id = 3 OR id = 4)", "optimization_boolean_rewrite_demorgan_nary"),  # 4 conditions
+        # Predicate compaction tests - multiple predicates on same column get compacted to most restrictive
+        ("SELECT * FROM $planets WHERE id > 1 AND id > 3", "optimization_predicate_compaction"),  # id > 1 AND id > 3 => id > 3
+        ("SELECT * FROM $planets WHERE id < 8 AND id < 5", "optimization_predicate_compaction"),  # id < 8 AND id < 5 => id < 5
+        ("SELECT * FROM $planets WHERE id > 1 AND id < 8 AND id > 3 AND id < 7", "optimization_predicate_compaction"),  # Multiple bounds compacted
     ]
 # fmt:on
 
