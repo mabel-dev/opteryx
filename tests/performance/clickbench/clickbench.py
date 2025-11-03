@@ -167,9 +167,9 @@ if __name__ == "__main__":  # pragma: no cover
                     iter_strs.append("-")
                 
                 status = ""
-                if avg_time > 5000:
+                if min_time > 5000:
                     status = " ⚠️ VERY SLOW"
-                elif avg_time > 2000:
+                elif min_time > 2000:
                     status = " ⚠️ SLOW"
 
                 print(f"{query_num:<8} {iter_strs[0]:<16} {iter_strs[1]:<16} {iter_strs[2]:<16} "
