@@ -3,7 +3,7 @@
 
 __build__ = 1726
 __author__ = "@joocer"
-__version__ = "0.26.1-beta.1726"
+__version__ = "0.26.0"
 
 # Store the version here so:
 # 1) we don't load dependencies by storing it in __init__.py
