@@ -126,11 +126,11 @@ def parse_yaml(yaml_str: str) -> dict:
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     if _config_path.exists():
-        with open(_config_path, "r") as _config_file:
+        with open(_config_path, "r", encoding="utf-8") as _config_file:
             _config_values = parse_yaml(_config_file.read())
         if _OPTERYX_DEBUG:
             print(f"{datetime.datetime.now()} [LOADER] Loading config from {_config_path}")
-except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
+except OSError as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
     if _OPTERYX_DEBUG:
         print(
             f"{datetime.datetime.now()} [LOADER] Config file {_config_path} not used - {exception}"

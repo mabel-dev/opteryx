@@ -216,5 +216,5 @@ def test_predicate_compaction_contradiction_inside_subquery():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
-    test_predicate_compaction_keeps_equality_with_additional_filters()
-    #run_tests()
+    
+    run_tests()
