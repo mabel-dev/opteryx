@@ -13,7 +13,9 @@ the aggregation node doesn't need the grouping node.
 
 
 """
+
 import time
+
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
