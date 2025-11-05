@@ -1,6 +1,6 @@
 [project]
 name = "opteryx"
-version = "0.26.1-beta.1735"
+version = "0.26.1-beta.1736"
 description = "Query your data, where it lives"
 requires-python = '>=3.11'
 readme = {file = "README.md", content-type = "text/markdown"}

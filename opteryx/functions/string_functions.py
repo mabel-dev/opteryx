@@ -337,4 +337,7 @@ def regex_replace(array, _pattern, _replacement):
     pattern = as_bytes(_pattern[0])
     replacement = as_bytes(_replacement[0])
 
-    return list_regex_replace(data_vector, pattern, replacement)
+    try:
+        return list_regex_replace(data_vector, pattern, replacement)
+    except ValueError as exc:
+        raise InvalidFunctionParameterError(str(exc)) from exc
