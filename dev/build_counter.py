@@ -1,7 +1,10 @@
-"""
-Build counter script to increment build number on each build.
+"""Build counter utility for the Draken project.
 
-We update the __version__ module and the version in pyproject.toml to keep them in sync.
+This script increments the build number in the __version__.py file and commits
+the change to version control. It reads the current build number, increments it,
+updates the version file, and stages the changes for commit.
+
+We also update the version in pyproject.toml to keep them in sync.
 """
 
 import re
@@ -9,6 +12,8 @@ import subprocess
 from pathlib import Path
 
 from enum import Enum  # isort: skip
+
+LIBRARY_NAME = "opteryx"
 
 class VersionStatus(Enum):
     """
@@ -25,7 +30,7 @@ __author__ = "@joocer"
 __status__ = VersionStatus.BETA
 
 __build__ = None
-with open("opteryx/__version__.py", mode="r", encoding="utf-8") as v:
+with open(f"{LIBRARY_NAME}/__version__.py", mode="r", encoding="utf-8") as v:
     vers = v.read()
 exec(vers)  # nosec
 
@@ -49,11 +54,11 @@ __version__ = "{__version__}"
 """
 
     # Save the build number to the build.py file
-    with open("opteryx/__version__.py", "w") as f:
+    with open(f"{LIBRARY_NAME}/__version__.py", "w") as f:
         f.write(VERSION_FILE_CONTENT)
 
 __version__ = "notset"
-with open("opteryx/__version__.py", mode="r") as v:
+with open(f"{LIBRARY_NAME}/__version__.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 print(__version__)
@@ -69,4 +74,4 @@ if replacements == 0:
 
 pyproject_path.write_text(updated_contents, encoding="utf-8")
 
-subprocess.run(["git", "add", "opteryx/__version__.py", "pyproject.toml"])
+subprocess.run(["git", "add", f"{LIBRARY_NAME}/__version__.py", "pyproject.toml"])

@@ -13,7 +13,7 @@ the aggregation node doesn't need the grouping node.
 
 
 """
-
+import time
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
@@ -217,9 +217,11 @@ class AggregateAndGroupNode(BasePlanNode):
             morsel = morsel.append_column(
                 "*", [numpy.ones(shape=morsel.num_rows, dtype=numpy.int8)]
             )
+        eval_start = time.monotonic_ns()
         if self.evaluatable_nodes:
             morsel = evaluate_and_append(self.evaluatable_nodes, morsel)
         morsel = evaluate_and_append(self.groups, morsel)
+        self.statistics.time_group_by_evaluations += time.monotonic_ns() - eval_start
 
         self.buffer.append(morsel)
 

@@ -72,7 +72,7 @@ cdef uint8_t[::1] _allop_eq_string_chunk(object literal, object list_array):
     Follows SQL semantics: NULL == X → UNKNOWN → row = FALSE
     """
     cdef:
-        bytes literal_bytes = b'' if literal is None else literal.encode('utf-8')
+        bytes literal_bytes = literal.encode('utf-8') if literal is not None else b''
         const char* literal_ptr = PyBytes_AsString(literal_bytes)
         Py_ssize_t literal_len = len(literal_bytes)
 

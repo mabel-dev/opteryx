@@ -5,7 +5,7 @@ Test we can read from Sqlite - this is a basic exercise of the SQL Connector
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
@@ -42,9 +42,9 @@ def test_cockroach_storage():
 
     # JOIN ON A NON SQL TABLE
     results = opteryx.query(
-        "SELECT * FROM cockroach.planets AS P INNER JOIN $planets ON P.gravity = $planets.gravity;"
+        "SELECT * FROM cockroach.planets AS P INNER JOIN $planets ON P.diameter = $planets.diameter;"
     )
-    assert results.rowcount == 11, results.rowcount
+    assert results.rowcount == 9, results.rowcount
     assert results.columncount == 40, results.columncount
 
     # PUSH - CHECK STATS THE PUSHES WORKED

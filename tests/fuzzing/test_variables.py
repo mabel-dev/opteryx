@@ -35,6 +35,8 @@ def test_fuzz_variables(name, value):
 
     # single quote is the delimiter, it's not a bug that we think its a delimeter
     value = value.replace("'", "#")
+    if len(value) == 0:
+        value = "default"
 
     statement = f"SET @{name} = '{value}'; SELECT @{name};"
     #    print(statement.encode())

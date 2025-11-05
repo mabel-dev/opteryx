@@ -9,6 +9,7 @@ to pyarrow tables so they can be processed as per any other data source.
 """
 
 import time
+from decimal import Decimal
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -164,7 +165,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 ]
             else:
                 query_builder.add("SELECT", "1")
-                self.schema.columns = [ConstantColumn(name="1", value=1)]  # type:ignore
+                self.schema.columns = [ConstantColumn(name="1", value=1, type=OrsoTypes.INTEGER)]  # type:ignore
 
         # Update SQL if we've pushed predicates
         parameters: dict = {}
@@ -188,6 +189,26 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
         if pushed_sql is None and limit is not None:
             query_builder.LIMIT(str(limit))
+
+        struct_column_indices = [
+            idx
+            for idx, column in enumerate(result_schema.columns)
+            if getattr(column, "type", None) == OrsoTypes.STRUCT
+        ]
+        decimal_column_indices = [
+            idx
+            for idx, column in enumerate(result_schema.columns)
+            if getattr(column, "type", None) == OrsoTypes.DECIMAL
+        ]
+        boolean_column_indices = [
+            idx
+            for idx, column in enumerate(result_schema.columns)
+            if getattr(column, "type", None) == OrsoTypes.BOOLEAN
+        ]
+
+        needs_struct_conversion = bool(struct_column_indices)
+        needs_decimal_conversion = bool(decimal_column_indices)
+        needs_boolean_conversion = bool(boolean_column_indices)
 
         at_least_once = False
 
@@ -216,21 +237,38 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 if not batch_rows:
                     break
 
-                # If we have a struct column, we need to convert the data to bytes
-                struct_column_indices = [
-                    i for i, col in enumerate(self.schema.columns) if col.type == OrsoTypes.STRUCT
-                ]
-                if struct_column_indices:
-                    batch_rows = [
-                        tuple(
-                            orjson.dumps(field)
-                            if i in struct_column_indices and isinstance(field, dict)
-                            else field
-                            for i, field in enumerate(row)
-                        )
-                        for row in batch_rows
-                    ]
-                    rows = batch_rows
+                if needs_struct_conversion or needs_decimal_conversion or needs_boolean_conversion:
+                    processed_rows = []
+                    for row in batch_rows:
+                        fields = list(row)
+                        if needs_struct_conversion:
+                            for index in struct_column_indices:
+                                value = fields[index]
+                                if isinstance(value, dict):
+                                    fields[index] = orjson.dumps(value)
+                        if needs_decimal_conversion:
+                            for index in decimal_column_indices:
+                                value = fields[index]
+                                if isinstance(value, float):
+                                    fields[index] = Decimal(str(value))
+                        if needs_boolean_conversion:
+                            for index in boolean_column_indices:
+                                value = fields[index]
+                                if value is None or isinstance(value, bool):
+                                    continue
+                                if isinstance(value, (int, Decimal)):
+                                    fields[index] = bool(value)
+                                    continue
+                                if isinstance(value, bytes):
+                                    value = value.decode("utf-8", errors="ignore")
+                                if isinstance(value, str):
+                                    normalized = value.strip().lower()
+                                    if normalized in {"true", "t", "1", "y", "yes"}:
+                                        fields[index] = True
+                                    elif normalized in {"false", "f", "0", "n", "no"}:
+                                        fields[index] = False
+                        processed_rows.append(tuple(fields))
+                    rows = processed_rows
                 else:
                     rows = map(tuple, batch_rows)
 
