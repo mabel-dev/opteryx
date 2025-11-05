@@ -7,6 +7,7 @@ from typing import List
 from typing import Union
 
 import numpy
+import pyarrow
 from pyarrow import compute
 
 from opteryx.exceptions import InvalidFunctionParameterError
@@ -290,14 +291,53 @@ def match_against(arr, val):
 
 def regex_replace(array, _pattern, _replacement):
     """
-    Regex replacement using PyArrow's optimized C++ implementation.
+    Regex replacement using the vendored RE2 engine exposed via list_ops.
 
-    PyArrow's replace_substring_regex is already highly optimized and works
-    directly with Arrow buffers without Python object conversion overhead.
-
-    Note: A Rust implementation was attempted but the overhead of converting
-    PyArrow arrays to Python lists (990x slower than direct buffer access)
-    made it significantly slower than PyArrow's native implementation.
+    This implementation avoids PyArrow's regex facilities so that pattern
+    compilation and matching are backed by Google RE2 while keeping the
+    vectorised execution model used elsewhere in list_ops.
     """
-    # Use PyArrow's optimized C++ implementation
-    return compute.replace_substring_regex(array, _pattern[0], _replacement[0])
+    from draken import Vector
+
+    from opteryx.compiled import list_ops as compiled_list_ops
+
+    list_regex_replace = getattr(compiled_list_ops, "list_regex_replace")
+
+    def _as_arrow(value, label):
+        if isinstance(value, pyarrow.Array):
+            return value
+        if hasattr(value, "to_arrow"):
+            return value.to_arrow()
+        if isinstance(value, numpy.ndarray):
+            if value.ndim != 1:
+                raise InvalidFunctionParameterError(f"{label} must be one-dimensional.")
+            return pyarrow.array(value)
+        if isinstance(value, (list, tuple)):
+            return pyarrow.array(value)
+        return None
+
+    def as_bytes(value):
+        # Handle numpy scalars
+        if hasattr(value, "item"):
+            value = value.item()
+        # Handle pyarrow scalars
+        elif hasattr(value, "as_py"):
+            value = value.as_py()
+        # Convert to bytes
+        if isinstance(value, bytes):
+            return value
+        if isinstance(value, str):
+            return value.encode("utf-8")
+        # Fallback: convert to string then bytes
+        return str(value).encode("utf-8")
+
+    array_arrow = _as_arrow(array, "Input")
+    data_vector = Vector.from_arrow(array_arrow)
+
+    pattern = as_bytes(_pattern[0])
+    replacement = as_bytes(_replacement[0])
+
+    try:
+        return list_regex_replace(data_vector, pattern, replacement)
+    except ValueError as exc:
+        raise InvalidFunctionParameterError(str(exc)) from exc

@@ -23,11 +23,14 @@ after a join, we add conditions to the JOIN.
 """
 
 from orso.tools import random_string
+from orso.types import OrsoTypes
 
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.managers.expression.formatter import ExpressionColumn
 from opteryx.models import Node
 from opteryx.planner.binder.binder_visitor import extract_join_fields
 from opteryx.planner.logical_planner import LogicalPlan
@@ -73,6 +76,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             context.collected_predicates = []
 
         elif node.node_type == LogicalPlanStepType.Filter:
+            self._inline_project_alias_predicates(node, context)
             # collect predicates we can probably push
             if (
                 len(node.relations) > 0
@@ -97,6 +101,20 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     predicate.condition.left.schema_column.identity,
                     predicate.condition.right.schema_column.identity,
                 }
+
+                # If the predicate only references columns from the relation feeding the UNNEST,
+                # move the filter before the UNNEST so we reduce the number of rows expanded.
+                if (
+                    predicate.relations
+                    and hasattr(node.unnest_column, "source")
+                    and predicate.relations.issubset({node.unnest_column.source})
+                    and node.unnest_target.schema_column.identity not in known_columns
+                ):
+                    self.statistics.optimization_predicate_pushdown += 1
+                    context.optimized_plan.insert_node_before(
+                        predicate.nid, predicate, context.node_id
+                    )
+                    continue
 
                 # Here we're pushing filters into the UNNEST - this means that
                 # CROSS JOIN UNNEST will produce fewer rows... it still does
@@ -288,3 +306,162 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             remaining_predicates.append(predicate)
         context.collected_predicates = remaining_predicates
         return context
+
+    def _inline_project_alias_predicates(
+        self, node: LogicalPlanNode, context: OptimizerContext
+    ) -> None:
+        """Inline simple project aliases referenced by a filter so the predicate can be
+        pushed below the projection."""
+
+        if node.condition is None:
+            return
+
+        alias_chain = set()
+        parent_nid = context.node_id
+        project_nid = None
+        ancestor_nodes = []
+
+        while True:
+            incoming = list(context.pre_optimized_tree.ingoing_edges(parent_nid))
+            if len(incoming) != 1:
+                return
+
+            parent_nid = incoming[0][0]
+            parent_node = context.pre_optimized_tree[parent_nid]
+            ancestor_nodes.append((parent_nid, parent_node))
+
+            node_alias = getattr(parent_node, "alias", None)
+            if node_alias:
+                alias_chain.add(node_alias)
+
+            if parent_node.node_type == LogicalPlanStepType.Project:
+                project_nid = parent_nid
+                project_node = parent_node
+                break
+            if parent_node.node_type in (
+                LogicalPlanStepType.Scan,
+                LogicalPlanStepType.FunctionDataset,
+            ):
+                return
+
+        alias_expressions = {}
+        for column in project_node.columns or []:
+            query_column = getattr(column, "query_column", None)
+            if not query_column:
+                continue
+
+            expression = column if isinstance(column, Node) else getattr(column, "expression", None)
+            if expression is None:
+                continue
+
+            alias_expressions[query_column] = (column, expression)
+
+        if not alias_expressions:
+            return
+
+        condition = node.condition
+        if condition.node_type != NodeType.COMPARISON_OPERATOR or condition.value not in {
+            "Eq",
+            "NotEq",
+        }:
+            return
+
+        candidates = (
+            (condition.left, condition.right),
+            (condition.right, condition.left),
+        )
+
+        for alias_candidate, literal_candidate in candidates:
+            if (
+                alias_candidate
+                and alias_candidate.node_type == NodeType.IDENTIFIER
+                and alias_candidate.source_column in alias_expressions
+                and literal_candidate
+                and literal_candidate.node_type == NodeType.LITERAL
+                and (
+                    literal_candidate.type == OrsoTypes.BOOLEAN
+                    or str(literal_candidate.type).upper() == "BOOLEAN"
+                )
+            ):
+                if (
+                    alias_candidate.source
+                    and alias_chain
+                    and alias_candidate.source not in alias_chain
+                ):
+                    continue
+
+                column_ref, expression_template = alias_expressions[alias_candidate.source_column]
+
+                if isinstance(expression_template, Node) and get_all_nodes_of_type(
+                    expression_template, (NodeType.AGGREGATOR,)
+                ):
+                    continue
+
+                if hasattr(expression_template, "copy"):
+                    expression = expression_template.copy()
+                else:
+                    expression = expression_template
+
+                if isinstance(expression, Node):
+                    expression.alias = None
+                    expression.query_column = None
+                    if expression.schema_column:
+                        expression.schema_column.aliases = []
+                elif getattr(expression, "schema_column", None):
+                    expression.schema_column.aliases = []
+
+                literal_value = literal_candidate.value
+                if isinstance(literal_value, str):
+                    literal_is_true = literal_value.strip().lower() in {"true", "t", "1"}
+                else:
+                    literal_is_true = bool(literal_value)
+
+                negate = (not literal_is_true) if condition.value == "Eq" else literal_is_true
+
+                if negate:
+                    new_condition = Node(NodeType.NOT, centre=expression)
+                    expr_name = f"NOT {format_expression(expression)}"
+                    new_condition.schema_column = ExpressionColumn(
+                        name=expr_name,
+                        type=OrsoTypes.BOOLEAN,
+                        expression=expr_name,
+                    )
+                else:
+                    new_condition = expression
+
+                node.condition = new_condition
+                identifiers = get_all_nodes_of_type(new_condition, (NodeType.IDENTIFIER,))
+                node.columns = identifiers
+                node.relations = {
+                    identifier.source
+                    for identifier in identifiers
+                    if getattr(identifier, "source", None)
+                }
+
+                project_node.columns = [
+                    col
+                    for col in project_node.columns or []
+                    if getattr(col, "query_column", None) != alias_candidate.source_column
+                ]
+
+                if isinstance(column_ref, Node) and column_ref in project_node.columns:
+                    project_node.columns.remove(column_ref)
+
+                if context.optimized_plan and project_nid in context.optimized_plan:
+                    context.optimized_plan[project_nid].columns = project_node.columns
+
+                for ancestor_nid, ancestor_node in ancestor_nodes:
+                    ancestor_columns = getattr(ancestor_node, "columns", None) or []
+                    filtered_columns = [
+                        col
+                        for col in ancestor_columns
+                        if (getattr(col, "query_column", None) or getattr(col, "alias", None))
+                        != alias_candidate.source_column
+                    ]
+                    if len(filtered_columns) != len(ancestor_columns):
+                        ancestor_node.columns = filtered_columns
+                        if context.optimized_plan and ancestor_nid in context.optimized_plan:
+                            context.optimized_plan[ancestor_nid].columns = filtered_columns
+
+                self.statistics.optimization_predicate_pushdown_inline_project += 1
+                return
