@@ -58,7 +58,7 @@ cpdef object list_regex_replace(object data, bytes pattern, bytes replacement):
     cdef _StringVectorCIterator it  # C-level iterator
     cdef object builder  # StringVectorBuilder
     cdef Py_ssize_t estimated_bytes_per_entry = 50
-    
+
     # Pre-allocate string buffer to reduce reallocation overhead
     # This capacity will grow if needed but helps for common case
     value_str.reserve(256)
