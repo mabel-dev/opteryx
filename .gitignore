@@ -196,3 +196,6 @@ opteryx/third_party/ulfjack/ryu.c
 opteryx/compiled/joins/joins.pyx
 pyiceberg_catalog.db
 opteryx/compiled/joins/joins.h
+**.html
+generated_**.pyx
+third_party/mabel/draken/vectors/string_vector.c
