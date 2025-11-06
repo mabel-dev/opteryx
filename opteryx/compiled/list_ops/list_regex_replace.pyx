@@ -48,7 +48,6 @@ cpdef StringVector list_regex_replace(
     - Single-pass processing with C-level iterator
     """
     cdef Py_ssize_t length = data.ptr.length
-    cdef Py_ssize_t i
 
     # Compile RE2 pattern once
     cdef char* pattern_buf = <char*>0
