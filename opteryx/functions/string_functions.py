@@ -338,6 +338,8 @@ def regex_replace(array, _pattern, _replacement):
     replacement = as_bytes(_replacement[0])
 
     try:
-        return list_regex_replace(data_vector, pattern, replacement)
+        result_vector = list_regex_replace(data_vector, pattern, replacement)
     except ValueError as exc:
         raise InvalidFunctionParameterError(str(exc)) from exc
+
+    return result_vector.to_arrow()

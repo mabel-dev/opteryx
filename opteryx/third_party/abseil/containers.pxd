@@ -6,6 +6,7 @@
 # cython: lintrule=ignore
 
 from libc.stdint cimport int64_t, uint64_t
+from libc.stddef cimport size_t
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
 

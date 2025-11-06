@@ -9,7 +9,13 @@
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int64_t, uint64_t
+from libc.stddef cimport size_t
 from libcpp.pair cimport pair
+
+
+cdef extern from "identity_hash.h":
+    cdef cppclass IdentityHash:
+        size_t operator()(uint64_t value) const
 
 
 cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
@@ -20,9 +26,10 @@ cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
         void clear()
 
 cdef class FlatHashMap:
-    #cdef flat_hash_map[uint64_t, vector[int64_t]] _map
+    cdef flat_hash_map[uint64_t, vector[int64_t], IdentityHash] _map
 
     def __cinit__(self):
+        # Construct the C++ member in-place
         self._map = flat_hash_map[uint64_t, vector[int64_t], IdentityHash]()
 
     cpdef insert(self, key: uint64_t, value: int64_t):
@@ -46,9 +53,10 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
         void reserve(int64_t value)
 
 cdef class FlatHashSet:
-    #cdef flat_hash_set[uint64_t, IdentityHash] _set
+    cdef flat_hash_set[uint64_t, IdentityHash] _set
 
     def __cinit__(self):
+        # Construct the C++ member in-place
         self._set = flat_hash_set[uint64_t, IdentityHash]()
         self._set.reserve(1024)
 

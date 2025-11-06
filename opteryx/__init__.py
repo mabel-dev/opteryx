@@ -20,6 +20,7 @@ For more information check out https://opteryx.dev.
 import datetime
 import os
 import random
+import sys
 import time
 import warnings
 import platform
@@ -27,6 +28,12 @@ from pathlib import Path
 
 from decimal import getcontext
 from typing import Optional, Union, Dict, Any, List, TYPE_CHECKING
+
+# Add vendored dependencies to sys.path for in-tree development
+_OPTERYX_ROOT = Path(__file__).parent.parent
+_VENDORED_PATH = _OPTERYX_ROOT / "third_party" / "mabel"
+if _VENDORED_PATH.exists() and str(_VENDORED_PATH) not in sys.path:
+    sys.path.insert(0, str(_VENDORED_PATH))
 
 if TYPE_CHECKING:  # pragma: no cover - only for type checkers
     import pyarrow
