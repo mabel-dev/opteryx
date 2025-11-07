@@ -15,6 +15,7 @@ import time
 from concurrent.futures import FIRST_COMPLETED
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
+from functools import lru_cache
 from typing import Dict
 from typing import List
 
@@ -36,6 +37,11 @@ from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
+
+
+@lru_cache(maxsize=1)
+def _get_disk_reader_module():
+    return importlib.import_module("opteryx.compiled.io.disk_reader")
 
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
@@ -121,8 +127,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
-        disk_reader = importlib.import_module("opteryx.compiled.io.disk_reader")
-        read_file_mmap = getattr(disk_reader, "read_file_mmap")
+        disk_reader = _get_disk_reader_module()
+        read_file_mmap = disk_reader.read_file_mmap
 
         # from opteryx.compiled.io.disk_reader import unmap_memory
         # Read using mmap for maximum speed
@@ -174,12 +180,16 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         if prefix in self.blob_list:
             return self.blob_list[prefix]
 
-        blobs = sorted(
-            os.path.join(root, file)
-            for root, _, files in os.walk(prefix + OS_SEP)
-            for file in files
-            if file.endswith(TUPLE_OF_VALID_EXTENSIONS)
-        )
+        disk_reader = _get_disk_reader_module()
+        list_files = getattr(disk_reader, "list_files", None)
+        if list_files is None:
+            raise RuntimeError("Compiled disk reader missing list_files helper")
+
+        target = os.path.normpath(prefix)
+        try:
+            blobs = sorted(list_files(target, TUPLE_OF_VALID_EXTENSIONS))
+        except FileNotFoundError:
+            blobs = []
 
         self.blob_list[prefix] = blobs
         return blobs
