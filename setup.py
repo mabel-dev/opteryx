@@ -250,10 +250,15 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.compiled.io.disk_reader",
-            sources=["opteryx/compiled/io/disk_reader.pyx", "src/cpp/disk_io.cpp"],
+            sources=[
+                "opteryx/compiled/io/disk_reader.pyx",
+                "src/cpp/disk_io.cpp",
+                "src/cpp/directories.cpp",
+            ],
             include_dirs=include_dirs + ["src/cpp"],
             language="c++",
             extra_compile_args=CPP_COMPILE_FLAGS,
+            depends=["src/cpp/directories.h"],
         ),
         Extension(
             name="opteryx.compiled.table_ops.distinct",

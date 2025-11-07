@@ -10,8 +10,13 @@
 Ultra-fast disk reader module
 """
 
+import errno
+
 from cpython.buffer cimport PyBuffer_FillInfo
-from libc.stdlib cimport free
+from cpython.mem cimport PyMem_Free
+from cpython.mem cimport PyMem_Malloc
+from cpython.unicode cimport PyUnicode_FromString
+from libc.stddef cimport size_t
 
 cdef extern from "disk_io.h":
     int read_all_pread(const char* path, unsigned char* dst, size_t* out_len,
@@ -19,15 +24,24 @@ cdef extern from "disk_io.h":
     int read_all_mmap(const char* path, unsigned char** dst, size_t* out_len)
     int unmap_memory_c(unsigned char* addr, size_t size)
 
+cdef extern from "directories.h":
+    ctypedef struct file_info_t:
+        char* name
+        int is_directory
+        int is_regular_file
+        long long size
+        long long mtime
+
+    int list_directory_c "list_directory"(const char* path, file_info_t** files, size_t* count)
+    void free_file_list(file_info_t* files, size_t count)
+    int list_matching_files_c "list_matching_files"(const char* base_path, const char** extensions,
+                                                    size_t ext_count, char*** files, size_t* count) nogil
+    void free_file_names(char** files, size_t count)
+
 cdef class MappedMemory:
     cdef unsigned char* data
     cdef size_t size
     cdef bint owned
-
-    def __dealloc__(self):
-        if self.owned and self.data != NULL:
-            # Free the allocated memory (for non-mmap case)
-            free(self.data)
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         PyBuffer_FillInfo(buffer, self, self.data, self.size, 1, flags)
@@ -62,6 +76,104 @@ def read_file(str path, bint sequential=True, bint willneed=True, bint drop_afte
         raise OSError(-rc, f"Failed to read file: {path}")
 
     return memoryview(buf)[:out_len]
+
+
+def list_directory(str path):
+    """Return directory entries using the native file system scanner."""
+
+    path_b = path.encode("utf-8")
+    cdef const char* c_path = path_b
+    cdef file_info_t* files = NULL
+    cdef size_t count = 0
+
+    cdef int rc = list_directory_c(c_path, &files, &count)
+    if rc != 0:
+        err = -rc
+        if err == errno.ENOENT:
+            raise FileNotFoundError(path)
+        raise OSError(err, f"Failed to list directory: {path}")
+
+    entries = []
+    cdef file_info_t entry
+    cdef char* name_ptr
+    cdef size_t idx
+    try:
+        for idx in range(count):
+            entry = files[idx]
+            name_ptr = entry.name
+            if name_ptr == NULL:
+                continue
+
+            py_name = PyUnicode_FromString(name_ptr)
+            entries.append(
+                (
+                    py_name,
+                    bool(entry.is_directory),
+                    bool(entry.is_regular_file),
+                    entry.size,
+                    entry.mtime,
+                )
+            )
+    finally:
+        if files != NULL:
+            free_file_list(files, count)
+
+    return entries
+
+
+def list_files(str path, extensions):
+    """Return a list of files under ``path`` matching provided extensions."""
+
+    if extensions is None:
+        raise ValueError("extensions must be provided")
+
+    ext_seq = tuple(extensions)
+    ext_count = len(ext_seq)
+
+    cdef size_t c_ext_count = ext_count
+    cdef const char** ext_array = NULL
+    cdef char** file_array = NULL
+    cdef size_t file_count = 0
+
+    ext_bytes = [ext.encode("utf-8") if isinstance(ext, str) else ext for ext in ext_seq]
+
+    if c_ext_count > 0:
+        ext_array = <const char**>PyMem_Malloc(c_ext_count * sizeof(const char*))
+        if ext_array == NULL:
+            raise MemoryError("Unable to allocate extension array")
+        for idx in range(c_ext_count):
+            ext_array[idx] = <const char*>ext_bytes[idx]
+
+    path_b = path.encode("utf-8")
+    cdef const char* c_path = path_b
+
+    cdef int rc
+    with nogil:
+        rc = list_matching_files_c(c_path, ext_array, c_ext_count, &file_array, &file_count)
+
+    if ext_array != NULL:
+        PyMem_Free(ext_array)
+
+    if rc != 0:
+        if file_array != NULL:
+            free_file_names(file_array, file_count)
+        err = -rc
+        if err == errno.ENOENT:
+            raise FileNotFoundError(path)
+        raise OSError(err, f"Failed to list files: {path}")
+
+    results = []
+    try:
+        for idx in range(file_count):
+            py_path = PyUnicode_FromString(file_array[idx])
+            if py_path is None:
+                raise MemoryError("Unable to decode file path")
+            results.append(py_path)
+    finally:
+        if file_array != NULL:
+            free_file_names(file_array, file_count)
+
+    return results
 
 
 def read_file_mmap(str path):
