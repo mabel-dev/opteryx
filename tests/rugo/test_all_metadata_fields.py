@@ -9,14 +9,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 import glob
 import pytest
 
-from rugo import parquet
+from opteryx.rugo import parquet
 
 
 def test_all_metadata_fields_exposed():
     """Test that all C++ ColumnStats fields are exposed in the Python dictionary."""
     # Read a test file
 
-    files_to_test = glob.glob("tests/data/*.parquet")
+    files_to_test = glob.glob("testdata/*.parquet", recursive=True)
 
     for file_path in files_to_test:
 
@@ -78,7 +78,7 @@ def test_all_metadata_fields_exposed():
 
 def test_metadata_field_types():
     """Test that metadata fields have the correct types."""
-    files_to_test = glob.glob("tests/data/*.parquet")
+    files_to_test = glob.glob("testdata/*.parquet", recursive=True)
 
     for file_path in files_to_test:
 
@@ -117,7 +117,7 @@ def test_metadata_field_types():
 
 def test_metadata_field_values():
     """Test that metadata field values are reasonable."""
-    files_to_test = glob.glob("tests/data/*.parquet")
+    files_to_test = glob.glob("testdata/*.parquet", recursive=True)
 
     for file_path in files_to_test:
 
@@ -165,7 +165,7 @@ def test_metadata_field_values():
 
 def test_multiple_columns():
     """Test that all columns have the complete metadata."""
-    metadata = parquet.read_metadata('tests/data/planets.parquet')
+    metadata = parquet.read_metadata('testdata/planets/planets.parquet')
     
     expected_fields = {
         'name', 'physical_type', 'logical_type', 'num_values', 'total_uncompressed_size',

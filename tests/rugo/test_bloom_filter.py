@@ -8,9 +8,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import pytest
 
-from rugo import parquet
+from opteryx.rugo import parquet
 
-DATASET = Path("tests/data/data_index_bloom_encoding_stats.parquet")
+DATASET = Path("testdata/parquet_tests/data_index_bloom_encoding_stats.parquet")
 
 
 def _bloom_info():

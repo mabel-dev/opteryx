@@ -1,4 +1,4 @@
-from rugo import jsonl
+from opteryx.rugo import jsonl
 
 
 def _build_sample():

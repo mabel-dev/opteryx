@@ -1,7 +1,7 @@
 """
 Test demonstrating that byte arrays are kept as raw binary (bytes), not UTF-8 strings.
 """
-import rugo.jsonl as jsonl
+import opteryx.rugo.jsonl as jsonl
 
 print("="*70)
 print("BYTE ARRAY HANDLING - KEEPING BINARY DATA AS BYTES")

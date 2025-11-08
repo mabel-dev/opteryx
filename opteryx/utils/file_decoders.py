@@ -437,10 +437,10 @@ def jsonl_decoder(
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     # rugo is our own library for fast jsonl reading
-    import rugo.jsonl as rj
     from orso.schema import convert_orso_schema_to_arrow_schema
-    from rugo.converters.orso import jsonl_to_orso_schema
 
+    import opteryx.rugo.jsonl as rj
+    from opteryx.rugo.converters.orso import jsonl_to_orso_schema
     from opteryx.utils import count_instances
 
     if just_statistics:

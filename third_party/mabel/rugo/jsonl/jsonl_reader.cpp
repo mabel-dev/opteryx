@@ -21,14 +21,14 @@
             "third_party/mabel/rugo/jsonl/vendor/simdjson"
         ],
         "language": "c++",
-        "name": "rugo.jsonl",
+        "name": "opteryx.rugo.jsonl",
         "sources": [
             "third_party/mabel/rugo/jsonl/jsonl_reader.pyx",
             "third_party/mabel/rugo/jsonl/decode.cpp",
             "third_party/mabel/rugo/jsonl/simdjson_wrapper.cpp"
         ]
     },
-    "module_name": "rugo.jsonl"
+    "module_name": "opteryx.rugo.jsonl"
 }
 END: Cython Metadata */
 
@@ -3286,7 +3286,7 @@ static int __Pyx_State_RemoveModule(void*);
 
 /* Module declarations from "cpython.bytes" */
 
-/* Module declarations from "rugo.jsonl" */
+/* Module declarations from "opteryx.rugo.jsonl" */
 static CYTHON_INLINE PyObject *__pyx_convert_PyObject_string_to_py_6libcpp_6string_std__in_string(std::string const &); /*proto*/
 static CYTHON_INLINE PyObject *__pyx_convert_PyUnicode_string_to_py_6libcpp_6string_std__in_string(std::string const &); /*proto*/
 static CYTHON_INLINE PyObject *__pyx_convert_PyBytes_string_to_py_6libcpp_6string_std__in_string(std::string const &); /*proto*/
@@ -3294,11 +3294,11 @@ static CYTHON_INLINE PyObject *__pyx_convert_PyByteArray_string_to_py_6libcpp_6s
 static std::string __pyx_convert_string_from_py_6libcpp_6string_std__in_string(PyObject *); /*proto*/
 /* #### Code section: typeinfo ### */
 /* #### Code section: before_global_var ### */
-#define __Pyx_MODULE_NAME "rugo.jsonl"
+#define __Pyx_MODULE_NAME "opteryx.rugo.jsonl"
 extern int __pyx_module_is_main_rugo__jsonl;
 int __pyx_module_is_main_rugo__jsonl = 0;
 
-/* Implementation of "rugo.jsonl" */
+/* Implementation of "opteryx.rugo.jsonl" */
 /* #### Code section: global_var ### */
 /* #### Code section: string_decls ### */
 static const char __pyx_k_Cython_wrapper_for_reading_JSONL[] = "Cython wrapper for reading JSONL files.";
@@ -4085,7 +4085,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl._parse_array_from_bytes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl._parse_array_from_bytes", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -4673,7 +4673,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_23_parse_array_from_bytes_parse_value(PyO
               __Pyx_TraceLine(81,164,0,__PYX_ERR(0, 81, __pyx_L21_except_error))
               __pyx_t_3 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
               if (__pyx_t_3) {
-                __Pyx_AddTraceback("rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
+                __Pyx_AddTraceback("opteryx.rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
                 __Pyx_TraceExceptionHandled(0);
                 if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_12) < 0) __PYX_ERR(0, 81, __pyx_L21_except_error)
                 __Pyx_XGOTREF(__pyx_t_5);
@@ -5559,7 +5559,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_23_parse_array_from_bytes_parse_value(PyO
         __Pyx_TraceLine(137,429,0,__PYX_ERR(0, 137, __pyx_L79_except_error))
         __pyx_t_3 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
         if (__pyx_t_3) {
-          __Pyx_AddTraceback("rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
+          __Pyx_AddTraceback("opteryx.rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
           __Pyx_TraceExceptionHandled(0);
           if (__Pyx_GetException(&__pyx_t_12, &__pyx_t_6, &__pyx_t_5) < 0) __PYX_ERR(0, 137, __pyx_L79_except_error)
           __Pyx_XGOTREF(__pyx_t_12);
@@ -6408,7 +6408,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_23_parse_array_from_bytes_parse_value(PyO
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 43, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl._parse_array_from_bytes.parse_value", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_chars);
@@ -6633,7 +6633,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl__parse_array_from_bytes(CYTHON_UNUSED PyO
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 39, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl._parse_array_from_bytes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl._parse_array_from_bytes", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_DECREF((PyObject *)__pyx_cur_scope);
@@ -6738,7 +6738,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl.get_jsonl_schema", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.get_jsonl_schema", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -7366,7 +7366,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_2get_jsonl_schema(CYTHON_UNUSED PyObject 
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 228, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl.get_jsonl_schema", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.get_jsonl_schema", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_data_bytes);
@@ -7497,7 +7497,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -7590,7 +7590,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._convert_strings_to_bytes_inplace", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._convert_strings_to_bytes_inplace", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -7773,7 +7773,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_10read_jsonl__convert_strings_to_bytes_in
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 415, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._convert_strings_to_bytes_inplace", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._convert_strings_to_bytes_inplace", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_v);
@@ -7862,7 +7862,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -8077,7 +8077,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_10read_jsonl_2_has_string_leaf(PyObject *
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 452, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_y);
@@ -8166,7 +8166,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   for (Py_ssize_t __pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
     Py_XDECREF(values[__pyx_temp]);
   }
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
@@ -8381,7 +8381,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_10read_jsonl_4_has_string_leaf(PyObject *
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 471, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl._has_string_leaf", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_y);
@@ -10130,7 +10130,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_4read_jsonl(CYTHON_UNUSED PyObject *__pyx
               __Pyx_TraceLine(481,422,0,__PYX_ERR(0, 481, __pyx_L45_except_error))
               __pyx_t_5 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
               if (__pyx_t_5) {
-                __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+                __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
                 __Pyx_TraceExceptionHandled(0);
                 if (__Pyx_GetException(&__pyx_t_6, &__pyx_t_10, &__pyx_t_27) < 0) __PYX_ERR(0, 481, __pyx_L45_except_error)
                 __Pyx_XGOTREF(__pyx_t_6);
@@ -10566,7 +10566,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_4read_jsonl(CYTHON_UNUSED PyObject *__pyx
                 __Pyx_TraceLine(519,526,0,__PYX_ERR(0, 519, __pyx_L65_except_error))
                 __pyx_t_5 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
                 if (__pyx_t_5) {
-                  __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+                  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
                   __Pyx_TraceExceptionHandled(0);
                   if (__Pyx_GetException(&__pyx_t_27, &__pyx_t_6, &__pyx_t_2) < 0) __PYX_ERR(0, 519, __pyx_L65_except_error)
                   __Pyx_XGOTREF(__pyx_t_27);
@@ -11967,7 +11967,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_4read_jsonl(CYTHON_UNUSED PyObject *__pyx
               __Pyx_TraceLine(592,806,0,__PYX_ERR(0, 592, __pyx_L95_except_error))
               __pyx_t_5 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
               if (__pyx_t_5) {
-                __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+                __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
                 __Pyx_TraceExceptionHandled(0);
                 if (__Pyx_GetException(&__pyx_t_2, &__pyx_t_10, &__pyx_t_33) < 0) __PYX_ERR(0, 592, __pyx_L95_except_error)
                 __Pyx_XGOTREF(__pyx_t_2);
@@ -12136,7 +12136,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_4read_jsonl(CYTHON_UNUSED PyObject *__pyx
         __Pyx_TraceLine(604,831,0,__PYX_ERR(0, 604, __pyx_L84_except_error))
         __pyx_t_5 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_Exception))));
         if (__pyx_t_5) {
-          __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+          __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
           __Pyx_TraceExceptionHandled(0);
           if (__Pyx_GetException(&__pyx_t_33, &__pyx_t_31, &__pyx_t_10) < 0) __PYX_ERR(0, 604, __pyx_L84_except_error)
           __Pyx_XGOTREF(__pyx_t_33);
@@ -12347,7 +12347,7 @@ static PyObject *__pyx_pf_4rugo_5jsonl_4read_jsonl(CYTHON_UNUSED PyObject *__pyx
   #else
   __Pyx_TraceReturnValue(NULL, 0, 0, __PYX_ERR(0, 304, __pyx_L1_error));
   #endif
-  __Pyx_AddTraceback("rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("opteryx.rugo.jsonl.read_jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_data_bytes);
@@ -12460,7 +12460,7 @@ static PyType_Slot __pyx_type_4rugo_5jsonl___pyx_scope_struct___parse_array_from
   {0, 0},
 };
 static PyType_Spec __pyx_type_4rugo_5jsonl___pyx_scope_struct___parse_array_from_bytes_spec = {
-  "rugo.jsonl.__pyx_scope_struct___parse_array_from_bytes",
+  "opteryx.rugo.jsonl.__pyx_scope_struct___parse_array_from_bytes",
   sizeof(struct __pyx_obj_4rugo_5jsonl___pyx_scope_struct___parse_array_from_bytes),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC,
@@ -12470,7 +12470,7 @@ static PyType_Spec __pyx_type_4rugo_5jsonl___pyx_scope_struct___parse_array_from
 
 static PyTypeObject __pyx_type_4rugo_5jsonl___pyx_scope_struct___parse_array_from_bytes = {
   PyVarObject_HEAD_INIT(0, 0)
-  "rugo.jsonl.""__pyx_scope_struct___parse_array_from_bytes", /*tp_name*/
+  "opteryx.rugo.jsonl.""__pyx_scope_struct___parse_array_from_bytes", /*tp_name*/
   sizeof(struct __pyx_obj_4rugo_5jsonl___pyx_scope_struct___parse_array_from_bytes), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_4rugo_5jsonl___pyx_scope_struct___parse_array_from_bytes, /*tp_dealloc*/
@@ -12636,7 +12636,7 @@ static PyType_Slot __pyx_type_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl_slots
   {0, 0},
 };
 static PyType_Spec __pyx_type_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl_spec = {
-  "rugo.jsonl.__pyx_scope_struct_1_read_jsonl",
+  "opteryx.rugo.jsonl.__pyx_scope_struct_1_read_jsonl",
   sizeof(struct __pyx_obj_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl),
   0,
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_HAVE_GC,
@@ -12646,7 +12646,7 @@ static PyType_Spec __pyx_type_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl_spec 
 
 static PyTypeObject __pyx_type_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl = {
   PyVarObject_HEAD_INIT(0, 0)
-  "rugo.jsonl.""__pyx_scope_struct_1_read_jsonl", /*tp_name*/
+  "opteryx.rugo.jsonl.""__pyx_scope_struct_1_read_jsonl", /*tp_name*/
   sizeof(struct __pyx_obj_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_4rugo_5jsonl___pyx_scope_struct_1_read_jsonl, /*tp_dealloc*/
@@ -13116,8 +13116,8 @@ __Pyx_RefNannySetupContext("PyInit_jsonl", 0);
   }
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "rugo.jsonl")) {
-      if (unlikely((PyDict_SetItemString(modules, "rugo.jsonl", __pyx_m) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "opteryx.rugo.jsonl")) {
+      if (unlikely((PyDict_SetItemString(modules, "opteryx.rugo.jsonl", __pyx_m) < 0))) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   /*--- Builtin init code ---*/
@@ -13231,7 +13231,7 @@ __Pyx_RefNannySetupContext("PyInit_jsonl", 0);
     __Pyx_TraceLine(27,16,0,__PYX_ERR(0, 27, __pyx_L4_except_error))
     __pyx_t_6 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(((PyTypeObject*)PyExc_ImportError))));
     if (__pyx_t_6) {
-      __Pyx_AddTraceback("rugo.jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("opteryx.rugo.jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
       __Pyx_TraceExceptionHandled(0);
       if (__Pyx_GetException(&__pyx_t_2, &__pyx_t_7, &__pyx_t_8) < 0) __PYX_ERR(0, 27, __pyx_L4_except_error)
       __Pyx_XGOTREF(__pyx_t_2);
@@ -13350,7 +13350,7 @@ __Pyx_RefNannySetupContext("PyInit_jsonl", 0);
   __Pyx_TraceExceptionUnwind(0, 0);
   if (__pyx_m) {
     if (__pyx_mstate->__pyx_d && stringtab_initialized) {
-      __Pyx_AddTraceback("init rugo.jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init opteryx.rugo.jsonl", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     #if !CYTHON_USE_MODULE_STATE
     Py_CLEAR(__pyx_m);
@@ -13364,7 +13364,7 @@ __Pyx_RefNannySetupContext("PyInit_jsonl", 0);
     }
     #endif
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init rugo.jsonl");
+    PyErr_SetString(PyExc_ImportError, "init opteryx.rugo.jsonl");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -13481,7 +13481,7 @@ const char* const cstring = "x\332\265XKw\323\326\026\306$)IIJLb\342\024\207\312
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
     #else /* compression: none (5435 bytes) */
-const char* const bytes = "Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False..>?\"\\/\010\014\n\r\tadd_notearray<array<bytes>array<double>array<int64>disableenablegcinvalid array separatorinvalid unicode escapeisenablednot an arrayobject does not support contiguous buffer interfacethird_party/mabel/rugo/jsonl/jsonl_reader.pyx\\uunexpected endunexpected token at %dunterminated arrayunterminated escapeunterminated objectunterminated stringutf-8DRAKEN_AVAILABLEE__Pyx_PyDict_NextRefVectorarrayarrow_arrayasyncio.coroutinesbbinarybool_booleanbytescchcharscline_in_tracebackcolcol_namecol_typecolumn_namescolumn_names_veccolumns_convert_strings_to_bytes_inplacecpdatadata_bytesdata_ptrdata_sizedepthdoubledrakendraken_columnsdraken_veceelem_typeelem_valencodeendswithescfirstfloat64from_arrow__func__get_jsonl_schema_has_string_leafhave_viewhex_siidxint64_is_coroutineitemsjjsonlist___main____module__nname__name__nullnullablenum_rowsoo_ptrobjobjectpa_parse_array_from_bytes_parse_array_from_bytes.<locals>.parse_valueparse_arraysparse_objectsparse_valueparsedpoppy_column_namespy_columnspy_listpy_objpyarrow__qualname__rawread_jsonlread_jsonl.<locals>._convert_strings_to_bytes_inplaceread_jsonl.<locals>._has_string_leafresresultrugo.jsonlssample_sizeschema__set_name__setdefaultstartstartswithstringsuccesstable__test__typetype_strtype_valvvalvaluesviewxy{}\200\001\330\004\030\230\001\330\004\030\230\003\2301\230A\340\004\005\360t\004\000\005\013\210\"\210B\210b\220\004\220A\220Q\220c\230\024\230S\240\002\240#\240U\250%\250q\330\004\007\200r\210\023\210B\210c\220\021\220!\2203\220c\230\021\330\010\016\210j\230\001\230\021\330\004\013\210;\220a\320\000\033\2301\360.\000\005\033\230!\330\004\007\200z\220\021\220&\230\001\330\010\025\220W\230A\330\010\023\320\023$\240G\2501\330\010\024\220C\220q\230\001\340\010\013\320\013\035\230Q\230f\240A\240V\320+<\270D\300\001\330\014\022\220)\2301""\230A\330\010\024\220A\330\010\023\320\023#\2404\240q\330\010\024\220H\230D\240\001\330\004'\240~\260Q\260j\300\013\3101\330\004\007\200q\330\010\030\230\001\230\021\230!\330\004\r\210Q\360\006\000\005\t\210\005\210U\220!\2206\230\025\230a\330\010\016\210f\220A\220Q\330\010\023\2205\230\003\2301\330\010\023\2201\340\010\013\2109\220C\220q\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\340\014\027\220u\230C\230q\330\014\017\210y\230\003\2301\330\020\033\2301\330\021\032\230#\230Q\330\020\033\2301\330\021\032\230#\230Q\330\020\033\2301\340\020\033\2301\330\r\026\220c\230\021\330\014\027\220q\330\010\016\210g\220Q\330\014\024\220C\220u\230G\2401\240A\330\014\024\220A\330\014\030\230\003\2301\340\004\013\2101\320\000\025\220^\320#6\260a\3600\000\005\033\230!\330\004\007\200z\220\021\220&\230\001\330\010\025\220W\230A\330\010\023\320\023$\240G\2501\330\010\024\220C\220q\230\001\340\010\013\320\013\035\230Q\230f\240A\240V\320+<\270D\300\001\330\014\022\220)\2301\230A\330\010\024\220A\330\010\023\320\023#\2404\240q\330\010\024\220H\230D\240\001\360\006\000\005\010\200x\210s\220!\330\010\020\220\t\230\021\230*\240A\340\010\014\210L\230\001\330\014\034\230J\240a\240x\250w\260a\260q\330\010\020\220\t\230\021\230*\240K\250q\330\004\007\200q\330\010\030\230\001\230\021\230!\330\004\007\200t\2105\220\001\330\010\t\330\014\027\220q\330\014\034\230A\330\014\030\230\001\330\014\027\220q\340\004\026\220a\340\004\010\210\005\210U\220!\2205\230\r\240U\250!\330\010\027\220w\230a\230u\240M\260\021\260\"\260G\2701\270A\330\004\021\220\021\340\004\010\210\001\360\006\000\005\t\210\005\210U\220!\2205\230\010\240\005\240Q\330\010\016\210a\210u\220H\230A\230Q\330\010\013\2104\210s\220!\330\014\026\220g\230Q\230a\330\014\r\330\010\023\2203\220e\2307\240!\2401\330\010\013\2109\220C\220q\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230k""\250\025\250a\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2403\240k\260\021\260!\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2403\240n\260A\260Q\330\014\026\220g\230Q\230a\330\r\026\220c\230\031\240#\240Y\250c\260\021\360\006\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\360\006\000\021\032\230\030\320!:\270!\270=\310\003\3105\320PT\320T`\320`c\320ch\320hi\330\020\023\2207\230'\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2401\330\014\026\220g\230Q\230a\330\r\025\220[\240\001\240\021\360\006\000\r\031\230\001\330\014\017\210x\220{\240!\240:\250T\260\030\270\031\300!\3001\330\020\034\230H\240A\240S\250\001\340\014\r\360\030\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\023\2201\340\024\034\320\0344\260A\3205E\300S\310\005\310T\320QT\320TY\320Y]\320]^\330\024\027\220v\230S\240\001\330\030\034\230H\240A\360\010\000\031\034\230:\240Q\240c\250\021\330\034\037\230z\250\023\250A\330 A\300\021\300!\330!+\2503\250a\360\006\000!\"\360\016\000!$\320#3\2601\260A\330$E\300Q\300a\330\030\037\230w\240a\240q\340\030\033\230>\250\021\330\034'\240q\330\030\031\330\034%\320%<\270A\270Q\330\034\037\230z\250\021\250(\260!\330 #\240:\250S\260\001\330$E\300Q\300a\330%/\250s\260!\330$%\360\016\000%(\320'7\260q\270\001\330(I\310\021\310!\330\034#\2407\250!\2501\330\037 \340\034#\2407\250!\2503\250g\260Q\260a\360\006\000\025\034\2307\240!\2403""\240g\250Q\250a\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\360\006\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\360\006\000\021\031\230\003\2301\230A\340\020\023\2206\230\023\230A\340\024\027\220q\340\030 \320 8\270\001\3209I\310\023\310E\320QU\320UX\320X]\320]a\320ab\330\030\033\2306\240\023\240A\330\034 \240\010\250\001\330\034#\2407\250!\2501\340\034\037\230~\250Q\330 +\2501\330\034\035\330 )\320)@\300\001\300\021\330 '\240w\250a\250q\330#$\330 '\240w\250a\250s\260'\270\021\270!\360\006\000\031 \230w\240a\240s\250'\260\021\260!\340\025\033\2303\230a\340\024\035\230X\320%>\270a\270}\310C\310u\320TX\320Xd\320dg\320gl\320lm\330\024\027\220w\230g\240Q\330\030\037\230w\240a\240q\340\030\037\230w\240a\240q\360\006\000\025\036\230X\320%>\270a\270}\310C\310u\320TX\320Xd\320dg\320gl\320lm\330\024\027\220w\230g\240Q\330\030\037\230w\240a\240q\340\030\037\230w\240a\240q\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230o\250U\260!\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2404\240q\250\003\250?\270!\2701\330\014\026\220g\230Q\230a\340\014\026\220g\230Q\230a\360\006\000\005\010\200q\330\010\031\230\021\330\010\014\210E\220\025\220a\220s\230!\2301\330\014\017\210z\230\021\230#\230S\240\001\330\020\036\230g\240Q\240a\330\020\021\360\006\000\r\030\220u\230H\240A\240R\240u\250G\2601\260A\360\006\000\r\016\330\020\023\2209\230C\230q\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\026\300q\330\025\036\230c\240\021\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\030\310\021\330\025\036\230c\240\021\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\026\300q\330\025\036\230c\240\031\250#\250Y\260c\270\021\360\010\000\025#\240\"\240F\250!\250:\260Q""\260d\270%\270r\300\027\310\001\330\025\036\230c\240\021\340\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\027\310\001\330\025\035\230[\250\001\250\021\340\024\025\330\030\033\2309\240C\240q\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RX\320XY\330\035&\240c\250\021\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RZ\320Z[\330\035&\240c\250\021\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RY\320YZ\360\010\000\035+\250'\260\021\260*\270A\270Q\330\034\035\330\033\034\340\030&\240g\250Q\250j\270\001\270\021\330\030\031\360\006\000\025#\240'\250\021\250*\260A\260Q\330\024\025\360\006\000\021\036\230V\2407\250+\260Q\260a\330\020\036\230g\240Q\240a\330\023\024\340\020\036\230g\240Q\240j\260\001\260\021\340\010\t\330\014\027\220q\330\014\034\230A\330\014\030\230\005\230Q\330\014\027\220q\360\010\000\t\n\330\014\027\220q\330\014\034\230A\330\014\030\230\005\230Q\330\014\027\220q\240A\330(+\250:\260Q\260c\270\021\330,0\260\005\260Q\33003\3203C\3001\300A\3304;\2701\330,3\2601\330(/\250z\270\021\270#\270Q\210A\360\006\000\021\024\220:\230Q\230e\2401\330\024\030\230\007\230u\240A\240S\250\001\250\021\330\030\034\230C\230q\240\001\330\030\033\230:\240Q\240c\250\021\330\034\037\230q\240\007\240q\250\007\250q\260\001\330\035'\240q\250\003\2501\330\034=\270Q\270a\200A\330\010\t\340\010\016\210b\220\002\220\"\220D\230\001\230\021\230#\230T\240\023\240B\240c\250\021\330\014\021\220\021\330\010\013\2102\210S\220\001\330\014\022\220*\230A\230Q\330\010\014\210A\210Q\210a\340\010\013\2102\210S\220\001\330\014\021\220\021\330\014\024\220A\330\014\022\220\"\220B\220a\330\020\025\220Q\220a\220q\330\020\023\2203\220c\230\021\330\024\031\230\021\330\024\033\2302\230U\240!\2401\330\020\023\2203\220c\230\021\330\024\031\230\021\330\024\027\220r\230\023\230A\330\030\036\230j\250\001\250\021\330\024\032\230!\2301\230A\330\024\031\230\021\330\024\027\220t\2303\230d\240%\240w\250a\250q\330\031\035\230S\240\004\240E""\250\027\260\001\260\021\330\031\035\230S\240\004\240E\250\027\260\001\260\021\330\031\035\230S\240\004\240E\250\027\260\001\260\021\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\001\340\030\033\2302\230R\230r\240\023\240A\330\034$\240A\240Q\240b\250\001\250\021\250\"\250G\2601\260A\330\034\035\330 %\240S\250\001\250\027\260\001\330 %\240W\250A\250S\260\001\260\021\330#$\330 %\240W\250A\250V\2602\260Q\330\034!\240\021\340\034\"\240*\250A\250Q\360\006\000\031\036\230W\240A\240S\250\001\250\021\360\010\000\025\035\230A\340\024\032\230\"\230B\230b\240\004\240A\240Q\240c\250\023\250C\250t\2601\260A\260S\270\003\2701\330\030\035\230Q\340\024\031\230\027\240\001\240\021\240!\2406\250\022\2507\260!\2601\330\014\022\220*\230A\230Q\360\006\000\t\014\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\360\006\000\t\014\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\330\010\013\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\360\006\000\t\014\2102\210S\220\003\2204\220s\230#\230U\240!\330\014\024\220A\330\014\017\210r\220\023\220A\330\020\025\220Q\330\014\022\220\"\220B\220b\230\004\230C\230s\240!\2401\240F\250!\330\020\025\220Q\330\014\017\210r\220\022\2202\220T\230\021\230!\2303\230c\240\021\330\020\025\220Q\330\020\026\220b\230\002\230\"\230D\240\003\2403\240a\240q\250\006\250a\330\024\031\230\021\330\014\017\210r\220\022\2202\220U\230!\2301\230C\230s\240$\240c\250\021\250!\2503\250c\260\021\330\020\025\220Q\330\020\023\2202\220R\220r\230\025\230a\230q\240\003\2403\240c\250\023\250A\250Q\250c\260\023\260A\330\024\031\230""\021\330\020\026\220b\230\002\230\"\230D\240\003\2403\240a\240q\250\006\250a\330\024\031\230\021\330\020\027\220u\230A\230Q\230a\230v\240R\240w\250a\250q\330\014\020\220\001\220\021\220&\230\002\230'\240\021\240!\330\014\017\210t\2203\220b\230\003\2304\230s\240\"\240C\240t\2503\250a\330\020\027\220u\230A\230Q\340\020\021\330\024\033\2303\230a\230q\330\027\030\330\024\033\2305\240\001\240\021\360\006\000\t\014\2102\210S\220\001\340\014\021\220\021\330\014\022\220!\340\014\022\220\"\220B\220b\230\004\230A\230Q\230c\240\024\240S\250\002\250#\250U\260%\260q\330\014\017\210r\220\022\2202\220T\230\021\230!\2303\230c\240\021\330\020\025\220Q\330\020\027\220q\330\014\r\330\020\026\220k\240\021\330\020\023\2207\230!\2301\330\020\026\220b\230\002\230\"\230D\240\001\240\021\240#\240T\250\023\250B\250c\260\025\260e\2701\330\020\023\2202\220S\230\001\330\024\032\230*\240A\240Q\330\020\023\2201\220A\220S\230\003\2301\330\024\031\230\021\330\024\025\330\025\026\220a\220s\230#\230Q\330\024\031\230\021\330\024\025\340\024\032\230*\240A\240Q\330\014\023\2201\360\006\000\t\014\2102\210S\220\001\330\014\024\220A\330\014\024\220A\330\014\022\220\"\220B\220a\330\020\025\220Q\220a\220q\330\020\023\2203\220c\230\021\340\024\031\230\021\330\024\032\230\"\230B\230a\330\030\033\2301\230A\230S\240\003\2401\330\034!\240\021\330\035\036\230a\230s\240#\240Q\330\034!\240\021\330\034\035\340\034!\240\021\330\024\025\330\020\023\2203\220c\230\021\330\024\035\230Q\330\025\030\230\003\2301\330\024\035\230Q\330\024\027\220v\230S\240\001\330\030\035\230Q\330\030\037\230q\240\001\240\026\240q\330\020\025\220Q\330\014\022\220*\230A\230Q\340\010\016\210j\230\001\320\0312\260\"\260A\240\001\330$'\240z\260\021\260#\260Q\330(,\250E\260\021\330,/\320/?\270q\300\001\33007\260q\330(/\250q\330$+\250:\260Q\260c\270\021falsenulltrue";
+const char* const bytes = "Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False..>?\"\\/\010\014\n\r\tadd_notearray<array<bytes>array<double>array<int64>disableenablegcinvalid array separatorinvalid unicode escapeisenablednot an arrayobject does not support contiguous buffer interfacethird_party/mabel/rugo/jsonl/jsonl_reader.pyx\\uunexpected endunexpected token at %dunterminated arrayunterminated escapeunterminated objectunterminated stringutf-8DRAKEN_AVAILABLEE__Pyx_PyDict_NextRefVectorarrayarrow_arrayasyncio.coroutinesbbinarybool_booleanbytescchcharscline_in_tracebackcolcol_namecol_typecolumn_namescolumn_names_veccolumns_convert_strings_to_bytes_inplacecpdatadata_bytesdata_ptrdata_sizedepthdoubledrakendraken_columnsdraken_veceelem_typeelem_valencodeendswithescfirstfloat64from_arrow__func__get_jsonl_schema_has_string_leafhave_viewhex_siidxint64_is_coroutineitemsjjsonlist___main____module__nname__name__nullnullablenum_rowsoo_ptrobjobjectpa_parse_array_from_bytes_parse_array_from_bytes.<locals>.parse_valueparse_arraysparse_objectsparse_valueparsedpoppy_column_namespy_columnspy_listpy_objpyarrow__qualname__rawread_jsonlread_jsonl.<locals>._convert_strings_to_bytes_inplaceread_jsonl.<locals>._has_string_leafresresultopteryx.rugo.jsonlssample_sizeschema__set_name__setdefaultstartstartswithstringsuccesstable__test__typetype_strtype_valvvalvaluesviewxy{}\200\001\330\004\030\230\001\330\004\030\230\003\2301\230A\340\004\005\360t\004\000\005\013\210\"\210B\210b\220\004\220A\220Q\220c\230\024\230S\240\002\240#\240U\250%\250q\330\004\007\200r\210\023\210B\210c\220\021\220!\2203\220c\230\021\330\010\016\210j\230\001\230\021\330\004\013\210;\220a\320\000\033\2301\360.\000\005\033\230!\330\004\007\200z\220\021\220&\230\001\330\010\025\220W\230A\330\010\023\320\023$\240G\2501\330\010\024\220C\220q\230\001\340\010\013\320\013\035\230Q\230f\240A\240V\320+<\270D\300\001\330\014\022\220)\2301""\230A\330\010\024\220A\330\010\023\320\023#\2404\240q\330\010\024\220H\230D\240\001\330\004'\240~\260Q\260j\300\013\3101\330\004\007\200q\330\010\030\230\001\230\021\230!\330\004\r\210Q\360\006\000\005\t\210\005\210U\220!\2206\230\025\230a\330\010\016\210f\220A\220Q\330\010\023\2205\230\003\2301\330\010\023\2201\340\010\013\2109\220C\220q\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\330\014\027\220q\330\r\026\220c\230\021\340\014\027\220u\230C\230q\330\014\017\210y\230\003\2301\330\020\033\2301\330\021\032\230#\230Q\330\020\033\2301\330\021\032\230#\230Q\330\020\033\2301\340\020\033\2301\330\r\026\220c\230\021\330\014\027\220q\330\010\016\210g\220Q\330\014\024\220C\220u\230G\2401\240A\330\014\024\220A\330\014\030\230\003\2301\340\004\013\2101\320\000\025\220^\320#6\260a\3600\000\005\033\230!\330\004\007\200z\220\021\220&\230\001\330\010\025\220W\230A\330\010\023\320\023$\240G\2501\330\010\024\220C\220q\230\001\340\010\013\320\013\035\230Q\230f\240A\240V\320+<\270D\300\001\330\014\022\220)\2301\230A\330\010\024\220A\330\010\023\320\023#\2404\240q\330\010\024\220H\230D\240\001\360\006\000\005\010\200x\210s\220!\330\010\020\220\t\230\021\230*\240A\340\010\014\210L\230\001\330\014\034\230J\240a\240x\250w\260a\260q\330\010\020\220\t\230\021\230*\240K\250q\330\004\007\200q\330\010\030\230\001\230\021\230!\330\004\007\200t\2105\220\001\330\010\t\330\014\027\220q\330\014\034\230A\330\014\030\230\001\330\014\027\220q\340\004\026\220a\340\004\010\210\005\210U\220!\2205\230\r\240U\250!\330\010\027\220w\230a\230u\240M\260\021\260\"\260G\2701\270A\330\004\021\220\021\340\004\010\210\001\360\006\000\005\t\210\005\210U\220!\2205\230\010\240\005\240Q\330\010\016\210a\210u\220H\230A\230Q\330\010\013\2104\210s\220!\330\014\026\220g\230Q\230a\330\014\r\330\010\023\2203\220e\2307\240!\2401\330\010\013\2109\220C\220q\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230k""\250\025\250a\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2403\240k\260\021\260!\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2403\240n\260A\260Q\330\014\026\220g\230Q\230a\330\r\026\220c\230\031\240#\240Y\250c\260\021\360\006\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\360\006\000\021\032\230\030\320!:\270!\270=\310\003\3105\320PT\320T`\320`c\320ch\320hi\330\020\023\2207\230'\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2401\330\014\026\220g\230Q\230a\330\r\025\220[\240\001\240\021\360\006\000\r\031\230\001\330\014\017\210x\220{\240!\240:\250T\260\030\270\031\300!\3001\330\020\034\230H\240A\240S\250\001\340\014\r\360\030\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\023\2201\340\024\034\320\0344\260A\3205E\300S\310\005\310T\320QT\320TY\320Y]\320]^\330\024\027\220v\230S\240\001\330\030\034\230H\240A\360\010\000\031\034\230:\240Q\240c\250\021\330\034\037\230z\250\023\250A\330 A\300\021\300!\330!+\2503\250a\360\006\000!\"\360\016\000!$\320#3\2601\260A\330$E\300Q\300a\330\030\037\230w\240a\240q\340\030\033\230>\250\021\330\034'\240q\330\030\031\330\034%\320%<\270A\270Q\330\034\037\230z\250\021\250(\260!\330 #\240:\250S\260\001\330$E\300Q\300a\330%/\250s\260!\330$%\360\016\000%(\320'7\260q\270\001\330(I\310\021\310!\330\034#\2407\250!\2501\330\037 \340\034#\2407\250!\2503\250g\260Q\260a\360\006\000\025\034\2307\240!\2403""\240g\250Q\250a\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\360\006\000\r\027\220a\330\014\020\220\005\220U\230!\2303\230n\250E\260\021\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\330\024\025\340\020\026\220c\230\036\240q\250\001\330\020\023\2203\220e\2303\230c\240\021\330\024\033\2307\240!\2401\330\024\025\360\006\000\021\031\230\003\2301\230A\340\020\023\2206\230\023\230A\340\024\027\220q\340\030 \320 8\270\001\3209I\310\023\310E\320QU\320UX\320X]\320]a\320ab\330\030\033\2306\240\023\240A\330\034 \240\010\250\001\330\034#\2407\250!\2501\340\034\037\230~\250Q\330 +\2501\330\034\035\330 )\320)@\300\001\300\021\330 '\240w\250a\250q\330#$\330 '\240w\250a\250s\260'\270\021\270!\360\006\000\031 \230w\240a\240s\250'\260\021\260!\340\025\033\2303\230a\340\024\035\230X\320%>\270a\270}\310C\310u\320TX\320Xd\320dg\320gl\320lm\330\024\027\220w\230g\240Q\330\030\037\230w\240a\240q\340\030\037\230w\240a\240q\360\006\000\025\036\230X\320%>\270a\270}\310C\310u\320TX\320Xd\320dg\320gl\320lm\330\024\027\220w\230g\240Q\330\030\037\230w\240a\240q\340\030\037\230w\240a\240q\330\014\026\220g\230Q\230a\330\r\026\220c\230\021\330\014\026\220a\330\014\020\220\005\220U\230!\2303\230o\250U\260!\330\020\023\2203\220j\240\001\240\021\330\024\033\2307\240!\2401\340\024\033\2307\240!\2404\240q\250\003\250?\270!\2701\330\014\026\220g\230Q\230a\340\014\026\220g\230Q\230a\360\006\000\005\010\200q\330\010\031\230\021\330\010\014\210E\220\025\220a\220s\230!\2301\330\014\017\210z\230\021\230#\230S\240\001\330\020\036\230g\240Q\240a\330\020\021\360\006\000\r\030\220u\230H\240A\240R\240u\250G\2601\260A\360\006\000\r\016\330\020\023\2209\230C\230q\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\026\300q\330\025\036\230c\240\021\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\030\310\021\330\025\036\230c\240\021\330\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\026\300q\330\025\036\230c\240\031\250#\250Y\260c\270\021\360\010\000\025#\240\"\240F\250!\250:\260Q""\260d\270%\270r\300\027\310\001\330\025\036\230c\240\021\340\024\"\240\"\240F\250!\250:\260Q\260d\270%\270r\300\027\310\001\330\025\035\230[\250\001\250\021\340\024\025\330\030\033\2309\240C\240q\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RX\320XY\330\035&\240c\250\021\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RZ\320Z[\330\035&\240c\250\021\330\034*\250\"\250F\260!\260:\270Q\270d\300%\300r\310\026\310q\320PR\320RY\320YZ\360\010\000\035+\250'\260\021\260*\270A\270Q\330\034\035\330\033\034\340\030&\240g\250Q\250j\270\001\270\021\330\030\031\360\006\000\025#\240'\250\021\250*\260A\260Q\330\024\025\360\006\000\021\036\230V\2407\250+\260Q\260a\330\020\036\230g\240Q\240a\330\023\024\340\020\036\230g\240Q\240j\260\001\260\021\340\010\t\330\014\027\220q\330\014\034\230A\330\014\030\230\005\230Q\330\014\027\220q\360\010\000\t\n\330\014\027\220q\330\014\034\230A\330\014\030\230\005\230Q\330\014\027\220q\240A\330(+\250:\260Q\260c\270\021\330,0\260\005\260Q\33003\3203C\3001\300A\3304;\2701\330,3\2601\330(/\250z\270\021\270#\270Q\210A\360\006\000\021\024\220:\230Q\230e\2401\330\024\030\230\007\230u\240A\240S\250\001\250\021\330\030\034\230C\230q\240\001\330\030\033\230:\240Q\240c\250\021\330\034\037\230q\240\007\240q\250\007\250q\260\001\330\035'\240q\250\003\2501\330\034=\270Q\270a\200A\330\010\t\340\010\016\210b\220\002\220\"\220D\230\001\230\021\230#\230T\240\023\240B\240c\250\021\330\014\021\220\021\330\010\013\2102\210S\220\001\330\014\022\220*\230A\230Q\330\010\014\210A\210Q\210a\340\010\013\2102\210S\220\001\330\014\021\220\021\330\014\024\220A\330\014\022\220\"\220B\220a\330\020\025\220Q\220a\220q\330\020\023\2203\220c\230\021\330\024\031\230\021\330\024\033\2302\230U\240!\2401\330\020\023\2203\220c\230\021\330\024\031\230\021\330\024\027\220r\230\023\230A\330\030\036\230j\250\001\250\021\330\024\032\230!\2301\230A\330\024\031\230\021\330\024\027\220t\2303\230d\240%\240w\250a\250q\330\031\035\230S\240\004\240E""\250\027\260\001\260\021\330\031\035\230S\240\004\240E\250\027\260\001\260\021\330\031\035\230S\240\004\240E\250\027\260\001\260\021\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\005\240U\250'\260\021\260!\330\031\035\230S\240\001\340\030\033\2302\230R\230r\240\023\240A\330\034$\240A\240Q\240b\250\001\250\021\250\"\250G\2601\260A\330\034\035\330 %\240S\250\001\250\027\260\001\330 %\240W\250A\250S\260\001\260\021\330#$\330 %\240W\250A\250V\2602\260Q\330\034!\240\021\340\034\"\240*\250A\250Q\360\006\000\031\036\230W\240A\240S\250\001\250\021\360\010\000\025\035\230A\340\024\032\230\"\230B\230b\240\004\240A\240Q\240c\250\023\250C\250t\2601\260A\260S\270\003\2701\330\030\035\230Q\340\024\031\230\027\240\001\240\021\240!\2406\250\022\2507\260!\2601\330\014\022\220*\230A\230Q\360\006\000\t\014\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\360\006\000\t\014\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\330\010\013\2102\210S\220\004\220D\230\002\230\"\230B\230c\240\022\2404\240q\250\001\250\022\2501\250A\250S\260\003\2601\330\014\021\220\021\330\014\023\2201\360\006\000\t\014\2102\210S\220\003\2204\220s\230#\230U\240!\330\014\024\220A\330\014\017\210r\220\023\220A\330\020\025\220Q\330\014\022\220\"\220B\220b\230\004\230C\230s\240!\2401\240F\250!\330\020\025\220Q\330\014\017\210r\220\022\2202\220T\230\021\230!\2303\230c\240\021\330\020\025\220Q\330\020\026\220b\230\002\230\"\230D\240\003\2403\240a\240q\250\006\250a\330\024\031\230\021\330\014\017\210r\220\022\2202\220U\230!\2301\230C\230s\240$\240c\250\021\250!\2503\250c\260\021\330\020\025\220Q\330\020\023\2202\220R\220r\230\025\230a\230q\240\003\2403\240c\250\023\250A\250Q\250c\260\023\260A\330\024\031\230""\021\330\020\026\220b\230\002\230\"\230D\240\003\2403\240a\240q\250\006\250a\330\024\031\230\021\330\020\027\220u\230A\230Q\230a\230v\240R\240w\250a\250q\330\014\020\220\001\220\021\220&\230\002\230'\240\021\240!\330\014\017\210t\2203\220b\230\003\2304\230s\240\"\240C\240t\2503\250a\330\020\027\220u\230A\230Q\340\020\021\330\024\033\2303\230a\230q\330\027\030\330\024\033\2305\240\001\240\021\360\006\000\t\014\2102\210S\220\001\340\014\021\220\021\330\014\022\220!\340\014\022\220\"\220B\220b\230\004\230A\230Q\230c\240\024\240S\250\002\250#\250U\260%\260q\330\014\017\210r\220\022\2202\220T\230\021\230!\2303\230c\240\021\330\020\025\220Q\330\020\027\220q\330\014\r\330\020\026\220k\240\021\330\020\023\2207\230!\2301\330\020\026\220b\230\002\230\"\230D\240\001\240\021\240#\240T\250\023\250B\250c\260\025\260e\2701\330\020\023\2202\220S\230\001\330\024\032\230*\240A\240Q\330\020\023\2201\220A\220S\230\003\2301\330\024\031\230\021\330\024\025\330\025\026\220a\220s\230#\230Q\330\024\031\230\021\330\024\025\340\024\032\230*\240A\240Q\330\014\023\2201\360\006\000\t\014\2102\210S\220\001\330\014\024\220A\330\014\024\220A\330\014\022\220\"\220B\220a\330\020\025\220Q\220a\220q\330\020\023\2203\220c\230\021\340\024\031\230\021\330\024\032\230\"\230B\230a\330\030\033\2301\230A\230S\240\003\2401\330\034!\240\021\330\035\036\230a\230s\240#\240Q\330\034!\240\021\330\034\035\340\034!\240\021\330\024\025\330\020\023\2203\220c\230\021\330\024\035\230Q\330\025\030\230\003\2301\330\024\035\230Q\330\024\027\220v\230S\240\001\330\030\035\230Q\330\030\037\230q\240\001\240\026\240q\330\020\025\220Q\330\014\022\220*\230A\230Q\340\010\016\210j\230\001\320\0312\260\"\260A\240\001\330$'\240z\260\021\260#\260Q\330(,\250E\260\021\330,/\320/?\270q\300\001\33007\260q\330(/\250q\330$+\250:\260Q\260c\270\021falsenulltrue";
     PyObject *data = NULL;
     CYTHON_UNUSED_VAR(__Pyx_DecompressString);
     #endif

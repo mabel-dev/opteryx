@@ -14,7 +14,7 @@ except Exception:
     pass
 
 import pytest
-import rugo.jsonl as rj
+import opteryx.rugo.jsonl as rj
 
 # Helper function to convert draken vectors to lists for comparison
 def vector_to_list(vec):

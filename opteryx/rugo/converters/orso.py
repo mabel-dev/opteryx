@@ -280,7 +280,7 @@ def jsonl_to_orso_schema(
     Convert JSON lines schema to an orso RelationSchema.
 
     Args:
-        jsonl_schema: The schema list returned by rugo.jsonl.get_jsonl_schema()
+        jsonl_schema: The schema list returned by opteryx.rugo.jsonl.get_jsonl_schema()
         schema_name: Name for the resulting schema (default: "jsonl_schema")
 
     Returns:

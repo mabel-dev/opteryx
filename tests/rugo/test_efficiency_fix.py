@@ -2,7 +2,7 @@
 Comprehensive test demonstrating the efficiency fix for type detection.
 Shows that type is determined per-column, not per-value.
 """
-import rugo.jsonl as jsonl
+import opteryx.rugo.jsonl as jsonl
 
 print("="*70)
 print("JSONL TYPE DETECTION EFFICIENCY FIX - DEMONSTRATION")

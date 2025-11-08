@@ -1,7 +1,7 @@
 """
 Test to verify that strings starting with '[' are not incorrectly parsed as arrays
 """
-import rugo.jsonl as jsonl
+import opteryx.rugo.jsonl as jsonl
 
 # Create test data with a string column that starts with '['
 test_data = b'''{"id": 1, "message": "[210105] NY Update!", "tags": ["news", "update"]}

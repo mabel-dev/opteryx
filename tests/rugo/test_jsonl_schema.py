@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-import rugo.jsonl as rj
+import opteryx.rugo.jsonl as rj
 
 def test_get_schema_basic():
     """Test schema extraction from basic JSON lines data."""

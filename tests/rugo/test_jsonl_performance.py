@@ -12,7 +12,7 @@ try:
 except ImportError:
     HAS_PYARROW = False
 
-import rugo.jsonl as rj
+import opteryx.rugo.jsonl as rj
 
 
 def generate_test_data(num_rows=10000):

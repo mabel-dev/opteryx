@@ -196,3 +196,7 @@ opteryx/third_party/ulfjack/ryu.c
 opteryx/compiled/joins/joins.pyx
 pyiceberg_catalog.db
 opteryx/compiled/joins/joins.h
+testdata/parquet_tests/185d5a679a475304.parquet
+testdata/parquet_tests/42004e494300.parquet
+testdata/parquet_tests/hits_51.parquet
+.gitignore

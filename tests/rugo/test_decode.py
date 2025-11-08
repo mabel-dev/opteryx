@@ -4,42 +4,42 @@ Tests for Parquet data decoding functionality.
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pytest
 
-import rugo.parquet as rp
+import opteryx.rugo.parquet as rp
 
 
 def test_can_decode_uncompressed_plain():
     """Test that can_decode returns True for uncompressed PLAIN-encoded files."""
     # The binary.parquet file has uncompressed, PLAIN-encoded byte_array columns
-    assert rp.can_decode('tests/data/binary.parquet') is True
+    assert rp.can_decode('testdata/parquet_tests/binary.parquet') is True
 
 
 def test_can_decode_compressed():
     """Test that can_decode returns True for SNAPPY compressed files."""
     # The snappy_compressed.parquet file uses SNAPPY compression with PLAIN encoding
     # SNAPPY compression is supported by our decoder
-    assert rp.can_decode('tests/data/snappy_compressed.parquet') is True
+    assert rp.can_decode('testdata/parquet_tests/snappy_compressed.parquet') is True
 
 
 def test_can_decode_dictionary_encoded():
     """Test that can_decode returns True for files with dictionary encoding."""
     # The dictionary_encoded.parquet file uses SNAPPY compression with RLE_DICTIONARY encoding
     # Both SNAPPY and RLE_DICTIONARY are supported
-    assert rp.can_decode('tests/data/dictionary_encoded.parquet') is True
+    assert rp.can_decode('testdata/parquet_tests/dictionary_encoded.parquet') is True
 
 
 def test_can_decode_unsupported_types():
     """Test that can_decode returns False for files with unsupported types."""
     # The alltypes_plain.parquet has boolean, float, etc. which are not supported
-    assert rp.can_decode('tests/data/alltypes_plain.parquet') is False
+    assert rp.can_decode('testdata/parquet_tests/alltypes_plain.parquet') is False
 
 
 def test_decode_string_column():
     """Test decoding a string column from binary.parquet."""
-    with open('tests/data/binary.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/binary.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['foo'])
@@ -56,7 +56,7 @@ def test_decode_string_column():
 
 def test_decode_nonexistent_column():
     """Test that decoding a non-existent column returns None in the data."""
-    with open('tests/data/binary.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/binary.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['nonexistent'])
@@ -70,7 +70,7 @@ def test_decode_compressed_column():
     """Test that decoding a column with unsupported encoding returns None in the data."""
     # planets.parquet uses DELTA_BYTE_ARRAY encoding
     # We don't support DELTA_BYTE_ARRAY for decoding yet
-    with open('tests/data/planets.parquet', 'rb') as f:
+    with open('testdata/planets/planets.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['name'])
@@ -82,7 +82,7 @@ def test_decode_compressed_column():
 
 def test_decode_int32_column():
     """Test decoding an int32 column."""
-    with open('tests/data/test_decode.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/test_decode.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['int32_col'])
@@ -97,7 +97,7 @@ def test_decode_int32_column():
 
 def test_decode_int64_column():
     """Test decoding an int64 column."""
-    with open('tests/data/test_decode.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/test_decode.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['int64_col'])
@@ -112,7 +112,7 @@ def test_decode_int64_column():
 
 def test_decode_string_column_types():
     """Test decoding a string column."""
-    with open('tests/data/test_decode.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/test_decode.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['string_col'])
@@ -127,13 +127,13 @@ def test_decode_string_column_types():
 
 def test_can_decode_test_file():
     """Test that can_decode works for test_decode.parquet."""
-    assert rp.can_decode('tests/data/test_decode.parquet') is True
+    assert rp.can_decode('testdata/parquet_tests/test_decode.parquet') is True
 
 
 def test_decode_snappy_compressed_column():
     """Test decoding a column from a SNAPPY compressed file."""
     # snappy_compressed.parquet has SNAPPY compression with PLAIN encoding
-    with open('tests/data/snappy_compressed.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/snappy_compressed.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['id'])
@@ -150,7 +150,7 @@ def test_decode_snappy_compressed_column():
 def test_decode_dictionary_encoded_column():
     """Test decoding a dictionary-encoded column."""
     # dictionary_encoded.parquet has RLE_DICTIONARY encoding
-    with open('tests/data/dictionary_encoded.parquet', 'rb') as f:
+    with open('testdata/parquet_tests/dictionary_encoded.parquet', 'rb') as f:
         file_data = f.read()
     
     result = rp.read_parquet(file_data, ['category'])

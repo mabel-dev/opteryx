@@ -1,1 +1,10 @@
-{"role":"restricted", "permission": "READ", "table": "opteryx.*"}
+{"role": "restricted", "permission": "READ", "table": "opteryx.*"}
+{"role": "data_analyst", "permission": "READ", "table": "opteryx.*"}
+{"role": "data_analyst", "permission": "READ", "table": "gs://*"}
+{"role": "data_engineer", "permission": "READ", "table": "opteryx.*"}
+{"role": "data_engineer", "permission": "READ", "table": "file://*"}
+{"role": "data_engineer", "permission": "READ", "table": "gs://*"}
+{"role": "data_engineer", "permission": "READ", "table": "s3://*"}
+{"role": "cloud_only", "permission": "READ", "table": "gs://*"}
+{"role": "cloud_only", "permission": "READ", "table": "s3://*"}
+{"role": "project_team", "permission": "READ", "table": "gs://project-bucket/*"}

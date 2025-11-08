@@ -9,16 +9,16 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from rugo import parquet
+from opteryx.rugo import parquet
 
 # Try to import orso components
 try:
     from orso.schema import RelationSchema
     from orso.types import OrsoTypes
 
-    from rugo.converters.orso import _map_parquet_type_to_orso
-    from rugo.converters.orso import extract_schema_only
-    from rugo.converters.orso import rugo_to_orso_schema
+    from opteryx.rugo.converters.orso import _map_parquet_type_to_orso
+    from opteryx.rugo.converters.orso import extract_schema_only
+    from opteryx.rugo.converters.orso import rugo_to_orso_schema
     ORSO_AVAILABLE = True
 except ImportError:
     ORSO_AVAILABLE = False
