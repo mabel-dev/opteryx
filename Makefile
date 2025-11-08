@@ -98,7 +98,7 @@ test: dev-install ## Run full test suite
 	$(call print_blue,"Running full test suite...")
 	@$(PIP) install --upgrade pytest pytest-xdist
 	@clear
-	@MANUAL_TEST=1 $(PYTEST) -n 2 --color=yes
+	@MANUAL_TEST=1 $(PYTEST) -n auto --color=yes
 
 test-quick: ## Run quick test (alias: t)
 	@clear

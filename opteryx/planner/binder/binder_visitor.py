@@ -497,6 +497,9 @@ class BinderVisitor:
             ]
             schema = RelationSchema(name=relation_name, columns=[c.schema_column for c in columns])
             context.schemas[relation_name] = schema
+            # ensure origin is set so later passes (projection pushdown, etc.)
+            for column in schema.columns:
+                column.origin = [relation_name]
             node.columns = columns
             node.schema = schema
         elif node.function == "GENERATE_SERIES":
@@ -531,6 +534,10 @@ class BinderVisitor:
                 columns=[c.schema_column for c in columns],
             )
             context.schemas[node.relation_name] = schema
+            # tag generated columns with their origin relation name so downstream
+            # binder/optimizer logic can detect their source
+            for column in schema.columns:
+                column.origin = [node.relation_name]
             node.columns = columns
             node.schema = schema
         elif node.function == "HTTP":
@@ -762,6 +769,8 @@ class BinderVisitor:
             from opteryx.exceptions import SqlError
 
             raise SqlError("INNER and NATURAL joins must have a either an ON or USING condition.")
+
+        node.schemas = context.schemas
 
         return node, context
 

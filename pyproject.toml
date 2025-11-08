@@ -1,6 +1,6 @@
 [project]
 name = "opteryx"
-version = "0.26.2-beta.1742"
+version = "0.26.2-beta.1745"
 description = "Query your data, where it lives"
 requires-python = '>=3.11'
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -95,3 +95,9 @@ directory = "coverage_html_report"  # Output directory for HTML reports
 
 [tool.coverage.xml]
 output = "coverage.xml"  # XML output (useful for CI)
+
+[tool.pytest.ini_options]
+# Exclude scratch directory - contains debugging scripts, not actual tests
+# These files run queries at module import time, slowing collection by 2+ minutes!
+testpaths = ["tests"]
+norecursedirs = ["scratch", ".*", "build", "dist", "tmp", "third_party"]

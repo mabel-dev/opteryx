@@ -46,7 +46,8 @@ def right_join(
     left_columns: List[str],
     right_columns: List[str],
     left_hash,
-    filter_index
+    filter_index,
+    columns=None
 ):
     """
     Perform a RIGHT JOIN.
@@ -60,6 +61,7 @@ def right_join(
         right_relation (pyarrow.Table): The right pyarrow.Table to join.
         left_columns (list of str): Column names from the left table to join on.
         right_columns (list of str): Column names from the right table to join on.
+        columns (list of str, optional): Columns to include in the result. If None, all columns are included.
 
     Yields:
         pyarrow.Table: A chunk of the result of the RIGHT JOIN operation.

@@ -41,6 +41,7 @@ def left_join(
     right_columns: List[str],
     filter_index,
     left_hash,
+    columns=None,
 ):
     """
     Perform a LEFT OUTER JOIN using a prebuilt hash map and optional filter.
@@ -112,7 +113,12 @@ def left_join(
 
 
 def full_join(
-    left_relation, right_relation, left_columns: List[str], right_columns: List[str], **kwargs
+    left_relation,
+    right_relation,
+    left_columns: List[str],
+    right_columns: List[str],
+    columns=None,
+    **kwargs,
 ):
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
@@ -157,6 +163,8 @@ class OuterJoinNode(JoinNode):
 
         self.right_columns = parameters.get("right_columns")
         self.right_readers = parameters.get("right_readers")
+
+        self.columns = parameters.get("columns")
 
         self.left_buffer = []
         self.left_buffer_columns = None
@@ -215,14 +223,21 @@ class OuterJoinNode(JoinNode):
 
                 join_provider = providers.get(self.join_type)
 
-                yield from join_provider(
+                for result_table in join_provider(
                     left_relation=self.left_relation,
                     right_relation=right_relation,
                     left_columns=self.left_columns,
                     right_columns=self.right_columns,
                     left_hash=self.left_hash,
                     filter_index=self.filter_index,
-                )
+                    columns=self.columns,
+                ):
+                    # Project down to only the needed columns if specified
+                    if self.columns is not None:
+                        candidates = [c.schema_column.identity for c in self.columns]
+                        keep_columns = [c for c in candidates if c in result_table.schema.names]
+                        result_table = result_table.select(keep_columns)
+                    yield result_table
                 yield EOS
 
             else:
