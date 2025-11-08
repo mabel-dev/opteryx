@@ -8,14 +8,12 @@ The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
 
-import importlib
 import os
 import threading
 import time
 from concurrent.futures import FIRST_COMPLETED
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
-from functools import lru_cache
 from typing import Dict
 from typing import List
 
@@ -37,11 +35,6 @@ from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
-
-
-@lru_cache(maxsize=1)
-def _get_disk_reader_module():
-    return importlib.import_module("opteryx.compiled.io.disk_reader")
 
 
 class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
@@ -127,8 +120,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             OSError:
                 If an I/O error occurs while reading the file.
         """
-        disk_reader = _get_disk_reader_module()
-        read_file_mmap = disk_reader.read_file_mmap
+        from opteryx.compiled.io.disk_reader import read_file_mmap
 
         # from opteryx.compiled.io.disk_reader import unmap_memory
         # Read using mmap for maximum speed
@@ -177,13 +169,10 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             A list of blob filenames.
         """
         # only fetch once per prefix (partition)
+        from opteryx.compiled.io.disk_reader import list_files
+
         if prefix in self.blob_list:
             return self.blob_list[prefix]
-
-        disk_reader = _get_disk_reader_module()
-        list_files = getattr(disk_reader, "list_files", None)
-        if list_files is None:
-            raise RuntimeError("Compiled disk reader missing list_files helper")
 
         target = os.path.normpath(prefix)
         try:
@@ -347,9 +336,6 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
 
                     if remaining_rows <= 0:
                         break
-
-        # column-level statistics are recorded by the read node after morsels
-        # leave connector-level accounting to avoid double counting
 
     def _read_blob_task(self, blob_name: str, columns, predicates):
         decoder = get_decoder(blob_name)

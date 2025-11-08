@@ -623,18 +623,11 @@ def create_node_relation(relation: dict):
             if "Values" not in subquery["subquery"]["body"]:
                 # SUBQUERY nodes wrap other queries and the result is available as a relation in
                 # the parent query.
-                #
-                # We have the name of the relation (alias), the query is added as a query plan to
-                # the parent plan.
-                if subquery["alias"] is None:
-                    from opteryx.exceptions import UnnamedSubqueryError
-
-                    raise UnnamedSubqueryError(
-                        "Ensure you provide a name for all subqueries in FROM or JOIN clauses by using AS)."
-                    )
-
                 subquery_step = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
-                subquery_step.alias = subquery["alias"]["name"]["value"]
+                if subquery["alias"] is None:
+                    subquery_step.alias = f"$subquery-{random_string(6)}"
+                else:
+                    subquery_step.alias = subquery["alias"]["name"]["value"]
                 step_id = random_string()
                 sub_plan.add_node(step_id, subquery_step)
 
