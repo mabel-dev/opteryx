@@ -9,7 +9,7 @@ is one of the initial targets for fuzzing.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import string
 import pytest
