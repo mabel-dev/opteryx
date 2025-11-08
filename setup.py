@@ -20,10 +20,20 @@ from Cython.Build import cythonize
 from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
+from setuptools.command.build_ext import build_ext as build_ext_orig
 from setuptools_rust import RustExtension
 
 LIBRARY = "opteryx"
 
+class build_ext(build_ext_orig):
+    """Ensure the compiler recognizes vendored assembly sources."""
+
+    def build_extensions(self):
+        if self.compiler:
+            src_exts = self.compiler.src_extensions
+            if ".S" not in src_exts:
+                src_exts.append(".S")
+        super().build_extensions()
 
 def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
@@ -37,8 +47,67 @@ def is_linux():  # pragma: no cover
     return platform.system().lower() == "linux"
 
 
+def detect_target_machine():
+    """Detect the target architecture. Prefer environment variables set by
+    cibuildwheel or CI (CIBW_ARCHS, CIBW_ARCH, CIBW_BUILD) and fall back to the
+    local platform.machine(). This avoids adding flags for the host arch when
+    cross-building inside manylinux containers or emulators.
+    """
+    # Prefer cibuildwheel environment vars which specify target arches
+    for key in ("CIBW_ARCHS", "CIBW_ARCH", "CIBW_BUILD"):
+        val = os.environ.get(key)
+        if not val:
+            continue
+        s = val.lower()
+        if "aarch64" in s or "arm64" in s:
+            return "aarch64"
+        if "x86_64" in s or "amd64" in s or "x86" in s:
+            return "x86_64"
+    # Fallback to the runtime platform machine
+    return platform.machine().lower()
+
+
 REQUESTED_COMMANDS = {arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith("-")}
 SHOULD_BUILD_EXTENSIONS = "clean" not in REQUESTED_COMMANDS
+RUGO_PARQUET = "third_party/mabel/rugo/parquet"
+RUGO_JSONL = "third_party/mabel/rugo/jsonl"
+
+def get_parquet_vendor_sources():
+    """Get vendored compression library sources"""
+    vendor_sources = []
+    
+    # Snappy sources (minimal set for decompression only) - these are C++
+    snappy_sources = [
+        f"{RUGO_PARQUET}/vendor/snappy/snappy.cc",
+        f"{RUGO_PARQUET}/vendor/snappy/snappy-sinksource.cc", 
+        f"{RUGO_PARQUET}/vendor/snappy/snappy-stubs-internal.cc"
+    ]
+    vendor_sources.extend(snappy_sources)
+    
+    # Zstd sources (decompression modules only) - compiled as C++
+    zstd_sources = [
+        # Common modules
+        f"{RUGO_PARQUET}/vendor/zstd/common/entropy_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/fse_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/zstd_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/xxhash.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/error_private.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress_block.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_ddict.cpp"
+    ]
+
+    machine_ = detect_target_machine()
+    if machine_ in ("x86_64", "amd64"):
+        # BMI2-enabled builds expect this ASM fast path to be present on x86-64.
+        zstd_sources.append(f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress_amd64.S")
+
+    vendor_sources.extend(zstd_sources)
+    
+    return vendor_sources
+
+
 
 if not SHOULD_BUILD_EXTENSIONS:
     REQUESTED_DISPLAY = ", ".join(sorted(REQUESTED_COMMANDS)) or "<none>"
@@ -66,6 +135,15 @@ if SHOULD_BUILD_EXTENSIONS:
     ]
     C_COMPILE_FLAGS.extend(COMMON_WARNING_SUPPRESSIONS)
     CPP_COMPILE_FLAGS.extend(COMMON_WARNING_SUPPRESSIONS)
+
+    # JSON lines reader extension with SIMD optimizations
+    JSONL_COMPILE_FLAGS = CPP_COMPILE_FLAGS.copy()
+    # Add SIMD flags based on architecture
+    machine_ = detect_target_machine()
+    if machine_ in ("x86_64", "amd64"):
+        # x86-64: Add SSE4.2 and AVX2 flags
+        CPP_COMPILE_FLAGS.extend(["-msse4.2", "-mavx2"])
+
 
     # Dynamically get the default include paths
     include_dirs = [numpy.get_include(), "src/cpp", "src/c"]
@@ -177,6 +255,46 @@ if SHOULD_BUILD_EXTENSIONS:
             include_dirs=include_dirs + ["third_party/ulfjack/ryu"],
             extra_compile_args=C_COMPILE_FLAGS,
             extra_link_args=["-Lthird_party/ulfjack/ryu"],
+        ),
+        Extension(
+                "opteryx.rugo.parquet",
+                sources=[
+                    f"{RUGO_PARQUET}/parquet_reader.pyx",
+                    f"{RUGO_PARQUET}/metadata.cpp",
+                    f"{RUGO_PARQUET}/bloom_filter.cpp",
+                    f"{RUGO_PARQUET}/decode.cpp",
+                    f"{RUGO_PARQUET}/compression.cpp",
+                ] + get_parquet_vendor_sources(),  # ADD: vendored compression libraries
+                include_dirs=[
+                    f"{RUGO_PARQUET}/vendor/snappy",      # Snappy headers
+                    f"{RUGO_PARQUET}/vendor/zstd",        # Zstd main header
+                    f"{RUGO_PARQUET}/vendor/zstd/common", # Zstd common headers
+                    f"{RUGO_PARQUET}/vendor/zstd/decompress" # Zstd decompress headers
+                ],
+                define_macros=[
+                    ("HAVE_SNAPPY", "1"),
+                    ("HAVE_ZSTD", "1"),
+                    ("ZSTD_STATIC_LINKING_ONLY", "1")  # Enable zstd static linking
+                ],
+                language="c++",
+                extra_compile_args=CPP_COMPILE_FLAGS,
+                extra_link_args=[],
+        ),
+        Extension(
+                "opteryx.rugo.jsonl",
+                sources=[
+                    f"{RUGO_JSONL}/jsonl_reader.pyx",
+                    f"{RUGO_JSONL}/decode.cpp",
+                    f"{RUGO_JSONL}/simdjson_wrapper.cpp",
+                ],
+                include_dirs=[
+                    f"{RUGO_JSONL}",
+                    f"{RUGO_JSONL}/vendor/simdjson/include",
+                    f"{RUGO_JSONL}/vendor/simdjson",
+                ],
+                language="c++",
+                extra_compile_args=JSONL_COMPILE_FLAGS,
+                extra_link_args=[],
         ),
         Extension(
             name="opteryx.compiled.functions.strings",
@@ -465,6 +583,7 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
         "package_data": {
             "": ["*.pyx", "*.pxd"],
         },
+        "cmdclass": {"build_ext": build_ext},
     }
 
     rust_build(setup_config)
