@@ -47,7 +47,6 @@ Exception
                  ├── IncompatibleTypesError
                  ├── UnexpectedDatasetReferenceError
                  ├── UnnamedColumnError
-                 ├── UnnamedSubqueryError
                  ├── UnsupportedSyntaxError
                  └── VariableNotFoundError
 """
@@ -387,10 +386,6 @@ class EmptyDatasetError(DataError):
             f"The requested dataset, '{dataset}', was found, but there was no valid partition."
         )
         super().__init__(message)
-
-
-class UnnamedSubqueryError(SqlError):
-    """Exception raised for unnamed subqueries."""
 
 
 class UnnamedColumnError(SqlError):
