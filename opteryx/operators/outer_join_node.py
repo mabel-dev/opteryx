@@ -113,7 +113,12 @@ def left_join(
 
 
 def full_join(
-    left_relation, right_relation, left_columns: List[str], right_columns: List[str], columns=None, **kwargs
+    left_relation,
+    right_relation,
+    left_columns: List[str],
+    right_columns: List[str],
+    columns=None,
+    **kwargs,
 ):
     hash_table = HashTable()
     non_null_right_values = right_relation.select(right_columns).itercolumns()
