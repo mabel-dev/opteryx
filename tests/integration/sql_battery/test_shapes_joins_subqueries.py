@@ -50,7 +50,6 @@ from opteryx.exceptions import (
     SqlError,
     UnexpectedDatasetReferenceError,
     UnnamedColumnError,
-    UnnamedSubqueryError,
     UnsupportedSyntaxError,
     VariableNotFoundError,
 )

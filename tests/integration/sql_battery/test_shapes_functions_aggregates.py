@@ -50,7 +50,6 @@ from opteryx.exceptions import (
     SqlError,
     UnexpectedDatasetReferenceError,
     UnnamedColumnError,
-    UnnamedSubqueryError,
     UnsupportedSyntaxError,
     VariableNotFoundError,
 )
@@ -260,8 +259,8 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v) AS S;", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", None, None, UnnamedSubqueryError),  
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 9, 20, None),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 9, 20, None),
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 9, 20, None),
         # [#646] Incorrectly placed temporal clauses
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", 9, 1, InvalidTemporalRangeFilterError),
