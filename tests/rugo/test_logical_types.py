@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from rugo import parquet
+from opteryx.rugo import parquet
 
 # these are specific to the test files only
 EQUIVALENT_TYPES = {

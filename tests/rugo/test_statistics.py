@@ -9,7 +9,7 @@ import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from rugo import parquet
+from opteryx.rugo import parquet
 
 FILES = glob.glob("tests/data/*.parquet")
 
