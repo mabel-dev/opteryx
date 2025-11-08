@@ -98,12 +98,16 @@ def render_difference(_: LogicalPlanNode) -> str:
 @register_render(LogicalPlanStepType.Join)
 def render_join(node: LogicalPlanNode) -> str:
     join_type = node.type.upper()
+    cols = ""
+    if node.columns:
+        cols = ", ".join(format_expression(col) for col in node.columns)
+        cols = f" [{cols}]"
     if node.on:
-        return f"{join_type} JOIN ({format_expression(node.on, True)})"
+        return f"{join_type} JOIN ({format_expression(node.on, True)}){cols}"
     if node.using:
         using = ",".join(map(format_expression, node.using))
-        return f"{join_type} JOIN (USING {using})"
-    return f"{join_type} JOIN"
+        return f"{join_type} JOIN (USING {using}){cols}"
+    return f"{join_type} JOIN{cols}"
 
 
 @register_render(LogicalPlanStepType.Unnest)

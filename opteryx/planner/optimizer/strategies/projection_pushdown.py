@@ -97,6 +97,26 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             # Update the node with the pushed columns
             node.columns = node_columns
 
+        if node.node_type == LogicalPlanStepType.Join:
+            node_columns = []
+
+            for schema in node.schemas.values():
+                node_columns.extend(
+                    [
+                        LogicalColumn(
+                            node_type=NodeType.IDENTIFIER,
+                            source_column=col.name,
+                            source=col.origin[0],
+                            schema_column=col,
+                        )
+                        for col in schema.columns
+                        if col.identity in node.pre_update_columns
+                    ]
+                )
+
+            # Update the node with the pushed columns
+            node.columns = node_columns
+
         context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
         if context.parent_nid:
             context.optimized_plan.add_edge(context.node_id, context.parent_nid)

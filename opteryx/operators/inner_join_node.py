@@ -51,6 +51,8 @@ class InnerJoinNode(JoinNode):
         self.left_hash = None
         self.left_filter = None
 
+        self.columns = parameters.get("columns")
+
         self.lock = Lock()
 
     @property
@@ -78,8 +80,7 @@ class InnerJoinNode(JoinNode):
                     )
 
                     # If the left side is small enough to quickly build a bloom filter, do that.
-                    # - We use 1m + 1 as the upper limit to catch LIMIT on 1m rows
-                    # The bloom filter has a 16m variation coded, but so far it's not fast enough.
+                    # - We use 16m + 1 as the upper limit to catch LIMIT on 16m rows
                     if self.left_relation.num_rows < 16_000_001:
                         start = time.monotonic_ns()
                         self.left_filter = create_bloom_filter(
@@ -89,6 +90,14 @@ class InnerJoinNode(JoinNode):
                             "time_build_bloom_filter", time.monotonic_ns() - start
                         )
                         self.statistics.increase("feature_bloom_filter", 1)
+
+                    # Project the left relation down to only the columns we need in the
+                    # resulting morsel. This reduces the amount of data we keep in memory
+                    # and pass through the align steps.
+                    if self.columns is not None:
+                        candidates = [c.schema_column.identity for c in self.columns]
+                        left_keep = [c for c in candidates if c in self.left_relation.schema.names]
+                        self.left_relation = self.left_relation.select(left_keep)
                 else:
                     if self.left_buffer_columns is None:
                         self.left_buffer_columns = morsel.schema.names
@@ -144,6 +153,15 @@ class InnerJoinNode(JoinNode):
                 self.statistics.increase("time_inner_join_indices", materialize_time)
                 self.statistics.increase("rows_inner_join_matched", matched_rows)
                 start = time.monotonic_ns()
+
+                # Project the right relation down to only the columns we need in the
+                # resulting morsel. This reduces the amount of data we keep in memory
+                # and pass through the align steps.
+                if self.columns is not None:
+                    candidates = [c.schema_column.identity for c in self.columns]
+                    right_keep = [c for c in candidates if c in morsel.schema.names]
+                    morsel = morsel.select(right_keep)
+
                 aligned = align_tables(morsel, self.left_relation, right_indicies, left_indicies)
                 self.statistics.increase("time_inner_join_align", time.monotonic_ns() - start)
 

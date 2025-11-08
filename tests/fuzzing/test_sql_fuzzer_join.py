@@ -122,54 +122,75 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
 from opteryx import virtual_datasets
 from tests import set_up_iceberg
 
-catalog = set_up_iceberg()
+# Lazy-load the catalog to avoid expensive setup during test collection
+_catalog = None
+_tables_cache = None
 
-TABLES = [
-    {
-        "name": "iceberg.planets",
-        "fields": IcebergConnector(dataset="iceberg.planets", statistics=None, catalog=catalog).get_dataset_schema().columns,
-    },
-    {
-        "name": "iceberg.satellites",
-        "fields": IcebergConnector(dataset="iceberg.satellites", statistics=None, catalog=catalog).get_dataset_schema().columns,
-    },
-    {
-        "name": "iceberg.astronauts",
-        "fields": IcebergConnector(dataset="iceberg.astronauts", statistics=None, catalog=catalog).get_dataset_schema().columns,
-    },
-    {
-        "name": "iceberg.missions",
-        "fields": IcebergConnector(dataset="iceberg.missions", statistics=None, catalog=catalog).get_dataset_schema().columns,
-    },
-    {
-        "name": virtual_datasets.planets.schema().name,
-        "fields": virtual_datasets.planets.schema().columns,
-    },
-    {
-        "name": virtual_datasets.satellites.schema().name,
-        "fields": virtual_datasets.satellites.schema().columns,
-    },
-    {
-        "name": virtual_datasets.astronauts.schema().name,
-        "fields": virtual_datasets.astronauts.schema().columns,
-    },
-    {
-        "name": virtual_datasets.missions.schema().name,
-        "fields": virtual_datasets.missions.schema().columns,
-    },
-    {
-        "name": "testdata.planets",
-        "fields": FileConnector(dataset="testdata/planets/planets.parquet", statistics=None).get_dataset_schema().columns,
-    },
-    {
-        "name": "testdata.satellites",
-        "fields": FileConnector(dataset="testdata/satellites/satellites.parquet", statistics=None).get_dataset_schema().columns,
-    },
-    {
-        "name": "testdata.missions",
-        "fields": FileConnector(dataset="testdata/missions/space_missions.parquet", statistics=None).get_dataset_schema().columns,
-    },
-]
+def get_iceberg_tables():
+    """Lazy initialization of Iceberg tables to avoid memory spike during test collection"""
+    global _catalog, _tables_cache
+    if _tables_cache is not None:
+        return _tables_cache
+    
+    _catalog = set_up_iceberg()
+    _tables_cache = [
+        {
+            "name": "iceberg.planets",
+            "fields": IcebergConnector(dataset="iceberg.planets", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+        },
+        {
+            "name": "iceberg.satellites",
+            "fields": IcebergConnector(dataset="iceberg.satellites", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+        },
+        {
+            "name": "iceberg.astronauts",
+            "fields": IcebergConnector(dataset="iceberg.astronauts", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+        },
+        {
+            "name": "iceberg.missions",
+            "fields": IcebergConnector(dataset="iceberg.missions", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+        },
+        {
+            "name": virtual_datasets.planets.schema().name,
+            "fields": virtual_datasets.planets.schema().columns,
+        },
+        {
+            "name": virtual_datasets.satellites.schema().name,
+            "fields": virtual_datasets.satellites.schema().columns,
+        },
+        {
+            "name": virtual_datasets.astronauts.schema().name,
+            "fields": virtual_datasets.astronauts.schema().columns,
+        },
+        {
+            "name": virtual_datasets.missions.schema().name,
+            "fields": virtual_datasets.missions.schema().columns,
+        },
+        {
+            "name": "testdata.planets",
+            "fields": FileConnector(dataset="testdata/planets/planets.parquet", statistics=None).get_dataset_schema().columns,
+        },
+        {
+            "name": "testdata.satellites",
+            "fields": FileConnector(dataset="testdata/satellites/satellites.parquet", statistics=None).get_dataset_schema().columns,
+        },
+        {
+            "name": "testdata.missions",
+            "fields": FileConnector(dataset="testdata/missions/space_missions.parquet", statistics=None).get_dataset_schema().columns,
+        },
+    ]
+    return _tables_cache
+
+# Keep old TABLES reference for compatibility but make it lazy
+class LazyTables:
+    def __getitem__(self, key):
+        return get_iceberg_tables()[key]
+    def __iter__(self):
+        return iter(get_iceberg_tables())
+    def __len__(self):
+        return len(get_iceberg_tables())
+
+TABLES = LazyTables()
 
 TEST_CYCLES: int = 10
 

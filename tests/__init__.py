@@ -605,7 +605,6 @@ INSERT INTO struct_tests VALUES
 
 """
 
-@lru_cache_with_expiry
 def create_duck_db():  # pragma: no cover
     """
     The DuckDB file format isn't stable, so ust create it anew each time and
@@ -631,7 +630,6 @@ def create_duck_db():  # pragma: no cover
     finally:
         cur.close()
 
-@lru_cache_with_expiry
 def populate_mongo():  # pragma: no cover
 
     MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
@@ -744,8 +742,13 @@ def set_up_iceberg():
         table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
         table.append(data)
 
+        # Verify row count without loading full result set into memory
+        expected_rows = data.num_rows
+        del data  # Free memory immediately
+        
         iceberged = opteryx.query(f"SELECT * FROM iceberg.{dataset}")
-        assert iceberged.rowcount == data.num_rows
+        assert iceberged.rowcount == expected_rows
+        del iceberged  # Free memory immediately
 
 
     return catalog
