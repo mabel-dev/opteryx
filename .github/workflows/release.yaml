@@ -40,6 +40,39 @@ jobs:
           name: dist-linux-${{ matrix.python-version }}
           path: io/dist/*manylinux2014_x86_64*.whl
 
+  build-manylinux-arm64:
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.1.7
+        with:
+          path: io
+
+      - name: Set permissions for build-wheels.sh
+        run: chmod +x io/dev/build-wheels.sh
+
+      - name: Build Wheels
+        run: >
+          docker run --rm
+          -e PLAT=manylinux2014_aarch64
+          -e PACKAGE_NAME=opteryx
+          -e PYTHON_VERSION=${{ matrix.python-version }}
+          -v `pwd`:/io
+          --workdir /io
+          quay.io/pypa/manylinux2014_aarch64
+          io/dev/build-wheels.sh
+
+      - name: Archive Wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux-arm64-${{ matrix.python-version }}
+          path: io/dist/*manylinux2014_aarch64*.whl
+
   build-macos:
     runs-on: macos-latest
     strategy:
@@ -121,7 +154,7 @@ jobs:
           path: dist
 
   upload:
-    needs: [build-manylinux, build-macos]
+    needs: [build-manylinux, build-manylinux-arm64, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -167,6 +200,34 @@ jobs:
           name: dist-linux-3.13
           path: dist-linux-3.13
       - run: mv -v dist-linux-3.13/* dist/
+
+      - name: Stage linux ARM64 3.10
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-linux-arm64-3.10
+          path: dist-linux-arm64-3.10
+      - run: mv -v dist-linux-arm64-3.10/* dist/
+
+      - name: Stage linux ARM64 3.11
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-linux-arm64-3.11
+          path: dist-linux-arm64-3.11
+      - run: mv -v dist-linux-arm64-3.11/* dist/
+
+      - name: Stage linux ARM64 3.12
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-linux-arm64-3.12
+          path: dist-linux-arm64-3.12
+      - run: mv -v dist-linux-arm64-3.12/* dist/
+
+      - name: Stage linux ARM64 3.13
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: dist-linux-arm64-3.13
+          path: dist-linux-arm64-3.13
+      - run: mv -v dist-linux-arm64-3.13/* dist/
 
       - name: Stage macos 3.9
         uses: actions/download-artifact@v4.1.7
