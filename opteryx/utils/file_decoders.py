@@ -17,18 +17,18 @@ from typing import Tuple
 from typing import Union
 
 import pyarrow
-import rugo.parquet as parquet_meta
 from orso.tools import random_string
 from orso.types import OrsoTypes
 from pyarrow import parquet
-from rugo.converters.orso import rugo_to_orso_schema
 
+import opteryx.rugo.parquet as parquet_meta
 from opteryx.compiled.structures.memory_view_stream import MemoryViewStream
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import RelationStatistics
+from opteryx.rugo.converters.orso import rugo_to_orso_schema
 from opteryx.utils.arrow import post_read_projector
 
 

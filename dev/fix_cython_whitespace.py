@@ -54,7 +54,10 @@ def main():
             print(f"Fixed: {filepath.relative_to(root)}")
             modified_count += 1
     
-    print(f"\nFixed {modified_count} file(s)")
+    if modified_count == 0:
+        print("No files needed fixing")
+    else:
+        print(f"\nFixed {modified_count} file(s)")
 
 
 if __name__ == '__main__':
