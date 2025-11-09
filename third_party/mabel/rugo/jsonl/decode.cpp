@@ -8,7 +8,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <unordered_set>
-#include "vendor/fast_float/fast_float.h"
+#include "fast_float/fast_float.h"
 
 // Fast JSON parser optimized for JSON lines format
 class JsonParser {

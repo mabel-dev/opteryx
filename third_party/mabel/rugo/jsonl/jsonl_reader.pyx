@@ -437,7 +437,7 @@ def read_jsonl(data, columns=None, parse_arrays=True, parse_objects=True):
 
                 if parse_arrays:
                     # Parse the JSON array into Python list
-                    o_ptr = ParseJsonSliceToPyObject(<const uint8_t*>raw.data(), raw.size(), True)
+                    o_ptr = ParseJsonSliceToPyObject(<const uint8_t*>raw.data(), raw.size(), parse_objects)
                     if o_ptr != NULL:
                         o = <object>o_ptr
                         # If element type is bytes, or unspecified but the parsed
@@ -506,7 +506,7 @@ def read_jsonl(data, columns=None, parse_arrays=True, parse_objects=True):
                     # This is an array in a mixed column
                     if parse_arrays:
                         # Parse as array into Python list
-                        o_ptr = ParseJsonSliceToPyObject(<const uint8_t*>raw.data(), raw.size(), True)
+                        o_ptr = ParseJsonSliceToPyObject(<const uint8_t*>raw.data(), raw.size(), parse_objects)
                         if o_ptr != NULL:
                             o = <object>o_ptr
                             py_list.append(o)
