@@ -1,31 +1,29 @@
 #include "simdjson_wrapper.hpp"
 
-// Look for the vendored single-header under the include path (setup.py adds the vendor include dir).
-#ifdef __has_include
-# if __has_include(<simdjson/simdjson.h>)
-#  include <simdjson/simdjson.h>
-#  define RUGO_HAVE_SIMDJSON 1
-# endif
-#endif
+// Use the consolidated simdjson from third_party/tktech/simdjson
+#include "simdjson.h"
 
-#ifdef RUGO_HAVE_SIMDJSON
 using namespace simdjson;
 
 // Helper to convert simdjson::ondemand::value to PyObject*
-static PyObject* value_to_pyobject(const ondemand::value &v, bool parse_objects) {
-    auto t = v.type();
+static PyObject* value_to_pyobject(ondemand::value v, bool parse_objects) {
+    auto t_result = v.type();
+    if (t_result.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get type"); return nullptr; }
+    auto t = t_result.value();
+    
     switch (t) {
-        case ondemand::json_type::STRING: {
-            std::string s;
-            auto r = v.get(s);
+        case ondemand::json_type::string: {
+            std::string_view sv;
+            auto r = v.get_string();
             if (r.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get string"); return nullptr; }
-            return PyUnicode_FromStringAndSize(s.data(), s.size());
+            sv = r.value();
+            return PyUnicode_FromStringAndSize(sv.data(), sv.size());
         }
-        case ondemand::json_type::NUMBER: {
+        case ondemand::json_type::number: {
             double d;
             auto rr = v.get_double();
             if (rr.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get number"); return nullptr; }
-            d = rr.get();
+            d = rr.value();
             long long ll = (long long)d;
             if ((double)ll == d) {
                 return PyLong_FromLongLong(ll);
@@ -33,46 +31,50 @@ static PyObject* value_to_pyobject(const ondemand::value &v, bool parse_objects)
                 return PyFloat_FromDouble(d);
             }
         }
-        case ondemand::json_type::BOOLEAN: {
+        case ondemand::json_type::boolean: {
             bool b;
-            auto r = v.get_bool().get(b);
+            auto r = v.get_bool();
             if (r.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get boolean"); return nullptr; }
+            b = r.value();
             return PyBool_FromLong(b ? 1 : 0);
         }
-        case ondemand::json_type::NULL_VALUE: {
+        case ondemand::json_type::null: {
             Py_INCREF(Py_None);
             return Py_None;
         }
-        case ondemand::json_type::ARRAY: {
+        case ondemand::json_type::array: {
             ondemand::array arr;
-            auto r = v.get_array().get(arr);
+            auto r = v.get_array();
             if (r.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get array"); return nullptr; }
+            arr = r.value();
             PyObject* list = PyList_New(0);
             if (!list) { PyErr_NoMemory(); return nullptr; }
             for (auto elem : arr) {
-                auto vp = value_to_pyobject(elem, parse_objects);
+                auto vp = value_to_pyobject(elem.value(), parse_objects);
                 if (!vp) { Py_DECREF(list); return nullptr; }
                 if (PyList_Append(list, vp) == -1) { Py_DECREF(vp); Py_DECREF(list); return nullptr; }
                 Py_DECREF(vp);
             }
             return list;
         }
-        case ondemand::json_type::OBJECT: {
+        case ondemand::json_type::object: {
             if (!parse_objects) {
-                std::string s;
-                auto r = v.get_object().get(s);
-                if (r.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get object as bytes"); return nullptr; }
-                return PyBytes_FromStringAndSize(s.data(), s.size());
+                // Use raw_json() on the value directly to get the full JSON representation
+                std::string_view raw_json = v.raw_json();
+                return PyBytes_FromStringAndSize(raw_json.data(), raw_json.size());
             }
             ondemand::object obj;
-            auto r = v.get_object().get(obj);
+            auto r = v.get_object();
             if (r.error()) { PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get object"); return nullptr; }
+            obj = r.value();
             PyObject* dict = PyDict_New();
             if (!dict) { PyErr_NoMemory(); return nullptr; }
             for (auto field : obj) {
-                std::string key;
-                auto kr = field.unescaped_key().get(key);
+                std::string_view key_sv;
+                auto kr = field.unescaped_key();
                 if (kr.error()) { Py_DECREF(dict); PyErr_SetString(PyExc_RuntimeError, "simdjson: failed to get object key"); return nullptr; }
+                key_sv = kr.value();
+                std::string key(key_sv.begin(), key_sv.end());
                 auto val = value_to_pyobject(field.value(), parse_objects);
                 if (!val) { Py_DECREF(dict); return nullptr; }
                 if (PyDict_SetItemString(dict, key.c_str(), val) == -1) { Py_DECREF(val); Py_DECREF(dict); return nullptr; }
@@ -80,6 +82,9 @@ static PyObject* value_to_pyobject(const ondemand::value &v, bool parse_objects)
             }
             return dict;
         }
+        case ondemand::json_type::unknown:
+            PyErr_SetString(PyExc_RuntimeError, "simdjson wrapper: unknown json type");
+            return nullptr;
     }
     PyErr_SetString(PyExc_RuntimeError, "simdjson wrapper: unhandled json type");
     return nullptr;
@@ -88,8 +93,7 @@ static PyObject* value_to_pyobject(const ondemand::value &v, bool parse_objects)
 extern "C" PyObject* ParseJsonSliceToPyObject(const uint8_t* data, size_t len, bool parse_objects) {
     try {
         ondemand::parser parser;
-        std::string s((const char*)data, len);
-        padded_string ps = padded_string::copy(s);
+        padded_string ps((const char*)data, len);
         ondemand::document doc = parser.iterate(ps);
         ondemand::value v = doc.get_value();
         return value_to_pyobject(v, parse_objects);
@@ -98,12 +102,3 @@ extern "C" PyObject* ParseJsonSliceToPyObject(const uint8_t* data, size_t len, b
         return nullptr;
     }
 }
-
-#else
-// simdjson not available: stub that returns NULL so callers fall back
-extern "C" PyObject* ParseJsonSliceToPyObject(const uint8_t* data, size_t len, bool parse_objects) {
-    (void)data; (void)len; (void)parse_objects;
-    return NULL;
-}
-
-#endif

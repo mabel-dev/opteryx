@@ -286,12 +286,13 @@ if SHOULD_BUILD_EXTENSIONS:
                     f"{RUGO_JSONL}/jsonl_reader.pyx",
                     f"{RUGO_JSONL}/decode.cpp",
                     f"{RUGO_JSONL}/simdjson_wrapper.cpp",
+                    "third_party/tktech/simdjson/simdjson.cpp",  # Consolidated simdjson
                 ],
                 include_dirs=[
                     f"{RUGO_JSONL}",
-                    f"{RUGO_JSONL}/vendor/simdjson/include",
-                    f"{RUGO_JSONL}/vendor/simdjson",
-                ],
+                    "third_party/tktech/simdjson",     # Consolidated simdjson
+                    "third_party/fastfloat",           # Consolidated fast_float
+                ] + include_dirs,
                 language="c++",
                 extra_compile_args=JSONL_COMPILE_FLAGS,
                 extra_link_args=[],
