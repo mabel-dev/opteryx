@@ -6,8 +6,8 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-from draken.vectors.string_vector cimport _StringVectorCIterator, StringElement
-from draken.vectors import string_vector as string_vector_module
+from opteryx.draken.vectors.string_vector cimport _StringVectorCIterator, StringElement
+from opteryx.draken.vectors import string_vector as string_vector_module
 
 from libc.stddef cimport size_t
 from cpython.bytes cimport PyBytes_AsStringAndSize
