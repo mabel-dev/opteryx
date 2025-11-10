@@ -9,7 +9,7 @@ name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pythonize = "0.26"
+pythonize = "0.27"
 serde = "1.0.171"
 regex = "1.10"
 
