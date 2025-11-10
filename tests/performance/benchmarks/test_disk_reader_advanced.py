@@ -8,9 +8,7 @@ import sys
 import tempfile
 import time
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../draken"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../../../orso"))
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../rugo"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 def test_streaming_large_files():

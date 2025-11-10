@@ -16,20 +16,29 @@ a consistent API, even before native implementations are developed.
 
 from __future__ import annotations
 
+import struct
+from array import array
+from typing import TYPE_CHECKING
 from typing import Any
 
-from opteryx.draken._optional import require_pyarrow
 from opteryx.draken.vectors.vector import Vector
+
+if TYPE_CHECKING:
+    import pyarrow
+
+
+NULL_HASH = 0x9E3779B97F4A7C15
 
 
 class ArrowVector(Vector):
     """Fallback Vector implementation backed by a ``pyarrow.Array``."""
 
-    def __init__(self, arr: Any):
-        pa = require_pyarrow("ArrowVector")
-        if not isinstance(arr, pa.Array):
+    def __init__(self, arrow_array: "pyarrow.Array"):
+        import pyarrow as pa
+
+        if not isinstance(arrow_array, pa.Array):
             raise TypeError("ArrowVector requires a pyarrow.Array")
-        self._arr = arr
+        self._arr = arrow_array
         self._pa = pa
         self._pc = pa.compute
 
@@ -107,16 +116,60 @@ class ArrowVector(Vector):
         return self._arr.to_pylist()
 
     def hash(self):
-        # Arrow has experimental hash kernels; fallback: use Python's hash
+        """Return a ``uint64`` memory view consistent with native Draken vectors."""
+        from opteryx.draken.interop.arrow import vector_from_arrow  # type: ignore[attr-defined]
+        from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
+
+        # Prefer native Draken implementations when available.
         try:
-            return self._pc.hash(self._arr).to_numpy(False).astype("uint64")
-        except Exception:
-            return [hash(v) if v is not None else 0 for v in self._arr.to_pylist()]
+            candidate = vector_from_arrow(self._arr)
+        except (RuntimeError, TypeError, ValueError):  # pragma: no cover - defensive fallback
+            candidate = None
+
+        if (
+            candidate is not None
+            and candidate is not self
+            and hasattr(candidate, "hash")
+            and not isinstance(candidate, ArrowVector)
+        ):
+            return candidate.hash()
+
+        values = self._arr.to_pylist()
+        result = array("Q", [0] * len(values))
+
+        for i, value in enumerate(values):
+            if value is None:
+                result[i] = NULL_HASH
+                continue
+
+            if isinstance(value, bool):
+                result[i] = 1 if value else 0
+                continue
+
+            if isinstance(value, int):
+                result[i] = value & 0xFFFFFFFFFFFFFFFF
+                continue
+
+            if isinstance(value, float):
+                packed = struct.pack("<d", value)
+                result[i] = int.from_bytes(packed, "little", signed=False)
+                continue
+
+            if isinstance(value, str):
+                data = value.encode("utf-8")
+            elif isinstance(value, (bytes, bytearray, memoryview)):
+                data = bytes(value)
+            else:
+                data = repr(value).encode("utf-8")
+
+            result[i] = hash_bytes(data)
+
+        return memoryview(result)
 
     def __str__(self):
         return f"<ArrowVector type={self._arr.type} len={len(self._arr)} values={self._arr.to_pylist()[:10]}>"
 
 
 # convenience
-def from_arrow(array: Any) -> ArrowVector:
-    return ArrowVector(array)
+def from_arrow(arrow_array: Any) -> ArrowVector:
+    return ArrowVector(arrow_array)

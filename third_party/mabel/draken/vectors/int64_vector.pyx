@@ -37,7 +37,6 @@ from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
 from opteryx.draken.vectors.vector cimport Vector
 from opteryx.draken.vectors.bool_vector cimport BoolVector
-from opteryx.draken._optional import require_pyarrow
 
 # NULL_HASH constant for null hash entries
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
@@ -90,7 +89,9 @@ cdef class Int64Vector(Vector):
 
     # -------- Interop (owned -> Arrow) --------
     def to_arrow(self):
-        pa = require_pyarrow("Int64Vector.to_arrow()")
+        """Convert to a PyArrow array."""
+        import pyarrow as pa
+        
         cdef size_t nbytes = buf_length(self.ptr) * buf_itemsize(self.ptr)
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
@@ -418,9 +419,8 @@ cdef class Int64Vector(Vector):
 
     cpdef uint64_t[::1] hash(self):
         """
-        Produce lightweight 64-bit hashes from int64_t data using a fast XOR mix.
-        This pattern is fast and produces sufficient entropy for hashing and shuffling.
-        Null entries are assigned a fixed hash value (NULL_HASH).
+        Return a 64-bit view of the column values for hashing.
+        Null entries are assigned ``NULL_HASH``.
         """
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
@@ -429,7 +429,6 @@ cdef class Int64Vector(Vector):
         if buf == NULL:
             raise MemoryError()
 
-        cdef uint64_t x
         cdef uint8_t byte, bit
         for i in range(n):
             if ptr.null_bitmap != NULL:
@@ -439,8 +438,7 @@ cdef class Int64Vector(Vector):
                     buf[i] = NULL_HASH
                     continue
 
-            x = <uint64_t> data[i]
-            buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+            buf[i] = <uint64_t> data[i]
 
         return <uint64_t[:n]> buf
 
