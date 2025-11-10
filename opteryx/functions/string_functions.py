@@ -297,9 +297,8 @@ def regex_replace(array, _pattern, _replacement):
     compilation and matching are backed by Google RE2 while keeping the
     vectorised execution model used elsewhere in list_ops.
     """
-    from draken import Vector
-
     from opteryx.compiled import list_ops as compiled_list_ops
+    from opteryx.draken import Vector
 
     list_regex_replace = getattr(compiled_list_ops, "list_regex_replace")
 

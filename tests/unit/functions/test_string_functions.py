@@ -11,7 +11,7 @@ import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
-from draken import Vector
+from opteryx.draken import Vector
 from opteryx.compiled import list_ops as compiled_list_ops
 from opteryx.functions import string_functions
 

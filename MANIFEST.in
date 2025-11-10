@@ -1,0 +1,44 @@
+# Include all source files for building
+include pyproject.toml
+include setup.py
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include SECURITY.md
+
+# Include all Cython source files
+recursive-include opteryx *.pyx
+recursive-include opteryx *.pxd
+recursive-include third_party *.pyx
+recursive-include third_party *.pxd
+
+# Include all header files for draken
+recursive-include third_party/mabel/draken *.h
+
+# Include C++ implementation files for draken
+recursive-include third_party/mabel/draken *.cpp
+
+# Include other vendored sources needed for compilation
+recursive-include src *.h
+recursive-include src *.cpp
+recursive-include src *.c
+
+# Include vendored third-party libraries
+recursive-include third_party/abseil *.h
+recursive-include third_party/apache *.h
+recursive-include third_party/re2 *.h *.cc
+recursive-include third_party/fastfloat *.h
+
+# Exclude compiled files and caches
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.so
+global-exclude *.dylib
+global-exclude *.dll
+global-exclude __pycache__
+global-exclude .DS_Store
+
+# Exclude build artifacts
+prune build
+prune dist
+prune *.egg-info

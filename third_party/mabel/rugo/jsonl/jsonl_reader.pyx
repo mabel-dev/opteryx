@@ -21,7 +21,7 @@ from cpython.bytes cimport PyBytes_FromStringAndSize
 
 # Import draken and pyarrow for creating vectors
 try:
-    import draken
+    import opteryx.draken as draken
     import pyarrow as pa
     DRAKEN_AVAILABLE = True
 except ImportError:
