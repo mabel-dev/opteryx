@@ -37,7 +37,6 @@ from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken._optional import require_pyarrow
 
 # NULL_HASH constant for null hash entries
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
@@ -96,7 +95,8 @@ cdef class TimeVector(Vector):
 
     # -------- Interop (owned -> Arrow) --------
     def to_arrow(self):
-        pa = require_pyarrow("TimeVector.to_arrow()")
+        import pyarrow as pa
+        
         cdef size_t nbytes = buf_length(self.ptr) * buf_itemsize(self.ptr)
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
@@ -216,8 +216,8 @@ cdef class TimeVector(Vector):
 
     cpdef uint64_t[::1] hash(self):
         """
-        Produce lightweight 64-bit hashes from time data using a fast XOR mix.
-        Null entries are assigned a fixed hash value (NULL_HASH).
+        Return 64-bit representations of the stored time values.
+        Null entries are assigned ``NULL_HASH``.
         """
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t i, n = ptr.length
@@ -225,7 +225,6 @@ cdef class TimeVector(Vector):
         if buf == NULL:
             raise MemoryError()
 
-        cdef uint64_t x
         cdef uint8_t byte, bit
         cdef int64_t* data64
         cdef int32_t* data32
@@ -239,8 +238,7 @@ cdef class TimeVector(Vector):
                     if not bit:
                         buf[i] = NULL_HASH
                         continue
-                x = <uint64_t> data64[i]
-                buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+                buf[i] = <uint64_t> data64[i]
         else:
             data32 = <int32_t*> ptr.data
             for i in range(n):
@@ -250,8 +248,7 @@ cdef class TimeVector(Vector):
                     if not bit:
                         buf[i] = NULL_HASH
                         continue
-                x = <uint64_t> data32[i]
-                buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+                buf[i] = <uint64_t>(<int64_t> data32[i])
 
         return <uint64_t[:n]> buf
 
@@ -273,7 +270,8 @@ cdef class TimeVector(Vector):
 
 
 cdef TimeVector from_arrow(object array):
-    cdef object pa = require_pyarrow("TimeVector.from_arrow()")
+    import pyarrow as pa
+    
     cdef bint is_time64 = pa.types.is_time64(array.type)
     cdef TimeVector vec = TimeVector(0, is_time64, True)   # wrap=True: no alloc
     vec.ptr = <DrakenFixedBuffer*> malloc(sizeof(DrakenFixedBuffer))

@@ -21,6 +21,7 @@ from cpython.memoryview cimport PyMemoryView_FromMemory
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cpython.bytes cimport PyBytes_AS_STRING
 from cpython.bytes cimport PyBytes_FromStringAndSize
+from libc.stddef cimport size_t
 from libc.stdint cimport int32_t, intptr_t, uint8_t, uint64_t
 from libc.string cimport memcpy, memset, memcmp
 from libc.stdlib cimport malloc, realloc, free
@@ -30,13 +31,11 @@ from opteryx.draken.core.buffers cimport DRAKEN_STRING
 from opteryx.draken.core.var_vector cimport alloc_var_buffer
 from opteryx.draken.core.var_vector cimport buf_dtype
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken._optional import require_pyarrow
+from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 
 # Constants
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
-cdef uint64_t FNV_PRIME = <uint64_t>0x100000001b3
-cdef uint64_t FNV_OFFSET_BASIS = <uint64_t>0xcbf29ce484222325
 
 
 
@@ -71,7 +70,8 @@ cdef class StringVector(Vector):
         Zero-copy conversion to Arrow StringArray (bytes-based).
         Keeps a reference to this vector to prevent premature garbage collection.
         """
-        pa = require_pyarrow("StringVector.to_arrow()")
+        import pyarrow as pa
+        
         cdef DrakenVarBuffer* ptr = self.ptr
         cdef size_t n = ptr.length
 
@@ -222,12 +222,8 @@ cdef class StringVector(Vector):
 
         return <int8_t[:n]> buf
 
-    # Optimized hash function with better hashing algorithm
     cpdef uint64_t[::1] hash(self):
-        """
-        Produce lightweight 64-bit hashes from byte sequences.
-        Uses FNV-1a hash for better distribution.
-        """
+        """Return a uint64 memory view of xxHash3 digests for each entry."""
         cdef DrakenVarBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
         cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
@@ -235,11 +231,11 @@ cdef class StringVector(Vector):
             raise MemoryError()
 
         cdef int32_t start, end
-        cdef uint64_t h
-        cdef uint8_t* p
-        cdef Py_ssize_t j, str_len, i
+        cdef Py_ssize_t j
+        cdef size_t str_len
+        cdef const uint8_t* data = <const uint8_t*> ptr.data
         cdef uint8_t* nb_ptr = ptr.null_bitmap
-        
+
         for j in range(n):
             if nb_ptr != NULL and ((nb_ptr[j >> 3] >> (j & 7)) & 1) == 0:
                 buf[j] = NULL_HASH
@@ -247,15 +243,8 @@ cdef class StringVector(Vector):
 
             start = ptr.offsets[j]
             end = ptr.offsets[j + 1]
-            str_len = end - start
-            p = <uint8_t*>ptr.data + start
-
-            # FNV-1a hash for better distribution
-            h = FNV_OFFSET_BASIS
-            for i in range(str_len):
-                h ^= p[i]
-                h *= FNV_PRIME
-            buf[j] = h
+            str_len = <size_t>(end - start)
+            buf[j] = cy_xxhash3_64(data + start, str_len)
 
         return <uint64_t[:n]> buf
 

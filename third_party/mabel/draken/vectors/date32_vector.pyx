@@ -35,7 +35,6 @@ from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken._optional import require_pyarrow
 
 # NULL_HASH constant for null hash entries
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
@@ -88,7 +87,9 @@ cdef class Date32Vector(Vector):
 
     # -------- Interop (owned -> Arrow) --------
     def to_arrow(self):
-        pa = require_pyarrow("Date32Vector.to_arrow()")
+        """Convert to a PyArrow array."""
+        import pyarrow as pa
+        
         cdef size_t nbytes = buf_length(self.ptr) * buf_itemsize(self.ptr)
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
@@ -315,8 +316,8 @@ cdef class Date32Vector(Vector):
 
     cpdef uint64_t[::1] hash(self):
         """
-        Produce lightweight 64-bit hashes from int32_t data using a fast XOR mix.
-        Null entries are assigned a fixed hash value (NULL_HASH).
+        Return 64-bit integers mirroring the stored values.
+        Null entries are assigned ``NULL_HASH``.
         """
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int32_t* data = <int32_t*> ptr.data
@@ -325,7 +326,6 @@ cdef class Date32Vector(Vector):
         if buf == NULL:
             raise MemoryError()
 
-        cdef uint64_t x
         cdef uint8_t byte, bit
         for i in range(n):
             if ptr.null_bitmap != NULL:
@@ -335,8 +335,7 @@ cdef class Date32Vector(Vector):
                     buf[i] = NULL_HASH
                     continue
 
-            x = <uint64_t> data[i]
-            buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+            buf[i] = <uint64_t>data[i]
 
         return <uint64_t[:n]> buf
 

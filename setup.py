@@ -72,6 +72,37 @@ SHOULD_BUILD_EXTENSIONS = "clean" not in REQUESTED_COMMANDS
 RUGO_PARQUET = "third_party/mabel/rugo/parquet"
 RUGO_JSONL = "third_party/mabel/rugo/jsonl"
 
+def validate_draken_package_data():
+    """
+    Validate that all necessary draken files for wheel distribution exist.
+    
+    This ensures that .pxd, .h, and .cpp files needed for downstream packages
+    to compile Cython code that imports from draken are present.
+    
+    Raises SystemExit if critical files are missing.
+    """
+    critical_files = {
+        "third_party/mabel/draken/core/buffers.h": "Core buffer type definitions",
+        "opteryx/draken/core/buffers.pxd": "Cython declarations for buffers",
+        "third_party/mabel/draken/core/ops.h": "Core operations header",
+        "opteryx/draken/vectors/string_vector.pxd": "String vector declarations",
+        "third_party/mabel/draken/interop/arrow_c_data_interface.h": "Arrow C interface",
+    }
+    
+    missing_files = []
+    for filepath, description in critical_files.items():
+        if not os.path.exists(filepath):
+            missing_files.append(f"  - {filepath} ({description})")
+    
+    if missing_files:
+        print("\033[91m✗ CRITICAL: Missing draken package files:\033[0m")
+        for missing in missing_files:
+            print(missing)
+        print("\nThese files are required for the wheel to be usable by downstream packages.")
+        sys.exit(1)
+    else:
+        print("\033[92m✓ Draken package data validation passed\033[0m")
+
 def get_parquet_vendor_sources():
     """Get vendored compression library sources"""
     vendor_sources = []
@@ -189,6 +220,43 @@ if SHOULD_BUILD_EXTENSIONS:
     with open("README.md", mode="r", encoding="UTF8") as rm:
         long_description = rm.read()
 
+    def make_draken_extension(module_path, source_file, depends=None, language=None, **kwargs):
+        """
+        Helper function to create draken extensions with consistent configuration.
+        
+        Args:
+            module_path: Module path relative to opteryx.draken (e.g., "vectors.int64_vector")
+            source_file: Source file path relative to third_party/mabel/draken/ (can be string or list)
+            depends: List of header files this extension depends on
+            language: "c++" for C++ extensions, None for C
+            **kwargs: Additional arguments passed to Extension
+        
+        Returns:
+            Extension object
+        """
+        if depends is None:
+            depends = ["third_party/mabel/draken/core/buffers.h"]
+        
+        # Handle both string and list of source files
+        if isinstance(source_file, str):
+            sources = [f"third_party/mabel/draken/{source_file}"]
+        else:
+            sources = [f"third_party/mabel/draken/{sf}" for sf in source_file]
+        
+        ext_kwargs = {
+            "name": f"opteryx.draken.{module_path}",
+            "sources": sources,
+            "extra_compile_args": CPP_COMPILE_FLAGS if language == "c++" else C_COMPILE_FLAGS,
+            "include_dirs": include_dirs + ["third_party/mabel/draken"],
+            "depends": depends,
+        }
+        
+        if language:
+            ext_kwargs["language"] = language
+        
+        ext_kwargs.update(kwargs)
+        return Extension(**ext_kwargs)
+
     extensions = [
         Extension(
             name="opteryx.third_party.abseil.containers",
@@ -301,100 +369,38 @@ if SHOULD_BUILD_EXTENSIONS:
 
 
 
-        Extension(
-            name="opteryx.draken.interop.arrow",
-            sources=["third_party/mabel/draken/interop/arrow.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
+        # Draken extensions (vendored columnar data library)
+        make_draken_extension(
+            "interop.arrow",
+            "interop/arrow.pyx",
             depends=[
                 "third_party/mabel/draken/core/buffers.h",
                 "third_party/mabel/draken/interop/arrow_c_data_interface.h"
             ],
         ),
-        Extension(
-            name="opteryx.draken.vectors.vector",
-            sources=["third_party/mabel/draken/vectors/vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.core.ops",
-            sources=[
-                "third_party/mabel/draken/core/ops.pyx",
-                "third_party/mabel/draken/core/ops_impl.cpp"
-            ],
-            extra_compile_args=CPP_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
+        make_draken_extension("vectors.vector", "vectors/vector.pyx"),
+        make_draken_extension(
+            "core.ops",
+            ["core/ops.pyx", "core/ops_impl.cpp"],
             depends=[
                 "third_party/mabel/draken/core/buffers.h",
                 "third_party/mabel/draken/core/ops.h"
             ],
             language="c++",
         ),
-        Extension(
-            name="opteryx.draken.vectors.bool_vector",
-            sources=["third_party/mabel/draken/vectors/bool_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.float64_vector",
-            sources=["third_party/mabel/draken/vectors/float64_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.int64_vector",
-            sources=["third_party/mabel/draken/vectors/int64_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.string_vector",
-            sources=["third_party/mabel/draken/vectors/string_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.date32_vector",
-            sources=["third_party/mabel/draken/vectors/date32_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.timestamp_vector",
-            sources=["third_party/mabel/draken/vectors/timestamp_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.time_vector",
-            sources=["third_party/mabel/draken/vectors/time_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.vectors.array_vector",
-            sources=["third_party/mabel/draken/vectors/array_vector.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
-            depends=["third_party/mabel/draken/core/buffers.h"],
-        ),
-        Extension(
-            name="opteryx.draken.morsels.morsel",
-            sources=["third_party/mabel/draken/morsels/morsel.pyx"],
-            extra_compile_args=C_COMPILE_FLAGS,
-            include_dirs=include_dirs + ["third_party/mabel/draken"],
+        make_draken_extension("vectors.bool_vector", "vectors/bool_vector.pyx"),
+        make_draken_extension("vectors.float64_vector", "vectors/float64_vector.pyx"),
+        make_draken_extension("vectors.int64_vector", "vectors/int64_vector.pyx"),
+        make_draken_extension("vectors.string_vector", "vectors/string_vector.pyx"),
+        make_draken_extension("vectors.date32_vector", "vectors/date32_vector.pyx"),
+        make_draken_extension("vectors.timestamp_vector", "vectors/timestamp_vector.pyx"),
+        make_draken_extension("vectors.time_vector", "vectors/time_vector.pyx"),
+        make_draken_extension("vectors.array_vector", "vectors/array_vector.pyx"),
+        make_draken_extension(
+            "morsels.morsel",
+            "morsels/morsel.pyx",
             depends=[
-                "third_party/mabel/draken/core/buffers.h"
+                "third_party/mabel/draken/core/buffers.h",
                 "third_party/mabel/draken/morsels/morsel.h"
             ],
         ),
@@ -696,5 +702,8 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
     }
 
     rust_build(setup_config)
+
+    # Validate package data for draken vendoring
+    validate_draken_package_data()
 
     setup(**setup_config)

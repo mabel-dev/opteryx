@@ -18,9 +18,14 @@ For now, this is a lightweight wrapper around PyArrow arrays since array types
 can contain any element type and require complex handling.
 """
 
+from array import array
+
 from opteryx.draken.vectors.vector cimport Vector
 from opteryx.draken.core.buffers cimport DRAKEN_ARRAY
-from opteryx.draken._optional import require_pyarrow
+from opteryx.third_party.cyan4973.xxhash import hash_bytes
+
+
+NULL_HASH: int = 0x9E3779B97F4A7C15
 
 
 cdef class ArrayVector(Vector):
@@ -55,7 +60,8 @@ cdef class ArrayVector(Vector):
 
     # -------- Generic operations --------
     def take(self, indices):
-        pa = require_pyarrow("ArrayVector.take()")
+        import pyarrow as pa
+        
         pc = pa.compute
         indices_arr = pa.array(indices, type=pa.int32())
         out = pc.take(self._arr, indices_arr)
@@ -64,7 +70,8 @@ cdef class ArrayVector(Vector):
         return result
 
     def is_null(self):
-        pa = require_pyarrow("ArrayVector.is_null()")
+        import pyarrow as pa
+        
         pc = pa.compute
         return pc.is_null(self._arr).to_numpy(False).astype("bool")
 
@@ -77,8 +84,25 @@ cdef class ArrayVector(Vector):
         return self._arr.to_pylist() if self._arr is not None else []
 
     def hash(self):
-        # Use Python's hash for list elements (Arrow doesn't hash lists)
-        return [hash(tuple(v)) if v is not None else 0 for v in self._arr.to_pylist()]
+        """Return a ``uint64`` memory view of xxHash3 digests for each element."""
+        values = self._arr.to_pylist() if self._arr is not None else []
+        result = array("Q", [0] * len(values))
+
+        for i, value in enumerate(values):
+            if value is None:
+                result[i] = NULL_HASH
+                continue
+
+            if isinstance(value, str):
+                data = value.encode("utf-8")
+            elif isinstance(value, (bytes, bytearray, memoryview)):
+                data = bytes(value)
+            else:
+                data = repr(value).encode("utf-8")
+
+            result[i] = hash_bytes(data)
+
+        return memoryview(result)
 
     def __str__(self):
         if self._arr is None:

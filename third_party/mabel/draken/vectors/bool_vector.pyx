@@ -25,7 +25,6 @@ from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_BOOL
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_length, free_fixed_buffer
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken._optional import require_pyarrow
 
 # NULL_HASH constant for null hash entries
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
@@ -81,8 +80,9 @@ cdef class BoolVector(Vector):
 
     # -------- Interop --------
     def to_arrow(self):
-        # Wrap existing bit-packed buffer
-        pa = require_pyarrow("BoolVector.to_arrow()")
+        """Convert to a PyArrow array."""
+        import pyarrow as pa
+        
         cdef size_t nbytes = (buf_length(self.ptr) + 7) >> 3
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
@@ -266,8 +266,8 @@ cdef class BoolVector(Vector):
 
     cpdef uint64_t[::1] hash(self):
         """
-        Produce lightweight 64-bit hashes from bit-packed boolean data.
-        Map False->0, True->1. Nulls -> NULL_HASH.
+        Return 64-bit integers representing boolean values (0 or 1).
+        Null entries receive ``NULL_HASH``.
         """
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t i, n = ptr.length
@@ -285,7 +285,7 @@ cdef class BoolVector(Vector):
                     buf[i] = NULL_HASH
                     continue
             x = ((<uint8_t*>ptr.data)[i >> 3] >> (i & 7)) & 1
-            buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+            buf[i] = x
         return <uint64_t[:n]> buf
 
     def __str__(self):

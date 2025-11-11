@@ -17,9 +17,7 @@ import sys
 import tempfile
 import time
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../draken"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../../../orso"))
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../rugo"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 def create_test_file(path, size_mb=1, content_type="random"):

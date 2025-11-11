@@ -36,7 +36,6 @@ from opteryx.draken.vectors.time_vector cimport from_arrow as time_from_arrow
 from opteryx.draken.vectors.array_vector cimport from_arrow as array_from_arrow
 
 from opteryx.draken.vectors.arrow_vector import from_arrow as arrow_from_arrow
-from opteryx.draken._optional import require_pyarrow
 
 cdef void release_arrow_array(ArrowArray* arr) noexcept:
     free(<void*>arr.buffers)
@@ -83,8 +82,8 @@ cdef void expose_draken_fixed_as_arrow(
 
 
 cpdef object vector_from_arrow(object array):
-    pa = require_pyarrow("vector_from_arrow()")
-
+    import pyarrow as pa
+    
     if hasattr(array, "combine_chunks"):
         array = array.combine_chunks()
 
@@ -117,7 +116,8 @@ cpdef DrakenType arrow_type_to_draken(object dtype):
     Convert a PyArrow DataType to a DrakenType enum.
     Raises TypeError if unsupported.
     """
-    pa = require_pyarrow("arrow_type_to_draken()")
+    import pyarrow as pa
+    
     if pa.types.is_int8(dtype):
         return DrakenType.DRAKEN_INT8
     elif pa.types.is_int16(dtype):

@@ -13,9 +13,6 @@ Main exports:
 - evaluate: Compiled expression evaluator
 """
 
-from opteryx.draken.__version__ import __author__
-from opteryx.draken.__version__ import __license__
-from opteryx.draken.__version__ import __version__
 from opteryx.draken.morsels.morsel import Morsel
 from opteryx.draken.vectors.vector import Vector
 

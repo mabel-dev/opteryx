@@ -1,11 +1,9 @@
 import os
 import sys
 
-os.environ["OPTERYX_DEBUG"] = ""
+os.environ.pop("OPTERYX_DEBUG", None)
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../draken"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../../../orso"))
-sys.path.insert(1, os.path.join(sys.path[0], "../../../../rugo"))
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import time

@@ -27,7 +27,6 @@ from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_FLOAT64
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_itemsize, buf_length, free_fixed_buffer
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken._optional import require_pyarrow
 
 # NULL_HASH constant for null hash entries
 cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
@@ -75,8 +74,10 @@ cdef class Float64Vector(Vector):
 
     # -------- Interop (owned -> Arrow) --------
     def to_arrow(self):
-        pa = require_pyarrow("Float64Vector.to_arrow()")
-        cdef size_t nbytes = buf_length(self.ptr) * buf_itemsize(self.ptr)
+        """Convert to a PyArrow array."""
+        import pyarrow as pa
+        
+        cdef size_t nbytes = buf_length(self.ptr) * sizeof(double)
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
 
@@ -346,9 +347,8 @@ cdef class Float64Vector(Vector):
 
     cpdef uint64_t[::1] hash(self):
         """
-        Produce lightweight 64-bit hashes from float64 data.
-        Bit-cast the double to uint64_t, apply XOR mix.
-        Null entries are assigned a fixed hash value (NULL_HASH).
+        Return 64-bit bit patterns for each float value.
+        Null entries are assigned ``NULL_HASH``.
         """
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef double* data = <double*> ptr.data
@@ -357,7 +357,7 @@ cdef class Float64Vector(Vector):
         if buf == NULL:
             raise MemoryError()
 
-        cdef uint64_t x
+        cdef uint64_t* bits = <uint64_t*> data
         cdef uint8_t byte, bit
         for i in range(n):
             if ptr.null_bitmap != NULL:
@@ -367,9 +367,7 @@ cdef class Float64Vector(Vector):
                     buf[i] = NULL_HASH
                     continue
 
-            # reinterpret double bits as uint64_t
-            x = (<uint64_t*> data)[i]
-            buf[i] = (x ^ (x >> 33)) * <uint64_t>0xff51afd7ed558ccdU
+            buf[i] = bits[i]
 
         return <uint64_t[:n]> buf
 
