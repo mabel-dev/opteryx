@@ -35,10 +35,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector
-
-# NULL_HASH constant for null hash entries
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
+from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
 
 cdef class TimestampVector(Vector):
 
@@ -316,30 +313,39 @@ cdef class TimestampVector(Vector):
 
         return out
 
-    cpdef uint64_t[::1] hash(self):
-        """
-        Return 64-bit representations of the timestamp values.
-        Null entries are assigned ``NULL_HASH``.
-        """
+
+    cpdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ):
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
-        cdef Py_ssize_t i, n = ptr.length
-        cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if buf == NULL:
-            raise MemoryError()
+        cdef Py_ssize_t n = ptr.length
 
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("TimestampVector.hash_into: output buffer too small")
+
+        cdef Py_ssize_t i
         cdef uint8_t byte, bit
+        cdef uint64_t value
+
         for i in range(n):
             if ptr.null_bitmap != NULL:
                 byte = ptr.null_bitmap[i >> 3]
                 bit = (byte >> (i & 7)) & 1
                 if not bit:
-                    buf[i] = NULL_HASH
-                    continue
+                    value = NULL_HASH
+                else:
+                    value = <uint64_t> data[i]
+            else:
+                value = <uint64_t> data[i]
 
-            buf[i] = <uint64_t> data[i]
-
-        return <uint64_t[:n]> buf
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
 
     def __str__(self):
         cdef list vals = []

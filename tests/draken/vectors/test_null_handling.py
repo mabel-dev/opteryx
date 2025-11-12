@@ -168,9 +168,8 @@ class TestStringNullHandling:
         vec = Vector.from_arrow(arr)
         
         result = vec.to_pylist()
-        # StringVector returns strings, not bytes in to_pylist
-        expected = ['hello', None, 'world', None, 'test']
-        
+        expected = [b'hello', None, b'world', None, b'test']
+
         assert result == expected
     
     def test_take_preserves_nulls(self):
@@ -182,7 +181,7 @@ class TestStringNullHandling:
         indices = np.array([0, 1, 3], dtype=np.int32)
         result = vec.take(indices)
         
-        assert result.to_pylist() == ['hello', None, None]
+        assert result.to_pylist() == [b'hello', None, None]
         assert result.null_count == 2
     
     def test_equals_with_nulls(self):

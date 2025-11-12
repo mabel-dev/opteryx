@@ -46,4 +46,5 @@ cdef class FlatHashSet:
     cdef inline void just_insert(self, uint64_t value)
     cdef inline size_t size(self)
     cdef inline bint contains(self, uint64_t value)
+    cdef inline void reserve(self, int64_t capacity)
     cpdef size_t items(self)

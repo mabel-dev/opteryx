@@ -177,7 +177,7 @@ if SHOULD_BUILD_EXTENSIONS:
 
 
     # Dynamically get the default include paths
-    include_dirs = [numpy.get_include(), "src/cpp", "src/c"]
+    include_dirs = [numpy.get_include(), "src/cpp", "src/c", "third_party/mabel/draken"]
 
     # Get the C++ include directory
     includedir = get_config_var("INCLUDEDIR")
@@ -213,6 +213,13 @@ if SHOULD_BUILD_EXTENSIONS:
     COMPILER_DIRECTIVES = {"language_level": "3"}
     COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
     COMPILER_DIRECTIVES["linetrace"] = not RELEASE_CANDIDATE
+    
+    # Enable line tracing for profiling in non-release builds
+    if RELEASE_CANDIDATE:
+        CPP_COMPILE_FLAGS.append("-DCYTHON_TRACE=1")
+        CPP_COMPILE_FLAGS.append("-DCYTHON_TRACE_NOGIL=1")
+        C_COMPILE_FLAGS.append("-DCYTHON_TRACE=1")
+        C_COMPILE_FLAGS.append("-DCYTHON_TRACE_NOGIL=1")
 
     print(f"\033[38;2;255;85;85mBuilding Opteryx version:\033[0m {__version__}")
     print(f"\033[38;2;255;85;85mStatus:\033[0m (test)", "(rc)" if RELEASE_CANDIDATE else "")

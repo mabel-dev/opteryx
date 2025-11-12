@@ -22,8 +22,9 @@ The module includes:
 from cpython.bytes cimport PyBytes_FromStringAndSize
 from cpython.mem cimport PyMem_Free
 from cpython.mem cimport PyMem_Malloc
-from libc.string cimport strlen, strcmp
+from libc.string cimport strlen, strcmp, memset
 from libc.stdint cimport int32_t
+from libc.stdint cimport uint64_t
 
 from opteryx.draken.vectors.vector cimport Vector
 from opteryx.draken.core.buffers cimport DrakenType, DrakenMorsel
@@ -54,9 +55,6 @@ cdef class DrakenTypeInt(int):
         return mapping.get(int(self), f"UNKNOWN({int(self)})")
 
 cdef class Morsel:
-    cdef DrakenMorsel* ptr
-    cdef list _encoded_names
-    cdef list _columns
 
     def __dealloc__(self):
         if self.ptr is not NULL:
@@ -96,24 +94,24 @@ cdef class Morsel:
 
         return self
 
-    def column(self, bytes name):
+    cpdef Vector column(self, bytes name):
         for i in range(self.ptr.num_columns):
             if self.ptr.column_names[i] == name:
                 return <Vector>self.ptr.columns[i]
         raise KeyError(f"Column '{name}' not found")
 
     @property
-    def shape(self):
+    def shape(self) -> tuple:
         """Return (num_rows, num_columns) tuple."""
         return (self.ptr.num_rows, self.ptr.num_columns)
 
     @property
-    def num_rows(self):
+    def num_rows(self) -> int:
         """Return the number of rows."""
         return self.ptr.num_rows
 
     @property
-    def num_columns(self):
+    def num_columns(self) -> int:
         """Return the number of columns."""
         return self.ptr.num_columns
 
@@ -129,7 +127,7 @@ cdef class Morsel:
         return names
 
     @property
-    def column_types(self):
+    def column_types(self) -> list:
         """Return the list of column types"""
         cdef list types = []
         cdef size_t i
@@ -146,11 +144,10 @@ cdef class Morsel:
                 out.append(None)
         return tuple(out)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Morsel: {self.ptr.num_rows} rows x {self.ptr.num_columns} columns>"
 
-    # High-performance C/Cython implementations
-    def copy(self, columns=None, mask=None):
+    def copy(self, columns=None, mask=None) -> Morsel:
         """
         Create a copy of this Morsel, optionally filtering columns and rows.
 
@@ -207,7 +204,7 @@ cdef class Morsel:
 
         return result
 
-    def take(self, indices):
+    def take(self, indices) -> Morsel:
         """
         Take rows by indices (IN-PLACE operation - modifies this Morsel).
 
@@ -266,7 +263,7 @@ cdef class Morsel:
         finally:
             PyMem_Free(indices_ptr)
 
-    def select(self, columns):
+    def select(self, columns) -> Morsel:
         """
         Select columns by name (IN-PLACE operation - modifies this Morsel).
 
@@ -336,7 +333,7 @@ cdef class Morsel:
         self._columns = new_column_list
         self._encoded_names = new_encoded_names
 
-    def rename(self, names):
+    def rename(self, names) -> Morsel:
         """
         Rename columns (IN-PLACE operation - modifies this Morsel).
 
@@ -393,3 +390,73 @@ cdef class Morsel:
             arrow_columns.append(vec.to_arrow())
 
         return pa.table(arrow_columns, names=column_names)
+
+    cpdef uint64_t[::1] hash(self, columns=None):
+        """Return per-row hash values, optionally restricted to selected columns."""
+        cdef Py_ssize_t row_count = self.ptr.num_rows
+        cdef Py_ssize_t i, j
+        cdef list column_indices
+        cdef Py_ssize_t n_selected
+        cdef Py_ssize_t alloc_rows
+        cdef uint64_t* out_buf
+        cdef Vector vec
+        cdef uint64_t[::1] single_hash
+        cdef uint64_t mix_constant = <uint64_t>0x9e3779b97f4a7c15U
+
+        if columns is None:
+            column_indices = list(range(self.ptr.num_columns))
+        else:
+            if isinstance(columns, (str, bytes, int)):
+                columns = [columns]
+
+            column_indices = []
+            for col in columns:
+                if isinstance(col, int):
+                    if col < 0 or col >= self.ptr.num_columns:
+                        raise IndexError(f"Column index {col} out of range")
+                    column_indices.append(col)
+                    continue
+
+                if isinstance(col, str):
+                    encoded = col.encode("utf-8")
+                else:
+                    encoded = col
+
+                for j in range(self.ptr.num_columns):
+                    if strcmp(self.ptr.column_names[j], encoded) == 0:
+                        column_indices.append(j)
+                        break
+                else:
+                    raise KeyError(f"Column '{col}' not found")
+
+        n_selected = len(column_indices)
+
+        if row_count == 0:
+            from array import array
+
+            return array("Q")
+
+        if n_selected == 0:
+            alloc_rows = row_count if row_count > 0 else 1
+            out_buf = <uint64_t*> PyMem_Malloc(alloc_rows * sizeof(uint64_t))
+            if out_buf == NULL:
+                raise MemoryError()
+            if row_count > 0:
+                memset(out_buf, 0, row_count * sizeof(uint64_t))
+            return <uint64_t[:row_count]> out_buf
+
+        alloc_rows = row_count if row_count > 0 else 1
+        out_buf = <uint64_t*> PyMem_Malloc(alloc_rows * sizeof(uint64_t))
+        if out_buf == NULL:
+            raise MemoryError()
+
+        if row_count > 0:
+            memset(out_buf, 0, row_count * sizeof(uint64_t))
+
+        cdef uint64_t[::1] out_view = <uint64_t[:row_count]> out_buf
+
+        for j in column_indices:
+            vec = <Vector> self.ptr.columns[j]
+            vec.hash_into(out_view, 0, mix_constant)
+
+        return <uint64_t[:row_count]> out_buf

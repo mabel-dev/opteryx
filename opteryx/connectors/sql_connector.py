@@ -10,6 +10,8 @@ to pyarrow tables so they can be processed as per any other data source.
 
 import time
 from decimal import Decimal
+from decimal import InvalidOperation
+from decimal import localcontext
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -207,7 +209,27 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         ]
 
         needs_struct_conversion = bool(struct_column_indices)
-        needs_decimal_conversion = bool(decimal_column_indices)
+        decimal_adjustments = []
+        for idx in decimal_column_indices:
+            column = result_schema.columns[idx]
+            scale = getattr(column, "scale", None)
+            precision = getattr(column, "precision", None)
+            quantizer = None
+
+            if isinstance(scale, int):
+                try:
+                    quantizer = Decimal(1).scaleb(-scale)
+                except Exception:  # pragma: no cover - defensive
+                    quantizer = None
+            elif scale is not None:
+                try:
+                    quantizer = Decimal(1).scaleb(-int(scale))
+                except Exception:  # pragma: no cover - defensive
+                    quantizer = None
+
+            decimal_adjustments.append((idx, quantizer, precision))
+
+        needs_decimal_conversion = bool(decimal_adjustments)
         needs_boolean_conversion = bool(boolean_column_indices)
 
         at_least_once = False
@@ -247,10 +269,27 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                                 if isinstance(value, dict):
                                     fields[index] = orjson.dumps(value)
                         if needs_decimal_conversion:
-                            for index in decimal_column_indices:
+                            for index, quantizer, precision in decimal_adjustments:
                                 value = fields[index]
-                                if isinstance(value, float):
-                                    fields[index] = Decimal(str(value))
+                                if value is None:
+                                    continue
+                                if isinstance(value, bytes):
+                                    value = value.decode("utf-8", errors="ignore")
+                                if not isinstance(value, Decimal):
+                                    value = Decimal(str(value))
+                                if quantizer is not None and not value.is_nan():
+                                    digits = len(value.as_tuple().digits)
+                                    with localcontext() as ctx:
+                                        if precision:
+                                            ctx.prec = max(ctx.prec, int(precision))
+                                        else:
+                                            ctx.prec = max(ctx.prec, digits)
+                                        try:
+                                            value = value.quantize(quantizer)
+                                        except InvalidOperation:
+                                            ctx.prec = max(ctx.prec, digits)
+                                            value = value.quantize(quantizer)
+                                fields[index] = value
                         if needs_boolean_conversion:
                             for index in boolean_column_indices:
                                 value = fields[index]

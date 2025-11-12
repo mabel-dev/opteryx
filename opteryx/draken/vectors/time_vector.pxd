@@ -20,5 +20,6 @@ cdef class TimeVector(Vector):
     cpdef list to_pylist(self)
 
     cpdef uint64_t[::1] hash(self)
+    cpdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*)
 
 cdef TimeVector from_arrow(object array)

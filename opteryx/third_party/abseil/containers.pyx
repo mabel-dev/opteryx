@@ -64,5 +64,8 @@ cdef class FlatHashSet:
     cdef inline bint contains(self, uint64_t value):
         return self._set.contains(value)
 
+    cdef inline void reserve(self, int64_t capacity):
+        self._set.reserve(capacity)
+
     cpdef size_t items(self):
         return self._set.size()

@@ -17,11 +17,11 @@ a consistent API, even before native implementations are developed.
 from __future__ import annotations
 
 import struct
-from array import array
 from typing import TYPE_CHECKING
 from typing import Any
 
 from opteryx.draken.vectors.vector import Vector
+from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
     import pyarrow
@@ -115,12 +115,22 @@ class ArrowVector(Vector):
     def to_pylist(self):
         return self._arr.to_pylist()
 
-    def hash(self):
-        """Return a ``uint64`` memory view consistent with native Draken vectors."""
-        from opteryx.draken.interop.arrow import vector_from_arrow  # type: ignore[attr-defined]
-        from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
+    def hash_into(
+        self,
+        out_buf,
+        offset: int = 0,
+        mix_constant: int = 0x9E3779B97F4A7C15,
+    ):
+        """Compute hashes and combine into the output buffer with mixing.
 
-        # Prefer native Draken implementations when available.
+        Args:
+            out_buf: uint64 memoryview to write hashes into
+            offset: Starting offset in out_buf
+            mix_constant: Constant for hash mixing
+        """
+        from opteryx.draken.interop.arrow import vector_from_arrow  # type: ignore[attr-defined]
+
+        # Prefer native implementations when available.
         try:
             candidate = vector_from_arrow(self._arr)
         except (RuntimeError, TypeError, ValueError):  # pragma: no cover - defensive fallback
@@ -129,42 +139,42 @@ class ArrowVector(Vector):
         if (
             candidate is not None
             and candidate is not self
-            and hasattr(candidate, "hash")
+            and hasattr(candidate, "hash_into")
             and not isinstance(candidate, ArrowVector)
         ):
-            return candidate.hash()
+            candidate.hash_into(out_buf, offset=offset, mix_constant=mix_constant)
+            return
 
         values = self._arr.to_pylist()
-        result = array("Q", [0] * len(values))
+        n = len(values)
+
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > len(out_buf):
+            raise ValueError("ArrowVector.hash_into: output buffer too small")
 
         for i, value in enumerate(values):
             if value is None:
-                result[i] = NULL_HASH
-                continue
-
-            if isinstance(value, bool):
-                result[i] = 1 if value else 0
-                continue
-
-            if isinstance(value, int):
-                result[i] = value & 0xFFFFFFFFFFFFFFFF
-                continue
-
-            if isinstance(value, float):
+                h = NULL_HASH
+            elif isinstance(value, bool):
+                h = 1 if value else 0
+            elif isinstance(value, int):
+                h = value & 0xFFFFFFFFFFFFFFFF
+            elif isinstance(value, float):
                 packed = struct.pack("<d", value)
-                result[i] = int.from_bytes(packed, "little", signed=False)
-                continue
-
-            if isinstance(value, str):
-                data = value.encode("utf-8")
+                h = int.from_bytes(packed, "little", signed=False)
+            elif isinstance(value, str):
+                h = hash_bytes(value.encode("utf-8"))
             elif isinstance(value, (bytes, bytearray, memoryview)):
-                data = bytes(value)
+                h = hash_bytes(bytes(value))
             else:
-                data = repr(value).encode("utf-8")
+                h = hash_bytes(repr(value).encode("utf-8"))
 
-            result[i] = hash_bytes(data)
-
-        return memoryview(result)
+            out_buf[offset + i] ^= h
+            out_buf[offset + i] = (out_buf[offset + i] * mix_constant) & 0xFFFFFFFFFFFFFFFF
+            out_buf[offset + i] ^= out_buf[offset + i] >> 32
+            out_buf[offset + i] &= 0xFFFFFFFFFFFFFFFF
 
     def __str__(self):
         return f"<ArrowVector type={self._arr.type} len={len(self._arr)} values={self._arr.to_pylist()[:10]}>"
