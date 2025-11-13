@@ -11,6 +11,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import pytest
 from sqlalchemy import create_engine
+from opteryx.utils.formatter import format_sql
 
 import opteryx
 from opteryx.connectors import SqlConnector
@@ -104,7 +105,6 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from opteryx.utils.formatter import format_sql
     from tests import trunc_printable
 
     start_suite = time.monotonic_ns()
