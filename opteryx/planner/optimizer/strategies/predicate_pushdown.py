@@ -318,8 +318,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         alias_chain = set()
         parent_nid = context.node_id
-        project_nid = None
-        ancestor_nodes = []
+        project_node = None
 
         while True:
             incoming = list(context.pre_optimized_tree.ingoing_edges(parent_nid))
@@ -328,14 +327,12 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
             parent_nid = incoming[0][0]
             parent_node = context.pre_optimized_tree[parent_nid]
-            ancestor_nodes.append((parent_nid, parent_node))
 
             node_alias = getattr(parent_node, "alias", None)
             if node_alias:
                 alias_chain.add(node_alias)
 
             if parent_node.node_type == LogicalPlanStepType.Project:
-                project_nid = parent_nid
                 project_node = parent_node
                 break
             if parent_node.node_type in (
@@ -343,6 +340,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 LogicalPlanStepType.FunctionDataset,
             ):
                 return
+
+        if project_node is None:
+            return
 
         alias_expressions = {}
         for column in project_node.columns or []:
@@ -390,7 +390,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 ):
                     continue
 
-                column_ref, expression_template = alias_expressions[alias_candidate.source_column]
+                _, expression_template = alias_expressions[alias_candidate.source_column]
 
                 if isinstance(expression_template, Node) and get_all_nodes_of_type(
                     expression_template, (NodeType.AGGREGATOR,)
@@ -437,31 +437,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     for identifier in identifiers
                     if getattr(identifier, "source", None)
                 }
-
-                project_node.columns = [
-                    col
-                    for col in project_node.columns or []
-                    if getattr(col, "query_column", None) != alias_candidate.source_column
-                ]
-
-                if isinstance(column_ref, Node) and column_ref in project_node.columns:
-                    project_node.columns.remove(column_ref)
-
-                if context.optimized_plan and project_nid in context.optimized_plan:
-                    context.optimized_plan[project_nid].columns = project_node.columns
-
-                for ancestor_nid, ancestor_node in ancestor_nodes:
-                    ancestor_columns = getattr(ancestor_node, "columns", None) or []
-                    filtered_columns = [
-                        col
-                        for col in ancestor_columns
-                        if (getattr(col, "query_column", None) or getattr(col, "alias", None))
-                        != alias_candidate.source_column
-                    ]
-                    if len(filtered_columns) != len(ancestor_columns):
-                        ancestor_node.columns = filtered_columns
-                        if context.optimized_plan and ancestor_nid in context.optimized_plan:
-                            context.optimized_plan[ancestor_nid].columns = filtered_columns
 
                 self.statistics.optimization_predicate_pushdown_inline_project += 1
                 return

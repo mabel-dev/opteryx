@@ -73,6 +73,33 @@ def test_inline_alias_from_view():
     assert _inline_stat(result) >= 1
 
 
+def test_inline_alias_keeps_projected_column():
+    sql = (
+        "SELECT * FROM (SELECT name LIKE '%a%' AS nom FROM $planets) AS p "
+        "WHERE nom = TRUE"
+    )
+
+    result = opteryx.query(sql)
+    plan = _plan_text(result)
+
+    assert result.shape == (4, 1)
+    assert result.column_names == ("nom",)
+    assert "FILTER (name INSTR 'a')" in plan
+    assert _inline_stat(result) >= 1
+
+def test_inline_alias_keeps_projected_column_two():
+    sql = (
+        "SELECT * FROM (SELECT name LIKE '%a%' AS nom FROM $planets) AS p "
+        "WHERE nom IS TRUE"
+    )
+
+    result = opteryx.query(sql)
+    plan = _plan_text(result)
+
+    assert result.shape == (4, 1)
+    assert result.column_names == ("nom",)
+    assert "FILTER (IsTrue(nom))" in plan, plan
+
 def test_does_not_inline_when_alias_used_directly():
     sql = (
         "SELECT *\n"
