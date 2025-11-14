@@ -113,7 +113,7 @@ def test_builder_validity_mask():
     builder.set_validity_mask(memoryview(bytes([0b01])))
 
     vec = builder.finish()
-    assert vec.to_pylist() == ["ab", None]
+    assert vec.to_pylist() == [b"ab", None]
 
 
 def test_string_vector_view_and_lengths():
@@ -335,7 +335,7 @@ def test_builder_null_then_mask_preserves_nulls():
     builder.append(b"c")
     
     vec = builder.finish()
-    assert vec.to_pylist() == ["a", None, "c"]
+    assert vec.to_pylist() == [b"a", None, b"c"]
 
 
 def test_string_vector_view_with_nulls():

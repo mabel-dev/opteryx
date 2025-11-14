@@ -9,6 +9,7 @@ from opteryx.draken.vectors.vector cimport Vector
 cdef class TimestampVector(Vector):
     cdef object _arrow_data_buf
     cdef object _arrow_null_buf
+    cdef Py_ssize_t null_bit_offset
     cdef DrakenFixedBuffer* ptr
     cdef bint owns_data
 
@@ -28,6 +29,6 @@ cdef class TimestampVector(Vector):
     cpdef int64_t min(self)
     cpdef int64_t max(self)
 
-    cpdef uint64_t[::1] hash(self)
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
 
 cdef TimestampVector from_arrow(object array)

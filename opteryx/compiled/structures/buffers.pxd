@@ -10,17 +10,19 @@ import numpy
 cimport numpy
 
 from libc.stdint cimport int64_t
+from libc.stddef cimport size_t
 from libcpp.vector cimport vector
 
-cdef extern from "intbuffer.h" namespace "":
+cdef extern from "intbuffer.h" namespace "" nogil:
     cdef cppclass CIntBuffer:
-        CIntBuffer(size_t size_hint)
+        CIntBuffer(size_t size_hint) except +
         void append(int64_t value)
         void extend(const vector[int64_t]& values)
         void extend(const int64_t* values, size_t count)
+        void reserve(size_t additional_capacity)
         const int64_t* data() const
         size_t size() const
-    void append_repeated(int64_t value, size_t count)
+        void append_repeated(int64_t value, size_t count)
 
 
 cdef class IntBuffer:

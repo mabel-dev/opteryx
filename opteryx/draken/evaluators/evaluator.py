@@ -7,6 +7,7 @@ evaluators for common patterns.
 """
 
 import hashlib
+import logging
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -21,6 +22,8 @@ from opteryx.draken.evaluators.generator import has_compiled_evaluator
 from opteryx.draken.morsels.morsel import Morsel
 from opteryx.draken.vectors import BoolMask
 from opteryx.draken.vectors.vector import Vector
+
+logger = logging.getLogger(__name__)
 
 # Try to import compiled maskops helper (fast byte-wise ops). If unavailable,
 # functions will be None and Python fallback will be used.
@@ -177,9 +180,12 @@ def _compile_binary_boolean(operation: str, left: Expression, right: Expression)
                     return left_result.or_vector(right_result)
                 elif operation == "xor":
                     return left_result.xor_vector(right_result)
-        except Exception:
-            # If any vector-level operation fails, fall back to generic
-            pass
+        except Exception as err:
+            logger.debug(
+                "Falling back to byte-wise combination for %s due to %s",
+                operation,
+                err,
+            )
 
         # Normalize to raw byte buffers (int-like 0/1 per element)
         def to_bytes_like(res):
@@ -192,8 +198,8 @@ def _compile_binary_boolean(operation: str, left: Expression, right: Expression)
             try:
                 mv = memoryview(res)
                 return bytearray(mv.tobytes())
-            except Exception:
-                pass
+            except (TypeError, ValueError, BufferError) as err:
+                logger.debug("memoryview conversion failed for %s: %s", type(res).__name__, err)
             # Try sequence of ints/bools
             try:
                 return bytearray((1 if bool(x) else 0) for x in res)
@@ -295,12 +301,19 @@ def _compile_expression(expr: Expression) -> CompiledEvaluator:
                     try:
                         mod_name, mod = ensure_compiled_evaluator(key, expr)
                         return CompiledEvaluator(expr, mod.evaluate, optimized=True)
-                    except Exception:
-                        # Fall through to normal compile path if generation fails
-                        pass
-        except Exception:
+                    except Exception as err:
+                        logger.debug(
+                            "Failed to synchronously compile evaluator %s: %s",
+                            key,
+                            err,
+                        )
+        except Exception as err:
             # Any error here shouldn't prevent fallback behavior
-            pass
+            logger.debug(
+                "Falling back to generic evaluator for %r due to %s",
+                expr,
+                err,
+            )
         # Try to compile as comparison
         comparison_ops = [
             "equals",

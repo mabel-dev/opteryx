@@ -20,6 +20,7 @@ Used for high-performance analytics and columnar data processing in Draken.
 
 from cpython.mem cimport PyMem_Malloc
 
+from libc.stddef cimport size_t
 from libc.stdint cimport int32_t
 from libc.stdint cimport int64_t
 from libc.stdint cimport int8_t
@@ -35,11 +36,15 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken.vectors.bool_vector cimport BoolVector
+from opteryx.draken.vectors.vector cimport (
+    MIX_HASH_CONSTANT,
+    NULL_HASH,
+    Vector,
+    mix_hash,
+    simd_mix_hash,
+)
 
-# NULL_HASH constant for null hash entries
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
+from opteryx.draken.vectors.bool_vector cimport BoolVector
 
 cdef class Int64Vector(Vector):
 
@@ -91,14 +96,20 @@ cdef class Int64Vector(Vector):
     def to_arrow(self):
         """Convert to a PyArrow array."""
         import pyarrow as pa
-        
+
         cdef size_t nbytes = buf_length(self.ptr) * buf_itemsize(self.ptr)
         addr = <intptr_t> self.ptr.data
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
 
         buffers = []
         if self.ptr.null_bitmap != NULL:
-            buffers.append(pa.foreign_buffer(<intptr_t> self.ptr.null_bitmap, (self.ptr.length + 7) // 8, base=self))
+            buffers.append(
+                pa.foreign_buffer(
+                    <intptr_t> self.ptr.null_bitmap,
+                    (self.ptr.length + 7) // 8,
+                    base=self,
+                )
+            )
         else:
             buffers.append(None)
 
@@ -417,30 +428,41 @@ cdef class Int64Vector(Vector):
 
         return out
 
-    cpdef uint64_t[::1] hash(self):
-        """
-        Return a 64-bit view of the column values for hashing.
-        Null entries are assigned ``NULL_HASH``.
-        """
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
-        cdef Py_ssize_t i, n = ptr.length
-        cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if buf == NULL:
-            raise MemoryError()
+        cdef Py_ssize_t n = ptr.length
 
-        cdef uint8_t byte, bit
-        for i in range(n):
-            if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:
-                    buf[i] = NULL_HASH
-                    continue
+        if n == 0:
+            return
 
-            buf[i] = <uint64_t> data[i]
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("Int64Vector.hash_into: output buffer too small")
 
-        return <uint64_t[:n]> buf
+        cdef Py_ssize_t i
+        cdef uint8_t byte
+        cdef uint64_t value
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef int64_t* src = data
+        cdef uint64_t* as_uint64 = <uint64_t*> src
+        cdef uint8_t* null_bitmap = ptr.null_bitmap
+        cdef bint has_nulls = null_bitmap != NULL
+
+        if has_nulls:
+            for i in range(n):
+                byte = null_bitmap[i >> 3]
+                if byte & (1 << (i & 7)):
+                    value = <uint64_t> src[i]
+                else:
+                    value = NULL_HASH
+                dst[i] = mix_hash(dst[i], value)
+        else:
+            simd_mix_hash(dst, as_uint64, <size_t>n, MIX_HASH_CONSTANT)
 
     def __str__(self):
         cdef list vals = []

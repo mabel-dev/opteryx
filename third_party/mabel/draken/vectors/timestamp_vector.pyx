@@ -35,10 +35,13 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
-# NULL_HASH constant for null hash entries
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
+
+cdef inline bint _bitmap_is_valid(uint8_t* bitmap, Py_ssize_t idx, Py_ssize_t bit_offset):
+    cdef Py_ssize_t bit_index = idx + bit_offset
+    cdef uint8_t byte = bitmap[bit_index >> 3]
+    return (byte >> (bit_index & 7)) & 1
 
 cdef class TimestampVector(Vector):
 
@@ -47,6 +50,10 @@ cdef class TimestampVector(Vector):
         length>0, wrap=False  -> allocate new owned buffer
         wrap=True             -> do not allocate; caller will set ptr & metadata
         """
+        self.null_bit_offset = 0
+        self._arrow_null_buf = None
+        self._arrow_data_buf = None
+
         if wrap:
             self.ptr = NULL
             self.owns_data = False
@@ -80,9 +87,7 @@ cdef class TimestampVector(Vector):
         if i < 0 or i >= ptr.length:
             raise IndexError("Index out of bounds")
         if ptr.null_bitmap != NULL:
-            byte = ptr.null_bitmap[i >> 3]
-            bit = (byte >> (i & 7)) & 1
-            if not bit:
+            if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
                 return None
         return data[i]
 
@@ -96,8 +101,10 @@ cdef class TimestampVector(Vector):
         data_buf = pa.foreign_buffer(addr, nbytes, base=self)
 
         buffers = []
+        cdef Py_ssize_t null_bytes
         if self.ptr.null_bitmap != NULL:
-            buffers.append(pa.foreign_buffer(<intptr_t> self.ptr.null_bitmap, (self.ptr.length + 7) // 8, base=self))
+            null_bytes = (self.ptr.length + self.null_bit_offset + 7) // 8
+            buffers.append(pa.foreign_buffer(<intptr_t> self.ptr.null_bitmap, null_bytes, base=self))
         else:
             buffers.append(None)
 
@@ -196,9 +203,7 @@ cdef class TimestampVector(Vector):
         # Find first non-null value
         for i in range(n):
             if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:  # null
+                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):  # null
                     continue
             m = data[i]
             found = True
@@ -210,9 +215,7 @@ cdef class TimestampVector(Vector):
         # Find minimum among remaining values
         for i in range(i + 1, n):
             if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:  # null
+                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):  # null
                     continue
             if data[i] < m:
                 m = data[i]
@@ -232,9 +235,7 @@ cdef class TimestampVector(Vector):
         # Find first non-null value
         for i in range(n):
             if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:  # null
+                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):  # null
                     continue
             m = data[i]
             found = True
@@ -246,9 +247,7 @@ cdef class TimestampVector(Vector):
         # Find maximum among remaining values
         for i in range(i + 1, n):
             if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:  # null
+                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):  # null
                     continue
             if data[i] > m:
                 m = data[i]
@@ -273,9 +272,7 @@ cdef class TimestampVector(Vector):
         else:
             # Extract null bits — 1 means valid, so invert for null
             for i in range(n):
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                buf[i] = 0 if bit else 1
+                buf[i] = 0 if _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset) else 1
 
         return <int8_t[:n]> buf
 
@@ -289,9 +286,7 @@ cdef class TimestampVector(Vector):
         if ptr.null_bitmap == NULL:
             return 0
         for i in range(n):
-            byte = ptr.null_bitmap[i >> 3]
-            bit = (byte >> (i & 7)) & 1
-            if not bit:
+            if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
                 count += 1
         return count
 
@@ -307,39 +302,47 @@ cdef class TimestampVector(Vector):
                 out.append(data[i])
         else:
             for i in range(n):
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if bit:
+                if _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
                     out.append(data[i])
                 else:
                     out.append(None)
 
         return out
 
-    cpdef uint64_t[::1] hash(self):
-        """
-        Return 64-bit representations of the timestamp values.
-        Null entries are assigned ``NULL_HASH``.
-        """
+
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
-        cdef Py_ssize_t i, n = ptr.length
-        cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if buf == NULL:
-            raise MemoryError()
+        cdef Py_ssize_t n = ptr.length
 
-        cdef uint8_t byte, bit
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("TimestampVector.hash_into: output buffer too small")
+
+        cdef Py_ssize_t i
+        cdef uint64_t value
+
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
         for i in range(n):
             if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:
-                    buf[i] = NULL_HASH
-                    continue
+                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
+                    value = NULL_HASH
+                else:
+                    value = <uint64_t> data[i]
+            else:
+                value = <uint64_t> data[i]
 
-            buf[i] = <uint64_t> data[i]
-
-        return <uint64_t[:n]> buf
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
 
     def __str__(self):
         cdef list vals = []
@@ -358,10 +361,14 @@ cdef TimestampVector from_arrow(object array):
     vec.owns_data = False
 
     cdef object bufs = array.buffers()
+    vec._arrow_null_buf = bufs[0]
+    vec._arrow_data_buf = bufs[1]
+
     cdef intptr_t base_ptr = <intptr_t> bufs[1].address
     cdef size_t itemsize = 8
     cdef Py_ssize_t offset = array.offset
     cdef intptr_t nb_addr
+    cdef Py_ssize_t byte_offset
 
     vec.ptr.type = DRAKEN_TIMESTAMP64
     vec.ptr.itemsize = itemsize
@@ -372,8 +379,11 @@ cdef TimestampVector from_arrow(object array):
 
     if bufs[0] is not None:
         nb_addr = bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> nb_addr
+        byte_offset = offset >> 3
+        vec.ptr.null_bitmap = <uint8_t*> (nb_addr + byte_offset)
+        vec.null_bit_offset = offset & 7
     else:
         vec.ptr.null_bitmap = NULL
+        vec.null_bit_offset = 0
 
     return vec

@@ -30,13 +30,8 @@ from opteryx.draken.core.buffers cimport DrakenVarBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_STRING
 from opteryx.draken.core.var_vector cimport alloc_var_buffer
 from opteryx.draken.core.var_vector cimport buf_dtype
-from opteryx.draken.vectors.vector cimport Vector
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
-
-
-# Constants
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
-
 
 
 cdef class StringVector(Vector):
@@ -216,107 +211,123 @@ cdef class StringVector(Vector):
             if str_len != val_len:
                 buf[i] = 0
                 continue
-            
-            # Use memcmp for equality
+
             buf[i] = 1 if memcmp(<char*>ptr.data + start, val_ptr, str_len) == 0 else 0
 
         return <int8_t[:n]> buf
 
-    cpdef uint64_t[::1] hash(self):
-        """Return a uint64 memory view of xxHash3 digests for each entry."""
+    cpdef list to_pylist(self):
         cdef DrakenVarBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
-        cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if buf == NULL:
-            raise MemoryError()
-
-        cdef int32_t start, end
-        cdef Py_ssize_t j
-        cdef size_t str_len
-        cdef const uint8_t* data = <const uint8_t*> ptr.data
-        cdef uint8_t* nb_ptr = ptr.null_bitmap
-
-        for j in range(n):
-            if nb_ptr != NULL and ((nb_ptr[j >> 3] >> (j & 7)) & 1) == 0:
-                buf[j] = NULL_HASH
-                continue
-
-            start = ptr.offsets[j]
-            end = ptr.offsets[j + 1]
-            str_len = <size_t>(end - start)
-            buf[j] = cy_xxhash3_64(data + start, str_len)
-
-        return <uint64_t[:n]> buf
-
-    cpdef list to_pylist(self):
-        """
-        Convert the StringVector into a Python list of str or None (for nulls).
-        """
-        cdef DrakenVarBuffer* ptr = self.ptr
-        cdef Py_ssize_t i, n = ptr.length
         cdef list out = []
-        cdef int32_t start, end, nbytes
-        cdef char* base = <char*>ptr.data
+        cdef Py_ssize_t i
+        cdef int32_t start, end
+        cdef char* data = <char*> ptr.data
         cdef uint8_t byte, bit
-        cdef uint8_t* nb_ptr = ptr.null_bitmap
 
-        if nb_ptr == NULL:
-            for i in range(n):
-                start = ptr.offsets[i]
-                end = ptr.offsets[i+1]
-                nbytes = end - start
-                out.append((<bytes>PyBytes_FromStringAndSize(base + start, nbytes)).decode("utf8"))
-        else:
-            for i in range(n):
-                byte = nb_ptr[i >> 3]
+        for i in range(n):
+            if ptr.null_bitmap != NULL:
+                byte = ptr.null_bitmap[i >> 3]
                 bit = (byte >> (i & 7)) & 1
                 if not bit:
                     out.append(None)
-                else:
-                    start = ptr.offsets[i]
-                    end = ptr.offsets[i+1]
-                    nbytes = end - start
-                    out.append((<bytes>PyBytes_FromStringAndSize(base + start, nbytes)).decode("utf8"))
+                    continue
+
+            start = ptr.offsets[i]
+            end = ptr.offsets[i + 1]
+            out.append(PyBytes_FromStringAndSize(data + start, end - start))
+
         return out
 
-    # Optimized take method with better memory layout
-    cpdef StringVector take(self, int32_t[::1] indices):
-        """
-        Take rows by indices - optimized implementation.
-        """
-        cdef Py_ssize_t i, n = indices.shape[0]
-        cdef DrakenVarBuffer* src_ptr = self.ptr
-        cdef int32_t src_idx, start, end, byte_len
-        cdef int32_t total_bytes = 0
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
+        cdef DrakenVarBuffer* ptr = self.ptr
+        cdef Py_ssize_t n = ptr.length
 
-        # Pre-calculate total bytes and check bounds in single pass
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("StringVector.hash_into: output buffer too small")
+
+        cdef int32_t start, end
+        cdef size_t str_len
+        cdef const uint8_t* data = <const uint8_t*> ptr.data
+        cdef uint8_t* nb_ptr = ptr.null_bitmap
+        cdef int32_t* offsets = ptr.offsets
+        cdef Py_ssize_t i, j, limit
+        cdef uint8_t null_byte
+        cdef uint64_t value
+
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
+        if nb_ptr != NULL:
+            for i in range(0, n, 8):
+                null_byte = nb_ptr[i >> 3]
+                limit = min(i + 8, n)
+                for j in range(i, limit):
+                    if (null_byte >> (j & 7)) & 1:
+                        start = offsets[j]
+                        end = offsets[j + 1]
+                        str_len = <size_t>(end - start)
+                        value = cy_xxhash3_64(data + start, str_len)
+                    else:
+                        value = NULL_HASH
+
+                    out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
+        else:
+            for j in range(n):
+                start = offsets[j]
+                end = offsets[j + 1]
+                str_len = <size_t>(end - start)
+                value = cy_xxhash3_64(data + start, str_len)
+                out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
+
+    cpdef StringVector take(self, int32_t[::1] indices):
+        cdef DrakenVarBuffer* src_ptr = self.ptr
+        cdef Py_ssize_t n = indices.shape[0]
+        cdef size_t total_bytes = 0
+        cdef Py_ssize_t i
+        cdef int32_t src_idx
+
         for i in range(n):
             src_idx = indices[i]
-            if src_idx < 0 or src_idx >= src_ptr.length:
-                raise IndexError(f"Index {src_idx} out of bounds for length {src_ptr.length}")
-            total_bytes += src_ptr.offsets[src_idx + 1] - src_ptr.offsets[src_idx]
+            if src_idx < 0 or src_idx >= <Py_ssize_t> src_ptr.length:
+                raise IndexError(
+                    f"Index {src_idx} out of bounds for length {src_ptr.length}"
+                )
+            total_bytes += <size_t>(
+                src_ptr.offsets[src_idx + 1] - src_ptr.offsets[src_idx]
+            )
 
-        # Create result vector
-        cdef StringVector result = StringVector(n, total_bytes)
+        cdef StringVector result = StringVector(<size_t> n, total_bytes)
         cdef DrakenVarBuffer* dst_ptr = result.ptr
-
-        # Copy data with better cache locality
-        cdef char* src_data = <char*>src_ptr.data
-        cdef char* dst_data = <char*>dst_ptr.data
+        cdef char* src_data = <char*> src_ptr.data
+        cdef char* dst_data = <char*> dst_ptr.data
         cdef int32_t* dst_offsets = dst_ptr.offsets
         cdef int32_t dst_offset = 0
+        cdef bint has_nulls = src_ptr.null_bitmap != NULL
+        cdef Py_ssize_t nb_size
+        cdef int32_t start, end
+        cdef int32_t byte_len
         cdef uint8_t src_bit
 
         dst_offsets[0] = 0
 
-        # Handle null bitmap upfront if needed
-        cdef bint has_nulls = (src_ptr.null_bitmap != NULL)
-        if has_nulls:
-            # Allocate and initialize null bitmap
-            dst_ptr.null_bitmap = <uint8_t*>PyMem_Malloc((n + 7) // 8)
+        if has_nulls and n > 0:
+            nb_size = (n + 7) >> 3
+            dst_ptr.null_bitmap = <uint8_t*> PyMem_Malloc(nb_size)
             if dst_ptr.null_bitmap == NULL:
                 raise MemoryError()
-            memset(dst_ptr.null_bitmap, 0xFF, (n + 7) // 8)  # Start with all valid
+            memset(dst_ptr.null_bitmap, 0xFF, nb_size)
+        else:
+            dst_ptr.null_bitmap = NULL
 
         for i in range(n):
             src_idx = indices[i]
@@ -324,18 +335,17 @@ cdef class StringVector(Vector):
             end = src_ptr.offsets[src_idx + 1]
             byte_len = end - start
 
-            # Copy string data
             if byte_len > 0:
                 memcpy(dst_data + dst_offset, src_data + start, byte_len)
 
             dst_offset += byte_len
             dst_offsets[i + 1] = dst_offset
 
-            # Handle null bitmap
             if has_nulls:
-                src_bit = (src_ptr.null_bitmap[src_idx >> 3] >> (src_idx & 7)) & 1
+                src_bit = (
+                    (src_ptr.null_bitmap[src_idx >> 3] >> (src_idx & 7)) & 1
+                )
                 if not src_bit:
-                    # Clear the bit for null
                     dst_ptr.null_bitmap[i >> 3] &= ~(1 << (i & 7))
 
         return result

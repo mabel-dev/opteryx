@@ -114,11 +114,11 @@ class TestSubscriptNullHandling:
         assert vec[1] is None
         assert vec[2] == b'world'
         
-        # to_pylist() should also return None for nulls (as strings, not bytes)
+        # to_pylist() should also return None for nulls
         pylist = vec.to_pylist()
-        assert pylist[0] == 'hello'
+        assert pylist[0] == b'hello'
         assert pylist[1] is None
-        assert pylist[2] == 'world'
+        assert pylist[2] == b'world'
         
     def test_builder_to_pylist_consistency(self):
         """Ensure builder-created vectors have consistent null handling."""
@@ -133,8 +133,8 @@ class TestSubscriptNullHandling:
         assert vec[1] is None
         assert vec[2] == b'world'
         
-        # to_pylist should also return None (as string)
+        # to_pylist should also return None
         pylist = vec.to_pylist()
-        assert pylist[0] == 'hello'
+        assert pylist[0] == b'hello'
         assert pylist[1] is None
-        assert pylist[2] == 'world'
+        assert pylist[2] == b'world'

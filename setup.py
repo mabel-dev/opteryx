@@ -67,6 +67,35 @@ def detect_target_machine():
     return platform.machine().lower()
 
 
+def _archflags_request_x86_64() -> bool:
+    """Check ARCHFLAGS for any x86_64 slices (e.g. macOS universal builds)."""
+    archflags = os.environ.get("ARCHFLAGS", "")
+    if not archflags:
+        return False
+
+    tokens = archflags.replace(",", " ").split()
+    idx = 0
+    requested = []
+    while idx < len(tokens):
+        token = tokens[idx].lower()
+        if token == "-arch" and idx + 1 < len(tokens):
+            requested.append(tokens[idx + 1].lower())
+            idx += 2
+            continue
+        if token.startswith("-arch="):
+            requested.append(token.split("=", 1)[1])
+        idx += 1
+    return any(t in ("x86_64", "x86-64", "amd64") for t in requested)
+
+
+def targets_include_x86_64() -> bool:
+    """Determine if the build should include x86_64-specific sources."""
+    if _archflags_request_x86_64():
+        return True
+    machine = detect_target_machine()
+    return machine in ("x86_64", "amd64")
+
+
 REQUESTED_COMMANDS = {arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith("-")}
 SHOULD_BUILD_EXTENSIONS = "clean" not in REQUESTED_COMMANDS
 RUGO_PARQUET = "third_party/mabel/rugo/parquet"
@@ -130,12 +159,12 @@ def get_parquet_vendor_sources():
     ]
 
     machine_ = detect_target_machine()
-    if machine_ in ("x86_64", "amd64"):
+    if targets_include_x86_64():
         # BMI2-enabled builds expect this ASM fast path to be present on x86-64.
         zstd_sources.append(f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress_amd64.S")
 
     vendor_sources.extend(zstd_sources)
-    
+
     return vendor_sources
 
 
@@ -151,11 +180,13 @@ if SHOULD_BUILD_EXTENSIONS:
     C_COMPILE_FLAGS = ["-O3"]
     if is_mac():
         CPP_COMPILE_FLAGS += ["-std=c++17"]
+        C_COMPILE_FLAGS += ["-std=c17"]
     elif is_win():
         CPP_COMPILE_FLAGS += ["/std:c++17"]
+        C_COMPILE_FLAGS += ["/std:c17"]
     else:
         CPP_COMPILE_FLAGS += ["-std=c++17", "-march=native", "-fvisibility=default"]
-        C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
+        C_COMPILE_FLAGS += ["-std=c17", "-march=native", "-fvisibility=default"]
 
     COMMON_WARNING_SUPPRESSIONS = [
         "-Wno-unused-function",
@@ -177,7 +208,7 @@ if SHOULD_BUILD_EXTENSIONS:
 
 
     # Dynamically get the default include paths
-    include_dirs = [numpy.get_include(), "src/cpp", "src/c"]
+    include_dirs = [numpy.get_include(), "src/cpp", "src/c", "third_party/mabel/draken"]
 
     # Get the C++ include directory
     includedir = get_config_var("INCLUDEDIR")
@@ -213,6 +244,13 @@ if SHOULD_BUILD_EXTENSIONS:
     COMPILER_DIRECTIVES = {"language_level": "3"}
     COMPILER_DIRECTIVES["profile"] = not RELEASE_CANDIDATE
     COMPILER_DIRECTIVES["linetrace"] = not RELEASE_CANDIDATE
+    
+    # Enable line tracing for profiling in non-release builds
+    if RELEASE_CANDIDATE:
+        CPP_COMPILE_FLAGS.append("-DCYTHON_TRACE=1")
+        CPP_COMPILE_FLAGS.append("-DCYTHON_TRACE_NOGIL=1")
+        C_COMPILE_FLAGS.append("-DCYTHON_TRACE=1")
+        C_COMPILE_FLAGS.append("-DCYTHON_TRACE_NOGIL=1")
 
     print(f"\033[38;2;255;85;85mBuilding Opteryx version:\033[0m {__version__}")
     print(f"\033[38;2;255;85;85mStatus:\033[0m (test)", "(rc)" if RELEASE_CANDIDATE else "")
@@ -390,12 +428,18 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         make_draken_extension("vectors.bool_vector", "vectors/bool_vector.pyx"),
         make_draken_extension("vectors.float64_vector", "vectors/float64_vector.pyx"),
-        make_draken_extension("vectors.int64_vector", "vectors/int64_vector.pyx"),
+        make_draken_extension("vectors.int64_vector", "vectors/int64_vector.pyx", language="c++"),
         make_draken_extension("vectors.string_vector", "vectors/string_vector.pyx"),
         make_draken_extension("vectors.date32_vector", "vectors/date32_vector.pyx"),
         make_draken_extension("vectors.timestamp_vector", "vectors/timestamp_vector.pyx"),
         make_draken_extension("vectors.time_vector", "vectors/time_vector.pyx"),
         make_draken_extension("vectors.array_vector", "vectors/array_vector.pyx"),
+        Extension(
+            name="opteryx.draken.vectors._hash_api",
+            sources=["opteryx/draken/vectors/_hash_api.pyx"],
+            include_dirs=include_dirs + ["third_party/mabel/draken"],
+            extra_compile_args=C_COMPILE_FLAGS,
+        ),
         make_draken_extension(
             "morsels.morsel",
             "morsels/morsel.pyx",
@@ -404,10 +448,6 @@ if SHOULD_BUILD_EXTENSIONS:
                 "third_party/mabel/draken/morsels/morsel.h"
             ],
         ),
-
-
-
-
 
         Extension(
             name="opteryx.compiled.functions.strings",
@@ -493,7 +533,7 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.compiled.table_ops.distinct",
-            sources=["opteryx/compiled/table_ops/distinct.pyx"],
+            sources=["opteryx/compiled/table_ops/distinct.pyx", "src/cpp/intbuffer.cpp"],
             include_dirs=include_dirs + ["third_party/abseil"],
             language="c++",
             extra_compile_args=CPP_COMPILE_FLAGS,
@@ -648,6 +688,11 @@ DO NOT EDIT THIS FILE MANUALLY - it will be overwritten during build.
         list_ops_link_args.append("-lcrypto")
     if not is_win():
         list_ops_link_args.append("-pthread")
+
+    for ext in extensions:
+        if ext.name == "opteryx.draken.vectors.int64_vector":
+            ext.sources.append("src/cpp/simd_hash.cpp")
+            break
 
     extensions.append(
         Extension(

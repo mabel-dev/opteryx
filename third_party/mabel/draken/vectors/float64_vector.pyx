@@ -26,10 +26,7 @@ from libc.stdlib cimport malloc
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_FLOAT64
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_itemsize, buf_length, free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector
-
-# NULL_HASH constant for null hash entries
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
 cdef class Float64Vector(Vector):
 
@@ -345,31 +342,44 @@ cdef class Float64Vector(Vector):
                     out.append(None)
         return out
 
-    cpdef uint64_t[::1] hash(self):
-        """
-        Return 64-bit bit patterns for each float value.
-        Null entries are assigned ``NULL_HASH``.
-        """
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef double* data = <double*> ptr.data
-        cdef Py_ssize_t i, n = ptr.length
-        cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if buf == NULL:
-            raise MemoryError()
+        cdef Py_ssize_t n = ptr.length
+
+        if n == 0:
+            return
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("Float64Vector.hash_into: output buffer too small")
 
         cdef uint64_t* bits = <uint64_t*> data
-        cdef uint8_t byte, bit
-        for i in range(n):
-            if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:
-                    buf[i] = NULL_HASH
-                    continue
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef uint8_t* null_bitmap = ptr.null_bitmap
+        cdef bint has_nulls = null_bitmap != NULL
+        cdef Py_ssize_t i
+        cdef uint8_t byte
+        cdef uint64_t value
 
-            buf[i] = bits[i]
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
 
-        return <uint64_t[:n]> buf
+        if has_nulls:
+            for i in range(n):
+                byte = null_bitmap[i >> 3]
+                if byte & (1 << (i & 7)):
+                    value = bits[i]
+                else:
+                    value = NULL_HASH
+                dst[i] = mix_hash(dst[i], value)
+        else:
+            for i in range(n):
+                dst[i] = mix_hash(dst[i], bits[i])
 
     def __str__(self):
         cdef list vals = []

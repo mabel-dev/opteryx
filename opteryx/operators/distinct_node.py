@@ -21,12 +21,13 @@ from . import BasePlanNode
 
 class DistinctNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
-        from opteryx.third_party.abseil.containers import FlatHashSet as HashSet
-
         BasePlanNode.__init__(self, properties=properties, **parameters)
         self._distinct_on = parameters.get("on")
         if self._distinct_on:
-            self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
+            # Convert column identities to bytes for Draken morsel
+            self._distinct_on = [
+                col.schema_column.identity.encode("utf-8") for col in self._distinct_on
+            ]
         self.hash_set = None
 
     @property
@@ -38,6 +39,7 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
+        import opteryx.draken as draken
         from opteryx.compiled.table_ops.distinct import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
@@ -51,8 +53,12 @@ class DistinctNode(BasePlanNode):
             yield EOS
             return
 
+        # Convert Arrow table to Draken morsel
+        draken_morsel = draken.Morsel.from_arrow(morsel)
+
+        # Use Draken-based distinct with column names as bytes
         unique_indexes, self.hash_set = distinct(
-            morsel, columns=self._distinct_on, seen_hashes=self.hash_set
+            draken_morsel, columns=self._distinct_on, seen_hashes=self.hash_set
         )
 
         if len(unique_indexes) > 0:

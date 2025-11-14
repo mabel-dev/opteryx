@@ -10,6 +10,8 @@ public:
     explicit CIntBuffer(size_t size_hint = 1024);
 
     void append(int64_t value);
+    void append(unsigned long value);
+    void append(unsigned long long value);
     void append(int64_t value1, int64_t value2);
     void append(const int64_t* values, size_t count);
     void append_optimized(int64_t value);

@@ -52,17 +52,20 @@ cdef class FlatHashSet:
         self._set = flat_hash_set[uint64_t, IdentityHash]()
         self._set.reserve(1024)
 
-    cdef inline bint insert(self, value: uint64_t):
+    cdef inline bint insert(self, value: uint64_t) noexcept nogil:
         return self._set.insert(value).second
 
-    cdef inline void just_insert(self, value: uint64_t):
+    cdef inline void just_insert(self, value: uint64_t) noexcept nogil:
         self._set.insert(value)
 
-    cdef inline size_t size(self):
+    cdef inline size_t size(self) noexcept nogil:
         return self._set.size()
 
-    cdef inline bint contains(self, uint64_t value):
+    cdef inline bint contains(self, uint64_t value) noexcept nogil:
         return self._set.contains(value)
+
+    cdef inline void reserve(self, int64_t capacity) noexcept nogil:
+        self._set.reserve(capacity)
 
     cpdef size_t items(self):
         return self._set.size()

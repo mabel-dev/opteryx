@@ -4,7 +4,6 @@
 # cython: nonecheck=False
 # cython: overflowcheck=False
 # cython: cdivision=True
-# distutils: language=c++
 
 from libc.stdint cimport uint64_t
 from libc.stddef cimport size_t

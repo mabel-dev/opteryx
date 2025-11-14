@@ -16,7 +16,7 @@ cdef extern from "identity_hash.h":
         size_t operator()(uint64_t value) const
 
 
-cdef extern from "absl/container/flat_hash_map.h" namespace "absl":
+cdef extern from "absl/container/flat_hash_map.h" namespace "absl" nogil:
     cdef cppclass flat_hash_map[K, V, HashFunc]:
         flat_hash_map()
         V& operator[](K key)
@@ -31,7 +31,7 @@ cdef class FlatHashMap:
     cpdef clear(self)
     cpdef vector[int64_t] get(self, uint64_t key)
 
-cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
+cdef extern from "absl/container/flat_hash_set.h" namespace "absl" nogil:
     cdef cppclass flat_hash_set[T, HashFunc]:
         flat_hash_set()
         pair[long, bint] insert(T value)
@@ -42,8 +42,9 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl":
 cdef class FlatHashSet:
     cdef flat_hash_set[uint64_t, IdentityHash] _set
 
-    cdef inline bint insert(self, uint64_t value)
-    cdef inline void just_insert(self, uint64_t value)
-    cdef inline size_t size(self)
-    cdef inline bint contains(self, uint64_t value)
+    cdef inline bint insert(self, uint64_t value) noexcept nogil
+    cdef inline void just_insert(self, uint64_t value) noexcept nogil
+    cdef inline size_t size(self) noexcept nogil
+    cdef inline bint contains(self, uint64_t value) noexcept nogil
+    cdef inline void reserve(self, int64_t capacity) noexcept nogil
     cpdef size_t items(self)

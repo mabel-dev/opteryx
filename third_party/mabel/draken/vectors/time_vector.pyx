@@ -36,10 +36,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector
-
-# NULL_HASH constant for null hash entries
-cdef uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
 cdef class TimeVector(Vector):
 
@@ -215,19 +212,44 @@ cdef class TimeVector(Vector):
         return out
 
     cpdef uint64_t[::1] hash(self):
-        """
-        Return 64-bit representations of the stored time values.
-        Null entries are assigned ``NULL_HASH``.
-        """
-        cdef DrakenFixedBuffer* ptr = self.ptr
-        cdef Py_ssize_t i, n = ptr.length
+        cdef Py_ssize_t n = self.ptr.length
         cdef uint64_t* buf = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
+        cdef Py_ssize_t i
+
         if buf == NULL:
             raise MemoryError()
 
+        for i in range(n):
+            buf[i] = 0
+
+        cdef uint64_t[::1] view = <uint64_t[:n]> buf
+        self.hash_into(view, 0)
+        return view
+
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
+        cdef DrakenFixedBuffer* ptr = self.ptr
+        cdef Py_ssize_t n = ptr.length
+
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("TimeVector.hash_into: output buffer too small")
+
+        cdef Py_ssize_t i
         cdef uint8_t byte, bit
+        cdef uint64_t value
         cdef int64_t* data64
         cdef int32_t* data32
+
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
 
         if self.is_time64:
             data64 = <int64_t*> ptr.data
@@ -236,9 +258,13 @@ cdef class TimeVector(Vector):
                     byte = ptr.null_bitmap[i >> 3]
                     bit = (byte >> (i & 7)) & 1
                     if not bit:
-                        buf[i] = NULL_HASH
-                        continue
-                buf[i] = <uint64_t> data64[i]
+                        value = NULL_HASH
+                    else:
+                        value = <uint64_t> data64[i]
+                else:
+                    value = <uint64_t> data64[i]
+
+                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
         else:
             data32 = <int32_t*> ptr.data
             for i in range(n):
@@ -246,11 +272,13 @@ cdef class TimeVector(Vector):
                     byte = ptr.null_bitmap[i >> 3]
                     bit = (byte >> (i & 7)) & 1
                     if not bit:
-                        buf[i] = NULL_HASH
-                        continue
-                buf[i] = <uint64_t>(<int64_t> data32[i])
+                        value = NULL_HASH
+                    else:
+                        value = <uint64_t>(<int64_t> data32[i])
+                else:
+                    value = <uint64_t>(<int64_t> data32[i])
 
-        return <uint64_t[:n]> buf
+                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
 
     def __str__(self):
         cdef list vals = []

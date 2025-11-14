@@ -18,14 +18,11 @@ For now, this is a lightweight wrapper around PyArrow arrays since array types
 can contain any element type and require complex handling.
 """
 
-from array import array
+from libc.stdint cimport uint64_t
 
-from opteryx.draken.vectors.vector cimport Vector
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 from opteryx.draken.core.buffers cimport DRAKEN_ARRAY
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
-
-
-NULL_HASH: int = 0x9E3779B97F4A7C15
 
 
 cdef class ArrayVector(Vector):
@@ -83,26 +80,40 @@ cdef class ArrayVector(Vector):
     def to_pylist(self):
         return self._arr.to_pylist() if self._arr is not None else []
 
-    def hash(self):
-        """Return a ``uint64`` memory view of xxHash3 digests for each element."""
-        values = self._arr.to_pylist() if self._arr is not None else []
-        result = array("Q", [0] * len(values))
+    cdef void hash_into(
+        self,
+        uint64_t[::1] out_buf,
+        Py_ssize_t offset=0,
+        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    ) except *:
+        """Compute hashes and combine into the output buffer with mixing."""
+        cdef Py_ssize_t i
+        cdef uint64_t h
+        cdef list values = self._arr.to_pylist() if self._arr is not None else []
+        cdef Py_ssize_t n = len(values)
 
-        for i, value in enumerate(values):
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
+        if n == 0:
+            return
+
+        if offset < 0 or offset + n > out_buf.shape[0]:
+            raise ValueError("ArrayVector.hash_into: output buffer too small")
+
+        for i in range(n):
+            value = values[i]
             if value is None:
-                result[i] = NULL_HASH
-                continue
-
-            if isinstance(value, str):
-                data = value.encode("utf-8")
+                h = NULL_HASH
+            elif isinstance(value, str):
+                h = hash_bytes(value.encode("utf-8"))
             elif isinstance(value, (bytes, bytearray, memoryview)):
-                data = bytes(value)
+                h = hash_bytes(bytes(value))
             else:
-                data = repr(value).encode("utf-8")
+                h = hash_bytes(repr(value).encode("utf-8"))
 
-            result[i] = hash_bytes(data)
-
-        return memoryview(result)
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], h)
 
     def __str__(self):
         if self._arr is None:
