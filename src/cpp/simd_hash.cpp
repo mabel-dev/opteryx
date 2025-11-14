@@ -21,25 +21,17 @@ inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count
 }
 
 #if defined(__AVX2__)
-inline __m256i mul32_full(__m256i a, __m256i b) {
-    __m256i even = _mm256_mul_epu32(a, b);
-    __m256i a_shift = _mm256_srli_si256(a, 4);
-    __m256i b_shift = _mm256_srli_si256(b, 4);
-    __m256i odd = _mm256_mul_epu32(a_shift, b_shift);
-    odd = _mm256_slli_si256(odd, 4);
-    return _mm256_blend_epi32(even, odd, 0b10101010);
-}
-
 inline __m256i mullo_u64(__m256i a, __m256i b) {
+    // AVX2 lacks a direct 64-bit integer multiply, so combine 32-bit partials per lane.
     const __m256i mask = _mm256_set1_epi64x(0xFFFFFFFFULL);
     __m256i a_lo = _mm256_and_si256(a, mask);
     __m256i b_lo = _mm256_and_si256(b, mask);
     __m256i a_hi = _mm256_srli_epi64(a, 32);
     __m256i b_hi = _mm256_srli_epi64(b, 32);
 
-    __m256i prod_ll = mul32_full(a_lo, b_lo);
-    __m256i prod_lh = mul32_full(a_lo, b_hi);
-    __m256i prod_hl = mul32_full(a_hi, b_lo);
+    __m256i prod_ll = _mm256_mul_epu32(a_lo, b_lo);
+    __m256i prod_lh = _mm256_mul_epu32(a_lo, b_hi);
+    __m256i prod_hl = _mm256_mul_epu32(a_hi, b_lo);
 
     __m256i cross = _mm256_add_epi64(prod_lh, prod_hl);
     cross = _mm256_slli_epi64(cross, 32);
