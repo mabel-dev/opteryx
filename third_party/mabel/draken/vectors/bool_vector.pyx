@@ -24,7 +24,7 @@ from libc.stdlib cimport malloc
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_BOOL
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_length, free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
 cdef class BoolVector(Vector):
 
@@ -261,12 +261,12 @@ cdef class BoolVector(Vector):
             out.append(bool(val))
         return out
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
         if n == 0:
@@ -279,6 +279,10 @@ cdef class BoolVector(Vector):
         cdef uint8_t byte, bit
         cdef uint64_t value
 
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
         for i in range(n):
             if ptr.null_bitmap != NULL:
                 byte = ptr.null_bitmap[i >> 3]
@@ -290,7 +294,7 @@ cdef class BoolVector(Vector):
             else:
                 value = (<uint64_t>(((<uint8_t*>ptr.data)[i >> 3] >> (i & 7)) & 1))
 
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
 
     def __str__(self):
         cdef list vals = []

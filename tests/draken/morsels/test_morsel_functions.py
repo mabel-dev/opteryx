@@ -10,7 +10,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 import pytest
 import pyarrow as pa
 import opteryx.draken as draken
+
 from opteryx.compiled.table_ops.distinct import _test_distinct_from_hashes as distinct_from_hashes
+from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
 
 
 def _hash_view_to_list(buffer):
@@ -29,7 +31,7 @@ def _vector_hash_to_list(vector):
             length = len(vector.to_pylist())
 
     out = array("Q", [0] * length)
-    vector.hash_into(out)
+    hash_into_vector(vector, out)
     return list(out)
 
 
@@ -43,12 +45,14 @@ def test_methods_exist():
     assert hasattr(morsel, 'select')
     assert hasattr(morsel, 'rename')
     assert hasattr(morsel, 'to_arrow')
+    assert hasattr(draken.Morsel, 'iter_from_arrow')
     
     # Check that methods are callable
     assert callable(morsel.take)
     assert callable(morsel.select)
     assert callable(morsel.rename)
     assert callable(morsel.to_arrow)
+    assert callable(draken.Morsel.iter_from_arrow)
 
 def test_metadata_properties_match_arrow_table():
     """Ensure exposed metadata mirrors the source Arrow table."""
@@ -362,6 +366,67 @@ def test_to_arrow_method():
     result_names = set(result.column_names)
     assert original_names == result_names
 
+
+def test_iter_from_arrow_uses_table_chunks():
+    table = pa.table({
+        'a': pa.chunked_array([pa.array([1, 2, 3]), pa.array([4, 5])]),
+        'b': pa.chunked_array([pa.array(['v', 'w', 'x']), pa.array(['y', 'z'])]),
+    })
+
+    morsels = list(draken.Morsel.iter_from_arrow(table))
+
+    assert len(morsels) == 2
+    assert all(isinstance(m, draken.Morsel) for m in morsels)
+    assert [m.num_rows for m in morsels] == [3, 2]
+    assert morsels[0].to_arrow().column(0).to_pylist() == [1, 2, 3]
+    assert morsels[1].to_arrow().column(1).to_pylist() == [b'y', b'z']
+
+
+def test_iter_from_arrow_handles_unchunked_and_empty_tables():
+    table = pa.table({'a': [1, 2], 'b': [3, 4]})
+    morsels = list(draken.Morsel.iter_from_arrow(table))
+    assert len(morsels) == 1
+    assert morsels[0].num_rows == 2
+
+    empty = pa.table({'a': pa.array([], type=pa.int64())})
+    assert list(draken.Morsel.iter_from_arrow(empty)) == []
+
+
+def test_iter_from_arrow_rejects_non_tables():
+    table = pa.table({'a': [1, 2, 3]})
+    batch = table.to_batches()[0]
+
+    with pytest.raises(TypeError):
+        list(draken.Morsel.iter_from_arrow(batch))
+
+    with pytest.raises(TypeError):
+        list(draken.Morsel.iter_from_arrow([1, 2, 3]))
+
+
+def test_iter_from_arrow_respects_batch_size():
+    table = pa.table({'a': [1, 2, 3, 4, 5], 'b': ['v', 'w', 'x', 'y', 'z']})
+
+    morsels = list(draken.Morsel.iter_from_arrow(table, batch_size=2))
+    assert [m.num_rows for m in morsels] == [2, 2, 1]
+    assert morsels[0].to_arrow().column(0).to_pylist() == [1, 2]
+    flattened = []
+    for m in morsels:
+        flattened.extend(m.to_arrow().column(1).to_pylist())
+    assert flattened == [b'v', b'w', b'x', b'y', b'z']
+
+
+def test_iter_from_arrow_validates_batch_size():
+    table = pa.table({'a': [1]})
+
+    with pytest.raises(TypeError):
+        list(draken.Morsel.iter_from_arrow(table, batch_size='not-int'))
+
+    with pytest.raises(ValueError):
+        list(draken.Morsel.iter_from_arrow(table, batch_size=0))
+
+    with pytest.raises(ValueError):
+        list(draken.Morsel.iter_from_arrow(table, batch_size=-3))
+
 def test_method_chaining():
     """Test that methods can be chained together (in-place operations)."""
     table = pa.table({'a': [1, 2, 3, 4], 'b': ['w', 'x', 'y', 'z'], 'c': [1.1, 2.2, 3.3, 4.4]})
@@ -457,7 +522,7 @@ def test_hash_all_columns_matches_column_hashes():
     assert len(int_hashes) == len(str_hashes) == morsel.num_rows
 
     combined = array("Q", int_hashes)
-    morsel.column(b"s").hash_into(combined)
+    hash_into_vector(morsel.column(b"s"), combined)
 
     expected = list(combined)
     morsel_hashes = _hash_view_to_list(morsel.hash())

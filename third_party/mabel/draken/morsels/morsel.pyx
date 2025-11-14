@@ -20,9 +20,10 @@ The module includes:
 """
 
 from cpython.bytes cimport PyBytes_FromStringAndSize
+from cpython.mem cimport PyMem_Calloc
 from cpython.mem cimport PyMem_Free
 from cpython.mem cimport PyMem_Malloc
-from libc.string cimport strlen, strcmp, memset
+from libc.string cimport strlen
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 
@@ -56,12 +57,54 @@ cdef class DrakenTypeInt(int):
 
 cdef class Morsel:
 
+    def __cinit__(self):
+        self.ptr = <DrakenMorsel*> NULL
+        self._columns = []
+        self._encoded_names = []
+        self._name_to_index = None
+
     def __dealloc__(self):
         if self.ptr is not NULL:
             PyMem_Free(self.ptr.column_names)
             PyMem_Free(self.ptr.column_types)
             PyMem_Free(self.ptr.columns)
             PyMem_Free(self.ptr)
+
+    cdef inline void _rebuild_name_to_index(self):
+        """Refresh the cached mapping from encoded column name -> index."""
+        cdef dict mapping = {}
+        cdef Py_ssize_t i, n
+        if self.ptr is NULL:
+            self._name_to_index = mapping
+            return
+        n = self.ptr.num_columns
+        for i in range(n):
+            mapping[self._encoded_names[i]] = i
+        self._name_to_index = mapping
+
+    cdef inline dict _ensure_name_map(self):
+        if self._name_to_index is None:
+            self._rebuild_name_to_index()
+        return self._name_to_index
+
+    cdef inline Py_ssize_t _column_index_from_name(self, object column):
+        """Resolve column identifier (str/bytes/int) to a numeric index."""
+        if isinstance(column, int):
+            if column < 0 or column >= self.ptr.num_columns:
+                raise IndexError(f"Column index {column} out of range")
+            return <Py_ssize_t>column
+
+        cdef bytes key
+        if isinstance(column, str):
+            key = column.encode("utf-8")
+        else:
+            key = column
+
+        cdef dict mapping = self._ensure_name_map()
+        cdef object idx = mapping.get(key)
+        if idx is None:
+            raise KeyError(f"Column '{column}' not found")
+        return <Py_ssize_t>idx
 
     @staticmethod
     def from_arrow(object table):
@@ -92,13 +135,76 @@ cdef class Morsel:
             self.ptr.column_types[i] = vec.dtype
             self.ptr.column_names[i] = <const char*>encoded_name
 
+        self._rebuild_name_to_index()
+
         return self
 
+    @staticmethod
+    def iter_from_arrow(object table, batch_size=None):
+        """Yield ``Morsel`` instances from an Arrow table without forcing ``combine_chunks``."""
+        import pyarrow as pa
+        cdef Py_ssize_t start
+        cdef Py_ssize_t length
+
+        if not isinstance(table, pa.Table):
+            raise TypeError("iter_from_arrow expects a pyarrow.Table")
+
+        if table.num_rows == 0:
+            return
+
+        if batch_size is not None:
+            if not isinstance(batch_size, int):
+                raise TypeError("batch_size must be an integer or None")
+            if batch_size <= 0:
+                raise ValueError("batch_size must be a positive integer when provided")
+
+            start = 0
+            while start < table.num_rows:
+                length = table.num_rows - start
+                if length > batch_size:
+                    length = batch_size
+                yield Morsel.from_arrow(table.slice(start, length))
+                start += length
+            return
+
+        # Build chunk boundaries from all columns so we never split an Arrow chunk.
+        cdef Py_ssize_t total_rows = table.num_rows
+        cdef Py_ssize_t previous = 0
+        cdef Py_ssize_t boundary
+        cdef set breakpoints = set()
+        cdef object column
+        cdef object chunk
+        cdef Py_ssize_t chunk_length
+        cdef Py_ssize_t slice_length
+
+        for column in table.columns:
+            boundary = 0
+            for chunk in column.chunks:
+                chunk_length = len(chunk)
+                boundary += chunk_length
+                breakpoints.add(boundary)
+
+        if not breakpoints:
+            breakpoints.add(total_rows)
+
+        for boundary in sorted(breakpoints):
+            if boundary <= previous:
+                continue
+            if boundary > total_rows:
+                boundary = total_rows
+            slice_length = boundary - previous
+            if slice_length <= 0:
+                previous = boundary
+                continue
+            yield Morsel.from_arrow(table.slice(previous, slice_length))
+            previous = boundary
+
     cpdef Vector column(self, bytes name):
-        for i in range(self.ptr.num_columns):
-            if self.ptr.column_names[i] == name:
-                return <Vector>self.ptr.columns[i]
-        raise KeyError(f"Column '{name}' not found")
+        cdef dict mapping = self._ensure_name_map()
+        cdef object idx = mapping.get(name)
+        if idx is None:
+            raise KeyError(f"Column '{name}' not found")
+        return <Vector>self.ptr.columns[<Py_ssize_t>idx]
 
     @property
     def shape(self) -> tuple:
@@ -202,6 +308,7 @@ cdef class Morsel:
             result.ptr.column_types[i] = self.ptr.column_types[i]
             result.ptr.column_names[i] = self.ptr.column_names[i]
 
+        result._rebuild_name_to_index()
         return result
 
     def take(self, indices) -> Morsel:
@@ -278,9 +385,8 @@ cdef class Morsel:
 
     cdef void _select_inplace(self, columns):
         """Internal in-place select implementation."""
-        cdef int i, j, n_selected
+        cdef int j, n_selected
         cdef list column_indices = []
-        cdef bytes col_name
         cdef Vector vec
 
         # Normalize columns to list
@@ -289,19 +395,9 @@ cdef class Morsel:
         elif isinstance(columns, bytes):
             columns = [columns]
 
-        # Find column indices efficiently
+        # Find column indices efficiently using cache
         for col in columns:
-            if isinstance(col, str):
-                col_name = col.encode('utf-8')
-            else:
-                col_name = col
-
-            for i in range(self.ptr.num_columns):
-                if strcmp(self.ptr.column_names[i], col_name) == 0:
-                    column_indices.append(i)
-                    break
-            else:
-                raise KeyError(f"Column '{col}' not found")
+            column_indices.append(self._column_index_from_name(col))
 
         n_selected = len(column_indices)
 
@@ -332,6 +428,7 @@ cdef class Morsel:
         self.ptr.num_columns = n_selected
         self._columns = new_column_list
         self._encoded_names = new_encoded_names
+        self._rebuild_name_to_index()
 
     def rename(self, names) -> Morsel:
         """
@@ -365,6 +462,7 @@ cdef class Morsel:
             self._encoded_names[i] = encoded_name
             self.ptr.column_names[i] = <const char*>encoded_name
 
+        self._rebuild_name_to_index()
         return self
 
     def to_arrow(self):
@@ -394,7 +492,7 @@ cdef class Morsel:
     cpdef uint64_t[::1] hash(self, columns=None):
         """Return per-row hash values, optionally restricted to selected columns."""
         cdef Py_ssize_t row_count = self.ptr.num_rows
-        cdef Py_ssize_t i, j
+        cdef Py_ssize_t idx
         cdef list column_indices
         cdef Py_ssize_t n_selected
         cdef Py_ssize_t alloc_rows
@@ -411,23 +509,7 @@ cdef class Morsel:
 
             column_indices = []
             for col in columns:
-                if isinstance(col, int):
-                    if col < 0 or col >= self.ptr.num_columns:
-                        raise IndexError(f"Column index {col} out of range")
-                    column_indices.append(col)
-                    continue
-
-                if isinstance(col, str):
-                    encoded = col.encode("utf-8")
-                else:
-                    encoded = col
-
-                for j in range(self.ptr.num_columns):
-                    if strcmp(self.ptr.column_names[j], encoded) == 0:
-                        column_indices.append(j)
-                        break
-                else:
-                    raise KeyError(f"Column '{col}' not found")
+                column_indices.append(self._column_index_from_name(col))
 
         n_selected = len(column_indices)
 
@@ -438,25 +520,20 @@ cdef class Morsel:
 
         if n_selected == 0:
             alloc_rows = row_count if row_count > 0 else 1
-            out_buf = <uint64_t*> PyMem_Malloc(alloc_rows * sizeof(uint64_t))
+            out_buf = <uint64_t*> PyMem_Calloc(alloc_rows, sizeof(uint64_t))
             if out_buf == NULL:
                 raise MemoryError()
-            if row_count > 0:
-                memset(out_buf, 0, row_count * sizeof(uint64_t))
             return <uint64_t[:row_count]> out_buf
 
         alloc_rows = row_count if row_count > 0 else 1
-        out_buf = <uint64_t*> PyMem_Malloc(alloc_rows * sizeof(uint64_t))
+        out_buf = <uint64_t*> PyMem_Calloc(alloc_rows, sizeof(uint64_t))
         if out_buf == NULL:
             raise MemoryError()
 
-        if row_count > 0:
-            memset(out_buf, 0, row_count * sizeof(uint64_t))
-
         cdef uint64_t[::1] out_view = <uint64_t[:row_count]> out_buf
 
-        for j in column_indices:
-            vec = <Vector> self.ptr.columns[j]
+        for idx in column_indices:
+            vec = <Vector> self.ptr.columns[idx]
             vec.hash_into(out_view, 0, mix_constant)
 
         return <uint64_t[:row_count]> out_buf

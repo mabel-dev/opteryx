@@ -20,14 +20,16 @@ import struct
 from typing import TYPE_CHECKING
 from typing import Any
 
-from opteryx.draken.vectors.vector import Vector
+from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
+from opteryx.draken.vectors.vector import Vector  # type: ignore[attr-defined]
 from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
 
 if TYPE_CHECKING:
     import pyarrow
 
 
-NULL_HASH = 0x9E3779B97F4A7C15
+MIX_HASH_CONSTANT = 0x9E3779B97F4A7C15
+NULL_HASH = MIX_HASH_CONSTANT
 
 
 class ArrowVector(Vector):
@@ -126,8 +128,9 @@ class ArrowVector(Vector):
         Args:
             out_buf: uint64 memoryview to write hashes into
             offset: Starting offset in out_buf
-            mix_constant: Constant for hash mixing
+            mix_constant: Constant for hash mixing (ignored; we use MIX_HASH_CONSTANT)
         """
+        mix_constant = MIX_HASH_CONSTANT
         from opteryx.draken.interop.arrow import vector_from_arrow  # type: ignore[attr-defined]
 
         # Prefer native implementations when available.
@@ -139,10 +142,9 @@ class ArrowVector(Vector):
         if (
             candidate is not None
             and candidate is not self
-            and hasattr(candidate, "hash_into")
             and not isinstance(candidate, ArrowVector)
         ):
-            candidate.hash_into(out_buf, offset=offset, mix_constant=mix_constant)
+            hash_into_vector(candidate, out_buf, offset=offset)
             return
 
         values = self._arr.to_pylist()

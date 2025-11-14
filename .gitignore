@@ -217,3 +217,5 @@ third_party/mabel/draken/vectors/timestamp_vector.c
 third_party/mabel/draken/vectors/vector.c
 third_party/mabel/draken/core/ops.cpp
 tests/draken/performance/.perf_baseline.json
+opteryx/draken/vectors/_hash_api.c
+opteryx/draken/evaluators/compiled/**.cpp

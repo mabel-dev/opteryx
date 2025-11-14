@@ -19,10 +19,10 @@ For more information check out https://opteryx.dev.
 
 import datetime
 import os
-import random
+import platform
+import secrets
 import time
 import warnings
-import platform
 from pathlib import Path
 
 from decimal import getcontext
@@ -34,8 +34,14 @@ if TYPE_CHECKING:  # pragma: no cover - only for type checkers
 # Set Decimal precision to 28 globally
 getcontext().prec = 28
 
+
 # end-of-stream marker
-EOS: int = random.randint(-(2**63), 2**63 - 1)
+def _generate_eos_marker() -> int:
+    """Generate a random 64-bit signed end-of-stream marker."""
+    return secrets.randbits(64) - (1 << 63)
+
+
+EOS: int = _generate_eos_marker()
 
 
 def is_mac() -> bool:  # pragma: no cover
@@ -218,14 +224,13 @@ def query_to_arrow(
 
 # Try to increase the priority of the application
 if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
-    nice_value = os.nice(0)
+    nice_value = 0
     try:
+        nice_value = os.nice(0)
         if not is_mac():
             os.nice(-20 + nice_value)
     except PermissionError:
-        display_nice = str(nice_value)
-        if nice_value == 0:
-            display_nice = "0 (normal)"
+        display_nice = f"{nice_value} (normal)" if nice_value == 0 else str(nice_value)
         if OPTERYX_DEBUG:
             print(
                 f"{datetime.datetime.now()} [LOADER] Cannot update process priority. Currently set to {display_nice}."

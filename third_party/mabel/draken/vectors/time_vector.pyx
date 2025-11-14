@@ -36,7 +36,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
 cdef class TimeVector(Vector):
 
@@ -226,12 +226,12 @@ cdef class TimeVector(Vector):
         self.hash_into(view, 0)
         return view
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
 
@@ -247,6 +247,10 @@ cdef class TimeVector(Vector):
         cdef int64_t* data64
         cdef int32_t* data32
 
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
         if self.is_time64:
             data64 = <int64_t*> ptr.data
             for i in range(n):
@@ -260,7 +264,7 @@ cdef class TimeVector(Vector):
                 else:
                     value = <uint64_t> data64[i]
 
-                out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
+                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
         else:
             data32 = <int32_t*> ptr.data
             for i in range(n):
@@ -274,7 +278,7 @@ cdef class TimeVector(Vector):
                 else:
                     value = <uint64_t>(<int64_t> data32[i])
 
-                out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
+                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
 
     def __str__(self):
         cdef list vals = []

@@ -7,7 +7,7 @@ compiled evaluator to generate optimized evaluation code.
 """
 
 from typing import Any
-
+from opteryx.third_party.cyan4973.xxhash import hash_bytes
 
 class Expression:
     """
@@ -23,8 +23,8 @@ class Expression:
     def __eq__(self, other):
         return isinstance(other, self.__class__)
 
-    def __hash__(self):
-        return hash(self.__class__.__name__)
+    def __hash__(self) -> int:
+        return hash_bytes(self.__class__.__name__.encode("utf-8"))
 
 
 class LiteralExpression(Expression):
@@ -52,8 +52,8 @@ class LiteralExpression(Expression):
     def __eq__(self, other):
         return isinstance(other, LiteralExpression) and self.value == other.value
 
-    def __hash__(self):
-        return hash((self.__class__.__name__, self.value))
+    def __hash__(self) -> int:
+        return hash_bytes(f"{self.__class__.__name__}::{self.value}".encode("utf-8"))
 
 
 class ColumnExpression(Expression):
@@ -80,8 +80,8 @@ class ColumnExpression(Expression):
     def __eq__(self, other):
         return isinstance(other, ColumnExpression) and self.column_name == other.column_name
 
-    def __hash__(self):
-        return hash((self.__class__.__name__, self.column_name))
+    def __hash__(self) -> int:
+        return hash_bytes(f"{self.__class__.__name__}::{self.column_name}".encode("utf-8"))
 
 
 class BinaryExpression(Expression):
@@ -117,8 +117,8 @@ class BinaryExpression(Expression):
             and self.right == other.right
         )
 
-    def __hash__(self):
-        return hash((self.__class__.__name__, self.operation, self.left, self.right))
+    def __hash__(self) -> int:
+        return hash_bytes(f"{self.__class__.__name__}::{self.operation}::{self.left}::{self.right}".encode("utf-8"))
 
 
 class UnaryExpression(Expression):
@@ -150,5 +150,5 @@ class UnaryExpression(Expression):
             and self.operand == other.operand
         )
 
-    def __hash__(self):
-        return hash((self.__class__.__name__, self.operation, self.operand))
+    def __hash__(self) -> int:
+        return hash_bytes(f"{self.__class__.__name__}::{self.operation}::{self.operand}".encode("utf-8"))

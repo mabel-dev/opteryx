@@ -8,6 +8,7 @@ import pytest
 from array import array
 
 from opteryx.draken import Vector
+from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
 from opteryx.draken.vectors.arrow_vector import ArrowVector
 from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
 
@@ -40,7 +41,7 @@ def _hash_buffer(vector) -> memoryview:
             length = len(vector.to_pylist())
 
     out = array("Q", [0] * length)
-    vector.hash_into(out)
+    hash_into_vector(vector, out)
     return memoryview(out)
 
 

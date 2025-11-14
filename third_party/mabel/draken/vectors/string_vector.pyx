@@ -30,7 +30,7 @@ from opteryx.draken.core.buffers cimport DrakenVarBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_STRING
 from opteryx.draken.core.var_vector cimport alloc_var_buffer
 from opteryx.draken.core.var_vector cimport buf_dtype
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 
@@ -239,12 +239,12 @@ cdef class StringVector(Vector):
 
         return out
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         cdef DrakenVarBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
 
@@ -263,6 +263,10 @@ cdef class StringVector(Vector):
         cdef uint8_t null_byte
         cdef uint64_t value
 
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
         if nb_ptr != NULL:
             for i in range(0, n, 8):
                 null_byte = nb_ptr[i >> 3]
@@ -276,16 +280,14 @@ cdef class StringVector(Vector):
                     else:
                         value = NULL_HASH
 
-                    out_buf[offset + j] = mix_hash(
-                        out_buf[offset + j], value, mix_constant
-                    )
+                    out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
         else:
             for j in range(n):
                 start = offsets[j]
                 end = offsets[j + 1]
                 str_len = <size_t>(end - start)
                 value = cy_xxhash3_64(data + start, str_len)
-                out_buf[offset + j] = mix_hash(out_buf[offset + j], value, mix_constant)
+                out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
 
     cpdef StringVector take(self, int32_t[::1] indices):
         cdef DrakenVarBuffer* src_ptr = self.ptr

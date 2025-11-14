@@ -20,6 +20,14 @@ void CIntBuffer::append(int64_t value) {
     buffer.push_back(value);
 }
 
+void CIntBuffer::append(unsigned long value) {
+    buffer.push_back(static_cast<int64_t>(value));
+}
+
+void CIntBuffer::append(unsigned long long value) {
+    buffer.push_back(static_cast<int64_t>(value));
+}
+
 void CIntBuffer::append(int64_t value1, int64_t value2) {
     if (buffer.capacity() - buffer.size() < 2) {
         buffer.reserve(buffer.capacity() * GROWTH_FACTOR);

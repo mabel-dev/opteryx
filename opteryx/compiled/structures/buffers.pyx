@@ -11,6 +11,7 @@ import numpy
 cimport numpy
 numpy.import_array()
 
+from libc.stddef cimport size_t
 from libc.stdint cimport int64_t
 from libcpp.vector cimport vector
 from libc.string cimport memcpy
@@ -21,6 +22,7 @@ cdef extern from "intbuffer.h":
         void append(int64_t value) nogil
         void extend(const vector[int64_t]& values) nogil
         void extend(const int64_t* data, size_t count) nogil
+        void reserve(size_t additional_capacity) nogil
         const int64_t* data() nogil
         size_t size() nogil
         void append_repeated(int64_t value, size_t count) nogil
@@ -90,5 +92,6 @@ cdef class IntBuffer:
 
     cpdef void reserve(self, size_t capacity):
         """Reserve capacity for future appends."""
-        # We'll need to add this method to the C++ class
-        pass
+        if capacity == 0:
+            return
+        self.c_buffer.reserve(capacity)

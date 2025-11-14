@@ -20,6 +20,7 @@ Used for high-performance analytics and columnar data processing in Draken.
 
 from cpython.mem cimport PyMem_Malloc
 
+from libc.stddef cimport size_t
 from libc.stdint cimport int32_t
 from libc.stdint cimport int64_t
 from libc.stdint cimport int8_t
@@ -27,7 +28,6 @@ from libc.stdint cimport intptr_t
 from libc.stdint cimport uint64_t
 from libc.stdint cimport uint8_t
 from libc.stdlib cimport malloc
-from libc.string cimport memset
 
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_INT64
@@ -36,7 +36,13 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport (
+    MIX_HASH_CONSTANT,
+    NULL_HASH,
+    Vector,
+    mix_hash,
+    simd_mix_hash,
+)
 
 from opteryx.draken.vectors.bool_vector cimport BoolVector
 
@@ -422,12 +428,12 @@ cdef class Int64Vector(Vector):
 
         return out
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
         cdef Py_ssize_t n = ptr.length
@@ -439,21 +445,24 @@ cdef class Int64Vector(Vector):
             raise ValueError("Int64Vector.hash_into: output buffer too small")
 
         cdef Py_ssize_t i
-        cdef uint8_t byte, bit
+        cdef uint8_t byte
         cdef uint64_t value
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef int64_t* src = data
+        cdef uint64_t* as_uint64 = <uint64_t*> src
+        cdef uint8_t* null_bitmap = ptr.null_bitmap
+        cdef bint has_nulls = null_bitmap != NULL
 
-        for i in range(n):
-            if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:
-                    value = NULL_HASH
+        if has_nulls:
+            for i in range(n):
+                byte = null_bitmap[i >> 3]
+                if byte & (1 << (i & 7)):
+                    value = <uint64_t> src[i]
                 else:
-                    value = <uint64_t> data[i]
-            else:
-                value = <uint64_t> data[i]
-
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
+                    value = NULL_HASH
+                dst[i] = mix_hash(dst[i], value)
+        else:
+            simd_mix_hash(dst, as_uint64, <size_t>n, MIX_HASH_CONSTANT)
 
     def __str__(self):
         cdef list vals = []

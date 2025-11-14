@@ -14,6 +14,7 @@ with the correct schema.
 This is more efficient than reading all rows and filtering them out.
 """
 
+import logging
 from typing import Generator
 
 import pyarrow
@@ -22,6 +23,8 @@ from orso.schema import convert_orso_schema_to_arrow_schema
 from opteryx import EOS
 
 from . import BasePlanNode
+
+logger = logging.getLogger(__name__)
 
 
 class NullReaderNode(BasePlanNode):  # pragma: no cover
@@ -57,8 +60,12 @@ class NullReaderNode(BasePlanNode):  # pragma: no cover
                 )
                 yield empty_table
                 return
-            except Exception:
-                pass
+            except (
+                ValueError,
+                TypeError,
+                pyarrow.lib.ArrowInvalid,
+            ) as err:  # pragma: no cover - defensive fallback
+                logger.debug("Unable to build schema-aware empty table: %s", err)
 
         # Second try: use columns property if available
         if self.columns:

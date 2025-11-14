@@ -20,7 +20,7 @@ can contain any element type and require complex handling.
 
 from libc.stdint cimport uint64_t
 
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 from opteryx.draken.core.buffers cimport DRAKEN_ARRAY
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
 
@@ -80,17 +80,21 @@ cdef class ArrayVector(Vector):
     def to_pylist(self):
         return self._arr.to_pylist() if self._arr is not None else []
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         """Compute hashes and combine into the output buffer with mixing."""
         cdef Py_ssize_t i
         cdef uint64_t h
         cdef list values = self._arr.to_pylist() if self._arr is not None else []
         cdef Py_ssize_t n = len(values)
+
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
 
         if n == 0:
             return
@@ -109,7 +113,7 @@ cdef class ArrayVector(Vector):
             else:
                 h = hash_bytes(repr(value).encode("utf-8"))
 
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], h, mix_constant)
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], h)
 
     def __str__(self):
         if self._arr is None:

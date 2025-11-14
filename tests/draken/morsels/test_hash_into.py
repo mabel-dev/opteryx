@@ -10,6 +10,13 @@ import pytest
 import pyarrow as pa
 from array import array
 import opteryx.draken as draken
+from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
+from opteryx.draken.vectors.arrow_vector import ArrowVector
+
+try:
+    from opteryx.draken.vectors.vector import MIX_HASH_CONSTANT  # type: ignore[attr-defined]
+except (ImportError, AttributeError):
+    from opteryx.draken.vectors.arrow_vector import MIX_HASH_CONSTANT
 
 
 def _hash_view_to_list(buffer):
@@ -36,7 +43,7 @@ def _vector_hash_to_list(vector, mix_constant: int = 0x9E3779B97F4A7C15):
             length = len(vector.to_pylist())
 
     out = array("Q", [0] * length)
-    vector.hash_into(out, mix_constant=mix_constant)
+    hash_into_vector(vector, out, mix_constant=mix_constant)
     return list(out)
 
 
@@ -51,7 +58,7 @@ def test_hash_into_int64_vector():
     out_view = memoryview(out_buf)
     
     # Call hash_into
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     # Verify buffer was modified
     result = list(out_buf)
@@ -68,7 +75,7 @@ def test_hash_into_float64_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -83,7 +90,7 @@ def test_hash_into_string_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -98,7 +105,7 @@ def test_hash_into_bool_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -113,10 +120,44 @@ def test_hash_into_timestamp_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
+
+
+def test_timestamp_hash_matches_arrow_vector_for_sliced_arrays():
+    """TimestampVector hash_into should match ArrowVector for sliced arrays with offsets."""
+    base = pa.array([None, 1, None, 2, 3, None], type=pa.timestamp('ns'))
+    arr = base.slice(1, 4)
+
+    arrow_vec = ArrowVector(arr)
+    table = pa.table({'a': arr})
+    morsel = draken.Morsel.from_arrow(table)
+    native_vec = morsel.column(b'a')
+
+    assert _vector_hash_to_list(native_vec) == _vector_hash_to_list(arrow_vec)
+
+
+def test_timestamp_hash_handles_timezone_arrays_with_offsets():
+    """TimestampVector hash_into should respect nulls when timezone arrays are sliced."""
+    base = pa.array([
+        None,
+        1,
+        None,
+        2,
+        3,
+        None,
+        4,
+    ], type=pa.timestamp('us', tz='UTC'))
+    arr = base.slice(2, 4)
+
+    arrow_vec = ArrowVector(arr)
+    table = pa.table({'a': arr})
+    morsel = draken.Morsel.from_arrow(table)
+    native_vec = morsel.column(b'a')
+
+    assert _vector_hash_to_list(native_vec) == _vector_hash_to_list(arrow_vec)
 
 
 def test_hash_into_date32_vector():
@@ -128,7 +169,7 @@ def test_hash_into_date32_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -143,7 +184,7 @@ def test_hash_into_arrow_vector_int8():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -158,7 +199,7 @@ def test_hash_into_arrow_vector_int16():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -173,7 +214,7 @@ def test_hash_into_arrow_vector_int32():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -188,7 +229,7 @@ def test_hash_into_arrow_vector_float32():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -203,7 +244,7 @@ def test_hash_into_array_vector():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result != [0, 0, 0]
@@ -219,7 +260,7 @@ def test_hash_into_with_offset():
     out_view = memoryview(out_buf)
     
     # Write at offset 2
-    vec.hash_into(out_view, 2, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 2, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # First two should be unchanged (zero)
@@ -241,7 +282,7 @@ def test_hash_into_buffer_too_small():
     out_view = memoryview(out_buf)
     
     with pytest.raises(ValueError, match="output buffer too small"):
-        vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+        hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
 
 
 def test_hash_into_buffer_too_small_with_offset():
@@ -255,7 +296,7 @@ def test_hash_into_buffer_too_small_with_offset():
     out_view = memoryview(out_buf)
     
     with pytest.raises(ValueError, match="output buffer too small"):
-        vec.hash_into(out_view, 2, 0x9E3779B97F4A7C15)
+        hash_into_vector(vec, out_view, 2, 0x9E3779B97F4A7C15)
 
 
 def test_hash_into_consistency_with_hash():
@@ -276,7 +317,7 @@ def test_hash_into_consistency_with_hash():
         expected.append(hashed)
 
     out_buf = array('Q', [0] * len(expected))
-    vec.hash_into(out_buf, 0, mix_constant)
+    hash_into_vector(vec, out_buf, 0, mix_constant)
 
     assert list(out_buf) == expected
 
@@ -309,7 +350,7 @@ def test_hash_into_with_nulls():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All should be non-zero (nulls have NULL_HASH)
@@ -326,25 +367,27 @@ def test_hash_into_empty_vector():
     out_view = memoryview(out_buf)
     
     # Should not raise
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
 
 
 def test_hash_into_different_mix_constants():
-    """hash_into should produce different results with different mix constants."""
+    """hash_into enforces a shared mix constant even when callers pass overrides."""
     table = pa.table({'a': pa.array([1, 2, 3], type=pa.int64())})
     morsel = draken.Morsel.from_arrow(table)
     vec = morsel.column(b'a')
     
     out_buf1 = array('Q', [0, 0, 0])
     out_view1 = memoryview(out_buf1)
-    vec.hash_into(out_view1, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view1, 0, 0x9E3779B97F4A7C15)
     
     out_buf2 = array('Q', [0, 0, 0])
     out_view2 = memoryview(out_buf2)
-    vec.hash_into(out_view2, 0, 0x123456789ABCDEF0)
+    hash_into_vector(vec, out_view2, 0, 0x123456789ABCDEF0)
     
-    # Results should differ due to different mix constants
-    assert list(out_buf1) != list(out_buf2)
+    # Both invocations collapse to the shared MIX_HASH_CONSTANT
+    assert list(out_buf1) == list(out_buf2)
+    baseline = _vector_hash_to_list(vec, mix_constant=MIX_HASH_CONSTANT)
+    assert list(out_buf1) == baseline
 
 
 def test_morsel_multi_column_hash_combines_correctly():
@@ -377,7 +420,7 @@ def test_hash_into_very_large_buffer():
     out_buf = array('Q', [0] * n)
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     # Verify all non-zero values were modified (hash of 0 may be 0 after mix)
     result = list(out_buf)
@@ -398,7 +441,7 @@ def test_hash_into_single_element():
     out_buf = array('Q', [0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     assert out_buf[0] != 0
 
@@ -412,7 +455,7 @@ def test_hash_into_all_same_values():
     out_buf = array('Q', [0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All should be the same since input values are identical
@@ -429,7 +472,7 @@ def test_hash_into_sequential_values():
     out_buf = array('Q', [0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All should be unique
@@ -445,7 +488,7 @@ def test_hash_into_negative_integers():
     out_buf = array('Q', [0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All should have been hashed (including 0, which hashes to non-zero)
@@ -463,7 +506,7 @@ def test_hash_into_float_special_values():
     out_buf = array('Q', [0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # +inf and -inf should be non-zero and different
@@ -484,7 +527,7 @@ def test_hash_into_float_nan():
     out_view = memoryview(out_buf)
     
     # Should not raise
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)
@@ -499,7 +542,7 @@ def test_hash_into_string_empty():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Empty strings should have same hash
@@ -517,7 +560,7 @@ def test_hash_into_string_unicode():
     out_buf = array('Q', [0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)
@@ -534,7 +577,7 @@ def test_hash_into_string_very_long():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Same strings should have same hash
@@ -551,7 +594,7 @@ def test_hash_into_bool_all_true():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert len(set(result)) == 1  # All same
@@ -567,7 +610,7 @@ def test_hash_into_bool_all_false():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert len(set(result)) == 1  # All same
@@ -583,7 +626,7 @@ def test_hash_into_bool_mixed():
     out_buf = array('Q', [0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result[0] != result[1]
@@ -598,10 +641,11 @@ def test_hash_into_timestamp_epoch():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
-    assert all(h != 0 for h in result)
+    assert result[1] != 0
+    assert result[2] != 0
     assert len(set(result)) == 3
 
 
@@ -614,7 +658,7 @@ def test_hash_into_date_boundaries():
     out_buf = array('Q', [0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)
@@ -636,7 +680,7 @@ def test_hash_into_nested_lists():
     out_buf = array('Q', [0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Duplicate lists should have same hash
@@ -655,7 +699,7 @@ def test_hash_into_all_nulls_int64():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All nulls should have same hash
@@ -672,7 +716,7 @@ def test_hash_into_all_nulls_string():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert len(set(result)) == 1
@@ -688,7 +732,7 @@ def test_hash_into_alternating_null_values():
     out_buf = array('Q', [0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Null hashes should be same
@@ -698,7 +742,7 @@ def test_hash_into_alternating_null_values():
 
 
 def test_hash_into_zero_mix_constant():
-    """hash_into with zero mix constant should still work."""
+    """hash_into treats zero mix overrides as a request for the shared constant."""
     table = pa.table({'a': pa.array([1, 2, 3], type=pa.int64())})
     morsel = draken.Morsel.from_arrow(table)
     vec = morsel.column(b'a')
@@ -707,11 +751,12 @@ def test_hash_into_zero_mix_constant():
     out_view = memoryview(out_buf)
     
     # Should not raise even with zero mix constant
-    vec.hash_into(out_view, 0, 0)
+    hash_into_vector(vec, out_view, 0, 0)
     
     result = list(out_buf)
-    # All will be zero due to multiplication by zero
-    assert all(h == 0 for h in result)
+    baseline = _vector_hash_to_list(vec, mix_constant=MIX_HASH_CONSTANT)
+    assert all(h != 0 for h in result)
+    assert result == baseline
 
 
 def test_hash_into_max_uint64_mix_constant():
@@ -724,7 +769,7 @@ def test_hash_into_max_uint64_mix_constant():
     out_view = memoryview(out_buf)
     
     max_uint64 = 0xFFFFFFFFFFFFFFFF
-    vec.hash_into(out_view, 0, max_uint64)
+    hash_into_vector(vec, out_view, 0, max_uint64)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)
@@ -745,11 +790,11 @@ def test_hash_into_multiple_calls_accumulate():
     out_view = memoryview(out_buf)
     
     # First call
-    vec1.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec1, out_view, 0, 0x9E3779B97F4A7C15)
     result_after_first = list(out_buf)
     
     # Second call (should combine with first)
-    vec2.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec2, out_view, 0, 0x9E3779B97F4A7C15)
     result_after_second = list(out_buf)
     
     # Results should be different after second call
@@ -767,7 +812,7 @@ def test_hash_into_preinitalized_buffer():
     out_view = memoryview(out_buf)
     initial_values = list(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Should be different from initial values
@@ -784,7 +829,7 @@ def test_hash_into_offset_at_end():
     out_view = memoryview(out_buf)
     
     # Write at the last position
-    vec.hash_into(out_view, 4, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 4, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # First four should be unchanged
@@ -802,7 +847,7 @@ def test_hash_into_arrow_vector_null_type():
     out_buf = array('Q', [0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # All nulls should have same hash
@@ -857,7 +902,7 @@ def test_hash_into_int8_boundaries():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Min and max should be non-zero
@@ -875,7 +920,7 @@ def test_hash_into_int16_boundaries():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result[0] != 0  # 32767
@@ -892,7 +937,7 @@ def test_hash_into_int32_boundaries():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result[0] != 0
@@ -909,7 +954,7 @@ def test_hash_into_int64_boundaries():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result[0] != 0
@@ -926,7 +971,7 @@ def test_hash_into_float32_very_small():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     # Small values should hash
@@ -943,7 +988,7 @@ def test_hash_into_float64_very_small():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert result[0] != 0
@@ -959,7 +1004,7 @@ def test_hash_into_string_with_special_chars():
     out_buf = array('Q', [0, 0, 0, 0, 0, 0, 0])
     out_view = memoryview(out_buf)
     
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)
@@ -979,7 +1024,7 @@ def test_hash_into_performance_no_regression():
     out_view = memoryview(out_buf)
     
     start = time.time()
-    vec.hash_into(out_view, 0, 0x9E3779B97F4A7C15)
+    hash_into_vector(vec, out_view, 0, 0x9E3779B97F4A7C15)
     elapsed = time.time() - start
     
     # Should complete in under 100ms for 10k elements

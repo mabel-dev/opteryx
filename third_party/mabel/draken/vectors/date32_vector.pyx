@@ -34,7 +34,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
 
 cdef class Date32Vector(Vector):
 
@@ -309,12 +309,12 @@ cdef class Date32Vector(Vector):
 
         return out
 
-    cpdef void hash_into(
+    cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
         uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
-    ):
+    ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int32_t* data = <int32_t*> ptr.data
         cdef Py_ssize_t n = ptr.length
@@ -329,6 +329,10 @@ cdef class Date32Vector(Vector):
         cdef uint8_t byte, bit
         cdef uint64_t value
 
+        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
         for i in range(n):
             if ptr.null_bitmap != NULL:
                 byte = ptr.null_bitmap[i >> 3]
@@ -340,7 +344,7 @@ cdef class Date32Vector(Vector):
             else:
                 value = <uint64_t> data[i]
 
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value, mix_constant)
+            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
 
     def __str__(self):
         cdef list vals = []

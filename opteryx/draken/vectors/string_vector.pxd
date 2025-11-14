@@ -21,7 +21,7 @@ cdef class StringVector(Vector):
     cdef bint owns_data
 
     cpdef int8_t[::1] equals(self, bytes value)
-    cpdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*)
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
     cpdef StringVector take(self, int32_t[::1] indices)
 
     cpdef list to_pylist(self)
