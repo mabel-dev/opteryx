@@ -278,19 +278,6 @@ def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
         for i, param in enumerate(root.parameters):
             root.parameters[i] = fold_constants(param, statistics)
 
-    # rewrite aggregations to constants where possible
-    for agg in aggregators:
-        if len(agg.parameters) == 1 and agg.parameters[0].node_type == NodeType.LITERAL:
-            if agg.value == "COUNT":
-                # COUNT(1) is always the number of rows
-                root.parameters[0] = Node(NodeType.WILDCARD)
-                statistics.optimization_constant_aggregation += 1
-                return root
-            if agg.value in ("AVG", "MIN", "MAX"):
-                # AVG, MIN, MAX of a constant is the constant
-                statistics.optimization_constant_aggregation += 1
-                return build_literal_node(agg.parameters[0].value, root, root.schema_column.type)
-
     if (
         len(identifiers) == 0
         and len(aggregators) == 0

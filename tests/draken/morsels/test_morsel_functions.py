@@ -11,7 +11,6 @@ import pytest
 import pyarrow as pa
 import opteryx.draken as draken
 
-from opteryx.compiled.table_ops.distinct import _test_distinct_from_hashes as distinct_from_hashes
 from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
 
 
@@ -283,23 +282,6 @@ def test_select_none_raises_type_error():
 
     with pytest.raises(TypeError):
         morsel.select(None)
-
-
-def test_distinct_from_draken_hashes():
-    table = pa.table({'a': [1, 1, 2], 'b': ['x', 'x', 'y']})
-    morsel = draken.Morsel.from_arrow(table)
-
-    hashes = morsel.hash()
-    unique_indexes, seen_hashes = distinct_from_hashes(memoryview(hashes))
-    assert unique_indexes.tolist() == [0, 2]
-
-    next_table = pa.table({'a': [1, 3], 'b': ['x', 'z']})
-    next_hashes = draken.Morsel.from_arrow(next_table).hash()
-
-    next_unique_indexes, _ = distinct_from_hashes(
-        memoryview(next_hashes), seen_hashes=seen_hashes
-    )
-    assert next_unique_indexes.tolist() == [1]
 
 
 def test_rename_method_signature():

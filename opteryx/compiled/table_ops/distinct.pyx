@@ -14,29 +14,6 @@ from opteryx.compiled.structures.buffers cimport IntBuffer
 from opteryx.draken.morsels.morsel cimport Morsel
 
 
-cdef tuple _distinct_from_hashes(uint64_t[::1] row_hashes, FlatHashSet seen_hashes):
-    cdef Py_ssize_t num_rows = row_hashes.shape[0]
-    cdef IntBuffer keep = IntBuffer(<size_t>(num_rows))
-    cdef Py_ssize_t row_idx
-
-    if num_rows == 0:
-        return keep.to_numpy(), seen_hashes
-
-    for row_idx in range(num_rows):
-        if seen_hashes.insert(row_hashes[row_idx]):
-            keep.append(<int64_t>row_idx)
-
-    return keep.to_numpy(), seen_hashes
-
-
-cpdef tuple _test_distinct_from_hashes(uint64_t[::1] row_hashes, FlatHashSet seen_hashes=None):
-    """Test helper to compute distinct indices directly from hash buffers."""
-    if seen_hashes is None:
-        seen_hashes = FlatHashSet()
-        seen_hashes.reserve(2048)
-
-    return _distinct_from_hashes(row_hashes, seen_hashes)
-
 cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=None):
     """
     Compute distinct indices using Draken morsel hashing.
@@ -53,7 +30,6 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         tuple: (indices_to_keep, updated_hash_set)
     """
     cdef uint64_t[::1] row_hashes
-    cdef int64_t num_rows, row_idx
 
     # Get row hashes
     if columns is None:
@@ -65,4 +41,15 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         seen_hashes = FlatHashSet()
         seen_hashes.reserve(2048)
 
-    return _distinct_from_hashes(row_hashes, seen_hashes)
+    cdef Py_ssize_t num_rows = row_hashes.shape[0]
+    cdef IntBuffer keep = IntBuffer(<size_t>(num_rows))
+    cdef Py_ssize_t row_idx
+
+    if num_rows == 0:
+        return keep.to_numpy(), seen_hashes
+
+    for row_idx in range(num_rows):
+        if seen_hashes.insert(row_hashes[row_idx]):
+            keep.append(<int64_t>row_idx)
+
+    return keep.to_numpy(), seen_hashes

@@ -325,9 +325,10 @@ class BinderVisitor:
         # remove literals in the GROUP BY clause, they form one group
         node.groups = [g for g in node.groups if g.node_type != NodeType.LITERAL]
         # 2) the columns referenced in the SELECT
-        node.columns = get_all_nodes_of_type(
+        identifier_columns = get_all_nodes_of_type(
             node.aggregates + node.groups, select_nodes=(NodeType.IDENTIFIER,)
         )
+        node.columns = list(node.aggregates) + identifier_columns
         all_identifiers = [node.schema_column.identity for node in node.columns]
         columns_to_keep = columns_to_keep.union(all_identifiers)
 
@@ -425,8 +426,11 @@ class BinderVisitor:
                 identities.append(column.identity)
 
         columns = []
+        seen_identities = set()
         for _, schema in context.schemas.items():
             for column in schema.columns:
+                if column.identity in seen_identities:
+                    continue
                 if keep_column(column, identities):
                     column_name = name_column(column=column)
                     column_reference = LogicalColumn(
@@ -437,6 +441,7 @@ class BinderVisitor:
                         schema_column=column,
                     )
                     columns.append(column_reference)
+                    seen_identities.add(column.identity)
 
         # we bound as we came across items in schemas, not the order the user wants them
         desired_order = {id: index for index, id in enumerate(identities)}
@@ -1121,9 +1126,8 @@ class BinderVisitor:
 
             # we can only UNNEST an ARRAY type column, we need to find it before we know its type
             if node.unnest_column.schema_column.type not in (
-                OrsoTypes._MISSING_TYPE,
-                OrsoTypes.ARRAY,
                 0,
+                OrsoTypes.ARRAY,
             ):
                 from opteryx.exceptions import IncorrectTypeError
 
