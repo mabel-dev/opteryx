@@ -13,11 +13,11 @@ import importlib
 from pathlib import Path
 from typing import Tuple
 
+from opteryx import __version__
 from opteryx.draken.evaluators.expression import BinaryExpression
 from opteryx.draken.evaluators.expression import ColumnExpression
 from opteryx.draken.evaluators.expression import LiteralExpression
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
-from opteryx import __version__
 
 PACKAGE_DIR = Path(__file__).parent / "compiled"
 GENERATED_DIR = PACKAGE_DIR
@@ -42,7 +42,7 @@ def ensure_compiled_evaluator(key: str, expr_ast) -> Tuple[str, object]:
     mod_name = f"opteryx.draken.evaluators.compiled.generated_{VERSION}_{key}"
     pyx_name = GENERATED_DIR / f"generated_{VERSION}_{key}.pyx"
     so_name = GENERATED_DIR / f"generated_{VERSION}_{key}.cpython-*.so"
-    
+
     # Check if .so is newer than .pyx
     if pyx_name.exists() and so_name.exists():
         so_files = list(GENERATED_DIR.glob(f"generated_{VERSION}_{key}.cpython-*.so"))
@@ -70,10 +70,10 @@ def ensure_compiled_evaluator(key: str, expr_ast) -> Tuple[str, object]:
             include_dirs=[],
             language="c++",
             extra_compile_args=[
-                "-O3", 
+                "-O3",
                 "-ffast-math",
                 "-march=native",  # Optimize for current CPU
-                "-DNDEBUG",       # Disable asserts
+                "-DNDEBUG",  # Disable asserts
             ],
         )
 

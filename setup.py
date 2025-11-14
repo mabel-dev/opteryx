@@ -180,11 +180,13 @@ if SHOULD_BUILD_EXTENSIONS:
     C_COMPILE_FLAGS = ["-O3"]
     if is_mac():
         CPP_COMPILE_FLAGS += ["-std=c++17"]
+        C_COMPILE_FLAGS += ["-std=c17"]
     elif is_win():
         CPP_COMPILE_FLAGS += ["/std:c++17"]
+        C_COMPILE_FLAGS += ["/std:c17"]
     else:
         CPP_COMPILE_FLAGS += ["-std=c++17", "-march=native", "-fvisibility=default"]
-        C_COMPILE_FLAGS += ["-march=native", "-fvisibility=default"]
+        C_COMPILE_FLAGS += ["-std=c17", "-march=native", "-fvisibility=default"]
 
     COMMON_WARNING_SUPPRESSIONS = [
         "-Wno-unused-function",
@@ -426,7 +428,7 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         make_draken_extension("vectors.bool_vector", "vectors/bool_vector.pyx"),
         make_draken_extension("vectors.float64_vector", "vectors/float64_vector.pyx"),
-        make_draken_extension("vectors.int64_vector", "vectors/int64_vector.pyx"),
+        make_draken_extension("vectors.int64_vector", "vectors/int64_vector.pyx", language="c++"),
         make_draken_extension("vectors.string_vector", "vectors/string_vector.pyx"),
         make_draken_extension("vectors.date32_vector", "vectors/date32_vector.pyx"),
         make_draken_extension("vectors.timestamp_vector", "vectors/timestamp_vector.pyx"),

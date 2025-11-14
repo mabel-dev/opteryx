@@ -7,7 +7,9 @@ compiled evaluator to generate optimized evaluation code.
 """
 
 from typing import Any
+
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
+
 
 class Expression:
     """
@@ -118,7 +120,11 @@ class BinaryExpression(Expression):
         )
 
     def __hash__(self) -> int:
-        return hash_bytes(f"{self.__class__.__name__}::{self.operation}::{self.left}::{self.right}".encode("utf-8"))
+        return hash_bytes(
+            f"{self.__class__.__name__}::{self.operation}::{self.left}::{self.right}".encode(
+                "utf-8"
+            )
+        )
 
 
 class UnaryExpression(Expression):
@@ -151,4 +157,6 @@ class UnaryExpression(Expression):
         )
 
     def __hash__(self) -> int:
-        return hash_bytes(f"{self.__class__.__name__}::{self.operation}::{self.operand}".encode("utf-8"))
+        return hash_bytes(
+            f"{self.__class__.__name__}::{self.operation}::{self.operand}".encode("utf-8")
+        )
