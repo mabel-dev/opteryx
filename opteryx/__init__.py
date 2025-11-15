@@ -176,6 +176,7 @@ def query(
 
     # Create a new cursor object using the connection
     curr = conn.cursor()
+    curr._owns_connection = True
 
     # Execute the SQL query using the cursor
     curr.execute(operation=operation, params=params, visibility_filters=visibility_filters)
@@ -215,6 +216,7 @@ def query_to_arrow(
 
     # Create a new cursor object using the connection
     curr = conn.cursor()
+    curr._owns_connection = True
 
     # Execute the SQL query using the cursor
     return curr.execute_to_arrow(
