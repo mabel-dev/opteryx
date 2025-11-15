@@ -48,6 +48,7 @@ cdef class DrakenTypeInt(int):
             21: "DRAKEN_FLOAT64",
             30: "DRAKEN_DATE32",
             40: "DRAKEN_TIMESTAMP64",
+            43: "DRAKEN_INTERVAL",
             50: "DRAKEN_BOOL",
             60: "DRAKEN_STRING",
             80: "DRAKEN_ARRAY",

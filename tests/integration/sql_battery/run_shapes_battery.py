@@ -20,6 +20,7 @@ test_files = [
 ]
 
 test_dir = Path(__file__).parent
+print(f"Test directory: {test_dir}")
 total_start = time.time()
 failed_files = []
 
@@ -57,4 +58,3 @@ if failed_files:
 else:
     print("✨ ALL TESTS PASSED")
     print("🎉 EXITING WITH SUCCESS CODE 0")
-    sys.exit(0)

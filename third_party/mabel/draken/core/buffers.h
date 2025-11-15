@@ -18,6 +18,7 @@ typedef enum {
     DRAKEN_TIMESTAMP64    = 40,
     DRAKEN_TIME32         = 41,
     DRAKEN_TIME64         = 42,
+    DRAKEN_INTERVAL       = 43,
 
     // Boolean: 50
     DRAKEN_BOOL           = 50,
