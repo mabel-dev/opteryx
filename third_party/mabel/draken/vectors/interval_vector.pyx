@@ -21,7 +21,7 @@ This module provides:
   packed interval transport
 """
 
-from cpython.mem cimport PyMem_Malloc
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cpython.bytes cimport PyBytes_AsString
 
 from libc.stddef cimport size_t
@@ -41,7 +41,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, NULL_HASH, Vector, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, NULL_HASH, Vector, mix_hash, simd_mix_hash
 
 cdef struct IntervalValue:
     int64_t months
@@ -291,17 +291,49 @@ cdef class IntervalVector(Vector):
             return
         if offset < 0 or offset + n > out_buf.shape[0]:
             raise ValueError("IntervalVector.hash_into: output buffer too small")
+
         cdef Py_ssize_t i
         cdef IntervalValue* data = <IntervalValue*> ptr.data
         cdef uint64_t value
         cdef uint64_t partial
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef bint has_nulls = ptr.null_bitmap != NULL
+        cdef Py_ssize_t chunk = 0
+        cdef Py_ssize_t block = 0
+        cdef Py_ssize_t j = 0
+        cdef uint64_t* scratch = NULL
+
+        mix_constant = MIX_HASH_CONSTANT
+        if mix_constant != MIX_HASH_CONSTANT:
+            mix_constant = MIX_HASH_CONSTANT
+
+        if not has_nulls:
+            chunk = 512 if n > 512 else n
+            scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
+            if scratch == NULL:
+                raise MemoryError()
+            try:
+                i = 0
+                while i < n:
+                    block = n - i
+                    if block > chunk:
+                        block = chunk
+                    for j in range(block):
+                        partial = mix_hash(0, <uint64_t>data[i + j].months)
+                        scratch[j] = mix_hash(partial, <uint64_t>data[i + j].microseconds)
+                    simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
+                    i += block
+            finally:
+                PyMem_Free(scratch)
+            return
+
         for i in range(n):
             if not _is_valid(ptr, i):
                 value = NULL_HASH
             else:
                 partial = mix_hash(0, <uint64_t>data[i].months)
                 value = mix_hash(partial, <uint64_t>data[i].microseconds)
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
+            dst[i] = mix_hash(dst[i], value)
 
     def __str__(self):
         cdef list preview = []

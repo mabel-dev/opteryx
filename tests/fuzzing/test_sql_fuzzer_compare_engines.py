@@ -152,7 +152,7 @@ def test_sql_fuzzing_connector_comparisons(i):
     worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
 
     import duckdb
-    conn = duckdb.connect(database=f"planets-{worker_id}.duckdb")
+    conn = duckdb.connect(database=f"tmp/planets-{worker_id}.duckdb")
     # Use test iteration number as seed for reproducibility
     seed = i + hash(worker_id) % 1000
     random.seed(seed)

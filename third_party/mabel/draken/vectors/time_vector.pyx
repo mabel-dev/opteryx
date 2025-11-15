@@ -18,7 +18,7 @@ This module provides:
 Used for high-performance temporal analytics and columnar data processing in Draken.
 """
 
-from cpython.mem cimport PyMem_Malloc
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 from libc.stdint cimport int32_t
 from libc.stdint cimport int64_t
@@ -36,7 +36,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash, simd_mix_hash
 
 cdef class TimeVector(Vector):
 
@@ -246,6 +246,12 @@ cdef class TimeVector(Vector):
         cdef uint64_t value
         cdef int64_t* data64
         cdef int32_t* data32
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef bint has_nulls = ptr.null_bitmap != NULL
+        cdef Py_ssize_t chunk = 0
+        cdef Py_ssize_t block = 0
+        cdef Py_ssize_t j = 0
+        cdef uint64_t* scratch = NULL
 
         mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
         if mix_constant != MIX_HASH_CONSTANT:
@@ -253,8 +259,11 @@ cdef class TimeVector(Vector):
 
         if self.is_time64:
             data64 = <int64_t*> ptr.data
+            if not has_nulls:
+                simd_mix_hash(dst, <uint64_t*> data64, <size_t> n, mix_constant)
+                return
             for i in range(n):
-                if ptr.null_bitmap != NULL:
+                if has_nulls:
                     byte = ptr.null_bitmap[i >> 3]
                     bit = (byte >> (i & 7)) & 1
                     if not bit:
@@ -264,21 +273,37 @@ cdef class TimeVector(Vector):
                 else:
                     value = <uint64_t> data64[i]
 
-                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
+                dst[i] = mix_hash(dst[i], value)
         else:
             data32 = <int32_t*> ptr.data
+            if not has_nulls:
+                chunk = 1024 if n > 1024 else n
+                scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
+                if scratch == NULL:
+                    raise MemoryError()
+                try:
+                    i = 0
+                    while i < n:
+                        block = n - i
+                        if block > chunk:
+                            block = chunk
+                        for j in range(block):
+                            scratch[j] = <uint64_t>(<int64_t> data32[i + j])
+                        simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
+                        i += block
+                finally:
+                    PyMem_Free(scratch)
+                return
+
             for i in range(n):
-                if ptr.null_bitmap != NULL:
-                    byte = ptr.null_bitmap[i >> 3]
-                    bit = (byte >> (i & 7)) & 1
-                    if not bit:
-                        value = NULL_HASH
-                    else:
-                        value = <uint64_t>(<int64_t> data32[i])
+                byte = ptr.null_bitmap[i >> 3]
+                bit = (byte >> (i & 7)) & 1
+                if not bit:
+                    value = NULL_HASH
                 else:
                     value = <uint64_t>(<int64_t> data32[i])
 
-                out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
+                dst[i] = mix_hash(dst[i], value)
 
     def __str__(self):
         cdef list vals = []

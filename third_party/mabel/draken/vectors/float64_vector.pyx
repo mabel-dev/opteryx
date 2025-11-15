@@ -26,7 +26,7 @@ from libc.stdlib cimport malloc
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_FLOAT64
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_itemsize, buf_length, free_fixed_buffer
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash, simd_mix_hash
 
 cdef class Float64Vector(Vector):
 
@@ -378,8 +378,8 @@ cdef class Float64Vector(Vector):
                     value = NULL_HASH
                 dst[i] = mix_hash(dst[i], value)
         else:
-            for i in range(n):
-                dst[i] = mix_hash(dst[i], bits[i])
+            simd_mix_hash(dst, bits, <size_t>n, mix_constant)
+            return
 
     def __str__(self):
         cdef list vals = []

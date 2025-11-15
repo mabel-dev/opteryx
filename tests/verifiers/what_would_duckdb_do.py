@@ -18,7 +18,7 @@ TABLES = ("planets","satellites")
 def wwdd(statement: str):
 
     create_duck_db()
-    conn = duckdb.connect(database="planets-gw0.duckdb")
+    conn = duckdb.connect(database="tmp/planets-gw0.duckdb")
 
     formatted_statement = format_sql(statement)
 

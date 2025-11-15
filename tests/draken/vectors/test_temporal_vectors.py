@@ -15,7 +15,7 @@ The tests validate:
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 import pyarrow as pa
@@ -203,7 +203,7 @@ def test_array_nested_types():
     # List of strings
     string_list = pa.array([['a', 'b'], ['c'], None, ['d', 'e', 'f']], type=pa.list_(pa.string()))
     vec = Vector.from_arrow(string_list)
-    assert vec.to_pylist() == [['a', 'b'], ['c'], None, ['d', 'e', 'f']]
+    assert vec.to_pylist() == [[b'a', b'b'], [b'c'], None, [b'd', b'e', b'f']]
     
     # List of floats
     float_list = pa.array([[1.1, 2.2], [3.3], None, [4.4]], type=pa.list_(pa.float64()))
