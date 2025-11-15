@@ -8,6 +8,9 @@ authors = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
 maintainers = [{name='Justin Joyce', email='justin.joyce@joocer.com'}]
 dependencies = ['aiohttp', 'numpy>=2.0.0', 'orjson', 'orso>=0.0.204', 'psutil', 'pyarrow>=20.0.0', 'requests']
 
+[project.optional-dependencies]
+substrait = ['substrait>=0.20.0', 'protobuf>=4.0.0']
+
 [project.scripts]
 opteryx = "opteryx.command:main"
 
