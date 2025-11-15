@@ -336,6 +336,27 @@ STATEMENTS = [
         # JOIN with DISTINCT in subquery - CORRECTED: Returns 1 for COUNT aggregation
         ("SELECT COUNT(*) FROM $planets p INNER JOIN (SELECT DISTINCT planetId FROM $satellites) s ON p.id = s.planetId", 1, 1, None),
 
+        # non-equi JOINs
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.id != s.id", 72, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.id > s.id", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.id >= s.id", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.id <= s.id", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.id < s.id", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.name != s.name", 72, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.name > s.name", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.name >= s.name", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.name <= s.name", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.name < s.name", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.mass != s.mass", 72, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.mass > s.mass", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.mass >= s.mass", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.mass <= s.mass", 45, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.mass < s.mass", 36, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.gravity != s.gravity", 70, 2, None),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.gravity > s.gravity", 72, 2, UnsupportedSyntaxError),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.gravity >= s.gravity", 72, 2, UnsupportedSyntaxError),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.gravity <= s.gravity", 72, 2, UnsupportedSyntaxError),
+        ("SELECT p.name, s.name FROM $planets AS p INNER JOIN $planets AS s ON p.gravity < s.gravity", 72, 2, UnsupportedSyntaxError),
 ]
 # fmt:on
 

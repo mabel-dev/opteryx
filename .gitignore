@@ -218,3 +218,4 @@ third_party/mabel/draken/core/ops.c*
 tests/draken/performance/.perf_baseline.json
 opteryx/draken/vectors/_hash_api.c*
 third_party/mabel/draken/vectors/interval_vector.c*
+third_party/mabel/draken/morsels/align.c*

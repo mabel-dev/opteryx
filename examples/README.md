@@ -27,6 +27,11 @@ pip install opteryx
 - `embedded_usage.py` - Embedding Opteryx in applications
 - `dbapi_pandas_integration.py` - Using cursor.pandas() for analytics
 
+### Feature Examples
+- `non_equi_join_example.py` - Non-equi join operations (!=, >, >=, <, <=) using draken
+- `simd_quote_finding.py` - SIMD-optimized quote finding
+- `disk_reader_usage.py` - Disk reader functionality
+
 ## Running Examples
 
 Each example is self-contained and can be run directly:

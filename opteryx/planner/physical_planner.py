@@ -49,9 +49,12 @@ def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             if node_config.get("type") == "inner":
                 # INNER JOIN, NATURAL JOIN
                 node = operators.InnerJoinNode(query_properties, **node_config)
-            elif node_config.get("type") == "nested_inner":
+            elif node_config.get("type") == "nested loop":
                 # NESTED LOOP JOIN (INNER JOIN)
                 node = operators.NestedLoopJoinNode(query_properties, **node_config)
+            elif node_config.get("type") == "non equi":
+                # NON-EQUI JOIN (!=, >, >=, <, <=)
+                node = operators.NonEquiJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left outer", "full outer", "right outer"):
                 # LEFT JOIN, RIGHT JOIN, FULL JOIN
                 node = operators.OuterJoinNode(query_properties, **node_config)

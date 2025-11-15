@@ -32,6 +32,7 @@ cdef class IntBuffer:
     cpdef void append(self, int64_t value)
     cpdef void extend(self, iterable)
     cpdef numpy.ndarray[int64_t, ndim=1] to_numpy(self)
+    cpdef const int64_t[::1] get_buffer(self)
     cpdef size_t size(self)
     cpdef void extend_numpy(self, numpy.ndarray[int64_t, ndim=1] arr)
     cpdef void reserve(self, size_t capacity)
