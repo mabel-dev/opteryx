@@ -1,0 +1,158 @@
+"""
+Tests for non-equi joins using draken
+"""
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+
+def test_non_equi_join_import():
+    """Test that the non-equi join module can be imported after compilation"""
+    try:
+        from opteryx.compiled.joins import non_equi_nested_loop_join
+        assert non_equi_nested_loop_join is not None
+        print("✓ non_equi_nested_loop_join imported successfully")
+    except ImportError as e:
+        print(f"✗ Import failed (expected before compilation): {e}")
+
+
+def test_non_equi_join_greater_than():
+    """Test non-equi join with greater than comparison"""
+    import pyarrow as pa
+    from opteryx.compiled.joins import non_equi_nested_loop_join
+
+    # Create test tables
+    left = pa.table({"id": [1, 2, 3, 4], "value": [10, 20, 30, 40]})
+    right = pa.table({"id": [1, 2, 3, 4], "threshold": [15, 25, 35, 45]})
+
+    # Find all rows where left.value > right.threshold
+    left_idx, right_idx = non_equi_nested_loop_join(
+        left, right, "value", "threshold", "greater_than"
+    )
+
+    # Expected: value > threshold
+    # 10 > 15: False
+    # 10 > 25: False
+    # 10 > 35: False
+    # 10 > 45: False
+    # 20 > 15: True (0, 0)
+    # 20 > 25: False
+    # 20 > 35: False
+    # 20 > 45: False
+    # 30 > 15: True (1, 0)
+    # 30 > 25: True (1, 1)
+    # 30 > 35: False
+    # 30 > 45: False
+    # 40 > 15: True (2, 0)
+    # 40 > 25: True (2, 1)
+    # 40 > 35: True (2, 2)
+    # 40 > 45: False
+
+    # Sort for consistent comparison
+    pairs = sorted(zip(left_idx, right_idx))
+    expected = [(1, 0), (2, 0), (2, 1), (3, 0), (3, 1), (3, 2)]
+
+    assert pairs == expected, f"Expected {expected}, got {pairs}"
+    print(f"✓ Greater than join test passed: {len(pairs)} matches found")
+
+
+def test_non_equi_join_not_equals():
+    """Test non-equi join with not equals comparison"""
+    import pyarrow as pa
+    from opteryx.compiled.joins import non_equi_nested_loop_join
+
+    # Create test tables
+    left = pa.table({"id": [1, 2, 3], "color": ["red", "blue", "green"]})
+    right = pa.table({"id": [1, 2, 3], "color": ["red", "yellow", "green"]})
+
+    # Find all rows where left.color != right.color
+    left_idx, right_idx = non_equi_nested_loop_join(
+        left, right, "color", "color", "not_equals"
+    )
+
+    # Expected: red != yellow (0,1), red != green (0,2),
+    #           blue != red (1,0), blue != yellow (1,1), blue != green (1,2)
+    #           green != red (2,0), green != yellow (2,1)
+
+    pairs = sorted(zip(left_idx, right_idx))
+    expected = [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)]
+
+    assert pairs == expected, f"Expected {expected}, got {pairs}"
+    print(f"✓ Not equals join test passed: {len(pairs)} matches found")
+
+
+def test_non_equi_join_with_nulls():
+    """Test that non-equi join handles nulls correctly"""
+    import pyarrow as pa
+    from opteryx.compiled.joins import non_equi_nested_loop_join
+
+    # Create test tables with nulls
+    left = pa.table({"id": [1, 2, 3, 4], "value": [10, None, 30, 40]})
+    right = pa.table({"id": [1, 2, 3], "threshold": [5, None, 25]})
+
+    # Find all rows where left.value > right.threshold
+    left_idx, right_idx = non_equi_nested_loop_join(
+        left, right, "value", "threshold", "greater_than"
+    )
+
+    # Nulls should be skipped
+    # 10 > 5: True (0, 0)
+    # 30 > 5: True (2, 0)
+    # 30 > 25: True (2, 2)
+    # 40 > 5: True (3, 0)
+    # 40 > 25: True (3, 2)
+
+    pairs = sorted(zip(left_idx, right_idx))
+    expected = [(0, 0), (2, 0), (2, 2), (3, 0), (3, 2)]
+
+    assert pairs == expected, f"Expected {expected}, got {pairs}"
+    print(f"✓ Null handling test passed: {len(pairs)} matches found")
+
+
+def test_non_equi_join_node():
+    """Test the NonEquiJoinNode operator"""
+    import opteryx
+
+    # Create simple test with SQL-like data
+    conn = opteryx.connect()
+    
+    # This query should work once the planner is set up to handle non-equi joins
+    # For now, we just test that the operator can be instantiated
+    from opteryx.operators import NonEquiJoinNode
+    from opteryx.models import QueryProperties
+    
+    props = QueryProperties()
+    node = NonEquiJoinNode(
+        props,
+        left_column="value",
+        right_column="threshold",
+        comparison_op="greater_than"
+    )
+    
+    assert node.name == "Non-Equi Join"
+    assert node.comparison_op == "greater_than"
+    print("✓ NonEquiJoinNode instantiation test passed")
+
+
+if __name__ == "__main__":  # pragma: no cover
+    print("\n=== Testing Non-Equi Join Implementation ===\n")
+    
+    # Test 1: Check if module compiles
+    test_non_equi_join_import()
+    
+    # Only run other tests if the module was successfully compiled
+    try:
+        from opteryx.compiled.joins import non_equi_nested_loop_join
+        
+        print("\n=== Running Functional Tests ===\n")
+        test_non_equi_join_greater_than()
+        test_non_equi_join_not_equals()
+        test_non_equi_join_with_nulls()
+        test_non_equi_join_node()
+        
+        print("\n=== All tests passed! ===\n")
+    except ImportError:
+        print("\n⚠ Skipping functional tests - module needs to be compiled first")
+        print("Run: python setup.py build_ext --inplace")

@@ -25,6 +25,7 @@ Joins:
 - OuterJoinNode: Left, right, and full outer joins
 - CrossJoinNode: Cartesian product joins
 - NestedLoopJoinNode: Nested loop algorithm for joins
+- NonEquiJoinNode: Non-equi joins (!=, >, >=, <, <=) using draken
 - UnnestJoinNode: Specialized join for array unnesting
 
 Filtering and Selection:
@@ -104,6 +105,7 @@ from .heap_sort_node import HeapSortNode  # Heap
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
 from .nested_loop_join_node import NestedLoopJoinNode
+from .non_equi_join_node import NonEquiJoinNode
 
 from .limit_node import LimitNode  # select the first N records
 
@@ -142,6 +144,7 @@ __all__ = [
     "HeapSortNode",
     "InnerJoinNode",
     "NestedLoopJoinNode",
+    "NonEquiJoinNode",
     "LimitNode",
     "OuterJoinNode",
     "ProjectionNode",
