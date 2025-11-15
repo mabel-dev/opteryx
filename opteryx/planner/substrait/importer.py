@@ -171,9 +171,8 @@ class SubstraitImporter:
         node = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         
         # Extract table name
-        if read_rel.HasField('named_table'):
-            if read_rel.named_table.names:
-                node.relation = read_rel.named_table.names[0]
+        if read_rel.HasField('named_table') and read_rel.named_table.names:
+            node.relation = read_rel.named_table.names[0]
         
         # Add to logical plan
         logical_plan.add_node(node)
