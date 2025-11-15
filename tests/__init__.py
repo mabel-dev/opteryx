@@ -45,6 +45,7 @@ Example:
         run_tests()
 """
 
+import datetime
 import os
 import platform
 from functools import wraps
@@ -615,12 +616,12 @@ def create_duck_db():  # pragma: no cover
 
     worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
 
-    if os.path.exists(f"planets-{worker_id}.duckdb"):
+    if os.path.exists(f"tmp/planets-{worker_id}.duckdb"):
         return
 
     import duckdb
 
-    conn = duckdb.connect(database=f"planets-{worker_id}.duckdb")
+    conn = duckdb.connect(database=f"tmp/planets-{worker_id}.duckdb")
     cur = conn.cursor()
     try:
         cur.execute(CREATE_DATABASE)
@@ -736,6 +737,48 @@ def set_up_iceberg():
     opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
 
     for dataset in ('planets', 'satellites', 'missions', 'astronauts'):
+        if dataset == 'planets':
+            from opteryx.virtual_datasets import planet_data
+
+            def snapshot_props(label, cutoff):
+                props = {"temporal_version": label}
+                if cutoff is not None:
+                    props["end_date"] = cutoff.isoformat()
+                else:
+                    props["end_date"] = "current"
+                return props
+
+            def load_planet_snapshot(cutoff):
+                table_data = planet_data.read() if cutoff is None else planet_data.read(end_date=cutoff)
+                return cast_dataset(table_data)
+
+            snapshots = [
+                ("pre_uranus", datetime.datetime(1781, 4, 25)),
+                ("pre_neptune", datetime.datetime(1846, 11, 12)),
+                ("pre_pluto", datetime.datetime(1930, 3, 12)),
+                ("modern", None),
+            ]
+
+            snapshot_label, cutoff = snapshots[0]
+            snapshot_data = load_planet_snapshot(cutoff)
+            table = catalog.create_table("iceberg.planets", schema=snapshot_data.schema)
+            table.append(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
+
+            latest_snapshot = snapshot_data
+            for snapshot_label, cutoff in snapshots[1:]:
+                snapshot_data = load_planet_snapshot(cutoff)
+                table.overwrite(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
+                latest_snapshot = snapshot_data
+
+            expected_rows = latest_snapshot.num_rows
+            del latest_snapshot
+            del snapshot_data
+
+            iceberged = opteryx.query("SELECT * FROM iceberg.planets")
+            assert iceberged.rowcount == expected_rows
+            del iceberged  # Free memory immediately
+            continue
+
         data = opteryx.query_to_arrow(f"SELECT * FROM ${dataset}")
         data = cast_dataset(data)
 

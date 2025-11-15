@@ -33,7 +33,7 @@ def test_duckdb_engine_join_groupby():
             "duckdb",
             SqlConnector,
             remove_prefix=True,
-            connection=f"duckdb:///planets-{worker_id}.duckdb",
+            connection=f"duckdb:///tmp/planets-{worker_id}.duckdb",
         )
     except Exception:
         return

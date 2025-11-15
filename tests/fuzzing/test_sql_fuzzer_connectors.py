@@ -94,7 +94,7 @@ def set_up_connections():
     opteryx.register_store("iceberg", IcebergConnector, catalog=iceberg_catalog)
     #opteryx.register_store("cockroach", SqlConnector, remove_prefix=True, connection=COCKROACH_CONNECTION)
     #opteryx.register_store("datastax", CqlConnector, remove_prefix=True, cluster=cluster)
-    opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection=f"duckdb:///planets-{worker_id}.duckdb")
+    opteryx.register_store("duckdb", SqlConnector, remove_prefix=True, connection=f"duckdb:///tmp/planets-{worker_id}.duckdb")
     #opteryx.register_store("mongo", MongoDbConnector, database=MONGO_DATABASE, connection=MONGO_CONNECTION, remove_prefix=True)
     opteryx.register_store("sqlite", SqlConnector, remove_prefix=True, connection="sqlite:///testdata/sqlite/database.db")
 

@@ -16,7 +16,7 @@ This matches Arrow's representation:
 
 """
 
-from cpython.mem cimport PyMem_Malloc
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 from libc.stdint cimport int32_t, int8_t, intptr_t, uint64_t, uint8_t
 from libc.stdlib cimport malloc
@@ -24,7 +24,10 @@ from libc.stdlib cimport malloc
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_BOOL
 from opteryx.draken.core.fixed_vector cimport alloc_fixed_buffer, buf_dtype, buf_length, free_fixed_buffer
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash, simd_mix_hash
+
+cdef const uint64_t TRUE_HASH = <uint64_t>0x4f112caa54efa882
+cdef const uint64_t FALSE_HASH = <uint64_t>0xc2fd8b2343f83ce7
 
 cdef class BoolVector(Vector):
 
@@ -276,25 +279,56 @@ cdef class BoolVector(Vector):
             raise ValueError("BoolVector.hash_into: output buffer too small")
 
         cdef Py_ssize_t i
+        cdef Py_ssize_t chunk = 0
+        cdef Py_ssize_t block = 0
+        cdef Py_ssize_t j = 0
+        cdef Py_ssize_t idx = 0
         cdef uint8_t byte, bit
         cdef uint64_t value
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef uint8_t* values = <uint8_t*> ptr.data
+        cdef bint has_nulls = ptr.null_bitmap != NULL
+        cdef uint64_t* scratch = NULL
 
         mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
         if mix_constant != MIX_HASH_CONSTANT:
             mix_constant = MIX_HASH_CONSTANT
 
-        for i in range(n):
-            if ptr.null_bitmap != NULL:
-                byte = ptr.null_bitmap[i >> 3]
-                bit = (byte >> (i & 7)) & 1
-                if not bit:
-                    value = NULL_HASH
-                else:
-                    value = (<uint64_t>(((<uint8_t*>ptr.data)[i >> 3] >> (i & 7)) & 1))
-            else:
-                value = (<uint64_t>(((<uint8_t*>ptr.data)[i >> 3] >> (i & 7)) & 1))
+        if not has_nulls:
+            chunk = 1024 if n > 1024 else n
+            scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
+            if scratch == NULL:
+                raise MemoryError()
+            try:
+                i = 0
+                while i < n:
+                    block = n - i
+                    if block > chunk:
+                        block = chunk
+                    for j in range(block):
+                        idx = i + j
+                        if (values[idx >> 3] >> (idx & 7)) & 1:
+                            scratch[j] = TRUE_HASH
+                        else:
+                            scratch[j] = FALSE_HASH
+                    simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
+                    i += block
+            finally:
+                PyMem_Free(scratch)
+            return
 
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
+        for i in range(n):
+            byte = ptr.null_bitmap[i >> 3]
+            bit = (byte >> (i & 7)) & 1
+            if not bit:
+                value = NULL_HASH
+            else:
+                if ((values)[i >> 3] >> (i & 7)) & 1:
+                    value = TRUE_HASH
+                else:
+                    value = FALSE_HASH
+
+            dst[i] = mix_hash(dst[i], value)
 
     def __str__(self):
         cdef list vals = []

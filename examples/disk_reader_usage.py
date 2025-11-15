@@ -21,7 +21,7 @@ def example_basic():
 # Example 2: Stream large files without cache pollution
 def example_streaming():
     """Process multiple large files efficiently."""
-    large_files = ["planets-gw0.duckdb", "planets-gw1.duckdb"]
+    large_files = ["tmp/planets-gw0.duckdb", "tmp/planets-gw1.duckdb"]
     
     for filename in large_files:
         # Read and evict from cache to save memory

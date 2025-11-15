@@ -30,7 +30,7 @@ from opteryx.draken.core.buffers cimport DrakenVarBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_STRING
 from opteryx.draken.core.var_vector cimport alloc_var_buffer
 from opteryx.draken.core.var_vector cimport buf_dtype
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, simd_mix_hash
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 
@@ -254,40 +254,41 @@ cdef class StringVector(Vector):
         if offset < 0 or offset + n > out_buf.shape[0]:
             raise ValueError("StringVector.hash_into: output buffer too small")
 
-        cdef int32_t start, end
-        cdef size_t str_len
         cdef const uint8_t* data = <const uint8_t*> ptr.data
-        cdef uint8_t* nb_ptr = ptr.null_bitmap
         cdef int32_t* offsets = ptr.offsets
-        cdef Py_ssize_t i, j, limit
-        cdef uint8_t null_byte
-        cdef uint64_t value
+        cdef uint8_t* nb_ptr = ptr.null_bitmap
+        cdef Py_ssize_t i
+        cdef uint8_t byte
+        cdef size_t str_len
+        cdef int32_t start, end
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef uint64_t* scratch = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
+        if scratch == NULL:
+            raise MemoryError()
 
-        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
-        if mix_constant != MIX_HASH_CONSTANT:
-            mix_constant = MIX_HASH_CONSTANT
+        mix_constant = MIX_HASH_CONSTANT
 
-        if nb_ptr != NULL:
-            for i in range(0, n, 8):
-                null_byte = nb_ptr[i >> 3]
-                limit = min(i + 8, n)
-                for j in range(i, limit):
-                    if (null_byte >> (j & 7)) & 1:
-                        start = offsets[j]
-                        end = offsets[j + 1]
-                        str_len = <size_t>(end - start)
-                        value = cy_xxhash3_64(data + start, str_len)
-                    else:
-                        value = NULL_HASH
+        try:
+            if nb_ptr != NULL:
+                for i in range(n):
+                    byte = nb_ptr[i >> 3]
+                    if ((byte >> (i & 7)) & 1) == 0:
+                        scratch[i] = NULL_HASH
+                        continue
+                    start = offsets[i]
+                    end = offsets[i + 1]
+                    str_len = <size_t>(end - start)
+                    scratch[i] = cy_xxhash3_64(data + start, str_len)
+            else:
+                for i in range(n):
+                    start = offsets[i]
+                    end = offsets[i + 1]
+                    str_len = <size_t>(end - start)
+                    scratch[i] = cy_xxhash3_64(data + start, str_len)
 
-                    out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
-        else:
-            for j in range(n):
-                start = offsets[j]
-                end = offsets[j + 1]
-                str_len = <size_t>(end - start)
-                value = cy_xxhash3_64(data + start, str_len)
-                out_buf[offset + j] = mix_hash(out_buf[offset + j], value)
+            simd_mix_hash(dst, scratch, <size_t> n, mix_constant)
+        finally:
+            PyMem_Free(scratch)
 
     cpdef StringVector take(self, int32_t[::1] indices):
         cdef DrakenVarBuffer* src_ptr = self.ptr

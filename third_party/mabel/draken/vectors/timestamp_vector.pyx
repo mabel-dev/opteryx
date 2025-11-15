@@ -35,7 +35,7 @@ from opteryx.draken.core.fixed_vector cimport buf_dtype
 from opteryx.draken.core.fixed_vector cimport buf_itemsize
 from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
-from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash
+from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash, simd_mix_hash
 
 
 cdef inline bint _bitmap_is_valid(uint8_t* bitmap, Py_ssize_t idx, Py_ssize_t bit_offset):
@@ -328,21 +328,25 @@ cdef class TimestampVector(Vector):
 
         cdef Py_ssize_t i
         cdef uint64_t value
+        cdef uint64_t* dst = &out_buf[offset]
+        cdef bint has_nulls = ptr.null_bitmap != NULL
+        cdef uint64_t* as_uint64 = <uint64_t*> data
 
         mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
         if mix_constant != MIX_HASH_CONSTANT:
             mix_constant = MIX_HASH_CONSTANT
 
+        if not has_nulls:
+            simd_mix_hash(dst, as_uint64, <size_t> n, mix_constant)
+            return
+
         for i in range(n):
-            if ptr.null_bitmap != NULL:
-                if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
-                    value = NULL_HASH
-                else:
-                    value = <uint64_t> data[i]
+            if not _bitmap_is_valid(ptr.null_bitmap, i, self.null_bit_offset):
+                value = NULL_HASH
             else:
                 value = <uint64_t> data[i]
 
-            out_buf[offset + i] = mix_hash(out_buf[offset + i], value)
+            dst[i] = mix_hash(dst[i], value)
 
     def __str__(self):
         cdef list vals = []

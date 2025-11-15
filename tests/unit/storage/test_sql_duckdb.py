@@ -66,7 +66,7 @@ def test_duckdb_storage():
         "duckdb",
         SqlConnector,
         remove_prefix=True,
-        connection=f"duckdb:///planets-{worker_id}.duckdb",
+        connection=f"duckdb:///tmp/planets-{worker_id}.duckdb",
     )
     # PUSH - CHECK STATS THE PUSHES WORKED
     results = opteryx.query("SELECT name FROM duckdb.planets WHERE name LIKE 'Earth';")
@@ -95,7 +95,7 @@ def test_duckdb_battery():
         "duckdb",
         SqlConnector,
         remove_prefix=True,
-        connection=f"duckdb:///planets-{worker_id}.duckdb",
+        connection=f"duckdb:///tmp/planets-{worker_id}.duckdb",
     )
 
     print(f"RUNNING FLOCK OF {len(STATEMENTS)} DUCK TESTS\n")
