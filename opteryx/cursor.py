@@ -5,14 +5,12 @@
 
 import datetime
 import time
-from enum import Enum
-from enum import auto
-from functools import wraps
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 from uuid import uuid4
 
@@ -38,72 +36,9 @@ from opteryx.utils import sql
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-class CursorState(Enum):
-    INITIALIZED = auto()
-    EXECUTED = auto()
-    CLOSED = auto()
-
-
-def require_state(required_state):
-    """
-    Decorator to enforce a required state before a Cursor method is called.
-
-    The decorator takes a required_state parameter which is the state the Cursor
-    must be in before the decorated method can be called. If the state condition
-    is not met, an InvalidCursorStateError is raised.
-
-    Parameters:
-        required_state: The state that the cursor must be in to execute the method.
-
-    Returns:
-        A wrapper function that checks the state and calls the original function.
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(obj, *args, **kwargs):
-            if obj._state != required_state:
-                raise InvalidCursorStateError(f"Cursor must be in {required_state} state.")
-            return func(obj, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def transition_to(new_state):
-    """
-    Decorator to transition the Cursor to a new state after a method call.
-
-    The decorator takes a new_state parameter which is the state the Cursor
-    will transition to after the decorated method is called.
-
-    Parameters:
-        new_state: The new state to transition to after the method is called.
-
-    Returns:
-        A wrapper function that executes the original function and then updates the state.
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(obj, *args, **kwargs):
-            # Execute the original method.
-            result = func(obj, *args, **kwargs)
-            # Transition to the new state.
-            obj._state = new_state
-            return result
-
-        return wrapper
-
-    return decorator
-
-
 class Cursor(DataFrame):
     """
     This class inherits from the orso DataFrame library to provide features such as fetch.
-
-    This class includes custom decorators @require_state and @transition_to for state management.
     """
 
     def __init__(self, connection):
@@ -121,10 +56,13 @@ class Cursor(DataFrame):
         self._plan = None
         self._qid = str(uuid4())
         self._statistics = QueryStatistics(self._qid)
-        self._state = CursorState.INITIALIZED
         self._query_status = QueryStatus._UNDEFINED
         self._result_type = ResultType._UNDEFINED
         self._rowcount = None
+        self._description: Optional[Tuple[Tuple[Any, ...], ...]] = None
+        self._owns_connection = False
+        self._closed = False
+        self._executed = False
         DataFrame.__init__(self, rows=[], schema=[])
 
     @property
@@ -234,8 +172,6 @@ class Cursor(DataFrame):
         # we only return the last result set
         return results
 
-    @require_state(CursorState.INITIALIZED)
-    @transition_to(CursorState.EXECUTED)
     def execute(
         self,
         operation: str,
@@ -251,6 +187,7 @@ class Cursor(DataFrame):
             params: Iterable, optional
                 Parameters for the SQL operation, defaults to None.
         """
+        self._ensure_open()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = results
@@ -275,6 +212,10 @@ class Cursor(DataFrame):
                 self._query_status = QueryStatus.SQL_SUCCESS
             else:  # pragma: no cover
                 self._query_status = QueryStatus.SQL_FAILURE
+            self._description = self._schema_to_description(self._schema)
+        else:
+            self._description = None
+        self._executed = True
 
     @property
     def result_type(self) -> ResultType:
@@ -292,8 +233,11 @@ class Cursor(DataFrame):
             return self._rowcount
         raise InvalidCursorStateError("Cursor not in valid state to return a row count.")
 
-    @require_state(CursorState.INITIALIZED)
-    @transition_to(CursorState.EXECUTED)
+    @property
+    def description(self) -> Optional[Tuple[Tuple[Any, ...], ...]]:
+        """DBAPI-compatible column description metadata."""
+        return self._description
+
     def execute_to_arrow(
         self,
         operation: str,
@@ -315,6 +259,7 @@ class Cursor(DataFrame):
         Returns:
             The query results in Arrow table format.
         """
+        self._ensure_open()
         results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = results
@@ -329,11 +274,13 @@ class Cursor(DataFrame):
                         columns=[FlatColumn(name="rows_affected", type=OrsoTypes.INTEGER)],
                     ),
                 )  # type: ignore
+                self._executed = True
                 return meta_dataframe.arrow()
 
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         if isinstance(result_data, pyarrow.Table):
+            self._executed = True
             return result_data
         try:
             # arrow allows duplicate column names, but not when concatting
@@ -352,9 +299,11 @@ class Cursor(DataFrame):
                         promote_options="permissive",
                     )
                     return return_table.rename_columns(column_names)
-            return pyarrow.concat_tables(
+            table = pyarrow.concat_tables(
                 chain([first_table], result_data), promote_options="permissive"
             )
+            self._executed = True
+            return table
         except (
             pyarrow.ArrowInvalid,
             pyarrow.ArrowTypeError,
@@ -391,13 +340,37 @@ class Cursor(DataFrame):
         """
         return self._statistics.messages
 
-    @require_state(CursorState.EXECUTED)
-    @transition_to(CursorState.CLOSED)
     def close(self):
         """
-        Closes the cursor, releasing any resources and closing the associated connection.
+        Closes the cursor, releasing any resources.
         """
-        self._connection.close()
+        if self._closed:
+            return
+        self._cursor = iter(())
+        self._description = None
+        connection = self._connection
+        self._connection = None
+        if connection is not None:
+            connection._unregister_cursor(self)
+            if self._owns_connection:
+                connection.close()
+        self._closed = True
+
+    def __enter__(self):
+        """Support context manager usage for cursors."""
+        self._ensure_open()
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.close()
+        return False
+
+    def _close_from_connection(self):
+        """Called by the Connection when it is closing."""
+        self._cursor = iter(())
+        self._description = None
+        self._connection = None
+        self._closed = True
 
     def __repr__(self):  # pragma: no cover
         """
@@ -420,4 +393,27 @@ class Cursor(DataFrame):
         """
         Truthy if executed, Falsy if not executed or error
         """
-        return self._state == CursorState.EXECUTED
+        return self._executed and not self._closed
+
+    def _ensure_open(self):
+        if self._closed or self._connection is None:
+            raise InvalidCursorStateError("Cursor is closed.")
+
+    @staticmethod
+    def _schema_to_description(schema: Optional[RelationSchema]):
+        if schema is None or not schema.columns:
+            return None
+        description: List[Tuple[Any, ...]] = []
+        for column in schema.columns:
+            description.append(
+                (
+                    column.name,
+                    column.type,
+                    None,
+                    None,
+                    None,
+                    None,
+                    getattr(column, "nullable", None),
+                )
+            )
+        return tuple(description)

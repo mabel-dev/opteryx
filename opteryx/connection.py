@@ -10,8 +10,10 @@ https://www.python.org/dev/peps/pep-0249/
 """
 
 from typing import Iterable
+from typing import List
 from typing import Optional
 from typing import Set
+from weakref import WeakSet
 
 from opteryx.cursor import Cursor
 from opteryx.exceptions import PermissionsError
@@ -51,27 +53,63 @@ class Connection:
         # check the permissions we've been given are valid permissions
         self.permissions = self.validate_permissions(permissions)
 
+        self._closed = False
+        self._cursors: "WeakSet[Cursor]" = WeakSet()
+
     def cursor(self) -> Cursor:
-        """return a cursor object"""
-        return Cursor(self)
+        """Return a cursor object."""
+        if self._closed:
+            raise ProgrammingError("Cannot create a cursor from a closed connection.")
+        cursor = Cursor(self)
+        self._register_cursor(cursor)
+        return cursor
 
     def close(self) -> None:
-        """Exists for interface compatibility only."""
-        pass
+        """Close the connection and any active cursors."""
+        if self._closed:
+            return
+        self._closed = True
+        self._close_all_cursors()
 
     def commit(self) -> None:
         """Exists for interface compatibility only."""
-        pass
+        if self._closed:  # pragma: no cover
+            raise ProgrammingError("Cannot commit using a closed connection.")
 
     def rollback(self):
         """Exists for interface compatibility only. Raises AttributeError."""
         # return AttributeError as per https://peps.python.org/pep-0249/#id48
         raise AttributeError("Opteryx does not support transactions.")
 
+    def __enter__(self):
+        """Support context manager usage."""
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.close()
+        return False
+
+    @property
+    def closed(self) -> bool:
+        """Whether the connection has been closed."""
+        return self._closed
+
     @property
     def history(self):
         """Returns a list of queries previously run on this connection"""
         return self.context.history
+
+    def _register_cursor(self, cursor: Cursor) -> None:
+        self._cursors.add(cursor)
+
+    def _unregister_cursor(self, cursor: Cursor) -> None:
+        self._cursors.discard(cursor)
+
+    def _close_all_cursors(self) -> None:
+        stale: List[Cursor] = list(self._cursors)
+        for cursor in stale:
+            cursor._close_from_connection()
+        self._cursors.clear()
 
     @staticmethod
     def validate_permissions(permissions: Optional[Iterable[str]] = None) -> Set[str]:

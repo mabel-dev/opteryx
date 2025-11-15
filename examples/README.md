@@ -15,6 +15,7 @@ pip install opteryx
 - `simple_queries.py` - Basic SQL queries and operations
 - `data_types.py` - Working with different data types
 - `csv_parquet.py` - Querying CSV and Parquet files
+- `dbapi_quickstart.py` - Using `opteryx.connect()` with cursors and pandas
 
 ### Connector Examples (`connectors/`)
 - `custom_connector.py` - Building custom data source connectors
@@ -24,6 +25,7 @@ pip install opteryx
 ### Advanced Examples (`advanced/`)
 - `query_optimization.py` - Performance optimization techniques
 - `embedded_usage.py` - Embedding Opteryx in applications
+- `dbapi_pandas_integration.py` - Using cursor.pandas() for analytics
 
 ## Running Examples
 
