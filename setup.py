@@ -449,6 +449,14 @@ if SHOULD_BUILD_EXTENSIONS:
                 "third_party/mabel/draken/morsels/morsel.h"
             ],
         ),
+        make_draken_extension(
+            "morsels.align",
+            "morsels/align.pyx",
+            depends=[
+                "third_party/mabel/draken/core/buffers.h",
+                "third_party/mabel/draken/morsels/morsel.pxd"
+            ],
+        ),
 
         Extension(
             name="opteryx.compiled.functions.strings",

@@ -15,18 +15,14 @@ for efficient columnar comparison operations.
 Supports: !=, >, >=, <, <=
 """
 
-import numpy
-cimport numpy
-numpy.import_array()
-
 from libc.stdint cimport int64_t
 
 from opteryx.compiled.structures.buffers cimport IntBuffer
-
+from opteryx.draken.morsels.morsel cimport Morsel
 
 cpdef tuple non_equi_nested_loop_join(
-    left_relation,
-    right_relation,
+    Morsel left_morsel,
+    Morsel right_morsel,
     str left_column,
     str right_column,
     str comparison_op
@@ -50,15 +46,11 @@ cpdef tuple non_equi_nested_loop_join(
     """
     from opteryx.draken.morsels.morsel import Morsel
 
-    # Convert Arrow tables to draken morsels
-    cdef object left_morsel = Morsel.from_arrow(left_relation)
-    cdef object right_morsel = Morsel.from_arrow(right_relation)
-
-    cdef int64_t left_rows = left_relation.num_rows
-    cdef int64_t right_rows = right_relation.num_rows
+    cdef int64_t left_rows = left_morsel.num_rows
+    cdef int64_t right_rows = right_morsel.num_rows
 
     if left_rows == 0 or right_rows == 0:
-        return numpy.empty(0, dtype=numpy.int64), numpy.empty(0, dtype=numpy.int64)
+        return (), ()
 
     # Get column vectors
     cdef object left_col_bytes = left_column.encode('utf-8')
@@ -76,28 +68,28 @@ cpdef tuple non_equi_nested_loop_join(
     # Nested loop join - compare each left row with each right row
     for i in range(left_rows):
         left_val = left_vec[i]
-        
+
         # Skip null values in left
         if left_val is None:
             continue
 
         for j in range(right_rows):
             right_val = right_vec[j]
-            
+
             # Skip null values in right
             if right_val is None:
                 continue
 
             # Perform the comparison
-            if comparison_op == 'not_equals':
+            if comparison_op == 'NotEq':
                 comparison_result = left_val != right_val
-            elif comparison_op == 'greater_than':
+            elif comparison_op == 'Gt':
                 comparison_result = left_val > right_val
-            elif comparison_op == 'greater_than_or_equals':
+            elif comparison_op == 'GtEq':
                 comparison_result = left_val >= right_val
-            elif comparison_op == 'less_than':
+            elif comparison_op == 'Lt':
                 comparison_result = left_val < right_val
-            elif comparison_op == 'less_than_or_equals':
+            elif comparison_op == 'LtEq':
                 comparison_result = left_val <= right_val
             else:
                 raise ValueError(f"Unsupported comparison operator: {comparison_op}")

@@ -491,7 +491,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR '2023-06-15'", 9, 20, None),
 
         # Complex JOIN conditions
-        ("SELECT p.id FROM $planets p INNER JOIN $satellites s ON p.id = s.planetId AND p.id < 5", 121, 1, UnsupportedSyntaxError),
+        ("SELECT p.id FROM $planets p INNER JOIN $satellites s ON p.id = s.planetId AND p.id < 5", 3, 1, None),
         ("SELECT COUNT(*) FROM $planets p LEFT JOIN $satellites s ON p.id = s.planetId WHERE s.id IS NULL", 1, 1, None),
         ("SELECT COUNT(*) FROM $satellites s RIGHT JOIN $planets p ON s.planetId = p.id WHERE s.id IS NOT NULL", 1, 1, None),
 

@@ -26,10 +26,13 @@ from pyarrow import Table
 
 from opteryx import EOS
 from opteryx.compiled.joins import non_equi_nested_loop_join
+from opteryx.draken import Morsel
+from opteryx.draken import align_tables
 from opteryx.models import QueryProperties
-from opteryx.utils.arrow import align_tables
 
 from . import JoinNode
+
+# from opteryx.utils.arrow import align_tables
 
 
 class NonEquiJoinNode(JoinNode):
@@ -37,25 +40,26 @@ class NonEquiJoinNode(JoinNode):
     Implements non-equi joins using nested loop algorithm with draken.
     """
 
-    join_type = "non_equi"
+    join_type = "non equi"
 
     def __init__(self, properties: QueryProperties, **parameters):
         JoinNode.__init__(self, properties=properties, **parameters)
 
-        self.left_column = parameters.get("left_column")
-        self.right_column = parameters.get("right_column")
-        self.comparison_op = parameters.get("comparison_op")
+        self.left_column = parameters.get("on").get("left").schema_column.identity
+        self.right_column = parameters.get("on").get("right").schema_column.identity
+        self.comparison_op = parameters.get("on").get("value")
 
         self.left_relation = None
+        self.left_morsel = None
         self.left_buffer = []
 
         # Validate comparison operator
         valid_ops = [
-            "not_equals",
-            "greater_than",
-            "greater_than_or_equals",
-            "less_than",
-            "less_than_or_equals",
+            "NotEq",
+            "Gt",
+            "GtEq",
+            "Lt",
+            "LtEq",
         ]
         if self.comparison_op not in valid_ops:
             raise ValueError(f"Unsupported comparison operator: {self.comparison_op}")
@@ -81,6 +85,7 @@ class NonEquiJoinNode(JoinNode):
             if morsel == EOS:
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
                 self.left_buffer.clear()
+                self.left_morsel = Morsel.from_arrow(self.left_relation)
             else:
                 self.left_buffer.append(morsel)
             yield None
@@ -91,16 +96,23 @@ class NonEquiJoinNode(JoinNode):
                 yield EOS
                 return
 
-            if self.left_relation.num_rows == 0 or morsel.num_rows == 0:
-                left_indexes = numpy.array([], dtype=numpy.int64)
-                right_indexes = numpy.array([], dtype=numpy.int64)
+            if morsel is EOS:
+                left_indexes = numpy.array([], dtype=numpy.int32)
+                right_indexes = numpy.array([], dtype=numpy.int32)
             else:
+                right_morsel = Morsel.from_arrow(morsel)
                 left_indexes, right_indexes = non_equi_nested_loop_join(
-                    self.left_relation,
-                    morsel,
+                    self.left_morsel,
+                    right_morsel,
                     self.left_column,
                     self.right_column,
                     self.comparison_op,
                 )
+                # Convert to int32 for align_tables
+                left_indexes = numpy.asarray(left_indexes, dtype=numpy.int32)
+                right_indexes = numpy.asarray(right_indexes, dtype=numpy.int32)
 
-            yield align_tables(self.left_relation, morsel, left_indexes, right_indexes)
+            result_morsel = align_tables(
+                self.left_morsel, right_morsel, left_indexes, right_indexes
+            )
+            yield result_morsel.to_arrow()

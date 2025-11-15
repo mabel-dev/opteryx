@@ -87,6 +87,24 @@ cdef class IntBuffer:
         memcpy(<void*>&arr[0], <const void*>data_ptr, size * sizeof(int64_t))
         return arr
 
+    cpdef const int64_t[::1] get_buffer(self):
+        """
+        Get a read-only memoryview of the underlying buffer (zero-copy).
+
+        This provides direct access to the C++ buffer without copying.
+        The memoryview remains valid as long as the IntBuffer exists
+        and no modifications are made to it.
+
+        Returns:
+            const int64_t[::1]: Read-only memoryview of the buffer
+        """
+        cdef size_t size = self.c_buffer.size()
+        if size == 0:
+            return numpy.empty(0, dtype=numpy.int64)
+
+        cdef const int64_t* data_ptr = self.c_buffer.data()
+        return <const int64_t[:size]>data_ptr
+
     cpdef size_t size(self):
         return self.c_buffer.size()
 

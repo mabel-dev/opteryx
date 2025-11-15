@@ -22,6 +22,7 @@ def test_non_equi_join_greater_than():
     """Test non-equi join with greater than comparison"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables
     left = pa.table({"id": [1, 2, 3, 4], "value": [10, 20, 30, 40]})
@@ -29,7 +30,7 @@ def test_non_equi_join_greater_than():
 
     # Find all rows where left.value > right.threshold
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "value", "threshold", "greater_than"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "value", "threshold", "Gt"
     )
 
     # Expected: value > threshold
@@ -62,6 +63,7 @@ def test_non_equi_join_not_equals():
     """Test non-equi join with not equals comparison"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables
     left = pa.table({"id": [1, 2, 3], "color": ["red", "blue", "green"]})
@@ -69,7 +71,7 @@ def test_non_equi_join_not_equals():
 
     # Find all rows where left.color != right.color
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "color", "color", "not_equals"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "color", "color", "NotEq"
     )
 
     # Expected: red != yellow (0,1), red != green (0,2),
@@ -87,6 +89,7 @@ def test_non_equi_join_less_than():
     """Test non-equi join with less than comparison"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables
     left = pa.table({"id": [1, 2, 3, 4], "value": [10, 20, 30, 40]})
@@ -94,7 +97,7 @@ def test_non_equi_join_less_than():
 
     # Find all rows where left.value < right.threshold
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "value", "threshold", "less_than"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "value", "threshold", "Lt"
     )
 
     # Expected: 10 < 25, 10 < 35, 10 < 45, 20 < 25, 20 < 35, 20 < 45, 30 < 35, 30 < 45, 40 < 45
@@ -109,6 +112,7 @@ def test_non_equi_join_less_than_or_equals():
     """Test non-equi join with less than or equals comparison"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables
     left = pa.table({"id": [1, 2, 3], "value": [10, 20, 30]})
@@ -116,7 +120,7 @@ def test_non_equi_join_less_than_or_equals():
 
     # Find all rows where left.value <= right.threshold
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "value", "threshold", "less_than_or_equals"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "value", "threshold", "LtEq"
     )
 
     # Expected: all combinations where value <= threshold
@@ -131,6 +135,7 @@ def test_non_equi_join_greater_than_or_equals():
     """Test non-equi join with greater than or equals comparison"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables
     left = pa.table({"id": [1, 2, 3], "value": [10, 20, 30]})
@@ -138,7 +143,7 @@ def test_non_equi_join_greater_than_or_equals():
 
     # Find all rows where left.value >= right.threshold
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "value", "threshold", "greater_than_or_equals"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "value", "threshold", "GtEq"
     )
 
     # Expected: all combinations where value >= threshold
@@ -153,6 +158,7 @@ def test_non_equi_join_with_nulls():
     """Test that non-equi join handles nulls correctly"""
     import pyarrow as pa
     from opteryx.compiled.joins import non_equi_nested_loop_join
+    from opteryx.draken import Morsel
 
     # Create test tables with nulls
     left = pa.table({"id": [1, 2, 3, 4], "value": [10, None, 30, 40]})
@@ -160,7 +166,7 @@ def test_non_equi_join_with_nulls():
 
     # Find all rows where left.value > right.threshold
     left_idx, right_idx = non_equi_nested_loop_join(
-        left, right, "value", "threshold", "greater_than"
+        Morsel.from_arrow(left), Morsel.from_arrow(right), "value", "threshold", "Gt"
     )
 
     # Nulls should be skipped
@@ -182,17 +188,27 @@ def test_non_equi_join_node():
     # Test that the operator can be instantiated
     from opteryx.operators import NonEquiJoinNode
     from opteryx.models import QueryProperties
+    from unittest.mock import Mock
     
     props = QueryProperties(qid="test", variables={})
+    
+    # Create mock objects for the "on" parameter structure
+    left_mock = Mock()
+    left_mock.schema_column.identity = "value"
+    right_mock = Mock()
+    right_mock.schema_column.identity = "threshold"
+    
     node = NonEquiJoinNode(
         props,
-        left_column="value",
-        right_column="threshold",
-        comparison_op="greater_than"
+        on={
+            "left": left_mock,
+            "right": right_mock,
+            "value": "Gt"
+        }
     )
     
     assert node.name == "Non-Equi Join"
-    assert node.comparison_op == "greater_than"
+    assert node.comparison_op == "Gt"
     print("✓ NonEquiJoinNode instantiation test passed")
 
 

@@ -13,6 +13,8 @@ Main exports:
 - evaluate: Compiled expression evaluator
 """
 
+from opteryx.draken.morsels.align import align_tables
+from opteryx.draken.morsels.align import align_tables_pyarray
 from opteryx.draken.morsels.morsel import Morsel
 from opteryx.draken.vectors.vector import Vector
 
@@ -34,4 +36,4 @@ def evaluate(morsel, expression):
     return _evaluate(morsel, expression)
 
 
-__all__ = ("Vector", "Morsel", "evaluate")
+__all__ = ("Vector", "Morsel", "evaluate", "align_tables", "align_tables_pyarray")

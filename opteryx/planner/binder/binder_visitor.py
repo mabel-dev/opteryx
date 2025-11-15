@@ -701,10 +701,12 @@ class BinderVisitor:
         if node.on:
             # All conditions have been mapped to 'on' conditions
             comparisons = get_all_nodes_of_type(node.on, (NodeType.COMPARISON_OPERATOR,))
-            if not all(com.value == "Eq" for com in comparisons):
+            if not all(
+                com.value in ("Eq", "NotEq", "Lt", "Gt", "LtEq", "GtEq") for com in comparisons
+            ):
                 from opteryx.exceptions import UnsupportedSyntaxError
 
-                raise UnsupportedSyntaxError("Only JOINs with equals comparisons supported")
+                raise UnsupportedSyntaxError("Only JOINs with equals comparisons supported.")
 
             node.on, context = inner_binder(node.on, context)
             node.left_columns, node.right_columns = extract_join_fields(
@@ -715,6 +717,17 @@ class BinderVisitor:
                 from opteryx.exceptions import IncompatibleTypesError
 
                 raise IncompatibleTypesError(**mismatches)
+
+            if any(
+                com.left.schema_column.type == OrsoTypes.DECIMAL
+                and com.value not in ("Eq", "NotEq")
+                for com in comparisons
+            ):
+                from opteryx.exceptions import UnsupportedSyntaxError
+
+                raise UnsupportedSyntaxError(
+                    "JOINs on DECIMAL types only supports Equals and Not Equals."
+                )
 
             # we need to put the referenced columns into the columns attribute for the
             # optimizers

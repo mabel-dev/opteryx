@@ -48,13 +48,17 @@ class JoinOrderingStrategy(OptimizationStrategy):
                 self.statistics.optimization_inner_join_smallest_table_left += 1
                 context.optimized_plan[context.node_id] = node
 
+            # if any of the comparisons are other than "equal", we cannot use a hash join
+            if node.on.value in ("NotEq", "Lt", "Gt", "LtEq", "GtEq"):
+                node.type = "non equi"
+                context.optimized_plan[context.node_id] = node
             # Small datasets benefit from nested loop joins (avoids building a hash table)
-            if (
+            elif (
                 not DISABLE_NESTED_LOOP_JOIN
                 and min(node.left_size, node.right_size) < 1_000
                 and max(node.left_size, node.right_size) < 100_000
             ) or FORCE_NESTED_LOOP_JOIN:
-                node.type = "nested_inner"
+                node.type = "nested loop"
                 context.optimized_plan[context.node_id] = node
 
         return context

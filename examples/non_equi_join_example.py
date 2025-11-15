@@ -6,10 +6,11 @@ Note: SQL integration for non-equi joins requires additional parser support.
 """
 
 import pyarrow as pa
-from opteryx.compiled.joins import non_equi_nested_loop_join
-from opteryx.operators import NonEquiJoinNode
-from opteryx.models import QueryProperties
+
 from opteryx import EOS
+from opteryx.compiled.joins import non_equi_nested_loop_join
+from opteryx.models import QueryProperties
+from opteryx.operators import NonEquiJoinNode
 
 
 def example_basic_non_equi_join():
