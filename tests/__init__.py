@@ -621,6 +621,7 @@ def create_duck_db():  # pragma: no cover
 
     import duckdb
 
+    os.makedirs("tmp", exist_ok=True)
     conn = duckdb.connect(database=f"tmp/planets-{worker_id}.duckdb")
     cur = conn.cursor()
     try:
