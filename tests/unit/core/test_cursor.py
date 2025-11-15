@@ -5,10 +5,9 @@ from decimal import Decimal
 import pyarrow
 import pytest
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
-from opteryx.cursor import CursorState
 from opteryx.exceptions import InvalidCursorStateError, MissingSqlStatement, UnsupportedSyntaxError
 
 
@@ -24,8 +23,10 @@ def test_execute():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM $planets")
     assert conn.history[-1][0] == "SELECT * FROM $planets", conn.history
-    with pytest.raises(InvalidCursorStateError):
-        cursor.execute("SELECT * FROM $planets")
+    # cursor can now be re-used for additional queries
+    cursor.execute("SELECT name FROM $planets LIMIT 1")
+    result = cursor.fetchone()
+    assert result[0] == "Mercury"
 
 
 def test_rowcount():
@@ -132,33 +133,7 @@ def test_execute_error():
 
 def test_cursor_init():
     cursor = setup_function()
-    assert cursor._state == CursorState.INITIALIZED
-
-
-def test_execute_transition_state():
-    cursor = setup_function()
-    cursor.execute("SELECT * FROM $planets")
-    assert cursor._state == CursorState.EXECUTED
-
-
-def test_execute_with_invalid_state():
-    cursor = setup_function()
-    cursor._state = CursorState.EXECUTED  # Manually setting to test
-    with pytest.raises(InvalidCursorStateError):
-        cursor.execute("SELECT * FROM $planets")
-
-
-def test_close_with_invalid_state():
-    cursor = setup_function()
-    with pytest.raises(InvalidCursorStateError):
-        cursor.close()
-
-
-def test_execute_to_arrow_with_invalid_state():
-    cursor = setup_function()
-    cursor.execute_to_arrow("SELECT * FROM $planets")
-    with pytest.raises(InvalidCursorStateError):
-        cursor.execute_to_arrow("SELECT * FROM $planets")
+    assert not cursor  # __bool__ should be False before execution
 
 
 def test_execute_to_arrow():
@@ -194,6 +169,29 @@ def test_limit():
     cursor = setup_function()
     dataset = cursor.execute_to_arrow("SELECT * FROM $planets", limit=3)
     assert dataset.num_rows == 3
+
+
+def test_cursor_close_blocks_further_commands():
+    cursor = setup_function()
+    cursor.close()
+    with pytest.raises(InvalidCursorStateError):
+        cursor.execute("SELECT * FROM $planets")
+
+
+def test_execute_to_arrow_can_repeat():
+    cursor = setup_function()
+    result_first = cursor.execute_to_arrow("SELECT * FROM $planets")
+    assert result_first.shape == (9, 20)
+    result_second = cursor.execute_to_arrow("SELECT name FROM $planets LIMIT 2")
+    assert result_second.num_rows == 2
+
+
+def test_cursor_truthiness_after_close():
+    cursor = setup_function()
+    cursor.execute("SELECT * FROM $planets")
+    assert cursor
+    cursor.close()
+    assert not cursor
 
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
