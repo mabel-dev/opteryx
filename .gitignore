@@ -170,8 +170,7 @@ version_2/**
 planet*.duckdb
 charts.csv
 testdata/tpch/**/**.parquet
-opteryx/compiled/**/*.cpp
-opteryx/compiled/**/*.c
+opteryx/compiled/**/*.c*
 secure-connect.zip
 hits/*.parquet
 space_missions.parquet
@@ -187,12 +186,12 @@ testdata/iceberg/**
 third_party/tktech/simdjson/csimdjson.cpp
 opteryx/compiled/list_ops/list_ops.pyx
 opteryx/third_party/abseil/containers.cpp
-opteryx/third_party/alantsd/base64.c
+opteryx/third_party/alantsd/base64.c*
 opteryx/third_party/cyan4973/xxhash.c*
 opteryx/third_party/fastfloat/fast_float.cpp
-opteryx/third_party/fuzzy/soundex.c
+opteryx/third_party/fuzzy/soundex.c*
 opteryx/third_party/tktech/csimdjson.cpp
-opteryx/third_party/ulfjack/ryu.c
+opteryx/third_party/ulfjack/ryu.c*
 opteryx/compiled/joins/joins.pyx
 pyiceberg_catalog.db
 opteryx/compiled/joins/joins.h
@@ -215,6 +214,7 @@ third_party/mabel/draken/vectors/string_vector.c*
 third_party/mabel/draken/vectors/time_vector.c*
 third_party/mabel/draken/vectors/timestamp_vector.c*
 third_party/mabel/draken/vectors/vector.c*
-third_party/mabel/draken/core/ops.cpp
+third_party/mabel/draken/core/ops.c*
 tests/draken/performance/.perf_baseline.json
 opteryx/draken/vectors/_hash_api.c*
+third_party/mabel/draken/vectors/interval_vector.c*

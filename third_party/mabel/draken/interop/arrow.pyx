@@ -33,6 +33,12 @@ from opteryx.draken.vectors.string_vector cimport from_arrow_struct as string_fr
 from opteryx.draken.vectors.date32_vector cimport from_arrow as date32_from_arrow
 from opteryx.draken.vectors.timestamp_vector cimport from_arrow as timestamp_from_arrow
 from opteryx.draken.vectors.time_vector cimport from_arrow as time_from_arrow
+from opteryx.draken.vectors.interval_vector cimport (
+    from_arrow_interval as interval_from_arrow_interval,
+)
+from opteryx.draken.vectors.interval_vector cimport (
+    from_arrow_binary as interval_from_arrow_binary,
+)
 from opteryx.draken.vectors.array_vector cimport from_arrow as array_from_arrow
 
 from opteryx.draken.vectors.arrow_vector import from_arrow as arrow_from_arrow
@@ -90,6 +96,10 @@ cpdef object vector_from_arrow(object array):
     pa_type = array.type
     if pa_type.equals(pa.int64()):
         return int64_from_arrow(array)
+    if pa.types.is_interval(pa_type):
+        return interval_from_arrow_interval(array)
+    if pa.types.is_fixed_size_binary(pa_type) and pa_type.byte_width == 16:
+        return interval_from_arrow_binary(array)
     if pa_type.equals(pa.string()) or pa_type.equals(pa.binary()):
         return string_from_arrow(array)
     if pa_type.equals(pa.float64()):
@@ -134,11 +144,15 @@ cpdef DrakenType arrow_type_to_draken(object dtype):
         return DrakenType.DRAKEN_DATE32
     elif pa.types.is_timestamp(dtype):
         return DrakenType.DRAKEN_TIMESTAMP64
+    elif pa.types.is_interval(dtype):
+        return DrakenType.DRAKEN_INTERVAL
     elif pa.types.is_boolean(dtype):
         return DrakenType.DRAKEN_BOOL
     elif pa.types.is_string(dtype) or pa.types.is_large_string(dtype):
         return DrakenType.DRAKEN_STRING
     elif pa.types.is_list(dtype) or pa.types.is_large_list(dtype):
         return DrakenType.DRAKEN_ARRAY
+    elif pa.types.is_fixed_size_binary(dtype) and dtype.byte_width == 16:
+        return DrakenType.DRAKEN_INTERVAL
 
     return DrakenType.DRAKEN_NON_NATIVE

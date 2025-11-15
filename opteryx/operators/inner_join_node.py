@@ -97,7 +97,9 @@ class InnerJoinNode(JoinNode):
                     if self.columns is not None:
                         candidates = [c.schema_column.identity for c in self.columns]
                         left_keep = [c for c in candidates if c in self.left_relation.schema.names]
-                        self.left_relation = self.left_relation.select(left_keep)
+                        if len(left_keep) < len(self.left_relation.schema.names):
+                            self.left_relation = self.left_relation.select(left_keep)
+                            self.statistics.feature_eliminate_left_join_columns = 1
                 else:
                     if self.left_buffer_columns is None:
                         self.left_buffer_columns = morsel.schema.names
@@ -160,7 +162,9 @@ class InnerJoinNode(JoinNode):
                 if self.columns is not None:
                     candidates = [c.schema_column.identity for c in self.columns]
                     right_keep = [c for c in candidates if c in morsel.schema.names]
-                    morsel = morsel.select(right_keep)
+                    if len(right_keep) < len(morsel.schema.names):
+                        morsel = morsel.select(right_keep)
+                        self.statistics.feature_eliminate_right_join_columns = 1
 
                 aligned = align_tables(morsel, self.left_relation, right_indicies, left_indicies)
                 self.statistics.increase("time_inner_join_align", time.monotonic_ns() - start)

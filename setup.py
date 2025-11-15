@@ -433,6 +433,7 @@ if SHOULD_BUILD_EXTENSIONS:
         make_draken_extension("vectors.date32_vector", "vectors/date32_vector.pyx"),
         make_draken_extension("vectors.timestamp_vector", "vectors/timestamp_vector.pyx"),
         make_draken_extension("vectors.time_vector", "vectors/time_vector.pyx"),
+        make_draken_extension("vectors.interval_vector", "vectors/interval_vector.pyx"),
         make_draken_extension("vectors.array_vector", "vectors/array_vector.pyx"),
         Extension(
             name="opteryx.draken.vectors._hash_api",

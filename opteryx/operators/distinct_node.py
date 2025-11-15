@@ -42,19 +42,12 @@ class DistinctNode(BasePlanNode):
         import opteryx.draken as draken
         from opteryx.compiled.table_ops.distinct import distinct
 
-        # We create a HashSet outside the distinct call, this allows us to pass
-        # the hash to each run of the distinct which means we don't need to concat
-        # all of the tables together to return a result.
-        #
-        # Being able to run morsel-by-morsel means if we have a LIMIT clause, we can
-        # limit processing
-
         if morsel == EOS:
             yield EOS
             return
 
         # Convert Arrow table to Draken morsel
-        draken_morsel = draken.Morsel.from_arrow(morsel)
+        draken_morsel = draken.Morsel.from_arrow(morsel) if isinstance(morsel, Table) else morsel
 
         # Use Draken-based distinct with column names as bytes
         unique_indexes, self.hash_set = distinct(
