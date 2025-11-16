@@ -30,7 +30,7 @@ from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize
 from cpython.buffer cimport PyBUF_SIMPLE, PyObject_GetBuffer, PyBuffer_Release, Py_buffer
 from threading import RLock
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uintptr_t
 
 import os
 
@@ -288,6 +288,8 @@ cdef class MemoryPool:
         cdef int64_t len_data
         cdef int64_t segment_index
         cdef MemorySegment segment, new_segment
+        cdef int64_t new_size
+        cdef MemorySegment additional_space
         cdef int64_t ref_id = self.next_ref_id
         cdef Py_buffer view
         cdef char* raw_ptr
@@ -314,9 +316,6 @@ cdef class MemoryPool:
             return ref_id
 
         aligned_size = _align_size(len_data, self.alignment)
-
-        cdef int64_t new_size
-        cdef MemorySegment additional_space
 
         with self.lock:
             # Try to find a suitable segment
@@ -386,6 +385,114 @@ cdef class MemoryPool:
             PyBuffer_Release(&view)
 
         return ref_id
+
+    cpdef tuple reserve_for_write_ptr(self, int64_t size):
+        """
+        Reserve a segment for direct write and return (ref_id, ptr, capacity).
+        The returned ptr is an integer address pointing into the internal pool.
+        The segment is latched to prevent compaction while the writer fills it.
+        """
+        cdef int64_t len_data = size
+        cdef int64_t aligned_size = _align_size(len_data, self.alignment)
+        cdef int64_t segment_index
+        cdef MemorySegment segment, new_segment
+        cdef int64_t new_size
+        cdef MemorySegment additional_space
+
+        with self.lock:
+            segment_index = self._find_best_fit_segment(aligned_size)
+
+            if segment_index == -1:
+                # Try compaction
+                self._merge_adjacent_free_segments()
+                segment_index = self._find_best_fit_segment(aligned_size)
+
+                if segment_index == -1:
+                    self._defragment_memory()
+                    segment_index = self._find_best_fit_segment(aligned_size)
+
+                    if segment_index == -1 and self.auto_resize:
+                        new_size = max(self.size * 2, self.size + aligned_size * 2)
+                        if self._resize_pool(new_size):
+                            if self.segments.size() > 0 and self.segments[self.segments.size() - 1].is_free:
+                                self.segments[self.segments.size() - 1].length += new_size - self.size
+                            else:
+                                additional_space.start = self.size
+                                additional_space.length = new_size - self.size
+                                additional_space.latches = 0
+                                additional_space.is_free = True
+                                self.segments.push_back(additional_space)
+
+                            segment_index = self._find_best_fit_segment(aligned_size)
+
+            if segment_index == -1:
+                self.failed_commits += 1
+                return (-1, 0, 0)
+
+            segment = self.segments[segment_index]
+
+            # Create new used segment and latch it to prevent moves
+            new_segment.start = segment.start
+            new_segment.length = aligned_size
+            new_segment.latches = 1
+            new_segment.is_free = False
+
+            if segment.length > aligned_size:
+                segment.start += aligned_size
+                segment.length -= aligned_size
+                self.segments[segment_index] = segment
+                self.segments.insert(self.segments.begin() + segment_index, new_segment)
+                self._used_start_map[self.next_ref_id] = new_segment.start
+                self.used_segments[self.next_ref_id] = {"start": new_segment.start, "length": new_segment.length, "latches": 1, "orig_length": 0}
+            else:
+                self.segments[segment_index] = new_segment
+                self._used_start_map[self.next_ref_id] = new_segment.start
+                self.used_segments[self.next_ref_id] = {"start": new_segment.start, "length": new_segment.length, "latches": 1, "orig_length": 0}
+
+            ptr_val = <uintptr_t>(self.pool + new_segment.start)
+            cap = new_segment.length
+            ref_id = self.next_ref_id
+            self.next_ref_id += 1
+            self.used_size += aligned_size
+            self.commits += 1
+
+        # Return (ref_id, pointer as integer, capacity)
+        return (ref_id, <unsigned long long>ptr_val, cap)
+
+    cpdef finalize_commit(self, int64_t ref_id, int64_t actual_length):
+        """Finalize a previous `reserve_for_write_ptr` by setting the actual
+        length and unlatching the segment so readers can access it."""
+        cdef int64_t segment_index
+        cdef MemorySegment segment
+
+        with self.lock:
+            if ref_id not in self._used_start_map:
+                raise ValueError(f"Invalid reference ID - {ref_id}.")
+
+            start = self._used_start_map[ref_id]
+            # update public view
+            if ref_id in self.used_segments:
+                self.used_segments[ref_id]["orig_length"] = actual_length
+
+            if start == -1:
+                return
+
+            segment_index = -1
+            for i in range(self.segments.size()):
+                if not self.segments[i].is_free and self.segments[i].start == start:
+                    segment_index = i
+                    break
+
+            if segment_index == -1:
+                raise ValueError(f"Invalid reference ID - {ref_id}.")
+
+            segment = self.segments[segment_index]
+            # unlatch the segment (writer finished)
+            if segment.latches > 0:
+                segment.latches -= 1
+            self.segments[segment_index] = segment
+            if ref_id in self.used_segments:
+                self.used_segments[ref_id]["latches"] = segment.latches
 
     cpdef read(self, int64_t ref_id, bint zero_copy=False, bint latch=False):
         cdef int64_t segment_index

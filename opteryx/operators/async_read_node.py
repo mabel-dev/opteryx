@@ -148,8 +148,8 @@ class AsyncReaderNode(ReaderNode):
                 # Attempt to get an item with a timeout.
                 item = data_queue.get(timeout=0.1)
             except queue.Empty:
-                # Increment stall count if the queue is empty.
-                self.statistics.stalls_reading_from_read_buffer += 1
+                # Increment stall count if the queue is empty (engine waiting on data).
+                self.statistics.stalls_engine_waiting_on_data += 1
                 system_statistics.io_wait_seconds += 0.1
                 continue  # Skip the rest of the loop and try to get an item again.
 

@@ -176,7 +176,7 @@ def async_read_thru_cache(func):
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
                 while read_buffer_ref == -1:  # pragma: no cover
                     await asyncio.sleep(0.1)
-                    statistics.stalls_writing_to_read_buffer += 1
+                    statistics.stalls_io_waiting_on_engine += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
                     statistics.bytes_read += len(payload)
                     system_statistics.cpu_wait_seconds += 0.1
@@ -192,7 +192,7 @@ def async_read_thru_cache(func):
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
                 while read_buffer_ref == -1:  # pragma: no cover
                     await asyncio.sleep(0.1)
-                    statistics.stalls_writing_to_read_buffer += 1
+                    statistics.stalls_io_waiting_on_engine += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
                     statistics.bytes_read += len(payload)
                     system_statistics.cpu_wait_seconds += 0.1
