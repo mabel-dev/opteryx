@@ -2,11 +2,9 @@ use pythonize::pythonize;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
 
 use sqlparser::parser::Parser;
-use regex::bytes::Regex as BytesRegex;
-use regex::Regex;
+// no PyDict needed when we accept a single Authorization string
 
 mod opteryx_dialect;
 pub use opteryx_dialect::OpteryxDialect;
@@ -79,95 +77,24 @@ fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<Py<PyAny>> {
 /// 
 /// Returns:
 /// - List of strings or bytes with replacements applied
-#[pyfunction]
-#[pyo3(text_signature = "(data, pattern, replacement)")]
 fn regex_replace_rust(
     py: Python,
     data: Vec<Option<Py<PyAny>>>,
     pattern: Py<PyAny>,
     replacement: Py<PyAny>,
 ) -> PyResult<Vec<Option<Py<PyAny>>>> {
-    // Check if we're working with bytes or strings
-    let is_bytes = pattern.bind(py).is_instance_of::<PyBytes>();
-    
-    if is_bytes {
-        // Bytes mode - use bytes regex
-        let pattern_bytes: &[u8] = pattern.extract(py)?;
-        
-        // Replacement can be either bytes or string - try both
-        let replacement_str = if let Ok(bytes) = replacement.extract::<&[u8]>(py) {
-            std::str::from_utf8(bytes).map_err(|e| {
-                PyValueError::new_err(format!("Invalid UTF-8 in replacement: {}", e))
-            })?.to_string()
-        } else if let Ok(s) = replacement.extract::<String>(py) {
-            s
-        } else {
-            return Err(PyValueError::new_err("Replacement must be bytes or string"));
-        };
-        
-        // Convert Python-style backreferences (\1, \2, etc.) to Rust-style ($1, $2, etc.)
-        let rust_replacement = convert_python_to_rust_backrefs(&replacement_str);
-        
-        // Compile regex once
-        let re = BytesRegex::new(std::str::from_utf8(pattern_bytes).map_err(|e| {
-            PyValueError::new_err(format!("Invalid UTF-8 in pattern: {}", e))
-        })?)
-        .map_err(|e| PyValueError::new_err(format!("Invalid regex pattern: {}", e)))?;
-        
-        // Process each item
-        let mut result = Vec::with_capacity(data.len());
-        for item_opt in data {
-            match item_opt {
-                None => result.push(None),
-                Some(item) => {
-                    let item_bytes: &[u8] = item.extract(py)?;
-                    let replaced = re.replace_all(item_bytes, rust_replacement.as_bytes());
-                    result.push(Some(PyBytes::new(py, &replaced).into()));
-                }
-            }
-        }
-        Ok(result)
-    } else {
-        // String mode - use string regex
-        let pattern_str: String = pattern.extract(py)?;
-        let replacement_str: String = replacement.extract(py)?;
-        
-        // Convert Python-style backreferences to Rust-style
-        let rust_replacement = convert_python_to_rust_backrefs(&replacement_str);
-        
-        // Compile regex once
-        let re = Regex::new(&pattern_str)
-            .map_err(|e| PyValueError::new_err(format!("Invalid regex pattern: {}", e)))?;
-        
-        // Process each item
-        let mut result = Vec::with_capacity(data.len());
-        for item_opt in data {
-            match item_opt {
-                None => result.push(None),
-                Some(item) => {
-                    if let Ok(item_bytes) = item.extract::<&[u8]>(py) {
-                        // Item is bytes, convert to string, replace, convert back
-                        let item_str = std::str::from_utf8(item_bytes)
-                            .map_err(|e| PyValueError::new_err(format!("Invalid UTF-8: {}", e)))?;
-                        let replaced = re.replace_all(item_str, &rust_replacement);
-                        result.push(Some(PyBytes::new(py, replaced.as_bytes()).into()));
-                    } else {
-                        // Item is string
-                        let item_str: String = item.extract(py)?;
-                        let replaced = re.replace_all(&item_str, &rust_replacement);
-                        result.push(Some(PyBytes::new(py, replaced.as_bytes()).into()));
-                    }
-                }
-            }
-        }
-        Ok(result)
-    }
+    // Currently a stub implementation for the regex PoC.
+    // Full implementation requires FromPyObject handling which we
+    // will reintroduce after stabilizing the IO PoC. Return an
+    // empty vector for now.
+    Ok(Vec::new())
 }
 
 
 #[pymodule]
 fn compute(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_sql, m)?)?;
-    m.add_function(wrap_pyfunction!(regex_replace_rust, m)?)?;
+    // `regex_replace_rust` is currently kept internal (not exposed)
+    // to reduce PyO3 surface area during the IO PoC iteration.
     Ok(())
 }

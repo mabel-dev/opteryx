@@ -3,6 +3,7 @@ import sys
 from collections import namedtuple
 
 import pytest
+os.environ.pop("OPTERYX_DEBUG", None)
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 

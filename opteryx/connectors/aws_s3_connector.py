@@ -190,8 +190,9 @@ class AwsS3Connector(
             data = stream.read()
 
             ref = await pool.commit(data)
-            while ref is None:
-                statistics.stalls_writing_to_read_buffer += 1
+            # treat both None and -1 as commit failure and retry
+            while ref is None or ref == -1:
+                statistics.stalls_io_waiting_on_engine += 1
                 await asyncio.sleep(0.1)
                 system_statistics.cpu_wait_seconds += 0.1
                 ref = await pool.commit(data)
