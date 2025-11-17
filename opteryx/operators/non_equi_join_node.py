@@ -81,6 +81,8 @@ class NonEquiJoinNode(JoinNode):
         return f"{self.left_column} {op_symbol} {self.right_column}"
 
     def execute(self, morsel: Table, join_leg: str) -> Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if join_leg == "left":
             if morsel == EOS:
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")

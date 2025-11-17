@@ -55,6 +55,8 @@ class HeapSortNode(BasePlanNode):
         return "Heap Sort"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
+        morsel = self.ensure_arrow_table(morsel)
+
         _ = kwargs  # kwargs are part of the execution contract
         if morsel is EOS:
             if self.table is None:

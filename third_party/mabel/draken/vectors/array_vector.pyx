@@ -42,6 +42,8 @@ from opteryx.draken.vectors.vector cimport (
 )
 from opteryx.third_party.cyan4973.xxhash import hash_bytes
 
+DEF ARRAY_HASH_CHUNK = 64
+
 
 cdef inline DrakenArrayBuffer* _alloc_array_buffer() except *:
     cdef DrakenArrayBuffer* buf = <DrakenArrayBuffer*> malloc(sizeof(DrakenArrayBuffer))
@@ -337,8 +339,7 @@ cdef class ArrayVector(Vector):
     cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9E3779B97F4A7C15U,
+        Py_ssize_t offset=0
     ) except *:
         if self.ptr == NULL:
             return
@@ -349,26 +350,31 @@ cdef class ArrayVector(Vector):
         if offset < 0 or offset + n > out_buf.shape[0]:
             raise ValueError("ArrayVector.hash_into: output buffer too small")
 
-        cdef uint64_t* scratch = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if scratch == NULL:
-            raise MemoryError()
+        cdef Py_ssize_t block
+        cdef Py_ssize_t j
+        cdef Py_ssize_t idx
+        cdef uint64_t[ARRAY_HASH_CHUNK] scratch
+        cdef uint64_t* scratch_ptr = <uint64_t*> scratch
         cdef Py_ssize_t i
         cdef object value
         cdef object encoded
 
-        mix_constant = MIX_HASH_CONSTANT
-        try:
-            for i in range(n):
-                if _row_is_null(self.ptr, i):
-                    scratch[i] = NULL_HASH
+        i = 0
+        while i < n:
+            block = n - i
+            if block > ARRAY_HASH_CHUNK:
+                block = ARRAY_HASH_CHUNK
+            for j in range(block):
+                idx = i + j
+                if _row_is_null(self.ptr, idx):
+                    scratch[j] = NULL_HASH
                     continue
-                value = self._materialize_row(i)
+                value = self._materialize_row(idx)
                 encoded = repr(value).encode("utf-8")
-                scratch[i] = hash_bytes(encoded)
+                scratch[j] = hash_bytes(encoded)
 
-            simd_mix_hash(&out_buf[offset], scratch, <size_t> n, mix_constant)
-        finally:
-            PyMem_Free(scratch)
+            simd_mix_hash(&out_buf[offset + i], scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+            i += block
 
     def __str__(self):
         if self.ptr == NULL:

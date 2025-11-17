@@ -428,28 +428,28 @@ cdef class Int64Vector(Vector):
 
         return out
 
-    cdef void hash_into(
+    cdef inline void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+        Py_ssize_t offset=0
     ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
         cdef Py_ssize_t n = ptr.length
+        cdef uint64_t* dst_base
 
         if n == 0:
             return
 
         if offset < 0 or offset + n > out_buf.shape[0]:
             raise ValueError("Int64Vector.hash_into: output buffer too small")
+        dst_base = &out_buf[0]
 
         cdef Py_ssize_t i
         cdef uint8_t byte
         cdef uint64_t value
-        cdef uint64_t* dst = &out_buf[offset]
-        cdef int64_t* src = data
-        cdef uint64_t* as_uint64 = <uint64_t*> src
+        cdef uint64_t* dst = dst_base + offset
+        cdef uint64_t* as_uint64 = <uint64_t*> data
         cdef uint8_t* null_bitmap = ptr.null_bitmap
         cdef bint has_nulls = null_bitmap != NULL
 
@@ -457,7 +457,7 @@ cdef class Int64Vector(Vector):
             for i in range(n):
                 byte = null_bitmap[i >> 3]
                 if byte & (1 << (i & 7)):
-                    value = <uint64_t> src[i]
+                    value = <uint64_t> data[i]
                 else:
                     value = NULL_HASH
                 dst[i] = mix_hash(dst[i], value)

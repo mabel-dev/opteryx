@@ -9,6 +9,7 @@
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int64_t, uint64_t
+from libc.stddef cimport size_t
 from libcpp.pair cimport pair
 
 
@@ -57,6 +58,11 @@ cdef class FlatHashSet:
 
     cdef inline void just_insert(self, value: uint64_t) noexcept nogil:
         self._set.insert(value)
+
+    cdef inline void insert_many(self, uint64_t* values, Py_ssize_t length) noexcept nogil:
+        if values == NULL or length <= 0:
+            return
+        flat_hash_set_insert_many(self._set, <const uint64_t*>values, <size_t>length)
 
     cdef inline size_t size(self) noexcept nogil:
         return self._set.size()

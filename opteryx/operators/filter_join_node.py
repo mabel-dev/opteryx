@@ -28,8 +28,9 @@ from . import JoinNode
 
 class FilterJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
-        JoinNode.__init__(self, properties=properties, **parameters)
+        # Ensure `join_type` exists before the base initializer accesses `self.name`
         self.join_type = parameters["type"]
+        JoinNode.__init__(self, properties=properties, **parameters)
         self.on = parameters.get("on")
         self.using = parameters.get("using")
 
@@ -56,6 +57,8 @@ class FilterJoinNode(JoinNode):
         return f"{self.join_type.upper()}"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if join_leg == "left":
             if morsel == EOS:
                 yield EOS

@@ -87,6 +87,8 @@ class AggregateAndGroupNode(BasePlanNode):
         return "Group By"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS:
             if not self.buffer:
                 yield EOS

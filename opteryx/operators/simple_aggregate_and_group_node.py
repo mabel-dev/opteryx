@@ -110,6 +110,8 @@ class SimpleAggregateAndGroupNode(BasePlanNode):
         return "Group By Simple"
 
     def execute(self, morsel: pyarrow.Table, **kwargs):
+        morsel = self.ensure_arrow_table(morsel)
+
         internal_names = list(self.column_map.values()) + self.group_by_columns
         column_names = list(self.column_map.keys()) + self.group_by_columns
 

@@ -54,6 +54,8 @@ class ProjectionNode(BasePlanNode):
         return "Projection"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS:
             yield EOS
             return

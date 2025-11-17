@@ -64,6 +64,8 @@ class InnerJoinNode(JoinNode):
         return ""
 
     def execute(self, morsel: Table, join_leg: str) -> Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         with self.lock:
             if join_leg == "left":
                 if morsel == EOS:

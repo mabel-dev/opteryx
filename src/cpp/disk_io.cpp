@@ -9,6 +9,21 @@
 #include <cstdio>
 #include <cstring>
 
+size_t get_optimal_chunk_size(size_t file_size) {
+    // For very small files, read in one chunk
+    if (file_size <= (2 << 20)) {  // 2MB
+        return file_size;
+    }
+    // For medium files, use 16MB chunks
+    else if (file_size <= (128 << 20)) {  // 128MB
+        return 16 << 20;
+    }
+    // For large files, use larger chunks but limit to 64MB
+    else {
+        return 64 << 20;
+    }
+}
+
 #ifdef __linux__
 #include <fcntl.h>
 #include <unistd.h>
@@ -29,8 +44,7 @@ int read_all_pread(const char* path, uint8_t* dst, size_t* out_len,
 
     size_t size = static_cast<size_t>(st.st_size);
     
-    // Use much larger chunks for better throughput (16MB for few-MB files)
-    const size_t CHUNK = 16 << 20;
+    const size_t CHUNK = get_optimal_chunk_size(size);
     
     // For files smaller than chunk size, read in one go
     if (size <= CHUNK) {
@@ -87,8 +101,7 @@ int read_all_pread(const char* path, uint8_t* dst, size_t* out_len,
 
     size_t size = static_cast<size_t>(st.st_size);
     
-    // Use larger chunks on macOS too
-    const size_t CHUNK = 16 << 20;
+    const size_t CHUNK = get_optimal_chunk_size(size);
     
     if (sequential) fcntl(fd, F_RDAHEAD, 1);
     if (drop_after) fcntl(fd, F_NOCACHE, 1);

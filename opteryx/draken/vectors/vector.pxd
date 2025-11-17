@@ -25,4 +25,4 @@ cdef inline uint64_t mix_hash(uint64_t current, uint64_t value) nogil:
 cdef class Vector:
     cdef bint here
     cpdef object null_bitmap(self)
-    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *

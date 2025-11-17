@@ -6,9 +6,14 @@
 
 import time
 from typing import Optional
+from typing import Union
 
 import pyarrow
 from orso.tools import random_string
+from pyarrow import Table
+
+from opteryx import EOS
+from opteryx.draken import Morsel
 
 END = object()
 
@@ -40,6 +45,9 @@ class BasePlanNode:
         self.records_out = 0
         self.bytes_out = 0
         self.columns = parameters.get("columns", [])
+
+        self._time_stat_key = f"time_{self.name.lower().replace(' ', '_')}"
+        self._empty_morsel_cache = None
 
     @property
     def config(self) -> str:
@@ -86,58 +94,84 @@ class BasePlanNode:
     def execute(self, morsel: pyarrow.Table) -> Optional[pyarrow.Table]:  # pragma: no cover
         raise NotImplementedError()
 
+    def ensure_arrow_table(self, morsel: Union[Table, Morsel]) -> Table:
+        """Ensure the provided morsel is a PyArrow table when needed."""
+        if morsel is EOS:
+            return EOS
+        if isinstance(morsel, Morsel):
+            self.statistics.morsel_to_table_conversion += 1
+            return morsel.to_arrow()
+        return morsel
+
+    def ensure_draken_morsel(self, table: Union[Table, Morsel]) -> Morsel:
+        """Ensure the provided morsel is a Draken morsel when needed."""
+        if table is EOS:
+            return EOS
+        if isinstance(table, Table):
+            self.statistics.table_to_morsel_conversion += 1
+            return Morsel.from_arrow(table)
+        return table
+
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:
+        # Cache frequently accessed attributes
+        statistics = self.statistics
+        time_stat_key = self._time_stat_key
+        is_scan = self.is_scan
+
+        # Process input metrics
         if hasattr(morsel, "num_rows"):
-            self.records_in += morsel.num_rows
-            self.bytes_in += morsel.nbytes
+            num_rows = morsel.num_rows
+            nbytes = morsel.nbytes
+            self.records_in += num_rows
+            self.bytes_in += nbytes
             self.calls += 1
 
-        # set up the execution of the operator
+        # Set up execution
         generator = self.execute(morsel, join_leg=join_leg)
         empty_morsel = None
         at_least_one = False
 
         while True:
             try:
-                # Time the production of the next result
                 start_time = time.monotonic_ns()
-                result = next(generator, END)  # Retrieve the next item from the generator
+                result = next(generator, END)
                 execution_time = time.monotonic_ns() - start_time
-                self.execution_time += execution_time
-                self.statistics.increase(
-                    "time_" + self.name.lower().replace(" ", "_"), execution_time
-                )
 
-                # Update metrics for valid results
+                self.execution_time += execution_time
+                statistics.increase(time_stat_key, execution_time)
+
                 if result == END:
-                    # End when the generator is exhausted
-                    if not at_least_one:
+                    if not at_least_one and empty_morsel is not None:
                         yield empty_morsel
                     break
 
-                if self.is_scan:
+                if is_scan:
                     self.calls += 1
 
-                if hasattr(result, "num_rows"):
-                    self.records_out += result.num_rows
-                    self.bytes_out += result.nbytes
+                # Optimized attribute checking
+                try:
+                    result_num_rows = result.num_rows
+                    result_nbytes = result.nbytes
+                    self.records_out += result_num_rows
+                    self.bytes_out += result_nbytes
 
                     if empty_morsel is None:
                         empty_morsel = result.slice(0, 0)
 
-                    # if we get empty sets, don't yield them unless they're the only one
-                    if result.num_rows > 0:
+                    if result_num_rows > 0:
                         at_least_one = True
                         yield result
                         continue
                     else:
-                        self.statistics.avoided_empty_morsels += 1
+                        statistics.dead_ended_empty_morsels += 1
+                except AttributeError:
+                    # Not a table-like object
+                    pass
 
                 at_least_one = True
                 yield result
 
             except Exception as err:
-                # print(f"Exception {err} in operator", self.name)
                 raise err
 
     def sensors(self):

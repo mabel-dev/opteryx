@@ -47,6 +47,8 @@ class FilterNode(BasePlanNode):
         return "Filter"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel is EOS:
             yield EOS
             return

@@ -33,6 +33,8 @@ from opteryx.draken.core.var_vector cimport buf_dtype
 from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, simd_mix_hash
 from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
+DEF STRING_HASH_CHUNK = 256
+
 
 cdef class StringVector(Vector):
 
@@ -243,7 +245,6 @@ cdef class StringVector(Vector):
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
     ) except *:
         cdef DrakenVarBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
@@ -258,37 +259,41 @@ cdef class StringVector(Vector):
         cdef int32_t* offsets = ptr.offsets
         cdef uint8_t* nb_ptr = ptr.null_bitmap
         cdef Py_ssize_t i
+        cdef Py_ssize_t j
         cdef uint8_t byte
         cdef size_t str_len
         cdef int32_t start, end
         cdef uint64_t* dst = &out_buf[offset]
-        cdef uint64_t* scratch = <uint64_t*> PyMem_Malloc(n * sizeof(uint64_t))
-        if scratch == NULL:
-            raise MemoryError()
+        cdef uint64_t[STRING_HASH_CHUNK] scratch
+        cdef uint64_t* scratch_ptr = <uint64_t*> scratch
+        cdef Py_ssize_t idx
 
-        mix_constant = MIX_HASH_CONSTANT
+        i = 0
+        while i < n:
+            block = n - i
+            if block > STRING_HASH_CHUNK:
+                block = STRING_HASH_CHUNK
 
-        try:
             if nb_ptr != NULL:
-                for i in range(n):
-                    byte = nb_ptr[i >> 3]
-                    if ((byte >> (i & 7)) & 1) == 0:
-                        scratch[i] = NULL_HASH
+                for j in range(block):
+                    idx = i + j
+                    byte = nb_ptr[idx >> 3]
+                    if ((byte >> (idx & 7)) & 1) == 0:
+                        scratch[j] = NULL_HASH
                         continue
-                    start = offsets[i]
-                    end = offsets[i + 1]
+                    start = offsets[idx]
+                    end = offsets[idx + 1]
                     str_len = <size_t>(end - start)
-                    scratch[i] = cy_xxhash3_64(data + start, str_len)
+                    scratch[j] = cy_xxhash3_64(data + start, str_len)
             else:
-                for i in range(n):
-                    start = offsets[i]
-                    end = offsets[i + 1]
+                for j in range(block):
+                    start = offsets[i + j]
+                    end = offsets[i + j + 1]
                     str_len = <size_t>(end - start)
-                    scratch[i] = cy_xxhash3_64(data + start, str_len)
+                    scratch[j] = cy_xxhash3_64(data + start, str_len)
 
-            simd_mix_hash(dst, scratch, <size_t> n, mix_constant)
-        finally:
-            PyMem_Free(scratch)
+            simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+            i += block
 
     cpdef StringVector take(self, int32_t[::1] indices):
         cdef DrakenVarBuffer* src_ptr = self.ptr

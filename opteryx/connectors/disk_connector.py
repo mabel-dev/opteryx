@@ -64,6 +64,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         OrsoTypes.DATE,
     }
 
+    _executor = None  # Lazy initialization
+
     def __init__(self, **kwargs):
         """
         Initialize the DiskConnector, which reads datasets directly from disk.
@@ -85,7 +87,16 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
         self.blobs_seen = 0
         self._stats_lock = threading.Lock()
         cpu_count = os.cpu_count() or 1
-        self._max_workers = max(1, min(8, (cpu_count + 1) // 2))
+        self._max_workers = max(1, min(cpu_count * 2, 16))  # More aggressive scaling
+
+    def get_executor(self):
+        if self._executor is None:
+            self._executor = ThreadPoolExecutor(max_workers=self._max_workers)
+        return self._executor
+
+    def __del__(self):
+        if self._executor is not None:
+            self._executor.shutdown(wait=False)
 
     def read_blob(
         self, *, blob_name: str, decoder, just_schema=False, projection=None, selection=None
@@ -121,6 +132,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                 If an I/O error occurs while reading the file.
         """
         from opteryx.compiled.io.disk_reader import read_file_mmap
+        from opteryx.compiled.io.disk_reader import unmap_memory
 
         # from opteryx.compiled.io.disk_reader import unmap_memory
         # Read using mmap for maximum speed
@@ -153,8 +165,8 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             return result
         finally:
             # CRITICAL: Clean up the memory mapping
-            pass
-            # unmap_memory(mmap_obj)
+            if mmap_obj is not None:
+                unmap_memory(mmap_obj)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -280,7 +292,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
             blob_iter = iter(blob_names)
             pending = {}
 
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            with self.get_executor() as executor:
                 for _ in range(max_workers):
                     try:
                         blob_name = next(blob_iter)

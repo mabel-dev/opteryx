@@ -2,7 +2,7 @@ import os
 import pytest
 import sys
 
-#import opteryx
+import opteryx
 
 os.environ.pop("OPTERYX_DEBUG", None)
 

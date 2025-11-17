@@ -244,6 +244,8 @@ class UnnestJoinNode(BasePlanNode):
         return f"CROSS JOIN {filters}"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str = None) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS:
             yield EOS
             return

@@ -204,6 +204,8 @@ class AggregateNode(BasePlanNode):
         return "Aggregation"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS:
             if _is_count_star(self.aggregates):
                 yield _count_star(

@@ -22,14 +22,19 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
 from opteryx.operators.aggregate_node import extract_evaluations
-from opteryx.third_party.abseil.containers import FlatHashSet
 
 from . import BasePlanNode
 
 
 class SimpleAggregateCollector:
     def __init__(
-        self, aggregate_type, schema_column, count_nulls=False, duplicate_treatment="IGNORE"
+        self,
+        aggregate_type,
+        schema_column,
+        *,
+        count_nulls=False,
+        duplicate_treatment="IGNORE",
+        statistics=None,
     ):
         self.aggregate_type = aggregate_type
         self.current_value = None
@@ -39,6 +44,7 @@ class SimpleAggregateCollector:
         self.schema_column = schema_column
         self.column_type = schema_column.type
         self.always_count = aggregate_type in ("COUNT", "AVG")
+        self.statistics = statistics
 
     def collect(self, values):
         if self.always_count and self.count_nulls:
@@ -54,7 +60,7 @@ class SimpleAggregateCollector:
             elif self.aggregate_type == "MAX":
                 self.current_value = pyarrow.compute.max(values).as_py()
             elif self.aggregate_type == "COUNT" and self.duplicate_treatment == "Distinct":
-                self.current_value = count_distinct(values, FlatHashSet())
+                self.current_value = count_distinct(values, None)
             elif self.aggregate_type == "HISTOGRAM":
                 from opteryx.third_party.maki_nage.distogram import Distogram
 
@@ -141,6 +147,7 @@ class SimpleAggregateNode(BasePlanNode):
                 aggregate_type,
                 aggregate.parameters[0].schema_column,
                 duplicate_treatment=aggregate.duplicate_treatment,
+                statistics=self.statistics,
             )
 
     @property
@@ -152,6 +159,8 @@ class SimpleAggregateNode(BasePlanNode):
         return "Aggregation Simple"
 
     def execute(self, morsel: pyarrow.Table, **kwargs) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS:
             names = []
             values = []

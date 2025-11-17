@@ -29,6 +29,8 @@ from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH,
 cdef const uint64_t TRUE_HASH = <uint64_t>0x4f112caa54efa882
 cdef const uint64_t FALSE_HASH = <uint64_t>0xc2fd8b2343f83ce7
 
+DEF BOOL_HASH_CHUNK = 1024
+
 cdef class BoolVector(Vector):
 
     def __cinit__(self, size_t length=0, bint wrap=False):
@@ -267,8 +269,7 @@ cdef class BoolVector(Vector):
     cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+        Py_ssize_t offset=0
     ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
@@ -279,7 +280,6 @@ cdef class BoolVector(Vector):
             raise ValueError("BoolVector.hash_into: output buffer too small")
 
         cdef Py_ssize_t i
-        cdef Py_ssize_t chunk = 0
         cdef Py_ssize_t block = 0
         cdef Py_ssize_t j = 0
         cdef Py_ssize_t idx = 0
@@ -288,33 +288,23 @@ cdef class BoolVector(Vector):
         cdef uint64_t* dst = &out_buf[offset]
         cdef uint8_t* values = <uint8_t*> ptr.data
         cdef bint has_nulls = ptr.null_bitmap != NULL
-        cdef uint64_t* scratch = NULL
-
-        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
-        if mix_constant != MIX_HASH_CONSTANT:
-            mix_constant = MIX_HASH_CONSTANT
+        cdef uint64_t[BOOL_HASH_CHUNK] scratch
+        cdef uint64_t* scratch_ptr = <uint64_t*> scratch
 
         if not has_nulls:
-            chunk = 1024 if n > 1024 else n
-            scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
-            if scratch == NULL:
-                raise MemoryError()
-            try:
-                i = 0
-                while i < n:
-                    block = n - i
-                    if block > chunk:
-                        block = chunk
-                    for j in range(block):
-                        idx = i + j
-                        if (values[idx >> 3] >> (idx & 7)) & 1:
-                            scratch[j] = TRUE_HASH
-                        else:
-                            scratch[j] = FALSE_HASH
-                    simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
-                    i += block
-            finally:
-                PyMem_Free(scratch)
+            i = 0
+            while i < n:
+                block = n - i
+                if block > BOOL_HASH_CHUNK:
+                    block = BOOL_HASH_CHUNK
+                for j in range(block):
+                    idx = i + j
+                    if (values[idx >> 3] >> (idx & 7)) & 1:
+                        scratch[j] = TRUE_HASH
+                    else:
+                        scratch[j] = FALSE_HASH
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+                i += block
             return
 
         for i in range(n):

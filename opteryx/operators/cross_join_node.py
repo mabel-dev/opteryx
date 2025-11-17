@@ -119,6 +119,8 @@ class CrossJoinNode(JoinNode):
         return f"CROSS JOIN"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if not self.continue_executing:
             yield None
             return

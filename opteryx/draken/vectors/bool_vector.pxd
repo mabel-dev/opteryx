@@ -20,7 +20,7 @@ cdef class BoolVector(Vector):
     cpdef int8_t all(self)
     cpdef int8_t[::1] is_null(self)
     cpdef list to_pylist(self)
-    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
     cpdef BoolVector and_vector(self, BoolVector other)
     cpdef BoolVector or_vector(self, BoolVector other)
     cpdef BoolVector xor_vector(self, BoolVector other)

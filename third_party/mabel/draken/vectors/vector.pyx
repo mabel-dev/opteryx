@@ -23,8 +23,8 @@ from libc.stdint cimport uint64_t
 
 from opteryx.draken.interop.arrow cimport vector_from_arrow
 
-cdef const uint64_t MIX_HASH_CONSTANT = <uint64_t>0x9e3779b97f4a7c15U
-cdef const uint64_t NULL_HASH = <uint64_t>0x9e3779b97f4a7c15U
+cdef const uint64_t MIX_HASH_CONSTANT = <uint64_t>0x9e3779b97f4a7c15ULL
+cdef const uint64_t NULL_HASH = <uint64_t>0x4c3f95a36ab8eccaULL
 
 cdef class Vector:
 
