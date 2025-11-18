@@ -82,6 +82,16 @@ def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
 
+def is_linux():  # pragma: no cover
+    """
+    Check if the current platform is Linux.
+
+    Returns:
+        bool: True if the platform is Linux, False otherwise.
+    """
+    return platform.system().lower() == "linux"
+
+
 def is_pypy():  # pragma: no cover
     """
     Check if the current Python implementation is PyPy.
@@ -146,7 +156,7 @@ def skip(func):  # pragma: no cover
     return wrapper
 
 
-def skip_if(is_true: bool = True):  # pragma: no cover
+def skip_if(is_true: bool = True, reason:str = ""):  # pragma: no cover
     """
     Decorator to conditionally skip the execution of a test function based on a condition.
 
@@ -173,7 +183,9 @@ def skip_if(is_true: bool = True):  # pragma: no cover
             if is_true and not manual():
                 import warnings
 
-                warnings.warn(f"Skipping {func.__name__} because of conditional execution.")
+                if not reason:
+                    reason = "conditional execution"
+                warnings.warn(f"Skipping {func.__name__} because of {reason}.")
             else:
                 return func(*args, **kwargs)
 
