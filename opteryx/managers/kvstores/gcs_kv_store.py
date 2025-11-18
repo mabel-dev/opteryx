@@ -42,7 +42,7 @@ class GCSKeyValueStore(BaseKeyValueStore):
 
         self._bucket_name = parsed.netloc
         self._prefix = parsed.path.lstrip("/")
-        self._client = _gcs_client()
+        self._client = _gcs_client(**_kwargs)
         self._bucket = self._client.bucket(self._bucket_name)
         super().__init__(location)
 

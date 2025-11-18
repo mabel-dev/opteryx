@@ -59,7 +59,7 @@ class S3KeyValueStore(BaseKeyValueStore):
         self._bucket = parsed.netloc
         # strip leading slash from path
         self._prefix = parsed.path.lstrip("/")
-        self._client = _s3_client()
+        self._client = _s3_client(**_kwargs)
         super().__init__(location)
 
     def _object_key(self, key: bytes) -> str:
