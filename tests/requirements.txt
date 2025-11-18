@@ -20,12 +20,13 @@ requests
 rich
 zstandard
 
+protobuf
+
 # different storage providers
 fastavro
 google-cloud-firestore
 google-cloud-storage
 google-cloud-bigquery-storage
-protobuf
 minio
 pymongo
 sqlalchemy>=2.0.0
