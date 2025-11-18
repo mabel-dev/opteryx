@@ -36,6 +36,6 @@ cdef class Float64Vector(Vector):
     cpdef double min(self)
     cpdef double max(self)
 
-    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
 
 cdef Float64Vector from_arrow(object array)

@@ -14,8 +14,7 @@ from opteryx.draken.vectors.vector cimport Vector
 cpdef void hash_into(
     Vector vector,
     uint64_t[::1] out_buf,
-    Py_ssize_t offset=0,
-    uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+    Py_ssize_t offset=0
 ):
     """
     Python-visible shim for invoking Vector.hash_into.
@@ -23,4 +22,4 @@ cpdef void hash_into(
     This exists solely for test helpers; production code should call the cdef
     method directly from Cython.
     """
-    vector.hash_into(out_buf, offset, mix_constant)
+    vector.hash_into(out_buf, offset)

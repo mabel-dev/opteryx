@@ -11,12 +11,13 @@ from opteryx.draken import Vector
 from opteryx.draken.vectors._hash_api import hash_into as hash_into_vector
 from opteryx.draken.vectors.arrow_vector import ArrowVector
 from opteryx.third_party.cyan4973.xxhash import hash_bytes  # type: ignore[attr-defined]
-
-NULL_HASH = 0x9E3779B97F4A7C15
+NULL_HASH = 0x4c3f95a36ab8ecca
 MASK = 0xFFFFFFFFFFFFFFFF
 
 
-def _mix_hash(current: int, value: int, mix_constant: int = NULL_HASH) -> int:
+MIX_HASH_CONSTANT = 0x9e3779b97f4a7c15
+
+def _mix_hash(current: int, value: int, mix_constant: int = MIX_HASH_CONSTANT) -> int:
     current ^= value & MASK
     current = (current * mix_constant) & MASK
     result = current ^ (current >> 32)

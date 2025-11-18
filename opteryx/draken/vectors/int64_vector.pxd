@@ -37,6 +37,6 @@ cdef class Int64Vector(Vector):
     cpdef int64_t min(self)
     cpdef int64_t max(self)
 
-    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
 
 cdef Int64Vector from_arrow(object array)

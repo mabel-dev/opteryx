@@ -108,6 +108,10 @@ b:
 	@clear
 	@$(PYTHON) scratch/brace.py
 
+clickbench:
+	@clear
+	@$(PYTHON) tests/performance/clickbench/clickbench.py
+
 # Aliases for backward compatibility
 t: test-quick
 

@@ -38,6 +38,8 @@ class UnionNode(BasePlanNode):
         Union needs to ensure the column names are the same and that
         coercible types are coerced.
         """
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel == EOS and self.seen_first_eos:
             yield EOS
             return

@@ -6,6 +6,7 @@
 # cython: lintrule=ignore
 
 from libc.stdint cimport int64_t, uint64_t
+from libc.stddef cimport size_t
 from libcpp.pair cimport pair
 from libcpp.vector cimport vector
 
@@ -39,11 +40,19 @@ cdef extern from "absl/container/flat_hash_set.h" namespace "absl" nogil:
         bint contains(T value) const
         void reserve(int64_t value)
 
+cdef extern from "flat_hash_set_helpers.h" namespace "opteryx" nogil:
+    void flat_hash_set_insert_many(
+        flat_hash_set[uint64_t, IdentityHash]& target,
+        const uint64_t* values,
+        size_t length,
+    )
+
 cdef class FlatHashSet:
     cdef flat_hash_set[uint64_t, IdentityHash] _set
 
     cdef inline bint insert(self, uint64_t value) noexcept nogil
     cdef inline void just_insert(self, uint64_t value) noexcept nogil
+    cdef inline void insert_many(self, uint64_t* values, Py_ssize_t length) noexcept nogil
     cdef inline size_t size(self) noexcept nogil
     cdef inline bint contains(self, uint64_t value) noexcept nogil
     cdef inline void reserve(self, int64_t capacity) noexcept nogil

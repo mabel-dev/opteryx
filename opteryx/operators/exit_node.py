@@ -71,6 +71,8 @@ class ExitNode(BasePlanNode):
         return "Exit"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         # Exit doesn't return EOS
         if morsel == EOS:
             if not self.at_least_one:

@@ -39,6 +39,8 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         import opteryx.draken as draken
         from opteryx.compiled.table_ops.distinct import distinct
 

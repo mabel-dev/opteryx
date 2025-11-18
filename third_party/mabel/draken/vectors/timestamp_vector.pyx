@@ -314,7 +314,6 @@ cdef class TimestampVector(Vector):
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
     ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef int64_t* data = <int64_t*> ptr.data
@@ -332,12 +331,9 @@ cdef class TimestampVector(Vector):
         cdef bint has_nulls = ptr.null_bitmap != NULL
         cdef uint64_t* as_uint64 = <uint64_t*> data
 
-        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
-        if mix_constant != MIX_HASH_CONSTANT:
-            mix_constant = MIX_HASH_CONSTANT
-
+        # Use shared MIX_HASH_CONSTANT directly; no need to pass it in.
         if not has_nulls:
-            simd_mix_hash(dst, as_uint64, <size_t> n, mix_constant)
+            simd_mix_hash(dst, as_uint64, <size_t> n)
             return
 
         for i in range(n):

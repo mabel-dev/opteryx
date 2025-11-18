@@ -38,6 +38,8 @@ from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
 from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, mix_hash, simd_mix_hash
 
+DEF TIME32_HASH_CHUNK = 1024
+
 cdef class TimeVector(Vector):
 
     def __cinit__(self, size_t length=0, bint is_time64=False, bint wrap=False):
@@ -229,8 +231,7 @@ cdef class TimeVector(Vector):
     cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+        Py_ssize_t offset=0
     ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
@@ -248,19 +249,15 @@ cdef class TimeVector(Vector):
         cdef int32_t* data32
         cdef uint64_t* dst = &out_buf[offset]
         cdef bint has_nulls = ptr.null_bitmap != NULL
-        cdef Py_ssize_t chunk = 0
         cdef Py_ssize_t block = 0
         cdef Py_ssize_t j = 0
-        cdef uint64_t* scratch = NULL
-
-        mix_constant = MIX_HASH_CONSTANT  # enforce shared mixing constant
-        if mix_constant != MIX_HASH_CONSTANT:
-            mix_constant = MIX_HASH_CONSTANT
+        cdef uint64_t[TIME32_HASH_CHUNK] scratch32
+        cdef uint64_t* scratch32_ptr = <uint64_t*> scratch32
 
         if self.is_time64:
             data64 = <int64_t*> ptr.data
             if not has_nulls:
-                simd_mix_hash(dst, <uint64_t*> data64, <size_t> n, mix_constant)
+                simd_mix_hash(dst, <uint64_t*> data64, <size_t> n)
                 return
             for i in range(n):
                 if has_nulls:
@@ -277,22 +274,15 @@ cdef class TimeVector(Vector):
         else:
             data32 = <int32_t*> ptr.data
             if not has_nulls:
-                chunk = 1024 if n > 1024 else n
-                scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
-                if scratch == NULL:
-                    raise MemoryError()
-                try:
-                    i = 0
-                    while i < n:
-                        block = n - i
-                        if block > chunk:
-                            block = chunk
-                        for j in range(block):
-                            scratch[j] = <uint64_t>(<int64_t> data32[i + j])
-                        simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
-                        i += block
-                finally:
-                    PyMem_Free(scratch)
+                i = 0
+                while i < n:
+                    block = n - i
+                    if block > TIME32_HASH_CHUNK:
+                        block = TIME32_HASH_CHUNK
+                    for j in range(block):
+                        scratch32[j] = <uint64_t>(<int64_t> data32[i + j])
+                    simd_mix_hash(dst + i, scratch32_ptr, <size_t> block)
+                    i += block
                 return
 
             for i in range(n):

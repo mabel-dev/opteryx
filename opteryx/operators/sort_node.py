@@ -42,6 +42,8 @@ class SortNode(BasePlanNode):
         return "Sort"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if morsel != EOS:
             if morsel.num_rows > 0:
                 self.morsels.append(morsel)

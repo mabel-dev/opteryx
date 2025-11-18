@@ -20,8 +20,7 @@ cdef class ArrayVector(Vector):
     cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=*,
-        uint64_t mix_constant=*,
+        Py_ssize_t offset=*
     ) except *
 
 

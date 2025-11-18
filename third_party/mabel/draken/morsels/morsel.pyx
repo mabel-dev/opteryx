@@ -535,6 +535,6 @@ cdef class Morsel:
 
         for idx in column_indices:
             vec = <Vector> self.ptr.columns[idx]
-            vec.hash_into(out_view, 0, mix_constant)
+            vec.hash_into(out_view, 0)
 
         return <uint64_t[:row_count]> out_buf

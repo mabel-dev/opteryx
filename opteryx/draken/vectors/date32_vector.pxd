@@ -27,6 +27,6 @@ cdef class Date32Vector(Vector):
     cpdef int32_t min(self)
     cpdef int32_t max(self)
 
-    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*, uint64_t mix_constant=*) except *
+    cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
 
 cdef Date32Vector from_arrow(object array)

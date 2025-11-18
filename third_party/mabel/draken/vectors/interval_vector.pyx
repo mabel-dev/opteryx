@@ -43,6 +43,8 @@ from opteryx.draken.core.fixed_vector cimport buf_length
 from opteryx.draken.core.fixed_vector cimport free_fixed_buffer
 from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, NULL_HASH, Vector, mix_hash, simd_mix_hash
 
+DEF INTERVAL_HASH_CHUNK = 512
+
 cdef struct IntervalValue:
     int64_t months
     int64_t microseconds
@@ -100,7 +102,7 @@ cdef void _copy_arrow_null_bitmap(DrakenFixedBuffer* dest, object array):
         if (src[bit_index >> 3] >> (bit_index & 7)) & 1:
             dest.null_bitmap[i >> 3] |= (1 << (i & 7))
 
-cdef inline void _divmod_microseconds(int64_t total, int64_t* out_days, int64_t* out_remainder) nogil:
+cdef inline void _divmod_microseconds(int64_t total, int64_t* out_days, int64_t* out_remainder) noexcept nogil:
     cdef int64_t q = total / MICROSECONDS_PER_DAY
     cdef int64_t r = total - q * MICROSECONDS_PER_DAY
     if r < 0:
@@ -282,8 +284,7 @@ cdef class IntervalVector(Vector):
     cdef void hash_into(
         self,
         uint64_t[::1] out_buf,
-        Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
+        Py_ssize_t offset=0
     ) except *:
         cdef DrakenFixedBuffer* ptr = self.ptr
         cdef Py_ssize_t n = ptr.length
@@ -298,33 +299,22 @@ cdef class IntervalVector(Vector):
         cdef uint64_t partial
         cdef uint64_t* dst = &out_buf[offset]
         cdef bint has_nulls = ptr.null_bitmap != NULL
-        cdef Py_ssize_t chunk = 0
         cdef Py_ssize_t block = 0
         cdef Py_ssize_t j = 0
-        cdef uint64_t* scratch = NULL
-
-        mix_constant = MIX_HASH_CONSTANT
-        if mix_constant != MIX_HASH_CONSTANT:
-            mix_constant = MIX_HASH_CONSTANT
+        cdef uint64_t[INTERVAL_HASH_CHUNK] scratch
+        cdef uint64_t* scratch_ptr = <uint64_t*> scratch
 
         if not has_nulls:
-            chunk = 512 if n > 512 else n
-            scratch = <uint64_t*> PyMem_Malloc(chunk * sizeof(uint64_t))
-            if scratch == NULL:
-                raise MemoryError()
-            try:
-                i = 0
-                while i < n:
-                    block = n - i
-                    if block > chunk:
-                        block = chunk
-                    for j in range(block):
-                        partial = mix_hash(0, <uint64_t>data[i + j].months)
-                        scratch[j] = mix_hash(partial, <uint64_t>data[i + j].microseconds)
-                    simd_mix_hash(dst + i, scratch, <size_t> block, mix_constant)
-                    i += block
-            finally:
-                PyMem_Free(scratch)
+            i = 0
+            while i < n:
+                block = n - i
+                if block > INTERVAL_HASH_CHUNK:
+                    block = INTERVAL_HASH_CHUNK
+                for j in range(block):
+                    partial = mix_hash(0, <uint64_t>data[i + j].months)
+                    scratch[j] = mix_hash(partial, <uint64_t>data[i + j].microseconds)
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
+                i += block
             return
 
         for i in range(n):

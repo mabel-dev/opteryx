@@ -153,8 +153,9 @@ def full_join(
 
 class OuterJoinNode(JoinNode):
     def __init__(self, properties: QueryProperties, **parameters):
-        JoinNode.__init__(self, properties=properties, **parameters)
+        # Ensure `join_type` exists before the base initializer accesses `self.name`
         self.join_type = parameters["type"]
+        JoinNode.__init__(self, properties=properties, **parameters)
         self.on = parameters.get("on")
         self.using = parameters.get("using")
 
@@ -178,7 +179,7 @@ class OuterJoinNode(JoinNode):
 
     @property
     def name(self):  # pragma: no cover
-        return self.join_type
+        return self.join_type.replace(" ", "_")
 
     @property
     def config(self) -> str:  # pragma: no cover
@@ -191,6 +192,8 @@ class OuterJoinNode(JoinNode):
         return f"{self.join_type.upper()}"
 
     def execute(self, morsel: pyarrow.Table, join_leg: str) -> pyarrow.Table:
+        morsel = self.ensure_arrow_table(morsel)
+
         if join_leg == "left":
             if morsel == EOS:
                 self.left_relation = pyarrow.concat_tables(self.left_buffer, promote_options="none")
