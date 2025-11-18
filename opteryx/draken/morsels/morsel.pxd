@@ -11,6 +11,7 @@ cdef class Morsel:
     cpdef Vector column(self, bytes name)
     cpdef uint64_t[::1] hash(self, object columns=*)
     cdef void _take_inplace(self, object indices)
+    cdef void _empty_inplace(self)
     cdef void _select_inplace(self, object columns)
     cdef Morsel _full_copy(self)
     cdef inline void _rebuild_name_to_index(self)

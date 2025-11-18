@@ -172,9 +172,10 @@ class ColumnReferencedBeforeEvaluationError(SqlError):
 class DatasetNotFoundError(SqlError):
     """Exception raised when a dataset is not found."""
 
-    def __init__(self, dataset: str = None, suggestion: Optional[str] = None):
+    def __init__(self, connector: str, dataset: str = None, suggestion: Optional[str] = None):
         self.dataset = dataset
-        message = f"The requested dataset, '{dataset}', could not be found."
+        self.connector = connector
+        message = f"The requested dataset, '{dataset}', could not be found by '{connector}'."
         if suggestion is not None:
             message += f" Did you mean '{suggestion}'?"
         super().__init__(message)

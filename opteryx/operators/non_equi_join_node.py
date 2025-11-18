@@ -117,4 +117,4 @@ class NonEquiJoinNode(JoinNode):
             result_morsel = align_tables(
                 self.left_morsel, right_morsel, left_indexes, right_indexes
             )
-            yield result_morsel.to_arrow()
+            yield result_morsel

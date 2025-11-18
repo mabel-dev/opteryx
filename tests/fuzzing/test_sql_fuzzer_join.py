@@ -135,20 +135,20 @@ def get_iceberg_tables():
     _catalog = set_up_iceberg()
     _tables_cache = [
         {
-            "name": "iceberg.planets",
-            "fields": IcebergConnector(dataset="iceberg.planets", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "name": "iceberg.opteryx.planets",
+            "fields": IcebergConnector(dataset="opteryx.planets", statistics=None, catalog=_catalog).get_dataset_schema().columns,
         },
         {
-            "name": "iceberg.satellites",
-            "fields": IcebergConnector(dataset="iceberg.satellites", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "name": "iceberg.opteryx.satellites",
+            "fields": IcebergConnector(dataset="opteryx.satellites", statistics=None, catalog=_catalog).get_dataset_schema().columns,
         },
         {
-            "name": "iceberg.astronauts",
-            "fields": IcebergConnector(dataset="iceberg.astronauts", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "name": "iceberg.opteryx.astronauts",
+            "fields": IcebergConnector(dataset="opteryx.astronauts", statistics=None, catalog=_catalog).get_dataset_schema().columns,
         },
         {
-            "name": "iceberg.missions",
-            "fields": IcebergConnector(dataset="iceberg.missions", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "name": "iceberg.opteryx.missions",
+            "fields": IcebergConnector(dataset="opteryx.missions", statistics=None, catalog=_catalog).get_dataset_schema().columns,
         },
         {
             "name": virtual_datasets.planets.schema().name,
@@ -204,7 +204,12 @@ def test_sql_fuzzing_join(i):
     from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
-    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
+    opteryx.register_store(
+        "iceberg",
+        connector=IcebergConnector,
+        catalog=iceberg,
+        remove_prefix=True,
+    )
 
     table1 = TABLES[random.choice(range(len(TABLES)))]
     table2 = TABLES[random.choice(range(len(TABLES)))]

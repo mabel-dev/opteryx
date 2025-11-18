@@ -74,7 +74,13 @@ cdef class StringVector(Vector):
 
         # Data buffer: all the concatenated string bytes
         # Pass self as base object to keep the vector alive
-        data_buf = pa.foreign_buffer(<intptr_t>ptr.data, ptr.offsets[n], base=self)
+        # If there are no bytes or the data pointer is NULL, create an empty
+        # pyarrow buffer instead of passing a NULL pointer to foreign_buffer
+        total_bytes = ptr.offsets[n]
+        if total_bytes <= 0 or ptr.data == NULL:
+            data_buf = pa.py_buffer(b"")
+        else:
+            data_buf = pa.foreign_buffer(<intptr_t>ptr.data, total_bytes, base=self)
 
         # Offsets buffer: (n+1) * int32_t entries
         offs_buf = pa.foreign_buffer(<intptr_t>ptr.offsets, (n + 1) * sizeof(int32_t), base=self)

@@ -318,7 +318,7 @@ class GcpCloudStorageConnector(
             break
 
         if self.schema is None:
-            raise DatasetNotFoundError(dataset=self.dataset)
+            raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__)
 
         # if we have more than one blob we need to estimate the row count
         if self.schema.row_count_metric and number_of_blobs > 1:

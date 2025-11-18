@@ -13,23 +13,23 @@ from tests import set_up_iceberg
 
 STATEMENTS = [
     # baseline
-    ("SELECT name FROM iceberg.planets;", 9),
+    ("SELECT name FROM iceberg.opteryx.planets;", 9),
     # push limit
-    ("SELECT name FROM iceberg.planets LIMIT 1;", 1),
+    ("SELECT name FROM iceberg.opteryx.planets LIMIT 1;", 1),
     # test with filter
-    ("SELECT name FROM iceberg.planets WHERE gravity > 1;", 8),
+    ("SELECT name FROM iceberg.opteryx.planets WHERE gravity > 1;", 8),
     # pushable filter and limit should push the limit
-    ("SELECT name FROM iceberg.planets WHERE gravity > 1 LIMIT 1;", 1),
+    ("SELECT name FROM iceberg.opteryx.planets WHERE gravity > 1 LIMIT 1;", 1),
     # if we can't push the filter, we can't push the limit
-    ("SELECT name FROM iceberg.planets WHERE SIGNUM(gravity) > 1 LIMIT 1;", 9),
+    ("SELECT name FROM iceberg.opteryx.planets WHERE SIGNUM(gravity) > 1 LIMIT 1;", 9),
     # we don't push past ORDER BY
-    ("SELECT * FROM iceberg.planets ORDER BY name LIMIT 3", 9),
+    ("SELECT * FROM iceberg.opteryx.planets ORDER BY name LIMIT 3", 9),
     # push past subqueries
-    ("SELECT name FROM (SELECT * FROM iceberg.planets) AS S LIMIT 3", 3),
+    ("SELECT name FROM (SELECT * FROM iceberg.opteryx.planets) AS S LIMIT 3", 3),
     # test with filter
-    ("SELECT name FROM iceberg.planets WHERE mass == 0;", 0),
+    ("SELECT name FROM iceberg.opteryx.planets WHERE mass == 0;", 0),
     # pushable filter and limit should push the limit
-    ("SELECT name FROM iceberg.planets WHERE mass == 0 LIMIT 1;", 0),
+    ("SELECT name FROM iceberg.opteryx.planets WHERE mass == 0 LIMIT 1;", 0),
 ]
 
 @skip_if(is_arm() or is_windows() or is_mac())
@@ -37,7 +37,12 @@ STATEMENTS = [
 def test_iceberg_limit_pushdown(query, expected_rows):
 
     catalog = set_up_iceberg()
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        remove_prefix=True,
+    )
 
     cur = opteryx.query(query)
     cur.materialize()

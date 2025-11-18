@@ -39,26 +39,22 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
-        morsel = self.ensure_arrow_table(morsel)
+        morsel = self.ensure_draken_morsel(morsel)
 
-        import opteryx.draken as draken
         from opteryx.compiled.table_ops.distinct import distinct
 
         if morsel == EOS:
             yield EOS
             return
 
-        # Convert Arrow table to Draken morsel
-        draken_morsel = draken.Morsel.from_arrow(morsel) if isinstance(morsel, Table) else morsel
-
         # Use Draken-based distinct with column names as bytes
         unique_indexes, self.hash_set = distinct(
-            draken_morsel, columns=self._distinct_on, seen_hashes=self.hash_set
+            morsel, columns=self._distinct_on, seen_hashes=self.hash_set
         )
 
         if len(unique_indexes) > 0:
-            distinct_table = morsel.take(unique_indexes)
-            yield distinct_table
+            morsel.take(unique_indexes)
+            yield morsel
         else:
-            distinct_table = morsel.slice(0, 0)
-            yield distinct_table
+            morsel.empty()
+            yield morsel

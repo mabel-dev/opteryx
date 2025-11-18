@@ -393,10 +393,10 @@ STATEMENTS = [
         ("SELECT * FROM $planets ORDER BY (id) DESC, name", 9, 20, None),
         # 2340
         ("SELECT * FROM $satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
-        ("SELECT * FROM iceberg.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.opteryx.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM sqlite.satellites WHERE magnitude != 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM $satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
-        ("SELECT * FROM iceberg.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
+        ("SELECT * FROM iceberg.opteryx.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         ("SELECT * FROM sqlite.satellites WHERE magnitude < 573602.533 ORDER BY magnitude DESC", 171, 8, None),
         # 2489
         ("SELECT name FROM $planets where length(md5(name)) == 32", 9, 1, None),
@@ -531,7 +531,12 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
-    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
+    opteryx.register_store(
+        "iceberg",
+        connector=IcebergConnector,
+        catalog=iceberg,
+        remove_prefix=True,
+    )
 
     from opteryx.connectors import DiskConnector, SqlConnector
     from opteryx.managers.schemes import MabelPartitionScheme

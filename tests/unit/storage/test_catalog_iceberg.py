@@ -3,7 +3,7 @@ import os
 import sys
 import pyarrow
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from tests import is_arm, is_mac, is_windows, skip_if
 from tests import set_up_iceberg
@@ -20,9 +20,14 @@ from opteryx.compiled.structures.relation_statistics import to_int
 def test_iceberg_basic():
 
     catalog = set_up_iceberg()
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        remove_prefix=True,
+    )
 
-    table = catalog.load_table("iceberg.tweets")
+    table = catalog.load_table("opteryx.tweets")
     table.scan().to_arrow()
 
 
@@ -30,9 +35,15 @@ def test_iceberg_basic():
 def test_iceberg_get_schema():
 
     catalog = set_up_iceberg()
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        io=DiskConnector,
+        remove_prefix=True,
+    )
 
-    table = catalog.load_table("iceberg.tweets")
+    table = catalog.load_table("opteryx.tweets")
     table.schema().as_arrow()
 
 
@@ -42,9 +53,15 @@ def test_iceberg_get_statistics_manual():
     from opteryx.models import RelationStatistics
 
     catalog = set_up_iceberg()
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        io=DiskConnector,
+        remove_prefix=True,
+    )
 
-    table = catalog.load_table("iceberg.tweets")
+    table = catalog.load_table("opteryx.tweets")
     table.schema().as_arrow()
 
     stats = RelationStatistics()
@@ -90,8 +107,13 @@ def test_iceberg_connector():
 
     catalog = set_up_iceberg()
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
-    table = opteryx.query("SELECT * FROM iceberg.tweets WHERE followers = 10")
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        remove_prefix=True,
+    )
+    table = opteryx.query("SELECT * FROM iceberg.opteryx.tweets WHERE followers = 10")
     assert table.shape[0] == 353
 
 @skip_if(is_arm() or is_windows() or is_mac())
@@ -101,8 +123,14 @@ def test_iceberg_get_stats_tweets():
 
     catalog = set_up_iceberg()
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
-    connector = connector_factory("iceberg.tweets", None)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        io=DiskConnector,
+        remove_prefix=True,
+    )
+    connector = connector_factory("iceberg.opteryx.tweets", None)
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 
@@ -125,8 +153,14 @@ def test_iceberg_get_stats_missions():
 
     catalog = set_up_iceberg()
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog, io=DiskConnector)
-    connector = connector_factory("iceberg.tweets", None)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        io=DiskConnector,
+        remove_prefix=True,
+    )
+    connector = connector_factory("iceberg.opteryx.tweets", None)
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 
@@ -160,8 +194,13 @@ def test_iceberg_get_stats_remote():
         }
     )
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
-    connector = connector_factory("iceberg.planets", None)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        remove_prefix=True,
+    )
+    connector = connector_factory("iceberg.iceberg.planets", None)
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 
@@ -196,9 +235,14 @@ def test_iceberg_remote():
         }
     )
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+    opteryx.register_store(
+        "iceberg",
+        IcebergConnector,
+        catalog=catalog,
+        remove_prefix=True,
+    )
 
-    table = opteryx.query("SELECT * FROM iceberg.tweets WHERE followers = 10")
+    table = opteryx.query("SELECT * FROM iceberg.iceberg.tweets WHERE followers = 10")
     assert table.shape[0] == 353
 
 

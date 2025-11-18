@@ -369,7 +369,12 @@ def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[E
     from tests import set_up_iceberg
     from opteryx.connectors import IcebergConnector
     iceberg = set_up_iceberg()
-    opteryx.register_store("iceberg", connector=IcebergConnector, catalog=iceberg)
+    opteryx.register_store(
+        "iceberg",
+        connector=IcebergConnector,
+        catalog=iceberg,
+        remove_prefix=True,
+    )
 
     from opteryx.connectors import DiskConnector, SqlConnector
     from opteryx.managers.schemes import MabelPartitionScheme

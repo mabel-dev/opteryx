@@ -135,7 +135,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
 
         if ".." in self.dataset or self.dataset[0] in ("\\", "/", "~"):
             # Don't find any datasets which look like path traversal
-            raise DatasetNotFoundError(dataset=self.dataset)
+            raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__)
 
         # Check if dataset contains wildcards
         self.has_wildcards = any(char in self.dataset for char in ["*", "?", "["])
@@ -144,7 +144,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
             # Expand wildcards to get list of files
             self.files = self._expand_wildcards(self.dataset)
             if not self.files:
-                raise DatasetNotFoundError(dataset=self.dataset)
+                raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__)
             # Use the first file to determine the decoder
             self.decoder = get_decoder(self.files[0])
         else:
@@ -168,7 +168,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
         """
         # Additional path traversal check after expansion
         if ".." in pattern:
-            raise DatasetNotFoundError(dataset=pattern)
+            raise DatasetNotFoundError(dataset=pattern, connector=self.__type__)
 
         # Use glob to expand the pattern
         matched_files = glob.glob(pattern, recursive=False)

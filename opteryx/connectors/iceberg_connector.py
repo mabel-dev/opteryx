@@ -148,12 +148,11 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
         import pyiceberg
 
-        self.dataset = self.dataset.lower()
         try:
             self.table = catalog.load_table(self.dataset)
             self.io_connector = io(**kwargs)
         except pyiceberg.exceptions.NoSuchTableError:
-            raise DatasetNotFoundError(dataset=self.dataset)
+            raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__) from None
 
     def get_dataset_schema(self) -> RelationSchema:
         iceberg_schema = self.table.schema()

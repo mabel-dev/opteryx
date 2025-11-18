@@ -88,7 +88,7 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
                 LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
                     source_column=col.name,
-                    source=col.origin[0],
+                    source=(col.origin[0] if col.origin else None),
                     schema_column=col,
                 )
                 for col in node.schema.columns
@@ -106,7 +106,7 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
                         LogicalColumn(
                             node_type=NodeType.IDENTIFIER,
                             source_column=col.name,
-                            source=col.origin[0],
+                            source=(col.origin[0] if col.origin else None),
                             schema_column=col,
                         )
                         for col in schema.columns

@@ -93,7 +93,9 @@ class SampleDataConnector(BaseConnector, Partitionable, Statistics):
     def get_dataset_schema(self) -> RelationSchema:
         if self.dataset not in WELL_KNOWN_DATASETS:
             suggestion = suggest(self.dataset)
-            raise DatasetNotFoundError(suggestion=suggestion, dataset=self.dataset)
+            raise DatasetNotFoundError(
+                suggestion=suggestion, dataset=self.dataset, connector=self.__type__
+            )
         data_provider, _ = _load_provider(self.dataset)
         self.relation_statistics = data_provider.statistics()
         return data_provider.schema()
@@ -138,6 +140,8 @@ class SampleDatasetReader(DatasetReader):
         data_provider, _ = _load_provider(self.dataset_name)
         if data_provider is None:
             suggestion = suggest(self.dataset_name.lower())
-            raise DatasetNotFoundError(suggestion=suggestion, dataset=self.dataset_name)
+            raise DatasetNotFoundError(
+                suggestion=suggestion, dataset=self.dataset_name, connector="SAMPLE"
+            )
         table = data_provider.read(self.date, self.variables)
         return arrow.post_read_projector(table, self.columns)

@@ -181,6 +181,11 @@ def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
         # uninstantiated classes aren't a type
         raise ValueError("connectors registered with `register_store` must be uninstantiated.")
 
+    if connector.__name__ == "IcebergConnector" and not remove_prefix:
+        raise ValueError(
+            "IcebergConnector requires remove_prefix=True so catalog prefixes don't leak into table names."
+        )
+
     # Store connector class directly (not as a string)
     _storage_prefixes[prefix] = {
         "connector": connector,  # type: ignore
@@ -289,6 +294,9 @@ def connector_factory(dataset, statistics, **config):
         dataset = dataset[len(prefix) :]
         if dataset.startswith(".") or dataset.startswith("//"):
             dataset = dataset[1:] if dataset.startswith(".") else dataset[2:]
+        if connector.__name__ == "IcebergConnector" and dataset and "." not in dataset:
+            # Default to a namespace matching the prefix when one isn't provided
+            dataset = f"{prefix}.{dataset}"
 
     return connector(dataset=dataset, statistics=statistics, **connector_entry)
 
