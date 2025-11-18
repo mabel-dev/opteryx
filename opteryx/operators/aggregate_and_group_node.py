@@ -69,12 +69,78 @@ class AggregateAndGroupNode(BasePlanNode):
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
+        aggregator_nodes = get_all_nodes_of_type(
+            self.aggregates, select_nodes=(NodeType.AGGREGATOR,)
+        )
+        self._aggregator_metadata = list(zip(aggregator_nodes, self.aggregate_functions))
+        (
+            self._partial_merge_aggs,
+            self._final_partial_column_map,
+            self._buffer_partial_column_map,
+        ) = self._build_partial_merge_plan()
+
         self.buffer = []
         self.max_buffer_size = (
             250  # Buffer size before partial aggregation (kept for future parallelization)
         )
         self._partial_aggregated = False  # Track if we've done a partial aggregation
         self._disable_partial_agg = False  # Can disable if partial agg isn't helping
+
+    def _build_partial_merge_plan(self):
+        merge_aggs = []
+        final_column_map = {}
+        buffer_column_map = {}
+        for aggregator_node, (field_name, function, _count_options) in self._aggregator_metadata:
+            alias = aggregator_node.schema_column.identity
+            source_column = self.column_map.get(alias)
+            if function == "count":
+                source_column = f"{field_name}_count"
+                merge_aggs.append((source_column, "sum", None))
+                final_column_map[alias] = f"{source_column}_sum"
+                buffer_column_map[source_column] = f"{source_column}_sum"
+            elif function in ("sum", "max", "min", "hash_one", "all", "any"):
+                merge_aggs.append((source_column, function, None))
+                renamed = f"{source_column}_{function}".replace("_hash_", "_")
+                final_column_map[alias] = renamed
+                buffer_column_map[source_column] = renamed
+            elif function == "mean":
+                merge_aggs.append((source_column, "hash_one", None))
+                renamed = f"{source_column}_one"
+                final_column_map[alias] = renamed
+                buffer_column_map[source_column] = renamed
+            elif function == "hash_list":
+                merge_aggs.append((source_column, "hash_list", None))
+                renamed = f"{source_column}_list"
+                final_column_map[alias] = renamed
+                buffer_column_map[source_column] = renamed
+            else:
+                merge_aggs.append((source_column, "hash_one", None))
+                renamed = f"{source_column}_one"
+                final_column_map[alias] = renamed
+                buffer_column_map[source_column] = renamed
+
+        return merge_aggs, final_column_map, buffer_column_map
+
+    def _reaggregate_partial_results(self, table, *, final: bool):
+        if not self._partial_merge_aggs or table.num_rows == 0:
+            return table
+
+        groups = table.group_by(self.group_by_columns)
+        groups = groups.aggregate(self._partial_merge_aggs)
+
+        column_map = self._final_partial_column_map if final else self._buffer_partial_column_map
+        if column_map:
+            groups = groups.select(list(column_map.values()) + self.group_by_columns)
+            groups = groups.rename_columns(list(column_map.keys()) + self.group_by_columns)
+
+        return groups
+
+    def _merge_partial_buffer(self):
+        table = pyarrow.concat_tables(
+            self.buffer,
+            promote_options="permissive",
+        )
+        return self._reaggregate_partial_results(table, final=False)
 
     @property
     def config(self):  # pragma: no cover
@@ -103,59 +169,7 @@ class AggregateAndGroupNode(BasePlanNode):
             # If we've done partial aggregations, the aggregate functions need adjusting
             # because columns like "*" have been renamed to "*_count"
             if self._partial_aggregated:
-                # Build new aggregate functions for re-aggregating partial results
-                adjusted_aggs = []
-                adjusted_column_map = {}
-
-                for field_name, function, _count_options in self.aggregate_functions:
-                    # For COUNT aggregates, the column is now named "*_count" and we need to SUM it
-                    if function == "count":
-                        renamed_field = f"{field_name}_count"
-                        adjusted_aggs.append((renamed_field, "sum", None))
-                        # The final column will be named "*_count_sum", need to track for renaming
-                        for orig_name, mapped_name in self.column_map.items():
-                            if mapped_name == f"{field_name}_count":
-                                adjusted_column_map[orig_name] = f"{renamed_field}_sum"
-                    # For other aggregates, we can re-aggregate with the same function
-                    else:
-                        renamed_field = f"{field_name}_{function}".replace("_hash_", "_")
-                        # Some aggregates can be re-aggregated (sum, max, min)
-                        if function in ("sum", "max", "min", "hash_one", "all", "any"):
-                            adjusted_aggs.append((renamed_field, function, None))
-                            # Track the mapping: original -> intermediate -> final
-                            for orig_name, mapped_name in self.column_map.items():
-                                if mapped_name == renamed_field:
-                                    # sum->sum, max->max, etc. means same name
-                                    adjusted_column_map[orig_name] = (
-                                        f"{renamed_field}_{function}".replace("_hash_", "_")
-                                    )
-                        elif function == "mean":
-                            # For mean, just take one of the existing values (not ideal)
-                            adjusted_aggs.append((renamed_field, "hash_one", None))
-                            for orig_name, mapped_name in self.column_map.items():
-                                if mapped_name == renamed_field:
-                                    adjusted_column_map[orig_name] = f"{renamed_field}_one"
-                        elif function == "hash_list":
-                            # For ARRAY_AGG, we need to flatten lists
-                            adjusted_aggs.append((renamed_field, "hash_list", None))
-                            for orig_name, mapped_name in self.column_map.items():
-                                if mapped_name == renamed_field:
-                                    adjusted_column_map[orig_name] = f"{renamed_field}_list"
-                        else:
-                            # For other aggregates, take one value
-                            adjusted_aggs.append((renamed_field, "hash_one", None))
-                            for orig_name, mapped_name in self.column_map.items():
-                                if mapped_name == renamed_field:
-                                    adjusted_column_map[orig_name] = f"{renamed_field}_one"
-
-                groups = table.group_by(self.group_by_columns)
-                groups = groups.aggregate(adjusted_aggs)
-
-                # Use the adjusted column map for selecting/renaming
-                groups = groups.select(list(adjusted_column_map.values()) + self.group_by_columns)
-                groups = groups.rename_columns(
-                    list(adjusted_column_map.keys()) + self.group_by_columns
-                )
+                groups = self._reaggregate_partial_results(table, final=True)
             else:
                 groups = table.group_by(self.group_by_columns)
                 groups = groups.aggregate(self.aggregate_functions)
@@ -229,9 +243,21 @@ class AggregateAndGroupNode(BasePlanNode):
 
         self.buffer.append(morsel)
 
+        # If we've already partially aggregated, convert incoming morsels to aggregated chunks
+        if self._partial_aggregated and morsel is not None and morsel != EOS:
+            group_start = time.monotonic_ns()
+            morsel = morsel.group_by(self.group_by_columns)
+            morsel = morsel.aggregate(self.aggregate_functions)
+            self.statistics.time_pregrouping += time.monotonic_ns() - group_start
+            self.buffer[-1] = morsel
+
         # If buffer is full, do partial aggregation
         # BUT: Skip partial aggregation if it's not reducing data effectively
-        if len(self.buffer) >= self.max_buffer_size and not self._disable_partial_agg:
+        if (
+            not self._partial_aggregated
+            and len(self.buffer) >= self.max_buffer_size
+            and not self._disable_partial_agg
+        ):
             table = pyarrow.concat_tables(
                 self.buffer,
                 promote_options="permissive",
@@ -251,5 +277,7 @@ class AggregateAndGroupNode(BasePlanNode):
                 # Good reduction, keep using partial aggregation
                 self.buffer = [groups]  # Replace buffer with partial result
                 self._partial_aggregated = True  # Mark that we've done a partial aggregation
+        elif self._partial_aggregated and len(self.buffer) >= self.max_buffer_size:
+            self.buffer = [self._merge_partial_buffer()]
 
         yield None
