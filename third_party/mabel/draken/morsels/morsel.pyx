@@ -58,6 +58,8 @@ cdef class DrakenTypeInt(int):
 
 cdef class Morsel:
 
+    cdef void _empty_inplace(self)
+
     def __cinit__(self):
         self.ptr = <DrakenMorsel*> NULL
         self._columns = []
@@ -223,6 +225,64 @@ cdef class Morsel:
         return self.ptr.num_columns
 
     @property
+    def nbytes(self):
+        """
+        Return the approximate number of bytes used by this morsel.
+
+        Strategy:
+        - Prefer `Vector.nbytes` when exposed by the vector implementation.
+        - Fall back to converting the vector to an Arrow array and using
+          `array.nbytes` when available.
+        - If neither is available, attempt a fixed-width approximation using
+          the Arrow type's `bit_width` when possible.
+        This keeps the property safe (never raises) and conservative.
+        """
+        cdef Py_ssize_t i
+        cdef object vec
+        cdef object arr
+        cdef object nb
+        cdef uint64_t total = 0
+
+        for i in range(self.ptr.num_columns):
+            try:
+                vec = <Vector>self.ptr.columns[i]
+            except Exception:
+                continue
+
+            # Prefer vector-level reporting
+            try:
+                nb = getattr(vec, "nbytes", None)
+                if nb is not None:
+                    total += <uint64_t>nb
+                    continue
+            except Exception:
+                nb = None
+
+            # Fall back to Arrow array size
+            try:
+                arr = vec.to_arrow()
+                nb = getattr(arr, "nbytes", None)
+                if nb is not None:
+                    total += <uint64_t>nb
+                    continue
+
+                # Try a naive fixed-width estimate
+                try:
+                    bit_width = arr.type.bit_width
+                    itemsize = bit_width // 8
+                    total += <uint64_t>(itemsize * len(arr))
+                    continue
+                except Exception:
+                    # Unknown/variable-width: best-effort zero contribution
+                    continue
+            except Exception:
+                # If all else fails, ignore this column
+                continue
+
+        return total
+
+
+    @property
     def column_names(self) -> list:
         """Return the list of column names."""
         cdef list names = []
@@ -284,6 +344,18 @@ cdef class Morsel:
 
         return result
 
+    def empty(self) -> Morsel:
+        """
+        Make this morsel empty in-place while preserving schema (column names
+        and types). Useful for operators that need an empty morsel with the
+        same shape metadata.
+
+        Returns:
+            Morsel: self
+        """
+        self._empty_inplace()
+        return self
+
     cdef Morsel _full_copy(self):
         """Create a complete copy of this Morsel."""
         cdef int i, n_columns = self.ptr.num_columns
@@ -343,6 +415,12 @@ cdef class Morsel:
 
         # Convert to C array
         n_indices = len(indices)
+        # Fast-path: empty selection -> replace each column with an empty
+        # vector of the same concrete class and set rowcount to 0.
+        if n_indices == 0:
+            self._empty_inplace()
+            return
+
         cdef int32_t* indices_ptr = <int32_t*>PyMem_Malloc(n_indices * sizeof(int32_t))
         if indices_ptr == NULL:
             raise MemoryError()
@@ -370,6 +448,46 @@ cdef class Morsel:
 
         finally:
             PyMem_Free(indices_ptr)
+
+    cdef void _empty_inplace(self):
+        """Replace each column with a zero-length vector of the same class.
+
+        This preserves column types and names while ensuring a valid internal
+        layout that converts cleanly to Arrow (offset arrays, null bitmaps,
+        etc.).
+        """
+        cdef int i, n_columns = self.ptr.num_columns
+        cdef Vector src_vec
+        cdef Vector dst_vec
+
+        for i in range(n_columns):
+            src_vec = <Vector>self.ptr.columns[i]
+            # Construct an empty vector of the same concrete class by calling
+            # its constructor with length 0. Most vector implementations
+            # support a zero-length constructor.
+            try:
+                dst_vec = src_vec.__class__(<size_t>0)
+            except Exception:
+                # Fall back to creating an empty Arrow array of the same
+                # type and converting it back to a Draken Vector. This
+                # preserves the concrete vector type/semantics and avoids
+                # low-level NULL-pointer memoryview edge-cases.
+                try:
+                    import pyarrow as pa
+                    arr = src_vec.to_arrow()
+                    empty_arr = arr.slice(0, 0)
+                    dst_vec = Vector.from_arrow(empty_arr)
+                except Exception:
+                    # As a last-resort fallback, use take with an empty
+                    # Python sequence. This may be slightly slower but is
+                    # safe for most vector implementations.
+                    dst_vec = src_vec.take([])
+
+            self._columns[i] = dst_vec
+            self.ptr.columns[i] = <void*>dst_vec
+
+        # Ensure num_rows is zero
+        self.ptr.num_rows = 0
 
     def select(self, columns) -> Morsel:
         """

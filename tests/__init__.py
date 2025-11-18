@@ -44,7 +44,7 @@ Example:
     if __name__ == "__main__":
         run_tests()
 """
-
+import contextlib
 import datetime
 import os
 import platform
@@ -678,6 +678,7 @@ def set_up_iceberg():
     import pyarrow
     import opteryx
     from pyiceberg.catalog.sql import SqlCatalog
+    from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
     from opteryx.connectors.iceberg_connector import IcebergConnector
 
     worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
@@ -724,18 +725,29 @@ def set_up_iceberg():
         },
     )
 
+    needs_setup = True
+    if existing:
+        try:
+            catalog.load_table("opteryx.planets")
+            catalog.load_table("opteryx.tweets")
+            needs_setup = False
+        except NoSuchTableError:
+            needs_setup = True
 
-    if existing: 
+    if not needs_setup:
         return catalog
 
-    catalog.create_namespace("iceberg")
+    with contextlib.suppress(NamespaceAlreadyExistsError):
+        catalog.create_namespace("opteryx")
 
     data = opteryx.query_to_arrow("SELECT tweet_id, text, timestamp, user_id, user_verified, user_name, hash_tags, followers, following, tweets_by_user, is_quoting, is_reply_to, is_retweeting FROM testdata.flat.formats.parquet")
-    table = catalog.create_table("iceberg.tweets", schema=data.schema)
+    table = catalog.create_table("opteryx.tweets", schema=data.schema)
     table.append(data.slice(0, 50000))
     table.append(data.slice(50000, 50000))
 
-    opteryx.register_store("iceberg", IcebergConnector, catalog=catalog)
+    opteryx.register_store(
+        "iceberg", IcebergConnector, catalog=catalog, remove_prefix=True
+    )
 
     for dataset in ('planets', 'satellites', 'missions', 'astronauts'):
         if dataset == 'planets':
@@ -762,7 +774,7 @@ def set_up_iceberg():
 
             snapshot_label, cutoff = snapshots[0]
             snapshot_data = load_planet_snapshot(cutoff)
-            table = catalog.create_table("iceberg.planets", schema=snapshot_data.schema)
+            table = catalog.create_table("opteryx.planets", schema=snapshot_data.schema)
             table.append(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
 
             latest_snapshot = snapshot_data
@@ -775,7 +787,7 @@ def set_up_iceberg():
             del latest_snapshot
             del snapshot_data
 
-            iceberged = opteryx.query("SELECT * FROM iceberg.planets")
+            iceberged = opteryx.query("SELECT * FROM iceberg.opteryx.planets")
             assert iceberged.rowcount == expected_rows
             del iceberged  # Free memory immediately
             continue
@@ -783,14 +795,14 @@ def set_up_iceberg():
         data = opteryx.query_to_arrow(f"SELECT * FROM ${dataset}")
         data = cast_dataset(data)
 
-        table = catalog.create_table(f"iceberg.{dataset}", schema=data.schema)
+        table = catalog.create_table(f"opteryx.{dataset}", schema=data.schema)
         table.append(data)
 
         # Verify row count without loading full result set into memory
         expected_rows = data.num_rows
         del data  # Free memory immediately
         
-        iceberged = opteryx.query(f"SELECT * FROM iceberg.{dataset}")
+        iceberged = opteryx.query(f"SELECT * FROM iceberg.opteryx.{dataset}")
         assert iceberged.rowcount == expected_rows
         del iceberged  # Free memory immediately
 

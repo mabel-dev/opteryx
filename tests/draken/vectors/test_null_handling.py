@@ -11,7 +11,7 @@ This module tests comprehensive null handling including:
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 import pyarrow as pa
@@ -78,7 +78,7 @@ class TestInt64NullHandling:
         result = vec.take(indices)
         
         # Current implementation: nulls become 0 in take operation
-        assert result.to_pylist() == [1, 0, 0]
+        assert result.to_pylist() == [1, None, None]
     
     def test_to_pylist_with_nulls(self):
         """Test to_pylist preserves None values."""
@@ -371,3 +371,6 @@ class TestNullHandlingEdgeCases:
         assert result_list[0] == 1
         # 4 == 4 -> True
         assert result_list[3] == 1
+
+if __name__ == "__main__":
+    pytest.main([__file__])

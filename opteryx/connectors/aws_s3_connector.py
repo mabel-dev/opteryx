@@ -176,7 +176,7 @@ class AwsS3Connector(
         self.schema = next(self.read_dataset(just_schema=True), None)
 
         if self.schema is None:
-            raise DatasetNotFoundError(dataset=self.dataset)
+            raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__)
 
         return self.schema
 

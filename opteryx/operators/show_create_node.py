@@ -45,6 +45,6 @@ class ShowCreateNode(BasePlanNode):
                 yield table
                 return
 
-            raise DatasetNotFoundError(self.object_name)
+            raise DatasetNotFoundError(dataset=self.object_name, connector="VIEW")
 
         raise UnsupportedSyntaxError("Invalid SHOW statement")

@@ -175,5 +175,5 @@ class InformationSchemaNode(BasePlanNode):
         elif self._dataset == "information_schema.routines":
             yield information_schema_routines()
         else:
-            raise DatasetNotFoundError(dataset=self._dataset)
+            raise DatasetNotFoundError(dataset=self._dataset, connector=self.__type__)
         return

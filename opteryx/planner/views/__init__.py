@@ -34,7 +34,7 @@ def view_as_plan(view_name: str) -> dict:
     from opteryx.utils.sql import remove_comments
 
     if not is_view(view_name):
-        raise DatasetNotFoundError(view_name)
+        raise DatasetNotFoundError(dataset=view_name, connector="VIEW")
 
     operation = view_as_sql(view_name)
 

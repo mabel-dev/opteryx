@@ -123,8 +123,36 @@ cdef class Int64Vector(Vector):
         cdef Int64Vector out = Int64Vector(<size_t>n)
         cdef int64_t* src = <int64_t*> self.ptr.data
         cdef int64_t* dst = <int64_t*> out.ptr.data
+        cdef uint8_t* src_null = <uint8_t*> self.ptr.null_bitmap
+
+        # If source has no null bitmap, copy directly
+        if src_null == NULL:
+            for i in range(n):
+                dst[i] = src[indices[i]]
+            out.ptr.null_bitmap = NULL
+            return out
+
+        # Source has nulls - allocate a null bitmap for the output and preserve nulls
+        cdef Py_ssize_t out_nbytes = (n + 7) >> 3
+        cdef uint8_t* out_null = <uint8_t*> malloc(out_nbytes)
+        if out_null == NULL:
+            raise MemoryError()
+        # zero-initialize
+        for i in range(out_nbytes):
+            out_null[i] = 0
+
+        cdef int32_t src_idx
+        cdef uint8_t byte
         for i in range(n):
-            dst[i] = src[indices[i]]
+            src_idx = indices[i]
+            byte = src_null[src_idx >> 3]
+            if byte & (1 << (src_idx & 7)):
+                dst[i] = src[src_idx]
+                out_null[i >> 3] |= (1 << (i & 7))
+            else:
+                dst[i] = 0
+
+        out.ptr.null_bitmap = out_null
         return out
 
     cpdef BoolVector equals(self, int64_t value):

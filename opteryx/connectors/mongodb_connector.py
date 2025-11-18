@@ -76,7 +76,7 @@ class MongoDbConnector(BaseConnector):
         record = next(self.read_dataset(chunk_size=25), None)
 
         if record is None:
-            raise DatasetNotFoundError(dataset=self.dataset)
+            raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__)
 
         arrow_schema = record.schema
 

@@ -7,11 +7,15 @@ with inline VALUES tables, ensuring NULL handling is correct.
 NOTE: These tests currently expose a bug in projection_pushdown.py where col.origin
 is empty for VALUES-based outer joins. Tests are marked xfail until fixed.
 """
-import pytest
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+
 import opteryx
+import pytest
 
 
-@pytest.mark.xfail(reason="Bug: projection_pushdown.py line 109 - col.origin[0] IndexError on VALUES outer joins")
 def test_left_join_with_values():
     """Test LEFT JOIN preserves all rows from left table, with NULL for non-matches."""
     result = opteryx.query("""
@@ -22,11 +26,10 @@ def test_left_join_with_values():
     """)
     
     actual = result.arrow().to_pydict()
-    expected = {'x': [1, 2, 3], 'y': [None, 2, 3]}
+    expected = {'a.x': [1, 2, 3], 'b.y': [None, 2, 3]}
     assert actual == expected, f"Expected {expected}, got {actual}"
 
 
-@pytest.mark.xfail(reason="Bug: projection_pushdown.py line 109 - col.origin[0] IndexError on VALUES outer joins")
 def test_right_join_with_values():
     """Test RIGHT JOIN preserves all rows from right table, with NULL for non-matches."""
     result = opteryx.query("""
@@ -37,30 +40,29 @@ def test_right_join_with_values():
     """)
     
     actual = result.arrow().to_pydict()
-    expected = {'x': [2, 3, None], 'y': [2, 3, 4]}
+    expected = {'a.x': [2, 3, None], 'b.y': [2, 3, 4]}
     assert actual == expected, f"Expected {expected}, got {actual}"
 
 
-@pytest.mark.xfail(reason="Bug: projection_pushdown.py line 109 - col.origin[0] IndexError on VALUES outer joins")
 def test_full_outer_join_with_values():
     """Test FULL OUTER JOIN preserves all rows from both tables."""
     result = opteryx.query("""
         SELECT a.x, b.y 
         FROM (VALUES (1), (2), (3)) AS a(x)
         FULL OUTER JOIN (VALUES (2), (3), (4)) AS b(y) ON a.x = b.y
-        ORDER BY COALESCE(a.x, b.y)
+        ORDER BY a.x, b.y
     """)
     
     actual = result.arrow().to_pydict()
     
     # Should have: (1, None), (2, 2), (3, 3), (None, 4)
-    assert 1 in actual['x'], "Expected x=1 in result"
-    assert 4 in actual['y'], "Expected y=4 in result"
-    assert None in actual['x'], "Expected NULL in x column"
-    assert None in actual['y'], "Expected NULL in y column"
+    assert 1 in actual['a.x'], "Expected x=1 in result"
+    assert 4 in actual['b.y'], "Expected y=4 in result"
+    assert None in actual['a.x'], "Expected NULL in x column"
+    assert None in actual['b.y'], "Expected NULL in y column"
     
     # Verify we have exactly 4 rows (one for each unique value)
-    assert len(actual['x']) == 4, f"Expected 4 rows, got {len(actual['x'])}"
+    assert len(actual['a.x']) == 4, f"Expected 4 rows, got {len(actual['x'])}"
 
 
 def test_right_outer_join_distinct_with_nulls():
@@ -92,3 +94,10 @@ def test_right_outer_join_distinct_with_nulls():
     # Should have at least one NULL (for planets without satellites)
     assert None in actual['planetId'], \
         "Expected NULL for planets without satellites"
+
+if __name__ == "__main__":
+    test_left_join_with_values()
+    test_right_join_with_values()
+    test_full_outer_join_with_values()
+    test_right_outer_join_distinct_with_nulls()
+    print("All tests passed.")

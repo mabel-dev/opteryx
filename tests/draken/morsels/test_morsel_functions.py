@@ -153,8 +153,10 @@ def test_copy_mask_accepts_arrow_array_and_empty_selection():
     assert arrow_filtered.shape == (1, 1)
     assert arrow_filtered.column(b'a').to_pylist() == [30]
 
-    with pytest.raises(ValueError):
-        morsel.copy(mask=[])
+    # Empty mask should produce an empty morsel (no rows) rather than raising
+    empty_filtered = morsel.copy(mask=[])
+    assert empty_filtered.shape[0] == 0
+    assert empty_filtered.num_columns == 1
 
 
 def test_take_method_signature():
@@ -192,8 +194,9 @@ def test_take_handles_duplicate_and_empty_indices():
     assert morsel.column(b'a').to_pylist() == [30, 30, 10]
 
     morsel_empty = draken.Morsel.from_arrow(table)
-    with pytest.raises(ValueError):
-        morsel_empty.take([])
+    # Empty indices should produce an empty morsel (no rows)
+    morsel_empty.take([])
+    assert morsel_empty.shape[0] == 0
 
 
 def test_take_rejects_generator_indices():
