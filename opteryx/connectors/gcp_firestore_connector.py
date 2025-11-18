@@ -49,8 +49,12 @@ def _initialize():  # pragma: no cover
     """Create the connection to Firebase"""
     try:
         from google.cloud import firestore
-    except ImportError as err:  # pragma: no cover
-        raise MissingDependencyError(err.name) from err
+    except (ImportError, AttributeError) as err:  # pragma: no cover
+        # Sometimes a partially-installed `google` package exists which raises
+        # AttributeError (e.g. "module 'google' has no attribute 'protobuf'").
+        # Treat these as missing dependencies for the connector.
+        name = getattr(err, "name", None) or str(err)
+        raise MissingDependencyError(name) from err
 
     project_id = GCP_PROJECT_ID
     if project_id is None:
@@ -82,7 +86,11 @@ class GcpFireStoreConnector(BaseConnector, PredicatePushable):
         """
         Return a morsel of documents
         """
-        from google.cloud.firestore_v1.base_query import FieldFilter
+        try:
+            from google.cloud.firestore_v1.base_query import FieldFilter
+        except (ImportError, AttributeError) as err:  # pragma: no cover
+            name = getattr(err, "name", None) or str(err)
+            raise MissingDependencyError(name) from err
 
         from opteryx.utils.file_decoders import filter_records
 

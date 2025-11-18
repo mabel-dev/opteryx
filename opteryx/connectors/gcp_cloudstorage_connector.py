@@ -39,8 +39,11 @@ def get_storage_credentials():
 
     try:
         from google.cloud import storage
-    except ImportError as err:  # pragma: no cover
-        raise MissingDependencyError(err.name) from err
+    except (ImportError, AttributeError) as err:  # pragma: no cover
+        # Handle partially-installed `google` namespace packages which can
+        # raise AttributeError (e.g. "module 'google' has no attribute 'protobuf'").
+        name = getattr(err, "name", None) or str(err)
+        raise MissingDependencyError(name) from err
 
     if os.environ.get("STORAGE_EMULATOR_HOST"):  # pragma: no cover
         from google.auth.credentials import AnonymousCredentials
@@ -81,8 +84,9 @@ class GcpCloudStorageConnector(
             import requests
             from google.auth.transport.requests import Request
             from requests.adapters import HTTPAdapter
-        except ImportError as err:  # pragma: no cover
-            raise MissingDependencyError(err.name) from err
+        except (ImportError, AttributeError) as err:  # pragma: no cover
+            name = getattr(err, "name", None) or str(err)
+            raise MissingDependencyError(name) from err
 
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
