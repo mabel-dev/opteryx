@@ -96,7 +96,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python package dependencies
-        run: python -m pip install --upgrade cython wheel numpy setuptools_rust draken
+        run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
       - name: Install Rust aarch64-apple-darwin target
         run: rustup target add aarch64-apple-darwin

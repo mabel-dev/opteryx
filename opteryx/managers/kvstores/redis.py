@@ -1,12 +1,8 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# See the License at http://www.apache.org/licenses/LICENSE-2.0
-# Distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 """
-This implements an interface to REDIS
+Redis-backed Key-Value Store moved into kvstores namespace.
+"""
 
-If we have 10 failures in a row, stop trying to use the cache.
-"""
+from __future__ import annotations
 
 import os
 from typing import Union
@@ -20,10 +16,6 @@ from opteryx.managers.kvstores import BaseKeyValueStore
 
 @single_item_cache
 def _redis_server(**kwargs):
-    """
-    Handling connecting to REDIS
-    """
-    # the server must be set in the environment
     redis_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
     if redis_config is None:
         return None
@@ -37,24 +29,15 @@ def _redis_server(**kwargs):
 
 
 class RedisCache(BaseKeyValueStore):
-    """
-    Cache object
-    """
-
     hits: int = 0
     misses: int = 0
     skips: int = 0
     errors: int = 0
     sets: int = 0
 
-    def __init__(self, **kwargs):
-        """
-        Parameters:
-            server: string (optional)
-                Sets the memcached server and port (server:port). If not provided
-                the value will be obtained from the OS environment.
-        """
+    def __init__(self, location: str | None = None, **kwargs):
         self._server = _redis_server(**kwargs)
+        super().__init__(location)
         if self._server is None:
             import datetime
 
@@ -93,7 +76,6 @@ class RedisCache(BaseKeyValueStore):
                 self._server.set(key, value)
                 self.sets += 1
             except Exception as err:  # pragma: no cover
-                # if we fail to set, stop trying
                 self._consecutive_failures = MAX_CONSECUTIVE_CACHE_FAILURES
                 self.errors += 1
                 import datetime
@@ -105,15 +87,7 @@ class RedisCache(BaseKeyValueStore):
             self.skips += 1
 
     def delete(self, key: bytes) -> None:
-        """
-        Delete an item from the cache.
-        """
         try:
             self._server.delete(key)
         except Exception as err:
-            # DEBUG: print(f"Unable to 'delete' Redis cache {err}")
             self.errors += 1
-
-    def __del__(self):
-        pass
-        # DEBUG: print(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")

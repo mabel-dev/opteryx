@@ -20,9 +20,11 @@ requests
 rich
 zstandard
 
+protobuf
+
 # different storage providers
 fastavro
-firestore
+google-cloud-firestore
 google-cloud-storage
 google-cloud-bigquery-storage
 minio
@@ -41,7 +43,7 @@ cassandra-driver
 pyiceberg[sql-sqlite]
 psycopg2-binary
 openpyxl
-vortex-data==0.54.0
+vortex-data==0.55.0
 
 setuptools_rust
 
