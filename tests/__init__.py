@@ -156,7 +156,7 @@ def skip(func):  # pragma: no cover
     return wrapper
 
 
-def skip_if(is_true: bool = True, reason:str = ""):  # pragma: no cover
+def skip_if(is_true: bool = True, reason: str = ""):  # pragma: no cover
     """
     Decorator to conditionally skip the execution of a test function based on a condition.
 
@@ -183,9 +183,8 @@ def skip_if(is_true: bool = True, reason:str = ""):  # pragma: no cover
             if is_true and not manual():
                 import warnings
 
-                if not reason:
-                    reason = "conditional execution"
-                warnings.warn(f"Skipping {func.__name__} because of {reason}.")
+                msg = reason or "conditional execution"
+                warnings.warn(f"Skipping {func.__name__} because of {msg}.")
             else:
                 return func(*args, **kwargs)
 
