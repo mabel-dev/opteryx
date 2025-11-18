@@ -347,7 +347,7 @@ cdef class Date32Vector(Vector):
                     block = DATE32_HASH_CHUNK
                 for j in range(block):
                     scratch[j] = <uint64_t>(<int64_t> data[i + j])
-                simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
                 i += block
             return
 

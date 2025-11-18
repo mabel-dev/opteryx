@@ -313,7 +313,7 @@ cdef class IntervalVector(Vector):
                 for j in range(block):
                     partial = mix_hash(0, <uint64_t>data[i + j].months)
                     scratch[j] = mix_hash(partial, <uint64_t>data[i + j].microseconds)
-                simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
                 i += block
             return
 

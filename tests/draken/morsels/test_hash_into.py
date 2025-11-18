@@ -34,6 +34,12 @@ def _mix_hash(current: int, value: int, mix_constant: int) -> int:
 
 
 def _vector_hash_to_list(vector, mix_constant: int = 0x9E3779B97F4A7C15):
+    """Compute vector hashes into a Python list.
+
+    The `mix_constant` parameter is accepted for compatibility with older
+    tests but is ignored because the mixing constant is now enforced
+    internally by the implementation.
+    """
     length = getattr(vector, "length", None)
 
     if length is None:
@@ -43,7 +49,7 @@ def _vector_hash_to_list(vector, mix_constant: int = 0x9E3779B97F4A7C15):
             length = len(vector.to_pylist())
 
     out = array("Q", [0] * length)
-    hash_into_vector(vector, out, mix_constant=mix_constant)
+    hash_into_vector(vector, out)
     return list(out)
 
 
@@ -317,7 +323,7 @@ def test_hash_into_consistency_with_hash():
         expected.append(hashed)
 
     out_buf = array('Q', [0] * len(expected))
-    hash_into_vector(vec, out_buf, 0, mix_constant)
+    hash_into_vector(vec, out_buf, 0)
 
     assert list(out_buf) == expected
 
@@ -750,8 +756,8 @@ def test_hash_into_zero_mix_constant():
     out_buf = array('Q', [0, 0, 0])
     out_view = memoryview(out_buf)
     
-    # Should not raise even with zero mix constant
-    hash_into_vector(vec, out_view, 0, 0)
+    # Should not raise (mix constant override removed)
+    hash_into_vector(vec, out_view, 0)
     
     result = list(out_buf)
     baseline = _vector_hash_to_list(vec, mix_constant=MIX_HASH_CONSTANT)
@@ -769,7 +775,7 @@ def test_hash_into_max_uint64_mix_constant():
     out_view = memoryview(out_buf)
     
     max_uint64 = 0xFFFFFFFFFFFFFFFF
-    hash_into_vector(vec, out_view, 0, max_uint64)
+    hash_into_vector(vec, out_view, 0)
     
     result = list(out_buf)
     assert all(h != 0 for h in result)

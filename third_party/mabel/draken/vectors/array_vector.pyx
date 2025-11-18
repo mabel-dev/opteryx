@@ -373,7 +373,7 @@ cdef class ArrayVector(Vector):
                 encoded = repr(value).encode("utf-8")
                 scratch[j] = hash_bytes(encoded)
 
-            simd_mix_hash(&out_buf[offset + i], scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+            simd_mix_hash(&out_buf[offset + i], scratch_ptr, <size_t> block)
             i += block
 
     def __str__(self):

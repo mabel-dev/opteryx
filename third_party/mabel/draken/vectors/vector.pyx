@@ -43,7 +43,6 @@ cdef class Vector:
         self,
         uint64_t[::1] out_buf,
         Py_ssize_t offset=0,
-        uint64_t mix_constant=<uint64_t>0x9e3779b97f4a7c15U,
     ) except *:
         """Default implementation delegates to Python overrides when available."""
         cdef object py_self = <object>self
@@ -54,4 +53,4 @@ cdef class Vector:
                 f"{self.__class__.__name__} does not implement hash_into"
             )
 
-        py_hash(out_buf, offset=offset, mix_constant=mix_constant)
+        py_hash(out_buf, offset=offset)

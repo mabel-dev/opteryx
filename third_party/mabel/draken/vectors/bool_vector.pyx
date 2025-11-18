@@ -303,7 +303,7 @@ cdef class BoolVector(Vector):
                         scratch[j] = TRUE_HASH
                     else:
                         scratch[j] = FALSE_HASH
-                simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
                 i += block
             return
 

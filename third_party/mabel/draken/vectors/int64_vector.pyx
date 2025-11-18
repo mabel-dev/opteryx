@@ -462,7 +462,7 @@ cdef class Int64Vector(Vector):
                     value = NULL_HASH
                 dst[i] = mix_hash(dst[i], value)
         else:
-            simd_mix_hash(dst, as_uint64, <size_t>n, MIX_HASH_CONSTANT)
+            simd_mix_hash(dst, as_uint64, <size_t>n)
 
     def __str__(self):
         cdef list vals = []

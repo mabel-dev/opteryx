@@ -257,7 +257,7 @@ cdef class TimeVector(Vector):
         if self.is_time64:
             data64 = <int64_t*> ptr.data
             if not has_nulls:
-                simd_mix_hash(dst, <uint64_t*> data64, <size_t> n, MIX_HASH_CONSTANT)
+                simd_mix_hash(dst, <uint64_t*> data64, <size_t> n)
                 return
             for i in range(n):
                 if has_nulls:
@@ -281,7 +281,7 @@ cdef class TimeVector(Vector):
                         block = TIME32_HASH_CHUNK
                     for j in range(block):
                         scratch32[j] = <uint64_t>(<int64_t> data32[i + j])
-                    simd_mix_hash(dst + i, scratch32_ptr, <size_t> block, MIX_HASH_CONSTANT)
+                    simd_mix_hash(dst + i, scratch32_ptr, <size_t> block)
                     i += block
                 return
 

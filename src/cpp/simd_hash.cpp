@@ -11,10 +11,10 @@
 
 namespace {
 
-inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count, uint64_t mix_constant) {
+inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count) {
     for (std::size_t i = 0; i < count; ++i) {
         uint64_t mixed = dest[i] ^ values[i];
-        mixed *= mix_constant;
+        mixed *= MIX_HASH_CONSTANT;
         mixed ^= mixed >> 32;
         dest[i] = mixed;
     }
@@ -53,14 +53,14 @@ inline uint64x2_t mullo_u64(uint64x2_t a, uint64x2_t b) {
 
 }  // namespace
 
-void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count, uint64_t mix_constant) {
+void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
     if (dest == nullptr || values == nullptr || count == 0) {
         return;
     }
 
 #if defined(__AVX2__)
     const std::size_t stride = 4;
-    const __m256i const_vec = _mm256_set1_epi64x(static_cast<long long>(mix_constant));
+    const __m256i const_vec = _mm256_set1_epi64x(static_cast<long long>(MIX_HASH_CONSTANT));
     std::size_t i = 0;
     for (; i + stride <= count; i += stride) {
         __m256i dst_vec = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(dest + i));
@@ -72,11 +72,11 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count, ui
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), combined);
     }
     if (i < count) {
-        scalar_mix(dest + i, values + i, count - i, mix_constant);
+        scalar_mix(dest + i, values + i, count - i);
     }
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
     const std::size_t stride = 2;
-    const uint64x2_t const_vec = vdupq_n_u64(mix_constant);
+    const uint64x2_t const_vec = vdupq_n_u64(MIX_HASH_CONSTANT);
     std::size_t i = 0;
     for (; i + stride <= count; i += stride) {
         uint64x2_t dst_vec = vld1q_u64(dest + i);
@@ -88,9 +88,9 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count, ui
         vst1q_u64(dest + i, combined);
     }
     if (i < count) {
-        scalar_mix(dest + i, values + i, count - i, mix_constant);
+        scalar_mix(dest + i, values + i, count - i);
     }
 #else
-    scalar_mix(dest, values, count, mix_constant);
+    scalar_mix(dest, values, count);
 #endif
 }

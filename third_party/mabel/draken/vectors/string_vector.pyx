@@ -292,7 +292,7 @@ cdef class StringVector(Vector):
                     str_len = <size_t>(end - start)
                     scratch[j] = cy_xxhash3_64(data + start, str_len)
 
-            simd_mix_hash(dst + i, scratch_ptr, <size_t> block, MIX_HASH_CONSTANT)
+            simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
             i += block
 
     cpdef StringVector take(self, int32_t[::1] indices):
