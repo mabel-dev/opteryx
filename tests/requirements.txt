@@ -22,7 +22,7 @@ zstandard
 
 # different storage providers
 fastavro
-firestore
+google-cloud-firestore
 google-cloud-storage
 google-cloud-bigquery-storage
 minio
