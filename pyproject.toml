@@ -1,6 +1,6 @@
 [project]
 name = "opteryx"
-version = "0.26.2-beta.1871"
+version = "0.26.2-beta.1878"
 description = "Query your data, where it lives"
 requires-python = '>=3.11'
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -65,7 +65,7 @@ exclude = '**/containers.pxd'
 
 [tool.ruff.lint]
 select = ["SIM", "NPY201"]
-ignore = []
+ignore = ["SIM105"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/optimizer/**" = ["SIM102"]

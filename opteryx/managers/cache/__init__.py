@@ -9,15 +9,15 @@ def get_cache_manager(cache_type: str):
     a backend is not needed.
     """
     if cache_type == "memcached":
-        from .memcached import MemcachedCache
+        from opteryx.managers.kvstores.memcached import MemcachedCache
 
         return MemcachedCache
     elif cache_type == "redis":
-        from .redis import RedisCache
+        from opteryx.managers.kvstores.redis import RedisCache
 
         return RedisCache
     elif cache_type == "valkey":
-        from .valkey import ValkeyCache
+        from opteryx.managers.kvstores.valkey import ValkeyCache
 
         return ValkeyCache
     else:
@@ -33,19 +33,19 @@ def __getattr__(name: str):
     while still avoiding eager imports of all backends.
     """
     if name == "MemcachedCache":
-        from .memcached import MemcachedCache
+        from opteryx.managers.kvstores.memcached import MemcachedCache
 
         return MemcachedCache
     if name == "RedisCache":
-        from .redis import RedisCache
+        from opteryx.managers.kvstores.redis import RedisCache
 
         return RedisCache
     if name == "ValkeyCache":
-        from .valkey import ValkeyCache
+        from opteryx.managers.kvstores.valkey import ValkeyCache
 
         return ValkeyCache
     if name == "NullCache":
-        from .null_cache import NullCache
+        from opteryx.managers.kvstores.null_cache import NullCache
 
         return NullCache
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
