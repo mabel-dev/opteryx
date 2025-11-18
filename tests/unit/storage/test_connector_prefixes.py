@@ -47,10 +47,8 @@ def test_connector_prefixes():
     cur = opteryx.query("SELECT * FROM sqlite.planets")
     assert cur.rowcount == 9
 
-    if not is_linux():
-        # GCP issues on linux CI
-        cur = opteryx.query("SELECT * FROM fs.dwarves")
-        assert cur.rowcount == 7, cur.rowcount
+    # cur = opteryx.query("SELECT * FROM fs.dwarves")
+    # assert cur.rowcount == 7, cur.rowcount
 
 
 def test_connector_prefixes_negative_tests():

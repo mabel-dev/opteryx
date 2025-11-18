@@ -1,5 +1,8 @@
 """
-Test we can read from GCS
+Test we can read from FireStore
+
+There is a problem with the google library in relation of protobuf
+so these tests are currently disabled.
 """
 
 import os
@@ -11,7 +14,7 @@ import opteryx
 from opteryx.connectors import GcpFireStoreConnector
 from tests import skip_if, is_linux
 
-@skip_if(is_linux(), "google library install issues on linux CI")
+@skip_if(reason="google library install issues on linux CI")
 def test_firestore_storage():
     opteryx.register_store("dwarves", GcpFireStoreConnector)
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
