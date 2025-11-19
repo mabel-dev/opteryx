@@ -691,6 +691,7 @@ def set_up_iceberg():
     from pyiceberg.catalog.sql import SqlCatalog
     from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
     from opteryx.connectors.iceberg_connector import IcebergConnector
+    from freezegun import freeze_time
 
     worker_id = os.environ.get('PYTEST_XDIST_WORKER', 'gw0')
     ICEBERG_BASE_PATH: str = f"tmp/iceberg/{worker_id}"
@@ -760,6 +761,8 @@ def set_up_iceberg():
         "iceberg", IcebergConnector, catalog=catalog, remove_prefix=True
     )
 
+    modern_timestamp = datetime.datetime(2025, 11, 18, 21, 6, 21, 210000)
+
     for dataset in ('planets', 'satellites', 'missions', 'astronauts'):
         if dataset == 'planets':
             from opteryx.virtual_datasets import planet_data
@@ -780,18 +783,27 @@ def set_up_iceberg():
                 ("pre_uranus", datetime.datetime(1781, 4, 25)),
                 ("pre_neptune", datetime.datetime(1846, 11, 12)),
                 ("pre_pluto", datetime.datetime(1930, 3, 12)),
-                ("modern", None),
+                ("modern", modern_timestamp),
             ]
 
             snapshot_label, cutoff = snapshots[0]
             snapshot_data = load_planet_snapshot(cutoff)
             table = catalog.create_table("opteryx.planets", schema=snapshot_data.schema)
-            table.append(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
+            if cutoff is None:
+                table.append(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
+            else:
+                with freeze_time(cutoff):
+                    table.append(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
 
             latest_snapshot = snapshot_data
             for snapshot_label, cutoff in snapshots[1:]:
-                snapshot_data = load_planet_snapshot(cutoff)
-                table.overwrite(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
+                snapshot_data = load_planet_snapshot(cutoff if cutoff is not modern_timestamp else None)
+                if cutoff is None or cutoff is modern_timestamp:
+                    with freeze_time(modern_timestamp):
+                        table.overwrite(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, None))
+                else:
+                    with freeze_time(cutoff):
+                        table.overwrite(snapshot_data, snapshot_properties=snapshot_props(snapshot_label, cutoff))
                 latest_snapshot = snapshot_data
 
             expected_rows = latest_snapshot.num_rows

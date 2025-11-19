@@ -20,13 +20,15 @@ from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
-from opteryx.connectors import DiskConnector
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import Diachronic
 from opteryx.connectors.capabilities import LimitPushable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import NotSupportedError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import RelationStatistics
@@ -117,7 +119,7 @@ def to_iceberg_filter(root):
     return iceberg_filter if iceberg_filter else "True", unsupported
 
 
-class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushable):
+class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, PredicatePushable):
     __mode__ = "Blob"
     __type__ = "ICEBERG"
 
@@ -140,9 +142,10 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         OrsoTypes.DATE,
     }
 
-    def __init__(self, *args, catalog=None, io=DiskConnector, **kwargs):
+    def __init__(self, *args, catalog=None, **kwargs):
         BaseConnector.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
+        Diachronic.__init__(self, **kwargs)
         Statistics.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
@@ -150,12 +153,44 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
 
         try:
             self.table = catalog.load_table(self.dataset)
-            self.io_connector = io(**kwargs)
+            self.snapshot = self.table.current_snapshot()
+            self.snapshot_id = self.snapshot.snapshot_id
         except pyiceberg.exceptions.NoSuchTableError:
             raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__) from None
 
     def get_dataset_schema(self) -> RelationSchema:
-        iceberg_schema = self.table.schema()
+        if self.start_date != self.end_date:
+            if self.start_date.date() != self.end_date.date():
+                raise UnsupportedSyntaxError("This table only supports point in time reads.")
+            raise UnsupportedSyntaxError(
+                "This table only supports point in time reads. Are you missing the time component from your FOR clause?"
+            )
+
+        if self.start_date is not None:
+            snapshots = self.table.inspect.snapshots().sort_by("committed_at")
+            snapshot_rows = snapshots.to_pylist()
+
+            if not snapshot_rows:
+                raise DatasetReadError("No data available for the specified date.")
+
+            # Honor dates before the first snapshot, reject dates beyond the newest snapshot
+            if self.start_date < snapshot_rows[0]["committed_at"]:
+                selected = snapshot_rows[0]
+            elif self.start_date > snapshot_rows[-1]["committed_at"]:
+                raise DatasetReadError("No data available for the specified date.")
+            else:
+                selected = snapshot_rows[0]
+                for candidate in snapshot_rows:
+                    if candidate["committed_at"] <= self.start_date:
+                        self.statistics.dataset_committed_at = candidate["committed_at"].isoformat()
+                        selected = candidate
+                    else:
+                        break
+
+            self.snapshot_id = selected["snapshot_id"]
+            self.snapshot = self.table.snapshot_by_id(self.snapshot_id)
+
+        iceberg_schema = self.table.schemas()[self.snapshot.schema_id]
         arrow_schema = iceberg_schema.as_arrow()
 
         self.schema = RelationSchema(
@@ -169,7 +204,7 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         column_names = {col.field_id: col.name for col in iceberg_schema.columns}
         column_types = {col.field_id: col.field_type for col in iceberg_schema.columns}
 
-        files = self.table.inspect.files()
+        files = self.table.inspect.files(snapshot_id=self.snapshot_id)
 
         # No files = empty table, no stats
         if len(files.column("file_path")) == 0:
@@ -225,7 +260,10 @@ class IcebergConnector(BaseConnector, LimitPushable, Statistics, PredicatePushab
         )
 
         reader = self.table.scan(
-            row_filter=pushed_filters, selected_fields=selected_columns, limit=limit
+            row_filter=pushed_filters,
+            selected_fields=selected_columns,
+            limit=limit,
+            snapshot_id=self.snapshot_id,
         ).to_arrow_batch_reader()
 
         batch = None
