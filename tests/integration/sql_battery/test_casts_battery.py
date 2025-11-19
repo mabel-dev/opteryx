@@ -97,9 +97,14 @@ STATEMENTS = [
     ("SELECT CAST(CAST(CAST('456' AS INTEGER) AS DOUBLE) AS VARCHAR)", 1, 1, None),
     ("SELECT CAST(CAST(TRUE AS INTEGER) AS VARCHAR)", 1, 1, None),
 
-    # BLOB/BINARY casts
+    # VARBINARY casts
     ("SELECT CAST('test' AS BLOB)", 1, 1, None),
     ("SELECT CAST(CAST('test' AS BLOB) AS VARCHAR)", 1, 1, None),
+    ("SELECT CAST('test' AS VARBINARY)", 1, 1, None),
+    ("SELECT VARBINARY('test')", 1, 1, None),
+    ("SELECT TRY_VARBINARY('test')", 1, 1, None),
+    ("SELECT 'test'::VARBINARY", 1, 1, None),
+    ("SELECT CAST(CAST('test' AS VARBINARY) AS VARCHAR)", 1, 1, None),
 
 ]
 # fmt:on

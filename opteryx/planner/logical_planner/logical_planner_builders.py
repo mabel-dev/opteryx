@@ -199,30 +199,34 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = type_key
     if "Custom" in data_type:
         data_type = branch["data_type"]["Custom"][0][0]["Identifier"]["value"].upper()
-    if data_type == "Timestamp":
+    lower_data_type = data_type.lower()
+    upper_data_type = data_type.upper()
+    if lower_data_type == "timestamp":
         data_type = "TIMESTAMP"
-    elif data_type == "Date":
+    elif lower_data_type == "date":
         data_type = "DATE"
-    elif "Varchar" in data_type:
+    elif "varchar" in lower_data_type:
         data_type = "VARCHAR"
-    elif "Decimal" in data_type:
+    elif "decimal" in lower_data_type:
         data_type = "DECIMAL"
         if "PrecisionAndScale" in branch["data_type"]["Decimal"]:
             precision = branch["data_type"]["Decimal"]["PrecisionAndScale"][0]
             scale = branch["data_type"]["Decimal"]["PrecisionAndScale"][1]
             args.append(build_literal_node(precision))
             args.append(build_literal_node(scale))
-    elif "Integer" in data_type:
+    elif "integer" in lower_data_type:
         data_type = "INTEGER"
-    elif "Double" in data_type:
+    elif "double" in lower_data_type:
         data_type = "DOUBLE"
-    elif "Boolean" in data_type:
+    elif "boolean" in lower_data_type:
         data_type = "BOOLEAN"
-    elif "STRUCT" in data_type:
+    elif "struct" in lower_data_type:
         data_type = "STRUCT"
-    elif "Blob" in data_type:
+    elif "blob" in lower_data_type:
         data_type = "BLOB"
-    elif "Array" in data_type:
+    elif any(token in lower_data_type for token in ("varbinary", "binary", "raw")):
+        data_type = "VARBINARY"
+    elif "array" in lower_data_type:
         element_key = branch["data_type"]["Array"].get("AngleBracket", {"Varchar": None})
         if isinstance(element_key, dict):
             element_key = next(iter(element_key))
@@ -231,23 +235,19 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
             args.append(element_key)
         data_type = "ARRAY"
     else:
-        if data_type in ("String", "Char", "Text", "Nvarchar"):
+        if upper_data_type in ("STRING", "CHAR", "TEXT", "NVARCHAR"):
             raise SqlError(
                 f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'VARCHAR'?"
             )
-        if data_type in ("Float", "Numeric", "Real"):
+        if upper_data_type in ("FLOAT", "NUMERIC", "REAL"):
             raise SqlError(
                 f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'DOUBLE'?"
             )
-        if data_type in ("Binary", "Raw", "VarBinary"):
-            raise SqlError(
-                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'BLOB'?"
-            )
-        if data_type in ("Int", "SmallInt", "TinyInt", "BigInt", "BYTE"):
+        if upper_data_type in ("INT", "SMALLINT", "TINYINT", "BIGINT", "BYTE"):
             raise SqlError(
                 f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'INTEGER'?"
             )
-        if data_type in ("Bool", "Bit"):
+        if upper_data_type in ("BOOL", "BIT"):
             raise SqlError(
                 f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'BOOLEAN'?"
             )
