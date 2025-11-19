@@ -494,6 +494,8 @@ DEPRECATED_FUNCTIONS = {
     "INT": "INTEGER",  # remove 0.27.0
     "GET": None,  # remove 0.28.0
     "SEARCH": None,  # remove 0.28.0
+    "BLOB": "VARBINARY",  # remove 0.29.0
+    "TRY_BLOB": "TRY_VARBINARY",  # remove 0.29.0
 }
 
 # fmt:off
@@ -526,11 +528,13 @@ FUNCTIONS = {
     "DATE": (lambda x: compute.cast(x, pyarrow.date32()), "DATE", 1.0),
     "PASSTHRU": (lambda x: x, "VARIANT", 1.0),
     "BLOB": (cast_to_blob, "BLOB", 1.0),
+    "VARBINARY": (cast_to_blob, "BLOB", 1.0),
     "TRY_ARRAY": (other_functions.array_cast_safe, "VARIANT", 1.0),
     "TRY_TIMESTAMP": (try_cast("TIMESTAMP"), "TIMESTAMP", 1.0),
     "TRY_BOOLEAN": (try_cast("BOOLEAN"), "BOOLEAN", 1.0),
     "TRY_VARCHAR": (try_cast("VARCHAR"), "VARCHAR", 1.0),
     "TRY_BLOB": (try_cast("BLOB"), "BLOB", 1.0),
+    "TRY_VARBINARY": (try_cast("BLOB"), "BLOB", 1.0),
     "TRY_INTEGER": (try_cast("INTEGER"), "INTEGER", 1.0),
     "TRY_DECIMAL": (try_cast("DECIMAL"), "DECIMAL", 1.0),
     "TRY_DOUBLE": (try_cast("DOUBLE"), "DOUBLE", 1.0),
