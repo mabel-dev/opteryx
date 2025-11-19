@@ -26,14 +26,16 @@ STATEMENTS = [
     ("SELECT COUNT(*) FROM (SELECT * FROM iceberg.opteryx.planets) AS p WHERE id > 4", 1, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets;", 9, 1, None),
     ("SELECT name FROM iceberg.opteryx.satellites;", 177, 1, None),
+    ("SELECT name FROM iceberg.opteryx.non_existent_table;", 0, 0, DatasetNotFoundError),
+    
     # Time-travel sanity checks
-    ("SELECT name FROM iceberg.opteryx.planets FOR '1700-01-01 00:00:00'", 6, 1, None),
+    ("SELECT name FROM iceberg.opteryx.planets FOR '1700-01-01 00:00:00'", 0, 0, DatasetReadError),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1781-04-25 00:00:00'", 6, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1846-11-12 00:00:00'", 7, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1930-03-12 00:00:00'", 8, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1970-01-01 00:00:00'", 8, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '2025-11-18 21:06:21.210000'", 9, 1, None),
-    ("SELECT name FROM iceberg.opteryx.planets FOR '2100-01-01 00:00:00'", 0, 0, DatasetReadError),
+    ("SELECT name FROM iceberg.opteryx.planets FOR '2100-01-01 00:00:00'", 9, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1781-04-25 00:00:00' WHERE name = 'Uranus'", 0, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1846-11-12 00:00:00' WHERE name = 'Neptune'", 0, 1, None),
     ("SELECT name FROM iceberg.opteryx.planets FOR '1846-11-12 00:00:00' WHERE name = 'Uranus'", 1, 1, None),
@@ -43,6 +45,7 @@ STATEMENTS = [
     ("SELECT historic.name FROM iceberg.opteryx.planets FOR '1846-11-12 00:00:00' AS historic INNER JOIN iceberg.opteryx.planets FOR '1930-03-12 00:00:00' AS newer USING(name)", 7, 1, None),
     ("SELECT later_name FROM (SELECT later.name AS later_name, early.name AS early_name FROM iceberg.opteryx.planets FOR '1930-03-12 00:00:00' AS later LEFT JOIN iceberg.opteryx.planets FOR '1781-04-25 00:00:00' AS early ON later.name = early.name) AS differences WHERE early_name IS NULL", 2, 1, None),
     ("SELECT modern_name FROM (SELECT modern.name AS modern_name, historic.name AS historic_name FROM iceberg.opteryx.planets FOR '2025-11-18 21:06:21.210000' AS modern LEFT JOIN iceberg.opteryx.planets FOR '1930-03-12 00:00:00' AS historic ON modern.name = historic.name) AS differences WHERE historic_name IS NULL", 1, 1, None),
+
     ("SELECT * FROM iceberg.opteryx.planets INNER JOIN $satellites ON iceberg.opteryx.planets.id = $satellites.planetId;", 177, 28, None),
     ("SELECT * FROM iceberg.opteryx.planets, $satellites WHERE iceberg.opteryx.planets.id = $satellites.planetId;", 177, 28, None),
     ("SELECT * FROM iceberg.opteryx.planets CROSS JOIN $satellites WHERE iceberg.opteryx.planets.id = $satellites.planetId;", 177, 28, None),
@@ -325,6 +328,26 @@ STATEMENTS = [
     ("SELECT * FROM iceberg.opteryx.planets WHERE gravity BETWEEN 3.0 AND 9.0;", 5, 20, None),
 
     ("SELECT * FROM iceberg.opteryx.invalid_table;", 0, 0, DatasetNotFoundError),
+
+    # Empty table tests - connector should now raise DatasetReadError when there are no snapshots
+    # tries to access the current snapshot which doesn't exist.
+    ("SELECT * FROM iceberg.opteryx.empty_battery", 0, 2, None),
+    ("SELECT * FROM iceberg.opteryx.empty_battery FOR '1970-01-01 00:00:00'", 0, 0, DatasetReadError),
+
+    # Single-snapshot tests. The table has one snapshot appended; reads should
+    # return the snapshot; time beyond the snapshot should raise DatasetReadError.
+    ("SELECT * FROM iceberg.opteryx.single_snap_battery", 3, 2, None),
+    ("SELECT * FROM iceberg.opteryx.single_snap_battery FOR '2022-01-01 00:00:00'", 0, 0, DatasetReadError),
+    ("SELECT * FROM iceberg.opteryx.single_snap_battery FOR '2023-01-01 12:00:00'", 3, 2, None),
+    ("SELECT * FROM iceberg.opteryx.single_snap_battery FOR '2040-01-01 00:00:00'", 3, 2, None),
+    ("SELECT COUNT(*) FROM iceberg.opteryx.single_snap_battery WHERE id = 1;", 1, 1, None),
+    ("SELECT * FROM iceberg.opteryx.two_snap_battery", 3, 2, None),
+    ("SELECT * FROM iceberg.opteryx.two_snap_battery FOR '2021-01-01 12:00:00'", 2, 2, None),
+    ("SELECT * FROM iceberg.opteryx.two_snap_battery FOR '2020-01-01 00:00:00'", 0, 0, DatasetReadError),
+    ("SELECT * FROM iceberg.opteryx.two_snap_battery FOR '2100-01-01 00:00:00'", 3, 2, None),
+    ("SELECT COUNT(*) FROM iceberg.opteryx.two_snap_battery;", 1, 1, None),
+    ("SELECT later.id FROM iceberg.opteryx.two_snap_battery FOR '2022-01-01 12:00:00' AS later LEFT JOIN iceberg.opteryx.two_snap_battery FOR '2021-01-01 12:00:00' AS early ON later.id = early.id WHERE early.id IS NULL", 1, 1, None),
+    ("SELECT COUNT(*) FROM iceberg.opteryx.empty_battery;", 1, 1, None),
 ]
 
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
@@ -363,6 +386,9 @@ def test_iceberg_battery(statement, rows, columns, exception):
             raise Exception(
                 f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
             ) from err
+
+
+
 
 
 if __name__ == "__main__":  # pragma: no cover
