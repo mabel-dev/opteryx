@@ -8,13 +8,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 from tests import is_arm, is_mac, is_windows, skip_if
 from tests import set_up_iceberg
 import opteryx
-from opteryx.connectors import DiskConnector
 from opteryx.connectors import IcebergConnector
 from opteryx.compiled.structures.relation_statistics import to_int
-
-
-# this is how we get the raw list of files for the scan
-# print([task.file.file_path for task in self.table.scan().plan_files()])
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_iceberg_basic():
@@ -39,7 +34,6 @@ def test_iceberg_get_schema():
         "iceberg",
         IcebergConnector,
         catalog=catalog,
-        io=DiskConnector,
         remove_prefix=True,
     )
 
@@ -57,7 +51,6 @@ def test_iceberg_get_statistics_manual():
         "iceberg",
         IcebergConnector,
         catalog=catalog,
-        io=DiskConnector,
         remove_prefix=True,
     )
 
@@ -127,7 +120,6 @@ def test_iceberg_get_stats_tweets():
         "iceberg",
         IcebergConnector,
         catalog=catalog,
-        io=DiskConnector,
         remove_prefix=True,
     )
     connector = connector_factory("iceberg.opteryx.tweets", None)
@@ -157,7 +149,6 @@ def test_iceberg_get_stats_missions():
         "iceberg",
         IcebergConnector,
         catalog=catalog,
-        io=DiskConnector,
         remove_prefix=True,
     )
     connector = connector_factory("iceberg.opteryx.tweets", None)

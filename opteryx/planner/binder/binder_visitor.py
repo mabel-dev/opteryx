@@ -947,7 +947,7 @@ class BinderVisitor:
         from opteryx.connectors import connector_factory
         from opteryx.connectors.capabilities import Asynchronous
         from opteryx.connectors.capabilities import Cacheable
-        from opteryx.connectors.capabilities import Partitionable
+        from opteryx.connectors.capabilities import Diachronic
         from opteryx.connectors.capabilities import Statistics
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
@@ -969,7 +969,7 @@ class BinderVisitor:
 
         if hasattr(node.connector, "variables"):
             node.connector.variables = context.connection.variables
-        if Partitionable in connector_capabilities:
+        if Diachronic in connector_capabilities:
             node.connector.start_date = node.start_date
             node.connector.end_date = node.end_date
         if Cacheable in connector_capabilities and "NO_CACHE" not in (node.hints or []):
@@ -1031,7 +1031,7 @@ class BinderVisitor:
         node, context = self.visit_exit(node, context)
 
         # Extract the column names to check for duplicates
-        column_names = (n.schema_column.name for n in node.columns)
+        column_names = (n.current_name for n in node.columns)
         seen = set()
         duplicates = [name for name in column_names if name in seen or seen.add(name)]  # type: ignore
 

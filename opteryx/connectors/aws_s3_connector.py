@@ -20,7 +20,7 @@ from orso.types import OrsoTypes
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
-from opteryx.connectors.capabilities import Partitionable
+from opteryx.connectors.capabilities import Diachronic
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DataError
@@ -36,7 +36,7 @@ OS_SEP = os.sep
 
 
 class AwsS3Connector(
-    BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous, Statistics
+    BaseConnector, Cacheable, Diachronic, PredicatePushable, Asynchronous, Statistics
 ):
     __mode__ = "Blob"
     __type__ = "S3"
@@ -67,7 +67,7 @@ class AwsS3Connector(
             raise MissingDependencyError(err.name) from err
 
         BaseConnector.__init__(self, **kwargs)
-        Partitionable.__init__(self, **kwargs)
+        Diachronic.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
         Asynchronous.__init__(self, **kwargs)

@@ -77,8 +77,8 @@ def read(end_date=None, *args) -> pyarrow.Table:
         # April 26, 1781 - Uranus discovered by Sir William Herschel
         return full_set.take([0, 1, 2, 3, 4, 5])
     if end_date < datetime.datetime(1846, 11, 13):
-        # November 13, 1846 - Neptune
-        return full_set.take([0, 1, 2, 3, 4, 5, 7])
+        # November 13, 1846 - Neptune discovered, so only planets through Uranus exist
+        return full_set.take([0, 1, 2, 3, 4, 5, 6])
     if end_date < datetime.datetime(1930, 3, 13):
         # March 13, 1930 - Pluto discovered by Clyde William Tombaugh
         return full_set.take([0, 1, 2, 3, 4, 5, 6, 7])

@@ -23,8 +23,8 @@ from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import Diachronic
 from opteryx.connectors.capabilities import LimitPushable
-from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DataError
@@ -37,7 +37,7 @@ from opteryx.utils.file_decoders import get_decoder
 OS_SEP = os.sep
 
 
-class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushable, Statistics):
+class DiskConnector(BaseConnector, Diachronic, PredicatePushable, LimitPushable, Statistics):
     """
     Connector for reading datasets from files on local storage.
     """
@@ -75,7 +75,7 @@ class DiskConnector(BaseConnector, Partitionable, PredicatePushable, LimitPushab
                 Arbitrary keyword arguments.
         """
         BaseConnector.__init__(self, **kwargs)
-        Partitionable.__init__(self, **kwargs)
+        Diachronic.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
         Statistics.__init__(self, **kwargs)

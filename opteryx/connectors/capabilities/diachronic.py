@@ -7,7 +7,14 @@
 from opteryx.exceptions import InvalidConfigurationError
 
 
-class Partitionable:
+class Diachronic:
+    """Capability for connectors that support diachronic (time-travel) reads.
+
+    Historically this capability was named `Partitionable`; it stores a partition
+    scheme and optional start/end date attributes used by connectors to support
+    date-range reads and time-travel queries.
+    """
+
     partitioned = True
 
     def __init__(self, **kwargs):

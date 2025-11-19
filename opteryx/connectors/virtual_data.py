@@ -20,7 +20,7 @@ from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
-from opteryx.connectors.capabilities import Partitionable
+from opteryx.connectors.capabilities import Diachronic
 from opteryx.connectors.capabilities import Statistics
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.utils import arrow
@@ -66,13 +66,13 @@ def suggest(dataset):
         )
 
 
-class SampleDataConnector(BaseConnector, Partitionable, Statistics):
+class SampleDataConnector(BaseConnector, Diachronic, Statistics):
     __mode__ = "Internal"
     __type__ = "SAMPLE"
 
     def __init__(self, *args, **kwargs):
         BaseConnector.__init__(self, **kwargs)
-        Partitionable.__init__(self, **kwargs)
+        Diachronic.__init__(self, **kwargs)
         Statistics.__init__(self, **kwargs)
         self.dataset = self.dataset.lower()
         self.variables = None
