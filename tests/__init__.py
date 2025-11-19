@@ -747,6 +747,48 @@ def set_up_iceberg():
             needs_setup = True
 
     if not needs_setup:
+        # Ensure a pair of convenience test tables exist even if catalog is already
+        # initialized by a prior run. These are used in battery tests.
+        from pyiceberg.exceptions import NoSuchTableError as _NoSuchTableError
+        import pyarrow as _pa
+        from freezegun import freeze_time as _freeze_time
+
+        def _ensure_table_empty(identifier):
+            try:
+                catalog.load_table(identifier)
+            except _NoSuchTableError:
+                schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+                catalog.create_table(identifier, schema=schema)
+
+        def _ensure_single_snapshot(identifier):
+            try:
+                catalog.load_table(identifier)
+            except _NoSuchTableError:
+                schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+                table = catalog.create_table(identifier, schema=schema)
+                data = _pa.Table.from_arrays([_pa.array([1, 2, 3]), _pa.array(["a", "b", "c"])], schema=schema)
+                commit_time = datetime.datetime(2023, 1, 1, 12, 0, 0)
+                with _freeze_time(commit_time):
+                    table.append(data)
+
+        def _ensure_two_snapshots(identifier):
+            try:
+                catalog.load_table(identifier)
+            except _NoSuchTableError:
+                schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+                table = catalog.create_table(identifier, schema=schema)
+                data1 = _pa.Table.from_arrays([_pa.array([1, 2]), _pa.array(["a", "b"])], schema=schema)
+                commit_time1 = datetime.datetime(2021, 1, 1, 12, 0, 0)
+                with _freeze_time(commit_time1):
+                    table.append(data1)
+                data2 = _pa.Table.from_arrays([_pa.array([1, 2, 3]), _pa.array(["a", "b", "c"])], schema=schema)
+                commit_time2 = datetime.datetime(2022, 1, 1, 12, 0, 0)
+                with _freeze_time(commit_time2):
+                    table.overwrite(data2)
+
+        _ensure_table_empty("opteryx.empty_battery")
+        _ensure_single_snapshot("opteryx.single_snap_battery")
+        _ensure_two_snapshots("opteryx.two_snap_battery")
         return catalog
 
     with contextlib.suppress(NamespaceAlreadyExistsError):
@@ -829,5 +871,47 @@ def set_up_iceberg():
         assert iceberged.rowcount == expected_rows
         del iceberged  # Free memory immediately
 
+
+    # Create additional tables that tests rely on (empty and single snapshot)
+    from pyiceberg.exceptions import NoSuchTableError as _NoSuchTableError
+    import pyarrow as _pa
+    from freezegun import freeze_time as _freeze_time
+
+    def _ensure_table_empty(identifier):
+        try:
+            catalog.load_table(identifier)
+        except _NoSuchTableError:
+            schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+            catalog.create_table(identifier, schema=schema)
+
+    def _ensure_single_snapshot(identifier):
+        try:
+            catalog.load_table(identifier)
+        except _NoSuchTableError:
+            schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+            table = catalog.create_table(identifier, schema=schema)
+            data = _pa.Table.from_arrays([_pa.array([1, 2, 3]), _pa.array(["a", "b", "c"])], schema=schema)
+            commit_time = datetime.datetime(2023, 1, 1, 12, 0, 0)
+            with _freeze_time(commit_time):
+                table.append(data)
+
+    def _ensure_two_snapshots(identifier):
+        try:
+            catalog.load_table(identifier)
+        except _NoSuchTableError:
+            schema = _pa.schema([_pa.field("id", _pa.int64()), _pa.field("name", _pa.string())])
+            table = catalog.create_table(identifier, schema=schema)
+            data1 = _pa.Table.from_arrays([_pa.array([1, 2]), _pa.array(["a", "b"])], schema=schema)
+            commit_time1 = datetime.datetime(2021, 1, 1, 12, 0, 0)
+            with _freeze_time(commit_time1):
+                table.append(data1)
+            data2 = _pa.Table.from_arrays([_pa.array([1, 2, 3]), _pa.array(["a", "b", "c"])], schema=schema)
+            commit_time2 = datetime.datetime(2022, 1, 1, 12, 0, 0)
+            with _freeze_time(commit_time2):
+                table.overwrite(data2)
+
+    _ensure_table_empty("opteryx.empty_battery")
+    _ensure_single_snapshot("opteryx.single_snap_battery")
+    _ensure_two_snapshots("opteryx.two_snap_battery")
 
     return catalog

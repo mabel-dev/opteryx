@@ -154,7 +154,11 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
         try:
             self.table = catalog.load_table(self.dataset)
             self.snapshot = self.table.current_snapshot()
-            self.snapshot_id = self.snapshot.snapshot_id
+            # If the table exists but has no snapshots, we don't raise here —
+            # we allow non-time-travel reads to return an empty result set with
+            # a valid schema. For time-travel (start_date specified), we will
+            # still raise DatasetReadError in get_dataset_schema.
+            self.snapshot_id = None if self.snapshot is None else self.snapshot.snapshot_id
         except pyiceberg.exceptions.NoSuchTableError:
             raise DatasetNotFoundError(dataset=self.dataset, connector=self.__type__) from None
 
@@ -173,11 +177,19 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             if not snapshot_rows:
                 raise DatasetReadError("No data available for the specified date.")
 
-            # Honor dates before the first snapshot, reject dates beyond the newest snapshot
-            if self.start_date < snapshot_rows[0]["committed_at"]:
-                selected = snapshot_rows[0]
-            elif self.start_date > snapshot_rows[-1]["committed_at"]:
+            # Honor dates before the first snapshot by rejecting them, but treat
+            # dates after the latest snapshot as selecting the latest snapshot
+            first_committed = snapshot_rows[0]["committed_at"]
+            last_committed = snapshot_rows[-1]["committed_at"]
+
+            if self.start_date < first_committed:
+                # Point-in-time read is before our first snapshot — no data available then
                 raise DatasetReadError("No data available for the specified date.")
+            elif self.start_date > last_committed:
+                # Point-in-time read after the latest snapshot — return current data
+                selected = snapshot_rows[-1]
+                # ensure we store the commit time for statistics/context
+                self.statistics.dataset_committed_at = selected["committed_at"].isoformat()
             else:
                 selected = snapshot_rows[0]
                 for candidate in snapshot_rows:
@@ -190,7 +202,12 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             self.snapshot_id = selected["snapshot_id"]
             self.snapshot = self.table.snapshot_by_id(self.snapshot_id)
 
-        iceberg_schema = self.table.schemas()[self.snapshot.schema_id]
+        # If the table has no snapshot and the read is not time-travel, use
+        # the table's declared schema (from metadata) and return an empty result set.
+        if self.snapshot is None:
+            iceberg_schema = self.table.schema()
+        else:
+            iceberg_schema = self.table.schemas()[self.snapshot.schema_id]
         arrow_schema = iceberg_schema.as_arrow()
 
         self.schema = RelationSchema(
@@ -265,6 +282,23 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             limit=limit,
             snapshot_id=self.snapshot_id,
         ).to_arrow_batch_reader()
+
+        # If there are no snapshots (snapshot_id is None), return an empty morsel
+        if self.snapshot_id is None:
+            from orso.schema import RelationSchema
+            from orso.schema import convert_orso_schema_to_arrow_schema
+
+            orso_schema = RelationSchema(
+                name="Relation", columns=[c.schema_column for c in columns]
+            )
+            arrow_shema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
+
+            morsel = pyarrow.Table.from_arrays(
+                [pyarrow.array([]) for _ in columns],
+                schema=arrow_shema,
+            )
+            yield morsel
+            return
 
         batch = None
         for batch in reader:
