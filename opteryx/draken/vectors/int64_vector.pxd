@@ -40,3 +40,4 @@ cdef class Int64Vector(Vector):
     cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
 
 cdef Int64Vector from_arrow(object array)
+cdef Int64Vector from_sequence(int64_t[::1] data)

@@ -2,7 +2,7 @@
 
 # cython: language_level=3
 
-from libc.stdint cimport int32_t, int8_t, uint64_t
+from libc.stdint cimport int32_t, int8_t, uint8_t, uint64_t
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.vectors.vector cimport Vector
 
@@ -26,3 +26,4 @@ cdef class BoolVector(Vector):
     cpdef BoolVector xor_vector(self, BoolVector other)
 
 cdef BoolVector from_arrow(object array)
+cdef BoolVector from_sequence(uint8_t[::1] data)

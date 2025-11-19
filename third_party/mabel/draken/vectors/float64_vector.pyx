@@ -417,3 +417,32 @@ cdef Float64Vector from_arrow(object array):
         vec.ptr.null_bitmap = NULL
 
     return vec
+
+
+cdef Float64Vector from_sequence(double[::1] data):
+    """
+    Create Float64Vector from a typed double memoryview (zero-copy).
+    
+    Args:
+        data: double[::1] memoryview (C-contiguous)
+    
+    Returns:
+        Float64Vector wrapping the memoryview data
+    """
+    cdef Float64Vector vec = Float64Vector(0, True)
+    vec.ptr = <DrakenFixedBuffer*> malloc(sizeof(DrakenFixedBuffer))
+    if vec.ptr == NULL:
+        raise MemoryError()
+    vec.owns_data = False
+
+    # Keep reference to prevent GC
+    vec._arrow_data_buf = data.base if data.base is not None else data
+    vec._arrow_null_buf = None
+
+    vec.ptr.type = DRAKEN_FLOAT64
+    vec.ptr.itemsize = 8
+    vec.ptr.length = <size_t> data.shape[0]
+    vec.ptr.data = <void*> &data[0]
+    vec.ptr.null_bitmap = NULL
+
+    return vec

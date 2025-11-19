@@ -39,3 +39,4 @@ cdef class Float64Vector(Vector):
     cdef void hash_into(self, uint64_t[::1] out_buf, Py_ssize_t offset=*) except *
 
 cdef Float64Vector from_arrow(object array)
+cdef Float64Vector from_sequence(double[::1] data)
