@@ -60,7 +60,7 @@ class GCSKeyValueStore(BaseKeyValueStore):
         blob = self._bucket.blob(name)
         try:
             return blob.download_as_bytes()
-        except GoogleAPIError:
+        except (GoogleAPIError, KeyError):
             return None
 
     def set(self, key: bytes, value: bytes) -> None:
@@ -75,7 +75,7 @@ class GCSKeyValueStore(BaseKeyValueStore):
             try:
                 if blob.exists():
                     result.append(k)
-            except GoogleAPIError:
+            except (GoogleAPIError, KeyError):
                 continue
         return result
 
@@ -83,5 +83,5 @@ class GCSKeyValueStore(BaseKeyValueStore):
         blob = self._bucket.blob(self._object_name(key))
         try:
             blob.delete()
-        except GoogleAPIError:
+        except (GoogleAPIError, KeyError):
             pass

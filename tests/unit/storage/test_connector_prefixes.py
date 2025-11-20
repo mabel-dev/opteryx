@@ -14,7 +14,6 @@ from sqlalchemy.exc import OperationalError
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
 from opteryx.exceptions import DatasetNotFoundError, DatasetReadError
-from tests import is_linux
 
 register_store(
     "sqlite",
