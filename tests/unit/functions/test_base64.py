@@ -3,7 +3,7 @@ import sys
 import base64
 import pytest
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.third_party.alantsd.base64 import encode, decode
 
@@ -102,7 +102,8 @@ def test_base64_3_byte_block():
 def test_base64_non_multiple_of_three():
     for i in range(1, 100):
         data = b"x" * i
-        assert decode(encode(data)) == data
+        r = decode(encode(data))
+        assert r == data, f"Expected {data} but got {r}"
 
 # -------------------
 # HIGH BIT DATA
@@ -130,7 +131,7 @@ def test_base64_decode_accepts_only_bytes():
 
 def test_base64_decode_invalid_characters():
     r = decode(b"!@#$%^&*")
-    assert r == b""
+    assert r == b"", r
 
 def test_base64_decode_non_base64_byte():
     r = decode(b"Zm9vYmFy\xFF")  # invalid byte at end

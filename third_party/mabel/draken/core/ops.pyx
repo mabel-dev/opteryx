@@ -124,7 +124,7 @@ def get_operation_enum(op_name: str) -> int:
     return op_map[op_name.lower()]
 
 
-def get_op(left_type, left_is_scalar, right_type, right_is_scalar, operation):
+def py_get_op(left_type, left_is_scalar, right_type, right_is_scalar, operation):
     """
     Get operation function for the given type and scalarity combination.
 
@@ -151,18 +151,27 @@ def get_op(left_type, left_is_scalar, right_type, right_is_scalar, operation):
 
     Examples
     --------
-    >>> from draken.core.ops import get_op, TYPE_INT64
+    >>> from draken.core.ops import py_get_op, TYPE_INT64
     >>> # Using operation enum
-    >>> func = get_op(TYPE_INT64, False, TYPE_INT64, True, 10)  # 10 is OP_EQUALS
+    >>> func = py_get_op(TYPE_INT64, False, TYPE_INT64, True, 10)  # 10 is OP_EQUALS
     >>> print(func)  # None if not supported, function pointer otherwise
 
     >>> # Using operation name string
-    >>> func = get_op(TYPE_INT64, False, TYPE_INT64, True, 'equals')
+    >>> func = py_get_op(TYPE_INT64, False, TYPE_INT64, True, 'equals')
     >>> print(func)  # None if not supported, function pointer otherwise
     """
     # If operation is a string, convert it to enum
     if isinstance(operation, str):
         operation = get_operation_enum(operation)
+
+    # Call the dispatch function
+    return dispatch_op(
+        left_type,
+        left_is_scalar,
+        right_type,
+        right_is_scalar,
+        operation
+    )
 
     # Call the dispatch function
     return dispatch_op(

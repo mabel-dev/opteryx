@@ -1,88 +1,48 @@
+#ifndef BASE64_H
+#define BASE64_H
 
-/*
-<https://github.com/rafagafe/base64>
-     
-  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
-  SPDX-License-Identifier: MIT
-  Copyright (c) 2016-2018 Rafa Garcia <rafagarcia77@gmail.com>.
-  Permission is hereby  granted, free of charge, to any  person obtaining a copy
-  of this software and associated  documentation files (the "Software"), to deal
-  in the Software  without restriction, including without  limitation the rights
-  to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
-  copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
-  furnished to do so, subject to the following conditions:
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-  THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
-  IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
-  FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
-  AUTHORS  OR COPYRIGHT  HOLDERS  BE  LIABLE FOR  ANY  CLAIM,  DAMAGES OR  OTHER
-  LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
-    
-*/
-
-#ifndef _BASE64_H_
-#define	_BASE64_H_
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stddef.h>
+// Lookup tables (shared across implementations)
+extern const uint8_t B64_DECODE_LUT[256];
+extern const char B64_ENCODE_LUT[64];
 
-/** @defgroup base64 Base64 Converter.
-  * @{ */
-
-/** Get size required for encoding base64 null-terminated string.
-  * @param size Size in bytes of source binary memory block.
-  * @return A size of required for result of base64 encoding */  
-static inline int bintob64_size(int size)
-{
-   return ((size + 3 - 1) / 3 * 4);
-}
-/** Get size required for decoding base64 null-terminated string.
-  * @param size Size in bytes of source base64 memory block.
-  * @return A size of required for result of base64 decoding */
-static inline int b64tobin_size(int size)
-{
-   return (size * 3 / 4);
-}
-/** Convert a binary memory block in a base64 null-terminated string.
-  * @param dest Destination memory wher to put the base64 null-terminated string.
-  * @param src Source binary memory block.
-  * @param size Size in bytes of source binary memory block.
-  * @return A pointer to the null character of the base64 null-terminated string. */
-char* bintob64( char* dest, void const* src, size_t size );
-
-/** Convert a base64 string to binary format.
-  * @param dest Destination memory block.
-  * @param src Source base64 string.
-  * @return If success a pointer to the next byte in memory block.
-  *         Null if string has a bad format.  */
-void* b64tobin( void* dest, char const* src );
-
-/** Convert a base64 string to binary format.
-  * @param dest Destination memory block.
-  * @param src Source base64 string.
-  * @param len Length of the base64 string.
-  * @return If success a pointer to the next byte in memory block.
-  *         Null if string has a bad format.  */
+// Basic functions (with auto-dispatch)
+void* b64tobin(void* restrict dest, const char* restrict src);
 void* b64tobin_len(void* restrict dest, const char* restrict src, size_t len);
+char* bintob64(char* dest, const void* src, size_t size);
 
-/** Convert a base64 string to binary format.
-  * @param p Source base64 string and destination memory block.
-  * @return If success a pointer to the next byte in memory block.
-  *         Null if string has a bad format.  */
-static inline void* b64decode( void* p ) {
-    return b64tobin( p, (char*)p );
-}
+// Optimized versions (for direct use if needed)
+void* b64tobin_scalar(void* restrict dest, const char* restrict src, size_t len);
+void* b64tobin_neon(void* restrict dest, const char* restrict src, size_t len);
+void* b64tobin_avx2(void* restrict dest, const char* restrict src, size_t len);
 
-/** @ } */
+char* bintob64_scalar(char* restrict dest, const void* restrict src, size_t size);
+char* bintob64_neon(char* restrict dest, const void* restrict src, size_t size);
+char* bintob64_avx2(char* restrict dest, const void* restrict src, size_t size);
+
+// Utility functions
+size_t b64_encoded_size(size_t bin_size);
+size_t b64_decoded_size(size_t b64_len);
+
+// CPU feature detection
+typedef struct {
+    int neon;
+    int avx2;
+} b64_cpu_features;
+
+b64_cpu_features b64_detect_cpu_features(void);
+void b64_force_scalar(void);  // Force scalar implementation
+int b64_has_neon(void);  // Check if NEON is available
+int b64_has_avx2(void);  // Check if AVX2 is available
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* _BASE64_H_ */
+#endif /* BASE64_H */
