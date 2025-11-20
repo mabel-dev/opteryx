@@ -27,8 +27,28 @@ from libc.string cimport strlen
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 
+from opteryx.draken.core.buffers cimport (
+    DrakenMorsel,
+    DrakenType,
+    DRAKEN_ARRAY,
+    DRAKEN_BOOL,
+    DRAKEN_DATE32,
+    DRAKEN_FLOAT32,
+    DRAKEN_FLOAT64,
+    DRAKEN_INT16,
+    DRAKEN_INT32,
+    DRAKEN_INT64,
+    DRAKEN_INT8,
+    DRAKEN_INTERVAL,
+    DRAKEN_NON_NATIVE,
+    DRAKEN_STRING,
+    DRAKEN_TIME32,
+    DRAKEN_TIME64,
+    DRAKEN_TIMESTAMP64,
+)
 from opteryx.draken.vectors.vector cimport Vector
-from opteryx.draken.core.buffers cimport DrakenType, DrakenMorsel
+from opteryx.draken.interop.arrow cimport vector_from_arrow
+import pyarrow as pa
 
 # Python helper: int subclass for DrakenType enum debugging
 cdef class DrakenTypeInt(int):
@@ -311,6 +331,82 @@ cdef class Morsel:
                 out.append(None)
         return tuple(out)
 
+    def slice(self, Py_ssize_t offset, Py_ssize_t length):
+        """
+        Return a new Morsel representing rows [offset: offset+length).
+        This is implemented as a small, zero-copy (where underlying vectors
+        support take) or minimal-copy operation where necessary by leveraging
+        each Vector's take() method.
+        """
+        cdef Morsel result
+        cdef int i, n_columns = self.ptr.num_columns
+        cdef Py_ssize_t start = offset
+        cdef Py_ssize_t ln = length
+        cdef Vector vec
+        cdef object new_vec
+        
+        if ln <= 0 or start >= self.ptr.num_rows:
+            # return an empty morsel of the same schema
+            result = self._full_copy()
+            result._empty_inplace()
+            return result
+
+        # clamp length to available rows
+        if start + ln > self.ptr.num_rows:
+            ln = self.ptr.num_rows - start
+
+        # Build an indices buffer for take (C array -> memoryview)
+        cdef int32_t* indices_ptr = <int32_t*> PyMem_Malloc(ln * sizeof(int32_t))
+        if indices_ptr == NULL:
+            raise MemoryError()
+        cdef int32_t[::1] indices_view
+        try:
+            for i in range(ln):
+                indices_ptr[i] = <int32_t>(start + i)
+            indices_view = <int32_t[:ln]>indices_ptr
+
+            # Build the new morsel
+            result = Morsel()
+            result._columns = [None] * n_columns
+            result._encoded_names = [None] * n_columns
+            result.ptr = <DrakenMorsel*> PyMem_Malloc(sizeof(DrakenMorsel))
+            if result.ptr == NULL:
+                raise MemoryError()
+            result.ptr.num_columns = n_columns
+            result.ptr.num_rows = ln
+            result.ptr.columns = <void**> PyMem_Malloc(sizeof(void*) * n_columns)
+            result.ptr.column_names = <const char**> PyMem_Malloc(sizeof(const char*) * n_columns)
+            result.ptr.column_types = <DrakenType*> PyMem_Malloc(sizeof(DrakenType) * n_columns)
+
+            for i in range(n_columns):
+                vec = <Vector> self.ptr.columns[i]
+                # Attempt to use vector.take(indices_view) when available
+                try:
+                    new_vec = vec.take(indices_view)
+                except (AttributeError, TypeError):
+                    # Fallback: try passing a python list of indices to take (some vector
+                    # implementations accept python lists). Avoid converting to Arrow.
+                    try:
+                        py_indices = [<int>(start + j) for j in range(ln)]
+                        new_vec = vec.take(py_indices)
+                    except Exception:
+                        # Last resort: convert via Arrow slice (preserves data correctly)
+                        import pyarrow as pa
+                        arrow_array = vec.to_arrow()
+                        sliced_arrow = arrow_array.slice(start, ln)
+                        new_vec = vector_from_arrow(sliced_arrow)
+
+                result._columns[i] = new_vec
+                result._encoded_names[i] = self._encoded_names[i]
+                result.ptr.columns[i] = <void*> new_vec
+                result.ptr.column_types[i] = new_vec.dtype
+                result.ptr.column_names[i] = <const char*> self.ptr.column_names[i]
+
+            result._rebuild_name_to_index()
+            return result
+        finally:
+            PyMem_Free(indices_ptr)
+
     def __repr__(self) -> str:
         return f"<Morsel: {self.ptr.num_rows} rows x {self.ptr.num_columns} columns>"
 
@@ -462,32 +558,130 @@ cdef class Morsel:
 
         for i in range(n_columns):
             src_vec = <Vector>self.ptr.columns[i]
-            # Construct an empty vector of the same concrete class by calling
-            # its constructor with length 0. Most vector implementations
-            # support a zero-length constructor.
-            try:
-                dst_vec = src_vec.__class__(<size_t>0)
-            except Exception:
-                # Fall back to creating an empty Arrow array of the same
-                # type and converting it back to a Draken Vector. This
-                # preserves the concrete vector type/semantics and avoids
-                # low-level NULL-pointer memoryview edge-cases.
-                try:
-                    import pyarrow as pa
-                    arr = src_vec.to_arrow()
-                    empty_arr = arr.slice(0, 0)
-                    dst_vec = Vector.from_arrow(empty_arr)
-                except Exception:
-                    # As a last-resort fallback, use take with an empty
-                    # Python sequence. This may be slightly slower but is
-                    # safe for most vector implementations.
-                    dst_vec = src_vec.take([])
+            dst_vec = self._empty_vector_like(i, src_vec)
 
             self._columns[i] = dst_vec
             self.ptr.columns[i] = <void*>dst_vec
 
         # Ensure num_rows is zero
         self.ptr.num_rows = 0
+
+    cdef Vector _empty_vector_like(self, Py_ssize_t column_index, Vector src_vec):
+        """Create an empty vector that preserves the source vector's type."""
+        cdef DrakenType expected = self.ptr.column_types[column_index]
+        cdef Vector candidate
+        cdef object arrow_array
+
+        # First try to instantiate the vector class directly. Prefer this
+        # path to avoid round-tripping through Arrow.
+        try:
+            candidate = src_vec.__class__(<size_t>0)
+            if candidate is not None and self._vector_dtype_matches(candidate, expected):
+                return candidate
+        except Exception:
+            candidate = None
+
+        # Next, attempt to go through Arrow using the existing column data.
+        try:
+            arrow_array = src_vec.to_arrow()
+            arrow_array = arrow_array.slice(0, 0)
+            return <Vector>Vector.from_arrow(arrow_array)
+        except Exception:
+            arrow_array = None
+
+        # Finally, synthesize an empty Arrow array from the stored type
+        # metadata. This handles vector implementations that cannot expose
+        # Arrow data (for example partially initialized ArrayVectors).
+        arrow_array = self._empty_arrow_array_for_type(expected, src_vec)
+        if arrow_array is not None:
+            return <Vector>Vector.from_arrow(arrow_array)
+
+        cdef int expected_code = <int>expected
+        raise RuntimeError(
+            f"Unable to create empty vector for column {int(column_index)} "
+            f"(DrakenType {expected_code})"
+        )
+
+    cdef bint _vector_dtype_matches(self, Vector vector, DrakenType expected):
+        """Best-effort check that a vector reports the requested dtype."""
+
+        try:
+            return vector.dtype == expected
+        except Exception:
+            # If the vector does not expose dtype, accept it. Downstream
+            # consumers (hashing/to_arrow) will validate behavior.
+            return True
+
+    cdef object _empty_arrow_array_for_type(self, DrakenType dtype, Vector src_vec):
+        """Return a zero-length Arrow array for the requested Draken type."""
+        cdef object arrow_type = self._arrow_type_for_draken(dtype, src_vec)
+        if arrow_type is None:
+            return None
+        return pa.array([], type=arrow_type)
+
+    cdef object _arrow_type_for_draken(self, DrakenType dtype, Vector src_vec):
+        """Map Draken types to PyArrow DataTypes for empty vector creation."""
+        cdef DrakenType child_dtype_val
+        cdef int child_dtype_int
+        cdef object child_type
+        cdef object child_dtype_obj
+
+        if dtype == DRAKEN_INT8:
+            return pa.int8()
+        if dtype == DRAKEN_INT16:
+            return pa.int16()
+        if dtype == DRAKEN_INT32:
+            return pa.int32()
+        if dtype == DRAKEN_INT64:
+            return pa.int64()
+        if dtype == DRAKEN_FLOAT32:
+            return pa.float32()
+        if dtype == DRAKEN_FLOAT64:
+            return pa.float64()
+        if dtype == DRAKEN_DATE32:
+            return pa.date32()
+        if dtype == DRAKEN_TIMESTAMP64:
+            return pa.timestamp("us")
+        if dtype == DRAKEN_TIME32:
+            return pa.time32("s")
+        if dtype == DRAKEN_TIME64:
+            return pa.time64("us")
+        if dtype == DRAKEN_INTERVAL:
+            return pa.month_day_nano_interval()
+        if dtype == DRAKEN_BOOL:
+            return pa.bool_()
+        if dtype == DRAKEN_STRING:
+            return pa.binary()
+        if dtype == DRAKEN_ARRAY:
+            child_type = None
+            child_dtype_obj = None
+
+            try:
+                child_dtype_obj = getattr(src_vec, "child_dtype", None)
+            except Exception:
+                child_dtype_obj = None
+
+            if child_dtype_obj is not None:
+                try:
+                    child_dtype_int = int(child_dtype_obj)
+                    child_dtype_val = <DrakenType> child_dtype_int
+                    if child_dtype_val != DRAKEN_NON_NATIVE:
+                        child_type = self._arrow_type_for_draken(child_dtype_val, src_vec)
+                except Exception:
+                    child_type = None
+
+            if child_type is None:
+                child_type = pa.null()
+            return pa.list_(child_type)
+
+        if dtype == DRAKEN_NON_NATIVE:
+            try:
+                arr = src_vec.to_arrow()
+                return arr.type
+            except Exception:
+                return None
+
+        return None
 
     def select(self, columns) -> Morsel:
         """

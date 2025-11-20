@@ -358,3 +358,37 @@ cdef BoolVector from_arrow(object array):
         vec.ptr.null_bitmap = NULL
 
     return vec
+
+
+cdef BoolVector from_sequence(uint8_t[::1] data):
+    """
+    Create BoolVector from a typed uint8 memoryview (zero-copy, bit-packed).
+    
+    Args:
+        data: uint8_t[::1] memoryview (C-contiguous, bit-packed: 8 bools per byte)
+    
+    Returns:
+        BoolVector wrapping the memoryview data
+    
+    Note:
+        Input data should be bit-packed (8 boolean values per byte).
+        The length will be inferred as data.shape[0] * 8.
+    """
+    cdef BoolVector vec = BoolVector(0, True)
+    vec.ptr = <DrakenFixedBuffer*> malloc(sizeof(DrakenFixedBuffer))
+    if vec.ptr == NULL:
+        raise MemoryError()
+    vec.owns_data = False
+
+    # Keep reference to prevent GC
+    vec._arrow_data_buf = data.base if data.base is not None else data
+    vec._arrow_null_buf = None
+
+    vec.ptr.type = DRAKEN_BOOL
+    vec.ptr.itemsize = 1
+    # Bit-packed: 8 booleans per byte
+    vec.ptr.length = <size_t> (data.shape[0] * 8)
+    vec.ptr.data = <void*> &data[0]
+    vec.ptr.null_bitmap = NULL
+
+    return vec

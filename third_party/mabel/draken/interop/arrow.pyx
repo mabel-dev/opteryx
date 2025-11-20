@@ -19,6 +19,7 @@ Used to enable efficient interchange between Draken and Apache Arrow for analyti
 
 from libc.stdlib cimport free
 from libc.stdlib cimport malloc
+from libc.stdint cimport int64_t, uint8_t
 
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DrakenType
@@ -42,6 +43,12 @@ from opteryx.draken.vectors.interval_vector cimport (
 from opteryx.draken.vectors.array_vector cimport from_arrow as array_from_arrow
 
 from opteryx.draken.vectors.arrow_vector import from_arrow as arrow_from_arrow
+from opteryx.draken.vectors.int64_vector cimport Int64Vector
+from opteryx.draken.vectors.int64_vector cimport from_sequence as int64_from_sequence
+from opteryx.draken.vectors.float64_vector cimport Float64Vector
+from opteryx.draken.vectors.float64_vector cimport from_sequence as float64_from_sequence
+from opteryx.draken.vectors.bool_vector cimport BoolVector
+from opteryx.draken.vectors.bool_vector cimport from_sequence as bool_from_sequence
 
 cdef void release_arrow_array(ArrowArray* arr) noexcept:
     free(<void*>arr.buffers)
@@ -119,6 +126,57 @@ cpdef object vector_from_arrow(object array):
 
     # fall back implementation (just wrap pyarrow compute)
     return arrow_from_arrow(array)
+
+
+cpdef object vector_from_sequence(object data, object dtype=None):
+    """
+    Create a Draken Vector from a typed memoryview or Python sequence.
+    
+    For fixed-width numeric/boolean types, accepts typed memoryviews for zero-copy wrapping.
+    Falls back to Arrow conversion for other types (including varchar/varbinary).
+    
+    Args:
+        data: int64[::1], double[::1], uint8[::1] (bool), or Python sequence
+        dtype: Optional type hint (for future use)
+    
+    Returns:
+        Vector: Appropriate Draken Vector subclass
+    
+    Note:
+        For varchar/varbinary types, use pa.array() + vector_from_arrow() instead.
+        This function is optimized for fixed-width numeric types only.
+    """
+    cdef int64_t[::1] int64_view
+    cdef double[::1] float64_view
+    cdef uint8_t[::1] bool_view
+    import pyarrow as pa
+    
+    # Check if it's a typed memoryview by attempting casts
+    try:
+        # Try int64 memoryview
+        int64_view = data
+        return int64_from_sequence(int64_view)
+    except (TypeError, ValueError):
+        pass
+    
+    try:
+        # Try float64 memoryview
+        float64_view = data
+        return float64_from_sequence(float64_view)
+    except (TypeError, ValueError):
+        pass
+    
+    try:
+        # Try bool/uint8 memoryview
+        bool_view = data
+        return bool_from_sequence(bool_view)
+    except (TypeError, ValueError):
+        pass
+    
+    # Fallback: convert to Arrow then to Vector
+    # This handles varchar, varbinary, and other complex types
+    arrow_array = pa.array(data)
+    return vector_from_arrow(arrow_array)
 
 
 cpdef DrakenType arrow_type_to_draken(object dtype):

@@ -532,3 +532,32 @@ cdef Int64Vector from_arrow(object array):
         vec.ptr.null_bitmap = NULL
 
     return vec
+
+
+cdef Int64Vector from_sequence(int64_t[::1] data):
+    """
+    Create Int64Vector from a typed int64 memoryview (zero-copy).
+    
+    Args:
+        data: int64_t[::1] memoryview (C-contiguous)
+    
+    Returns:
+        Int64Vector wrapping the memoryview data
+    """
+    cdef Int64Vector vec = Int64Vector(0, True)   # wrap=True: no alloc
+    vec.ptr = <DrakenFixedBuffer*> malloc(sizeof(DrakenFixedBuffer))
+    if vec.ptr == NULL:
+        raise MemoryError()
+    vec.owns_data = False
+
+    # Keep reference to prevent GC
+    vec._arrow_data_buf = data.base if data.base is not None else data
+    vec._arrow_null_buf = None
+
+    vec.ptr.type = DRAKEN_INT64
+    vec.ptr.itemsize = 8
+    vec.ptr.length = <size_t> data.shape[0]
+    vec.ptr.data = <void*> &data[0]
+    vec.ptr.null_bitmap = NULL
+
+    return vec
