@@ -171,7 +171,7 @@ class TestGetOpFunction:
     
     def test_get_op_with_string_operation(self):
         """Test get_op with string operation name."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         # Should work with string operation name
         result = get_op(TYPE_INT64, False, TYPE_INT64, True, 'equals')
@@ -179,7 +179,7 @@ class TestGetOpFunction:
     
     def test_get_op_with_enum_operation(self):
         """Test get_op with enum operation."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         # Should work with enum value
         equals_op = get_operation_enum('equals')
@@ -188,14 +188,14 @@ class TestGetOpFunction:
     
     def test_get_op_with_invalid_string(self):
         """Test get_op with invalid string raises error."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         with pytest.raises(ValueError, match="Unknown operation"):
             get_op(TYPE_INT64, False, TYPE_INT64, True, 'invalid_op')
     
     def test_get_op_all_operation_types(self):
         """Test get_op with all operation types."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         # Test various operations
         operations = ['add', 'subtract', 'multiply', 'divide', 
@@ -213,7 +213,7 @@ class TestDispatchVectorVectorComparisons:
     
     def test_dispatch_vector_vector_int64_comparisons(self):
         """Test dispatcher recognizes Int64Vector-Int64Vector comparisons as valid."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         # Test all comparison operations for vector-vector Int64
         operations = ['equals', 'not_equals', 'greater_than', 
@@ -228,7 +228,7 @@ class TestDispatchVectorVectorComparisons:
     
     def test_dispatch_vector_vector_float64_comparisons(self):
         """Test dispatcher recognizes Float64Vector-Float64Vector comparisons as valid."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         # Test all comparison operations for vector-vector Float64
         operations = ['equals', 'not_equals', 'greater_than', 
@@ -243,7 +243,7 @@ class TestDispatchVectorVectorComparisons:
     
     def test_dispatch_vector_scalar_comparisons(self):
         """Test dispatcher recognizes vector-scalar comparisons as valid."""
-        from opteryx.draken.core.ops import get_op
+        from opteryx.draken.core.ops import py_get_op as get_op
         
         operations = ['equals', 'not_equals', 'greater_than', 
                      'greater_than_or_equals', 'less_than', 'less_than_or_equals']

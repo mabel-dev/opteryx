@@ -9,7 +9,7 @@
 from libc.stdlib cimport malloc, free
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
-from opteryx.third_party.alantsd.base64 cimport b64tobin_len, bintob64
+from opteryx.third_party.alantsd.base64 cimport b64tobin_len, bintob64, b64_has_neon, b64_has_avx2
 
 cdef inline size_t calc_encoded_size(size_t length):
     """Base64-encoded output length (without newlines)."""
@@ -53,3 +53,13 @@ cpdef bytes decode(bytes data):
         return b""
 
     return result[:end_ptr - outbuf]
+
+
+cpdef bint has_neon():
+    """Check if NEON SIMD is available."""
+    return b64_has_neon() != 0
+
+
+cpdef bint has_avx2():
+    """Check if AVX2 SIMD is available."""
+    return b64_has_avx2() != 0

@@ -316,7 +316,13 @@ if SHOULD_BUILD_EXTENSIONS:
         ),
         Extension(
             name="opteryx.third_party.alantsd.base64",
-            sources=["opteryx/third_party/alantsd/base64.pyx", "third_party/alantsd/base64.c"],
+            sources=[
+                "opteryx/third_party/alantsd/base64.pyx",
+                "third_party/alantsd/base64.c",
+                "third_party/alantsd/base64_dispatch.c",
+                "third_party/alantsd/base64_neon.c",
+                "third_party/alantsd/base64_axv2.c"
+            ],
             include_dirs=include_dirs + ["third_party/alantsd"],
             extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],
             extra_link_args=["-Lthird_party/alantsd"],

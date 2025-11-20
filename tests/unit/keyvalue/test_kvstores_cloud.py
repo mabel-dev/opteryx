@@ -131,3 +131,55 @@ def test_gcs_kv_store_with_fake_client():
         del sys.modules["google.cloud.storage"]
         del sys.modules["google.cloud"]
         del sys.modules["google"]
+
+
+def test_s3_kv_store_with_fake_client_and_s3error_class():
+    # ensure that KeyError('NotFound') is treated like a not-found error even
+    # if the minio package (and S3Error class) are present in the environment
+    fake_minio = type("minio", (), {})()
+    fake_client = FakeS3Client()
+    fake_minio.Minio = lambda endpoint, access_key, secret_key, secure=True: fake_client
+    fake_error = type("minio.error", (), {})()
+    class S3Err(Exception):
+        pass
+    fake_error.S3Error = S3Err
+    sys.modules["minio"] = fake_minio
+    sys.modules["minio.error"] = fake_error
+    try:
+        store = create_kv_store("s3://mybucket/pfx", S3_END_POINT="minio", S3_ACCESS_KEY="a", S3_SECRET_KEY="b")
+        key = b"0x1"
+        assert store.get(key) is None
+    finally:
+        del sys.modules["minio.error"]
+        del sys.modules["minio"]
+
+
+def test_gcs_kv_store_with_fake_client_and_googleapierror_class():
+    # ensure KeyError('NotFound') is treated as not-found even if the
+    # google.api_core.exceptions.GoogleAPIError class is present in the env
+    fake_pkg = type("google", (), {})()
+    fake_cloud = type("cloud", (), {})()
+    fake_storage = type("storage", (), {})()
+    def client_factory():
+        return FakeGCSClient()
+    fake_storage.Client = client_factory
+    fake_cloud.storage = fake_storage
+    fake_pkg.cloud = fake_cloud
+    sys.modules["google"] = fake_pkg
+    sys.modules["google.cloud"] = fake_cloud
+    sys.modules["google.cloud.storage"] = fake_storage
+    # now create a fake google.api_core.exceptions module
+    fake_exceptions = type("google.api_core.exceptions", (), {})()
+    class GoogleErr(Exception):
+        pass
+    fake_exceptions.GoogleAPIError = GoogleErr
+    sys.modules["google.api_core.exceptions"] = fake_exceptions
+    try:
+        store = create_kv_store("gs://bucket/pfx")
+        key = b"0x1"
+        assert store.get(key) is None
+    finally:
+        del sys.modules["google.api_core.exceptions"]
+        del sys.modules["google.cloud.storage"]
+        del sys.modules["google.cloud"]
+        del sys.modules["google"]

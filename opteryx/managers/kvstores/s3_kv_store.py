@@ -81,7 +81,7 @@ class S3KeyValueStore(BaseKeyValueStore):
             finally:
                 with contextlib.suppress(Exception):
                     stream.close()
-        except S3Error:
+        except (S3Error, KeyError):
             return None
 
     def set(self, key: bytes, value: bytes) -> None:
@@ -95,10 +95,10 @@ class S3KeyValueStore(BaseKeyValueStore):
             try:
                 self._client.stat_object(self._bucket, self._object_key(k))
                 result.append(k)
-            except S3Error:
+            except (S3Error, KeyError):
                 continue
         return result
 
     def delete(self, key: bytes) -> None:
-        with contextlib.suppress(S3Error):
+        with contextlib.suppress(S3Error, KeyError):
             self._client.remove_object(self._bucket, self._object_key(key))
