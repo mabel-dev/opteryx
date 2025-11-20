@@ -182,8 +182,8 @@ def sql_parts(string):
                 parts.append(f"CAST({part[1:]} AS VARBINARY)")
                 # if there's no alias, we should add one to preserve the input
                 if len(quoted_strings) > i + 1 and quoted_strings[i + 1].upper().strip()[:3] != "AS ":
-                    parts.append("AS")
-                    parts.append(f"`{part}`")
+                    parts.append(" AS ")
+                    parts.append(f"`{part}` ")
             elif part[0] in ("r", "R"):
                 # We take the raw string and encode it, pass it into the
                 # plan as the encoded string and let the engine decode it
@@ -193,8 +193,8 @@ def sql_parts(string):
                 # if there's no alias, we should add one to preserve the input
                 parts.append(f"BASE64_DECODE('{encoded_part}')")
                 if len(quoted_strings) > i + 1 and quoted_strings[i + 1].upper().strip()[:3] != "AS ":
-                    parts.append("AS")
-                    parts.append(f"`{part}`")
+                    parts.append(" AS ")
+                    parts.append(f"`{part}` ")
             else:
                 parts.append(part)
         else:
