@@ -228,7 +228,7 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
             _map = mmap.mmap(file_descriptor, size, access=mmap.ACCESS_READ)
             self.schema = self.decoder(_map, just_schema=True)
             self.relation_statistics = self.decoder(_map, just_statistics=True)
-            
+
             # Aggregate statistics from all other files
             for file_path in self.files[1:]:
                 try:
@@ -240,10 +240,10 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
                         self.relation_statistics.merge(stats)
                     file_map.close()
                     os.close(fd)
-                except Exception:
+                except (OSError, IOError):
                     # If we can't read statistics from a file, skip it
                     pass
-            
+
             return self.schema
         finally:
             os.close(file_descriptor)
