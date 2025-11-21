@@ -7,7 +7,10 @@ use sqlparser::parser::Parser;
 // no PyDict needed when we accept a single Authorization string
 
 mod opteryx_dialect;
+mod temporal_parser;
+
 pub use opteryx_dialect::OpteryxDialect;
+pub use temporal_parser::{extract_temporal_for_clauses, TemporalExtractionResult, TemporalFilter};
 
 /// Convert Python-style backreferences (\1, \2, etc.) to Rust-style ($1, $2, etc.)
 fn convert_python_to_rust_backrefs(replacement: &str) -> String {
@@ -65,6 +68,23 @@ fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<Py<PyAny>> {
     Ok(output.into())
 }
 
+/// Extract temporal FOR clauses from SQL.
+/// Returns a dictionary with 'clean_sql' (SQL with FOR clauses removed) 
+/// and 'filters' (list of temporal filter information).
+/// 
+/// **Note**: This is a proof-of-concept. The Python implementation in
+/// sql_rewriter.py remains the production version.
+#[pyfunction]
+#[pyo3(text_signature = "(sql)")]
+fn extract_temporal_filters(py: Python, sql: String) -> PyResult<Py<PyAny>> {
+    let result = extract_temporal_for_clauses(&sql);
+    let pythonized = pythonize(py, &result).map_err(|e| {
+        let msg = e.to_string();
+        PyValueError::new_err(format!("Serialization failed.\n\t{msg}"))
+    })?;
+    Ok(pythonized.into())
+}
+
 /// Fast regex replacement using Rust's regex crate.
 /// 
 /// This function performs regex replacement on arrays of strings or bytes,
@@ -94,6 +114,7 @@ fn regex_replace_rust(
 #[pymodule]
 fn compute(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_sql, m)?)?;
+    m.add_function(wrap_pyfunction!(extract_temporal_filters, m)?)?;
     // `regex_replace_rust` is currently kept internal (not exposed)
     // to reduce PyO3 surface area during the IO PoC iteration.
     Ok(())
