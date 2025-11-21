@@ -128,7 +128,30 @@ AVX512 code is only compiled when the compiler supports it, ensuring backward co
 
 ## Future Optimization Opportunities
 
-### 1. ARM SVE/SVE2 Support
+### Category A: Extending Existing SIMD Usage
+
+These opportunities involve adding AVX512/wider SIMD support to operations already using some SIMD:
+
+#### 1. Advanced AVX512 Instructions
+
+**Current**: Using basic AVX512F + AVX512BW
+**Opportunities**:
+- AVX512VBMI2 for advanced string operations
+- AVX512BITALG for bit manipulation
+- AVX512VPOPCNTDQ for faster popcount
+
+**Implementation Complexity**: Low-Medium
+**Expected Performance Gain**: 10-20% for specific operations
+
+#### 2. Optimized Base64 AVX512 Implementation
+
+**Current**: Placeholder implementation falls back to scalar
+**Opportunity**: Full vectorized base64 encode/decode
+
+**Implementation Complexity**: High
+**Expected Performance Gain**: 2-3x for base64 operations
+
+#### 3. ARM SVE/SVE2 Support
 
 **Target**: Modern ARM servers (AWS Graviton 3+, Ampere Altra)
 
@@ -140,32 +163,105 @@ AVX512 code is only compiled when the compiler supports it, ensuring backward co
 **Implementation Complexity**: Medium
 **Expected Performance Gain**: 1.5-2x on SVE2-capable ARM processors
 
-### 2. Advanced AVX512 Instructions
+### Category B: New SIMD Opportunities
 
-**Current**: Using basic AVX512F + AVX512BW
-**Opportunities**:
-- AVX512VBMI2 for advanced string operations
-- AVX512BITALG for bit manipulation
-- AVX512VPOPCNTDQ for faster popcount
+These are operations that currently don't use SIMD but could benefit significantly:
 
-**Implementation Complexity**: Low-Medium
-**Expected Performance Gain**: 10-20% for specific operations
+#### 4. String Case Conversion ✨ NEW
 
-### 3. Optimized Base64 AVX512 Implementation
+**Current**: Character-by-character conversion in Python/Cython
+**Opportunity**: SIMD case conversion for ASCII strings
+**Location**: `src/cpp/simd_string_ops.cpp` (implemented)
 
-**Current**: Placeholder implementation falls back to scalar
-**Opportunity**: Full vectorized base64 encode/decode
+**Implementation**: 
+- AVX512: Processes 64 characters at once
+- AVX2: Processes 32 characters at once
+- Uses masked operations to selectively convert only alphabetic characters
 
-**Implementation Complexity**: High
-**Expected Performance Gain**: 2-3x for base64 operations
+**Implementation Complexity**: Low (completed)
+**Expected Performance Gain**: 5-8x for UPPER/LOWER operations on ASCII strings
 
-### 4. SIMD String Comparison
+#### 5. Array Comparison Operations (HIGH PRIORITY)
 
-**Current**: Mostly scalar string operations
-**Opportunity**: Vectorized string comparison for LIKE, regex
+**Current**: Scalar comparison loops with memcmp in `opteryx/compiled/list_ops/`
+**Opportunity**: SIMD batch comparisons for ANY/ALL array operators
+
+**Example Operations**:
+- `list_anyop_eq` - Check if value equals any element in array
+- `list_allop_eq` - Check if value equals all elements in array
+- Similar for inequality, greater than, less than
+
+**Implementation Complexity**: Medium
+**Expected Performance Gain**: 3-4x for array predicate operations
+
+#### 6. Bitwise Mask Operations
+
+**Current**: Boolean mask operations done element-wise
+**Opportunity**: Bulk AND/OR/XOR operations on boolean masks
+
+**Use Cases**:
+- Combining multiple filter conditions
+- Bitmap indexes
+- Null handling
+
+**Implementation Complexity**: Low
+**Expected Performance Gain**: 4-8x for filter combination operations
+
+#### 7. IP Address Operations
+
+**Current**: Scalar IP parsing and CIDR matching in `list_ip_in_cidr.pyx`
+**Opportunity**: 
+- SIMD parsing of IP addresses (parallel string-to-int)
+- Vectorized subnet mask application
 
 **Implementation Complexity**: Medium-High
-**Expected Performance Gain**: 2-4x for string-heavy queries
+**Expected Performance Gain**: 4-5x for IP filtering queries
+
+#### 8. Numeric Aggregations on Nullable Data
+
+**Current**: Using NumPy (which has SIMD but doesn't optimize nullable columns well)
+**Opportunity**: Custom SIMD reductions with proper null handling
+
+**Operations**: SUM, MIN, MAX, AVG on nullable columns
+
+**Implementation Complexity**: Medium
+**Expected Performance Gain**: 2-3x for aggregations on nullable data
+
+#### 9. Date/Time Arithmetic
+
+**Current**: Scalar date calculations in `compiled/functions/timestamp.pyx`
+**Opportunity**:
+- Vectorized date addition/subtraction
+- Batch timezone conversions
+
+**Implementation Complexity**: Medium
+**Expected Performance Gain**: 2-4x for date-heavy queries
+
+#### 10. Binary-to-Hex Conversion
+
+**Current**: Scalar byte-to-hex conversion
+**Opportunity**: SIMD parallel nibble extraction and lookup
+
+**Implementation Complexity**: Low-Medium
+**Expected Performance Gain**: 3-4x for binary display operations
+
+## Priority Implementation Order
+
+**High Priority (Immediate Impact)**:
+1. ✅ String case conversion (UPPER/LOWER) - Completed
+2. Array comparison operations (ANY/ALL) - Most common use case
+3. Bitwise mask operations - Fundamental building block
+
+**Medium Priority (Specialized Workloads)**:
+4. Complete AVX512 base64 - Infrastructure exists
+5. IP address operations - Network analytics
+6. Numeric aggregations on nullable data - Common in real-world data
+
+**Lower Priority (Specific Use Cases)**:
+7. Date/time arithmetic - Specialized
+8. Binary-to-hex conversion - Display operations
+9. Advanced AVX512 instructions - Incremental gains
+10. ARM SVE/SVE2 support - Future ARM deployments
 
 ## Performance Testing
 
