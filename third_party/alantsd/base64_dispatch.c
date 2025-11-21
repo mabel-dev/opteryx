@@ -26,8 +26,12 @@ static int check_avx2(void) {
 static int check_avx512(void) {
     int cpuinfo[4];
     x86_cpuid(7, 0, cpuinfo);
-    // Check for AVX512F (bit 16) and AVX512BW (bit 30)
-    return ((cpuinfo[1] & (1 << 16)) != 0) && ((cpuinfo[1] & (1 << 30)) != 0);
+    // Check for AVX512F (bit 16) and AVX512BW (bit 30) in EBX (cpuinfo[1])
+    // AVX512F: Foundation instructions (required for all AVX512)
+    // AVX512BW: Byte and Word instructions (required for our string operations)
+    int has_avx512f = (cpuinfo[1] & (1 << 16)) != 0;
+    int has_avx512bw = (cpuinfo[1] & (1 << 30)) != 0;
+    return has_avx512f && has_avx512bw;
 }
 #endif
 

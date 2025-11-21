@@ -10,7 +10,7 @@ static const size_t EXPECTED_MATCH_RATIO = 100;
 #include <arm_neon.h>
 #endif
 
-#if defined(__AVX512F__) && defined(__AVX512BW__) || defined(__AVX2__)
+#if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
 #include <immintrin.h>
 #endif
 

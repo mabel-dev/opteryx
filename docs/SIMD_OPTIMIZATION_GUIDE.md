@@ -43,7 +43,7 @@ Opteryx currently uses SIMD instructions across several critical performance pat
 
 **Supported Instruction Sets:**
 - **NEON** (ARM): 128-bit SIMD
-- **AVX2** (x86-64): 256-bit SIMD (note: source file has legacy typo `base64_axv2.c`)
+- **AVX2** (x86-64): 256-bit SIMD
 - **AVX512** (x86-64): 512-bit SIMD ✨ NEW (currently delegates to scalar - placeholder for future optimization)
 
 **Operations:**
