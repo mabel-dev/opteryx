@@ -68,9 +68,12 @@ fn parse_sql(py: Python, sql: String, _dialect: String) -> PyResult<Py<PyAny>> {
     Ok(output.into())
 }
 
-/// Extract temporal FOR clauses from SQL
+/// Extract temporal FOR clauses from SQL.
 /// Returns a dictionary with 'clean_sql' (SQL with FOR clauses removed) 
-/// and 'filters' (list of temporal filter information)
+/// and 'filters' (list of temporal filter information).
+/// 
+/// **Note**: This is a proof-of-concept. The Python implementation in
+/// sql_rewriter.py remains the production version.
 #[pyfunction]
 #[pyo3(text_signature = "(sql)")]
 fn extract_temporal_filters(py: Python, sql: String) -> PyResult<Py<PyAny>> {

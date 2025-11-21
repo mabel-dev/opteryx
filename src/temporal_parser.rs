@@ -5,19 +5,17 @@
 
 //! Temporal FOR Clause Parser
 //! 
-//! This module provides Rust-based parsing for Opteryx's temporal FOR clauses.
-//! This is intended to eventually replace the Python regex-based implementation
-//! in opteryx/planner/sql_rewriter.py
+//! This module provides a proof-of-concept for Rust-based parsing of Opteryx's 
+//! temporal FOR clauses. This demonstrates how temporal extraction could potentially 
+//! be moved from Python to Rust in the future.
 //! 
 //! ## Current Status
 //! 
-//! **THIS IS A WORK IN PROGRESS / PROOF OF CONCEPT**
+//! **THIS IS A PROOF OF CONCEPT FOR INVESTIGATION PURPOSES**
 //! 
-//! The Python implementation in sql_rewriter.py is still the authoritative version.
-//! This Rust version is being developed to eventually:
-//! - Improve performance
-//! - Reduce Python code complexity
-//! - Provide better type safety
+//! The Python implementation in sql_rewriter.py remains the authoritative version
+//! and should continue to be used in production. This Rust version demonstrates
+//! feasibility and provides a foundation if native Rust implementation is pursued later.
 //! 
 //! ## FOR Clause Syntax
 //! 
@@ -57,21 +55,13 @@ pub struct TemporalExtractionResult {
 
 /// Extract FOR clauses from SQL and return cleaned SQL plus temporal filters
 /// 
-/// **NOTE**: This is a simplified proof-of-concept implementation.
+/// **NOTE**: This is a proof-of-concept implementation for investigation.
 /// Use the Python version in sql_rewriter.py for production.
 /// 
-/// This function demonstrates how temporal extraction could be done in Rust,
-/// but it does not yet handle:
-/// - Quoted strings with special prefixes (b"", r"")
-/// - SQL comments
-/// - Complex nested queries
-/// - Special functions (EXTRACT, SUBSTRING, TRIM)
+/// # Example (Internal Crate Usage)
 /// 
-/// # Example
-/// 
-/// ```rust
-/// use crate::temporal_parser::extract_temporal_for_clauses;
-/// 
+/// ```
+/// # use crate::temporal_parser::extract_temporal_for_clauses;
 /// let result = extract_temporal_for_clauses("SELECT * FROM planets");
 /// assert_eq!(result.filters.len(), 0);
 /// ```
