@@ -321,7 +321,8 @@ if SHOULD_BUILD_EXTENSIONS:
                 "third_party/alantsd/base64.c",
                 "third_party/alantsd/base64_dispatch.c",
                 "third_party/alantsd/base64_neon.c",
-                "third_party/alantsd/base64_axv2.c"
+                "third_party/alantsd/base64_axv2.c",
+                "third_party/alantsd/base64_avx512.c"
             ],
             include_dirs=include_dirs + ["third_party/alantsd"],
             extra_compile_args=C_COMPILE_FLAGS + ["-std=c99", "-DBASE64_IMPLEMENTATION"],

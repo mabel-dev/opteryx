@@ -1,0 +1,188 @@
+# SIMD Optimization Opportunities in Opteryx
+
+This document outlines the SIMD (Single Instruction, Multiple Data) optimizations implemented in Opteryx and opportunities for future improvements.
+
+## Current SIMD Support
+
+Opteryx currently uses SIMD instructions across several critical performance paths:
+
+### 1. String/Character Search Operations (`src/cpp/simd_search.cpp`)
+
+**Supported Instruction Sets:**
+- **NEON** (ARM): 128-bit SIMD, processes 16 bytes per iteration
+- **AVX2** (x86-64): 256-bit SIMD, processes 32 bytes per iteration  
+- **AVX512** (x86-64): 512-bit SIMD, processes 64 bytes per iteration ✨ NEW
+
+**Operations:**
+- `avx_search()` / `neon_search()` - Find first occurrence of a character
+- `avx_find_all()` / `neon_find_all()` - Find all occurrences of a character
+- `avx_count()` / `neon_count()` - Count occurrences of a character
+- `avx_find_delimiter()` / `neon_find_delimiter()` - Find JSON delimiters
+
+**Performance Impact:**
+- AVX512: **2x throughput** vs AVX2 (64-byte vs 32-byte chunks)
+- AVX2: **2x throughput** vs NEON (32-byte vs 16-byte chunks)
+- Critical for CSV/JSON parsing, string operations
+
+### 2. Hash Mixing Operations (`src/cpp/simd_hash.cpp`)
+
+**Supported Instruction Sets:**
+- **NEON** (ARM): 2x uint64 parallel lanes
+- **AVX2** (x86-64): 4x uint64 parallel lanes
+- **AVX512** (x86-64): 8x uint64 parallel lanes ✨ NEW
+
+**Operations:**
+- `simd_mix_hash()` - Parallel hash value mixing for hash tables
+
+**Performance Impact:**
+- AVX512: **2x throughput** vs AVX2 (8 vs 4 parallel lanes)
+- Native 64-bit multiply instruction (`vpmuludq`) on AVX512 (vs emulated on AVX2)
+- Critical for JOIN operations, GROUP BY, DISTINCT
+
+### 3. Base64 Encoding/Decoding (`third_party/alantsd/base64_*.c`)
+
+**Supported Instruction Sets:**
+- **NEON** (ARM): 128-bit SIMD
+- **AVX2** (x86-64): 256-bit SIMD
+- **AVX512** (x86-64): 512-bit SIMD ✨ NEW (placeholder)
+
+**Operations:**
+- Base64 encode/decode with runtime CPU dispatch
+
+**Performance Impact:**
+- Important for binary data handling, API responses
+- AVX512 implementation is currently a placeholder for future optimization
+
+### 4. JSON Parsing (`third_party/tktech/simdjson`)
+
+**Supported Instruction Sets:**
+- **NEON** (ARM)
+- **Haswell/AVX2** (x86-64)
+- **Icelake/AVX512** (x86-64) ✅ Already supported
+
+**Performance Impact:**
+- Critical for JSON data ingestion
+- simdjson library already includes AVX512 support
+
+### 5. Hashing (`third_party/cyan4973/xxhash`)
+
+**Supported Instruction Sets:**
+- **SSE4.1** (x86-64)
+- **AVX2** (x86-64)
+- **AVX512** (x86-64) ✅ Already supported
+
+**Performance Impact:**
+- Used for data deduplication, checksums
+- xxHash library already includes AVX512 support
+
+## Runtime CPU Feature Detection
+
+Opteryx uses runtime CPU feature detection to automatically select the best SIMD implementation:
+
+```c
+// For base64 operations
+b64_cpu_features features = b64_detect_cpu_features();
+if (features.avx512 && len >= 64) {
+    return b64tobin_avx512(dest, src, len);
+} else if (features.avx2 && len >= 32) {
+    return b64tobin_avx2(dest, src, len);
+} else if (features.neon && len >= 16) {
+    return b64tobin_neon(dest, src, len);
+} else {
+    return b64tobin_scalar(dest, src, len);
+}
+```
+
+## Build Configuration
+
+The build system (`setup.py`) automatically detects the target architecture and adds appropriate compiler flags:
+
+- **x86-64**: `-msse4.2 -mavx2` (baseline)
+- **ARM**: NEON enabled by default on aarch64
+- **AVX512**: Enabled via conditional compilation (`#if defined(__AVX512F__)`)
+
+AVX512 code is only compiled when the compiler supports it, ensuring backward compatibility.
+
+## Target Deployment Environments
+
+### Cloud Platforms with AVX512 Support
+
+1. **AWS EC2**
+   - Intel Ice Lake instances (C6i, M6i, R6i)
+   - Intel Sapphire Rapids instances (C7i, M7i, R7i)
+   - AMD Genoa instances (C7a, M7a, R7a) - AVX512 support
+
+2. **Google Cloud Platform**
+   - Intel Ice Lake instances (N2, C2, M2)
+   - Intel Sapphire Rapids instances (C3, M3)
+
+3. **Azure**
+   - Dv5/Ev5 series (Intel Ice Lake)
+   - Dasv5/Easv5 series (AMD Milan with AVX2, Genoa with AVX512)
+
+### On-Premises Deployments
+
+- **Intel**: Ice Lake (2019+), Sapphire Rapids (2023+)
+- **AMD**: Zen 4 (2022+) with AVX512 support
+
+## Future Optimization Opportunities
+
+### 1. ARM SVE/SVE2 Support
+
+**Target**: Modern ARM servers (AWS Graviton 3+, Ampere Altra)
+
+**Benefits**:
+- Scalable vector length (128 to 2048 bits)
+- Better than NEON for large-scale data processing
+- Native gather/scatter operations
+
+**Implementation Complexity**: Medium
+**Expected Performance Gain**: 1.5-2x on SVE2-capable ARM processors
+
+### 2. Advanced AVX512 Instructions
+
+**Current**: Using basic AVX512F + AVX512BW
+**Opportunities**:
+- AVX512VBMI2 for advanced string operations
+- AVX512BITALG for bit manipulation
+- AVX512VPOPCNTDQ for faster popcount
+
+**Implementation Complexity**: Low-Medium
+**Expected Performance Gain**: 10-20% for specific operations
+
+### 3. Optimized Base64 AVX512 Implementation
+
+**Current**: Placeholder implementation falls back to scalar
+**Opportunity**: Full vectorized base64 encode/decode
+
+**Implementation Complexity**: High
+**Expected Performance Gain**: 2-3x for base64 operations
+
+### 4. SIMD String Comparison
+
+**Current**: Mostly scalar string operations
+**Opportunity**: Vectorized string comparison for LIKE, regex
+
+**Implementation Complexity**: Medium-High
+**Expected Performance Gain**: 2-4x for string-heavy queries
+
+## Performance Testing
+
+To verify SIMD performance improvements:
+
+```bash
+# Run with SIMD disabled (for baseline)
+export OPTERYX_FORCE_SCALAR=1
+python tests/performance/benchmark.py
+
+# Run with SIMD enabled (default)
+unset OPTERYX_FORCE_SCALAR
+python tests/performance/benchmark.py
+```
+
+## References
+
+- [Intel Intrinsics Guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html)
+- [ARM NEON Intrinsics](https://developer.arm.com/architectures/instruction-sets/intrinsics/)
+- [simdjson](https://github.com/simdjson/simdjson)
+- [xxHash](https://github.com/Cyan4973/xxHash)

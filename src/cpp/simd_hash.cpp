@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+#include <immintrin.h>
+#elif defined(__AVX2__)
 #include <immintrin.h>
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
@@ -20,7 +22,12 @@ inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count
     }
 }
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+// AVX512 has native 64-bit multiply instruction (vpmuludq)
+inline __m512i mullo_u64(__m512i a, __m512i b) {
+    return _mm512_mullo_epi64(a, b);
+}
+#elif defined(__AVX2__)
 inline __m256i mullo_u64(__m256i a, __m256i b) {
     // AVX2 lacks a direct 64-bit integer multiply, so combine 32-bit partials per lane.
     const __m256i mask = _mm256_set1_epi64x(0xFFFFFFFFULL);
@@ -58,7 +65,24 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
         return;
     }
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+    // AVX512: Process 8x uint64 per iteration (512 bits / 64 bits = 8)
+    const std::size_t stride = 8;
+    const __m512i const_vec = _mm512_set1_epi64(static_cast<long long>(MIX_HASH_CONSTANT));
+    std::size_t i = 0;
+    for (; i + stride <= count; i += stride) {
+        __m512i dst_vec = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(dest + i));
+        __m512i val_vec = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(values + i));
+        __m512i mixed = _mm512_xor_si512(dst_vec, val_vec);
+        __m512i product = mullo_u64(mixed, const_vec);
+        __m512i shifted = _mm512_srli_epi64(product, 32);
+        __m512i combined = _mm512_xor_si512(product, shifted);
+        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), combined);
+    }
+    if (i < count) {
+        scalar_mix(dest + i, values + i, count - i);
+    }
+#elif defined(__AVX2__)
     const std::size_t stride = 4;
     const __m256i const_vec = _mm256_set1_epi64x(static_cast<long long>(MIX_HASH_CONSTANT));
     std::size_t i = 0;
