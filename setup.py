@@ -464,6 +464,13 @@ if SHOULD_BUILD_EXTENSIONS:
                 "third_party/mabel/draken/morsels/morsel.pxd"
             ],
         ),
+        Extension(
+            name="opteryx.draken.compiled.maskops",
+            sources=["third_party/mabel/draken/compiled/maskops.pyx", "src/cpp/simd_bitops.cpp"],
+            include_dirs=include_dirs + ["third_party/mabel/draken"],
+            language="c++",
+            extra_compile_args=CPP_COMPILE_FLAGS,
+        ),
 
         Extension(
             name="opteryx.compiled.functions.strings",

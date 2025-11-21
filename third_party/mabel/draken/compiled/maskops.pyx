@@ -9,45 +9,102 @@
 from libc.stdint cimport uint8_t
 from libc.stdlib cimport malloc, free
 
+# External SIMD functions from C++
+cdef extern from "simd_bitops.h":
+    void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) nogil
+    void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) nogil
+    void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) nogil
+    void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) nogil
+    size_t simd_popcount(const uint8_t* data, size_t n) nogil
+
 
 def and_mask(bytes a, bytes b, Py_ssize_t n):
-    """Return the byte-wise AND of `a` and `b` for `n` bytes as bytes."""
+    """Return the byte-wise AND of `a` and `b` for `n` bytes as bytes.
+    
+    Uses SIMD acceleration:
+    - AVX512: 64 bytes per iteration
+    - AVX2: 32 bytes per iteration  
+    - NEON: 16 bytes per iteration
+    """
     cdef uint8_t* pa = <uint8_t*> a
     cdef uint8_t* pb = <uint8_t*> b
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
-    cdef Py_ssize_t i
-    for i in range(n):
-        out[i] = pa[i] & pb[i]
+    
+    simd_and_mask(out, pa, pb, n)
+    
     py_out = bytes(<char *><void*> out, n)
     free(out)
     return py_out
 
 
 def or_mask(bytes a, bytes b, Py_ssize_t n):
+    """Return the byte-wise OR of `a` and `b` for `n` bytes as bytes.
+    
+    Uses SIMD acceleration:
+    - AVX512: 64 bytes per iteration
+    - AVX2: 32 bytes per iteration
+    - NEON: 16 bytes per iteration
+    """
     cdef uint8_t* pa = <uint8_t*> a
     cdef uint8_t* pb = <uint8_t*> b
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
-    cdef Py_ssize_t i
-    for i in range(n):
-        out[i] = pa[i] | pb[i]
+    
+    simd_or_mask(out, pa, pb, n)
+    
     py_out = bytes(<char *><void*> out, n)
     free(out)
     return py_out
 
 
 def xor_mask(bytes a, bytes b, Py_ssize_t n):
+    """Return the byte-wise XOR of `a` and `b` for `n` bytes as bytes.
+    
+    Uses SIMD acceleration:
+    - AVX512: 64 bytes per iteration
+    - AVX2: 32 bytes per iteration
+    - NEON: 16 bytes per iteration
+    """
     cdef uint8_t* pa = <uint8_t*> a
     cdef uint8_t* pb = <uint8_t*> b
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
-    cdef Py_ssize_t i
-    for i in range(n):
-        out[i] = pa[i] ^ pb[i]
+    
+    simd_xor_mask(out, pa, pb, n)
+    
     py_out = bytes(<char *><void*> out, n)
     free(out)
     return py_out
+
+
+def not_mask(bytes a, Py_ssize_t n):
+    """Return the byte-wise NOT of `a` for `n` bytes as bytes.
+    
+    Uses SIMD acceleration:
+    - AVX512: 64 bytes per iteration
+    - AVX2: 32 bytes per iteration
+    - NEON: 16 bytes per iteration
+    """
+    cdef uint8_t* pa = <uint8_t*> a
+    cdef uint8_t* out = <uint8_t*> malloc(n)
+    if out == NULL:
+        raise MemoryError()
+    
+    simd_not_mask(out, pa, n)
+    
+    py_out = bytes(<char *><void*> out, n)
+    free(out)
+    return py_out
+
+
+def popcount_mask(bytes a, Py_ssize_t n):
+    """Return the count of set bits in the mask.
+    
+    Uses SIMD acceleration with POPCNT instruction when available.
+    """
+    cdef uint8_t* pa = <uint8_t*> a
+    return simd_popcount(pa, n)

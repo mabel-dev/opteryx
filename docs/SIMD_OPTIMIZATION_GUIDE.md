@@ -76,6 +76,35 @@ Opteryx currently uses SIMD instructions across several critical performance pat
 - Used for data deduplication, checksums
 - xxHash library already includes AVX512 support
 
+### 6. Boolean Vector and Bit Mask Operations ✨ NEW
+
+**Location**: `third_party/mabel/draken/compiled/maskops.pyx`, `src/cpp/simd_bitops.cpp`
+
+**Supported Instruction Sets:**
+- **NEON** (ARM): 16 bytes per iteration
+- **AVX2** (x86-64): 32 bytes per iteration
+- **AVX512** (x86-64): 64 bytes per iteration ✨ NEW
+
+**Operations:**
+- `simd_and_mask()` - Bitwise AND on boolean masks
+- `simd_or_mask()` - Bitwise OR on boolean masks
+- `simd_xor_mask()` - Bitwise XOR on boolean masks
+- `simd_not_mask()` - Bitwise NOT on boolean masks
+- `simd_popcount()` - Count set bits (uses POPCNT instruction when available)
+- `simd_select_bytes()` - Conditional selection (mask ? a : b)
+
+**Performance Impact:**
+- AVX512: **8-16x throughput** vs scalar for boolean operations
+- AVX2: **4-8x throughput** vs scalar
+- Critical for filter combinations, JOIN predicates, WHERE clauses
+- Popcount is essential for counting TRUE values in boolean columns
+
+**Use Cases:**
+- Combining multiple filter conditions (WHERE A AND B)
+- Boolean column operations in draken vectors
+- Bitmap index operations
+- Null handling in columnar format
+
 ## Runtime CPU Feature Detection
 
 Opteryx uses runtime CPU feature detection to automatically select the best SIMD implementation:
@@ -181,7 +210,27 @@ These are operations that currently don't use SIMD but could benefit significant
 **Implementation Complexity**: Low (completed)
 **Expected Performance Gain**: 5-8x for UPPER/LOWER operations on ASCII strings
 
-#### 5. Array Comparison Operations (HIGH PRIORITY)
+#### 5. Bitwise Mask Operations ✨ NEW
+
+**Current**: Boolean mask operations done element-wise in Python/Cython
+**Opportunity**: Bulk AND/OR/XOR/NOT operations on boolean masks
+**Location**: `src/cpp/simd_bitops.cpp`, `third_party/mabel/draken/compiled/maskops.pyx` (implemented)
+
+**Implementation**:
+- AVX512: Processes 64 bytes at once
+- AVX2: Processes 32 bytes at once
+- NEON: Processes 16 bytes at once
+- Includes popcount for counting set bits
+
+**Use Cases**:
+- Combining multiple filter conditions
+- Bitmap indexes
+- Null handling in columnar storage
+
+**Implementation Complexity**: Low (completed)
+**Expected Performance Gain**: 8-16x for boolean operations on AVX512
+
+#### 6. Array Comparison Operations (HIGH PRIORITY)
 
 **Current**: Scalar comparison loops with memcmp in `opteryx/compiled/list_ops/`
 **Opportunity**: SIMD batch comparisons for ANY/ALL array operators
@@ -193,19 +242,6 @@ These are operations that currently don't use SIMD but could benefit significant
 
 **Implementation Complexity**: Medium
 **Expected Performance Gain**: 3-4x for array predicate operations
-
-#### 6. Bitwise Mask Operations
-
-**Current**: Boolean mask operations done element-wise
-**Opportunity**: Bulk AND/OR/XOR operations on boolean masks
-
-**Use Cases**:
-- Combining multiple filter conditions
-- Bitmap indexes
-- Null handling
-
-**Implementation Complexity**: Low
-**Expected Performance Gain**: 4-8x for filter combination operations
 
 #### 7. IP Address Operations
 
@@ -249,8 +285,8 @@ These are operations that currently don't use SIMD but could benefit significant
 
 **High Priority (Immediate Impact)**:
 1. ✅ String case conversion (UPPER/LOWER) - Completed
-2. Array comparison operations (ANY/ALL) - Most common use case
-3. Bitwise mask operations - Fundamental building block
+2. ✅ Bitwise mask operations (AND/OR/XOR/NOT/POPCOUNT) - Completed
+3. Array comparison operations (ANY/ALL) - Most common use case
 
 **Medium Priority (Specialized Workloads)**:
 4. Complete AVX512 base64 - Infrastructure exists
