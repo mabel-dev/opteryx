@@ -70,7 +70,7 @@ pub struct TemporalExtractionResult {
 /// # Example
 /// 
 /// ```rust
-/// use compute::extract_temporal_for_clauses;
+/// use crate::temporal_parser::extract_temporal_for_clauses;
 /// 
 /// let result = extract_temporal_for_clauses("SELECT * FROM planets");
 /// assert_eq!(result.filters.len(), 0);
