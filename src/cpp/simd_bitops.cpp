@@ -1,4 +1,5 @@
 #include "simd_bitops.h"
+#include <cstring>
 
 #if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
 #include <immintrin.h>
@@ -229,31 +230,8 @@ static const uint8_t popcount_table[256] = {
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8
 };
 
-#if defined(__AVX512F__) && defined(__AVX512BW__) && defined(__AVX512VPOPCNTDQ__)
-// AVX512 with VPOPCNTDQ instruction for ultra-fast popcount
-size_t simd_popcount(const uint8_t* data, size_t n) {
-    size_t count = 0;
-    size_t i = 0;
-    
-    // Process 64 bytes at a time
-    for (; i + 64 <= n; i += 64) {
-        __m512i v = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
-        // Convert bytes to qwords for popcnt
-        __m512i lo = _mm512_cvtepu8_epi64(_mm512_extracti64x2_epi64(v, 0));
-        __m512i hi = _mm512_cvtepu8_epi64(_mm512_extracti64x2_epi64(v, 1));
-        count += _mm512_reduce_add_epi64(_mm512_popcnt_epi64(lo));
-        count += _mm512_reduce_add_epi64(_mm512_popcnt_epi64(hi));
-    }
-    
-    // Scalar tail using lookup table
-    for (; i < n; i++) {
-        count += popcount_table[data[i]];
-    }
-    
-    return count;
-}
-#elif defined(__AVX2__) && defined(__POPCNT__)
-// AVX2 with POPCNT instruction
+#if defined(__AVX2__) && defined(__POPCNT__)
+// AVX2 with POPCNT instruction (also works for AVX512)
 size_t simd_popcount(const uint8_t* data, size_t n) {
     size_t count = 0;
     size_t i = 0;
