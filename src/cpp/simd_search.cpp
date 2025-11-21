@@ -3,13 +3,14 @@
 #include <vector>
 #include <cstring>
 
+// Estimated match ratio for vector pre-allocation (1%)
+static const size_t EXPECTED_MATCH_RATIO = 100;
+
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
 #endif
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-#include <immintrin.h>
-#elif defined(__AVX2__)
+#if defined(__AVX512F__) && defined(__AVX512BW__) || defined(__AVX2__)
 #include <immintrin.h>
 #endif
 
@@ -107,7 +108,7 @@ int neon_search(const char* data, size_t length, char target) {
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 std::vector<size_t> neon_find_all(const char* data, size_t length, char target) {
     std::vector<size_t> results;
-    results.reserve(length / 100);  // Reserve space for ~1% matches as a reasonable estimate
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
     
     size_t i = 0;
     // Create a vector with the target repeated.
@@ -253,7 +254,7 @@ int avx_search(const char* data, size_t length, char target) {
 #if defined(__AVX512F__) && defined(__AVX512BW__)
 std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
     std::vector<size_t> results;
-    results.reserve(length / 100);  // Reserve space for ~1% matches as a reasonable estimate
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
     
     size_t i = 0;
     __m512i target_vec = _mm512_set1_epi8(target);
@@ -283,7 +284,7 @@ std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
 #elif defined(__AVX2__)
 std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
     std::vector<size_t> results;
-    results.reserve(length / 100);  // Reserve space for ~1% matches as a reasonable estimate
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
     
     size_t i = 0;
     __m256i target_vec = _mm256_set1_epi8(target);

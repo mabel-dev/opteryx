@@ -3,9 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#if defined(__AVX512F__)
-#include <immintrin.h>
-#elif defined(__AVX2__)
+#if defined(__AVX512F__) || defined(__AVX2__)
 #include <immintrin.h>
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
