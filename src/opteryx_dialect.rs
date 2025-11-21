@@ -9,6 +9,155 @@
 //
 // Extends:
 //  https://github.com/apache/datafusion-sqlparser-rs/blob/main/src/dialect/mod.rs
+//
+// ==================================================================================
+// RECOMMENDED SQL LANGUAGE FEATURE ADDITIONS (Prioritized)
+// ==================================================================================
+//
+// After reviewing the sqlparser-rs Dialect trait (v0.59.0) and analyzing Opteryx's
+// current implementation, the following features are recommended for addition, 
+// listed in priority order based on:
+// 1. User value and common SQL use cases
+// 2. Alignment with Opteryx's analytical query focus
+// 3. Implementation complexity vs. benefit
+// 4. Compatibility with existing Python execution engine capabilities
+//
+// CURRENT STATE:
+// Opteryx already supports:
+// - Basic SELECT, FROM, WHERE, GROUP BY, ORDER BY, LIMIT
+// - JOIN operations (INNER, LEFT, RIGHT, CROSS)
+// - Aggregation functions with FILTER clause
+// - Array operations (@>, @>>)
+// - SELECT * EXCEPT (column)
+// - PartiQL-style subscripting (field['key'])
+// - Numeric literals with underscores (10_000_000)
+// - MATCH() AGAINST() for text search
+// - Custom operators (DIV)
+// - Set operations (UNION, INTERSECT, EXCEPT)
+// - Subqueries in FROM clause
+// - Common table expressions (WITH)
+//
+// PRIORITY 1: Window Functions with Named Window References
+// ----------------------------------------------------------
+// Feature: supports_window_clause_named_window_reference
+// SQL Example:
+//   SELECT *, ROW_NUMBER() OVER w1 
+//   FROM table
+//   WINDOW w1 AS (PARTITION BY category ORDER BY price)
+//
+// Rationale:
+// - Critical for analytical queries (ranking, running totals, lag/lead)
+// - Commonly used in business intelligence and reporting
+// - Named windows improve query readability and reduce duplication
+// - Opteryx's current code shows window function infrastructure exists but
+//   named window references are not dialect-enabled
+// - High user demand for analytical features
+//
+// Implementation Impact: MEDIUM
+// - Parser already supports window functions
+// - Need to enable dialect flag and test
+// - May require minor planner updates
+//
+// PRIORITY 2: Lambda Functions (Higher-Order Functions)
+// ------------------------------------------------------
+// Feature: supports_lambda_functions
+// SQL Example:
+//   SELECT TRANSFORM(array_col, x -> x * 2) FROM table
+//   SELECT FILTER(scores, s -> s > 70) FROM students
+//
+// Rationale:
+// - Modern SQL feature available in BigQuery, Snowflake, DuckDB
+// - Powerful for array/list transformations without UDFs
+// - Aligns with Opteryx's support for arrays and complex types
+// - Reduces need for complex procedural code
+// - Enhances expressiveness for data transformations
+//
+// Implementation Impact: HIGH
+// - Requires parser support (available in sqlparser-rs)
+// - Needs lambda expression evaluation in Python execution engine
+// - Would unlock powerful array manipulation capabilities
+// - Consider starting with simple lambda functions on arrays
+//
+// PRIORITY 3: Dictionary/Map Literal Syntax
+// ------------------------------------------
+// Feature: supports_dictionary_syntax OR support_map_literal_syntax
+// SQL Examples:
+//   SELECT {'key': 'value', 'num': 123} AS config
+//   SELECT Map {1: 'one', 2: 'two'} AS lookup
+//
+// Rationale:
+// - Opteryx supports STRUCT types and complex data
+// - Dictionary/map literals complement existing JSON/struct support
+// - Common in modern analytical databases (BigQuery, Snowflake)
+// - Useful for ad-hoc data structure creation
+// - Aligns with PartiQL support already enabled
+//
+// Implementation Impact: MEDIUM
+// - Parser support available in sqlparser-rs
+// - Need to map to Python dict/map structures
+// - Integrates with existing complex type handling
+//
+// PRIORITY 4: GROUP BY Expression Enhancements
+// ---------------------------------------------
+// Features: 
+//   - supports_group_by_expr (ROLLUP, CUBE, GROUPING SETS)
+//   - supports_order_by_all (ORDER BY ALL)
+//
+// SQL Examples:
+//   SELECT region, product, SUM(sales)
+//   FROM sales
+//   GROUP BY ROLLUP(region, product)
+//
+//   SELECT * FROM table ORDER BY ALL
+//
+// Rationale:
+// - ROLLUP/CUBE are standard OLAP operations
+// - Useful for generating subtotals and cross-tabulations
+// - ORDER BY ALL simplifies sorting entire result sets
+// - Opteryx focuses on analytical queries - these are core features
+// - Reduces complexity of multi-level aggregation queries
+//
+// Implementation Impact: MEDIUM-HIGH
+// - Parser support exists
+// - ROLLUP/CUBE require expansion of GROUP BY execution logic
+// - ORDER BY ALL is simpler - just orders all columns
+// - Both align well with Opteryx's aggregation capabilities
+//
+// PRIORITY 5: IN () Empty List Support
+// -------------------------------------
+// Feature: supports_in_empty_list
+// SQL Example:
+//   SELECT * FROM table WHERE column IN ()  -- Returns empty set
+//
+// Rationale:
+// - Handles edge cases in dynamic query generation
+// - Prevents query errors when parameter lists are empty
+// - Common issue in programmatically generated SQL
+// - Simple to implement with high practical value
+// - Low risk, high convenience feature
+//
+// Implementation Impact: LOW
+// - Minimal parser changes needed
+// - Execution engine just returns empty result
+// - Good candidate for quick win
+//
+// ==================================================================================
+// FEATURES NOT RECOMMENDED (Opteryx has solid base without these):
+// ==================================================================================
+// - supports_connect_by: Hierarchical queries (niche use case)
+// - supports_match_recognize: Pattern matching (very complex, niche)
+// - supports_outer_join_operator: Oracle (+) syntax (legacy)
+// - supports_execute_immediate: Dynamic SQL execution (security concerns)
+// - supports_dollar_placeholder: $1, $2 style parameters (prefer named params)
+// - Most dialect-specific syntaxes (Opteryx aims for portable SQL)
+//
+// CONCLUSION:
+// Opteryx already has a strong SQL foundation covering core DML operations,
+// joins, aggregations, and modern features like array operators and PartiQL.
+// The five recommended additions above would significantly enhance analytical
+// query capabilities while maintaining reasonable implementation complexity.
+// Focus should be on Priority 1 (window functions) and Priority 2 (lambdas)
+// as these provide the highest value for analytical workloads.
 
 use std::boxed::Box;
 
