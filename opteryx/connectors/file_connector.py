@@ -241,7 +241,8 @@ class FileConnector(BaseConnector, PredicatePushable, Statistics, LimitPushable)
                     file_map.close()
                     os.close(fd)
                 except (OSError, IOError):
-                    # If we can't read statistics from a file, skip it
+                    # Statistics are optional for optimization. If we can't read them from
+                    # this file, we skip it and continue with stats from other files.
                     pass
 
             return self.schema

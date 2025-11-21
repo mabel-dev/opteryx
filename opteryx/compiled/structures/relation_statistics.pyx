@@ -233,11 +233,17 @@ cdef class RelationStatistics:
     cpdef void merge(self, RelationStatistics other):
         """
         Merge another RelationStatistics into this one.
-        - Sums record counts
-        - Takes minimum of lower bounds
-        - Takes maximum of upper bounds
-        - Sums null counts
-        - Takes maximum of cardinality estimates
+
+        Parameters:
+            other: RelationStatistics
+                The statistics object to merge into this one.
+
+        Behavior:
+            - Sums record counts
+            - Takes minimum of lower bounds
+            - Takes maximum of upper bounds
+            - Sums null counts
+            - Takes maximum of cardinality estimates
         """
         cdef unordered_map[string, int64_t].iterator it
         cdef string key
