@@ -230,5 +230,57 @@ cdef class RelationStatistics:
         read_map(buf, &offset, inst.cardinality_estimate)
         return inst
 
+    cpdef void merge(self, RelationStatistics other):
+        """
+        Merge another RelationStatistics into this one.
+        - Sums record counts
+        - Takes minimum of lower bounds
+        - Takes maximum of upper bounds
+        - Sums null counts
+        - Takes maximum of cardinality estimates
+        """
+        cdef unordered_map[string, int64_t].iterator it
+        cdef string key
+        cdef int64_t value
+
+        # Add record counts
+        self.record_count += other.record_count
+        self.record_count_estimate += other.record_count_estimate
+
+        # Merge lower bounds (take minimum)
+        it = other.lower_bounds.begin()
+        while it != other.lower_bounds.end():
+            key = dereference(it).first
+            value = dereference(it).second
+            if not map_contains(self.lower_bounds, key) or value < self.lower_bounds[key]:
+                self.lower_bounds[key] = value
+            preincrement(it)
+
+        # Merge upper bounds (take maximum)
+        it = other.upper_bounds.begin()
+        while it != other.upper_bounds.end():
+            key = dereference(it).first
+            value = dereference(it).second
+            if not map_contains(self.upper_bounds, key) or value > self.upper_bounds[key]:
+                self.upper_bounds[key] = value
+            preincrement(it)
+
+        # Merge null counts (sum)
+        it = other.null_count.begin()
+        while it != other.null_count.end():
+            key = dereference(it).first
+            value = dereference(it).second
+            self.null_count[key] = map_get(self.null_count, key, 0) + value
+            preincrement(it)
+
+        # Merge cardinality estimates (take maximum)
+        it = other.cardinality_estimate.begin()
+        while it != other.cardinality_estimate.end():
+            key = dereference(it).first
+            value = dereference(it).second
+            if not map_contains(self.cardinality_estimate, key) or value > self.cardinality_estimate[key]:
+                self.cardinality_estimate[key] = value
+            preincrement(it)
+
     def __deepcopy__(self, memo):
         return self
