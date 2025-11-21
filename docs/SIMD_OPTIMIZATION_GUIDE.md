@@ -43,15 +43,16 @@ Opteryx currently uses SIMD instructions across several critical performance pat
 
 **Supported Instruction Sets:**
 - **NEON** (ARM): 128-bit SIMD
-- **AVX2** (x86-64): 256-bit SIMD
-- **AVX512** (x86-64): 512-bit SIMD ✨ NEW (placeholder)
+- **AVX2** (x86-64): 256-bit SIMD (note: source file has legacy typo `base64_axv2.c`)
+- **AVX512** (x86-64): 512-bit SIMD ✨ NEW (currently delegates to scalar - placeholder for future optimization)
 
 **Operations:**
 - Base64 encode/decode with runtime CPU dispatch
 
 **Performance Impact:**
 - Important for binary data handling, API responses
-- AVX512 implementation is currently a placeholder for future optimization
+- AVX512 implementation is currently a placeholder that delegates to scalar processing
+- Future work: Implement full vectorized AVX512 base64 encode/decode for 2-3x speedup
 
 ### 4. JSON Parsing (`third_party/tktech/simdjson`)
 
