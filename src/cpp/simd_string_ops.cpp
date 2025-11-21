@@ -6,10 +6,6 @@
 #include <immintrin.h>
 #endif
 
-#if defined(__ARM_NEON) || defined(__ARM_NEON__)
-#include <arm_neon.h>
-#endif
-
 // SIMD-accelerated ASCII case conversion
 // Handles only ASCII characters (0-127); non-ASCII bytes are left unchanged
 
