@@ -161,6 +161,8 @@ class DiskConnector(BaseConnector, Diachronic, PredicatePushable, LimitPushable,
                     with self._stats_lock:
                         if self.relation_statistics is None:
                             self.relation_statistics = stats
+                        else:
+                            self.relation_statistics.merge(stats)
 
             return result
         finally:
