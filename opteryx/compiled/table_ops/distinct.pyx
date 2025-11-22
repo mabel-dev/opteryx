@@ -7,10 +7,10 @@
 # cython: boundscheck=False
 
 from libc.stddef cimport size_t
-from libc.stdint cimport int64_t, uint64_t
+from libc.stdint cimport int64_t, uint64_t, int32_t
 
+from opteryx.compiled.structures.buffers cimport IntBuffer, Int32Buffer
 from opteryx.third_party.abseil.containers cimport FlatHashSet
-from opteryx.compiled.structures.buffers cimport IntBuffer
 from opteryx.draken.morsels.morsel cimport Morsel
 
 
@@ -42,14 +42,42 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         seen_hashes.reserve(2048)
 
     cdef Py_ssize_t num_rows = row_hashes.shape[0]
-    cdef IntBuffer keep = IntBuffer(<size_t>(num_rows))
-    cdef Py_ssize_t row_idx
-
+    
     if num_rows == 0:
-        return keep.to_numpy(), seen_hashes
+        return IntBuffer(0), seen_hashes
 
-    for row_idx in range(num_rows):
-        if seen_hashes.insert(row_hashes[row_idx]):
-            keep.append(<int64_t>row_idx)
+    cdef uint64_t* hashes_ptr = &row_hashes[0]
+    cdef Py_ssize_t count = 0
+    cdef Int32Buffer buffer32
+    cdef int32_t* buffer32_ptr
+    cdef IntBuffer buffer64
+    cdef int64_t* buffer64_ptr
 
-    return keep.to_numpy(), seen_hashes
+    # Use Int32Buffer if indices fit in 32 bits (approx 2 billion rows)
+    if num_rows < 2147483647:
+        buffer32 = Int32Buffer(num_rows)
+        buffer32.c_buffer.resize(num_rows)
+        buffer32_ptr = buffer32.c_buffer.mutable_data()
+        
+        with nogil:
+            count = seen_hashes.find_new_indices_out_32(hashes_ptr, num_rows, buffer32_ptr)
+            
+        if count == 0:
+            return Int32Buffer(0), seen_hashes
+            
+        buffer32.c_buffer.resize(count)
+        return buffer32, seen_hashes
+    else:
+        # Fallback to Int64Buffer for huge datasets
+        buffer64 = IntBuffer(num_rows)
+        buffer64.c_buffer.resize(num_rows)
+        buffer64_ptr = buffer64.c_buffer.mutable_data()
+        
+        with nogil:
+            count = seen_hashes.find_new_indices_out(hashes_ptr, num_rows, buffer64_ptr)
+            
+        if count == 0:
+            return IntBuffer(0), seen_hashes
+            
+        buffer64.c_buffer.resize(count)
+        return buffer64, seen_hashes

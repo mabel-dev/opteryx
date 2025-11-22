@@ -16,7 +16,9 @@ This matches Arrow's representation:
 
 """
 
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AS_STRING
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
+from libc.string cimport memset
 
 from libc.stdint cimport int32_t, int8_t, intptr_t, uint64_t, uint8_t
 from libc.stdlib cimport malloc
@@ -348,12 +350,58 @@ cdef BoolVector from_arrow(object array):
     vec.ptr.itemsize = 1
     vec.ptr.length = <size_t> len(array)
 
-    # Arrow boolean buffer is bit-packed already
-    vec.ptr.data = <void*> (base_ptr + (offset >> 3))
+    # Data buffer handling
+    cdef Py_ssize_t nbytes
+    cdef uint8_t* src_data
+    cdef uint8_t* dst_data
+    cdef object new_data_bytes
+    cdef Py_ssize_t i
+
+    if offset % 8 == 0:
+        # Aligned offset: zero-copy
+        vec.ptr.data = <void*> (base_ptr + (offset >> 3))
+    else:
+        # Unaligned offset: must copy and shift data
+        nbytes = (len(array) + 7) // 8
+        new_data_bytes = PyBytes_FromStringAndSize(NULL, nbytes)
+        dst_data = <uint8_t*> PyBytes_AS_STRING(new_data_bytes)
+        memset(dst_data, 0, nbytes)
+        
+        src_data = <uint8_t*> base_ptr
+        
+        # Copy bits shifting them
+        for i in range(len(array)):
+            if (src_data[(offset + i) >> 3] >> ((offset + i) & 7)) & 1:
+                dst_data[i >> 3] |= (1 << (i & 7))
+        
+        vec.ptr.data = <void*> dst_data
+        vec._arrow_data_buf = new_data_bytes
+
+    # Null bitmap handling
+    cdef uint8_t* src_bitmap
+    cdef uint8_t* dst_bitmap
+    cdef object new_bitmap_bytes
 
     if bufs[0] is not None:
         nb_addr = bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> nb_addr
+        
+        if offset % 8 == 0:
+            vec.ptr.null_bitmap = (<uint8_t*> nb_addr) + (offset >> 3)
+        else:
+            # Unaligned offset: must copy and shift nulls
+            nbytes = (len(array) + 7) // 8
+            new_bitmap_bytes = PyBytes_FromStringAndSize(NULL, nbytes)
+            dst_bitmap = <uint8_t*> PyBytes_AS_STRING(new_bitmap_bytes)
+            memset(dst_bitmap, 0, nbytes)
+            
+            src_bitmap = <uint8_t*> nb_addr
+            
+            for i in range(len(array)):
+                if (src_bitmap[(offset + i) >> 3] >> ((offset + i) & 7)) & 1:
+                    dst_bitmap[i >> 3] |= (1 << (i & 7))
+            
+            vec.ptr.null_bitmap = dst_bitmap
+            vec._arrow_null_buf = new_bitmap_bytes
     else:
         vec.ptr.null_bitmap = NULL
 

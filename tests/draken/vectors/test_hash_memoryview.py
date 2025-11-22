@@ -19,7 +19,7 @@ MIX_HASH_CONSTANT = 0x9e3779b97f4a7c15
 
 def _mix_hash(current: int, value: int, mix_constant: int = MIX_HASH_CONSTANT) -> int:
     current ^= value & MASK
-    current = (current * mix_constant) & MASK
+    current = ((current * mix_constant) + 1) & MASK
     result = current ^ (current >> 32)
     return result & MASK
 

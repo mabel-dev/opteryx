@@ -3,9 +3,14 @@
 #include <vector>
 #include <cstring>
 
+// Estimated match ratio for vector pre-allocation (1%)
+static const size_t EXPECTED_MATCH_RATIO = 100;
+
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
-#elif defined(__AVX2__)
+#endif
+
+#if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
 #include <immintrin.h>
 #endif
 
@@ -103,7 +108,7 @@ int neon_search(const char* data, size_t length, char target) {
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 std::vector<size_t> neon_find_all(const char* data, size_t length, char target) {
     std::vector<size_t> results;
-    results.reserve(length / 100);  // Reserve space for ~1% matches as a reasonable estimate
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
     
     size_t i = 0;
     // Create a vector with the target repeated.
@@ -191,8 +196,29 @@ size_t neon_count(const char* data, size_t length, char target) {
 }
 #endif
 
-// AVX2 implementation for x86
-#ifdef __AVX2__
+// AVX512 implementation for x86 (if available)
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+int avx_search(const char* data, size_t length, char target) {
+    size_t i = 0;
+    __m512i target_vec = _mm512_set1_epi8(target);
+    for (; i + 64 <= length; i += 64) {
+        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
+        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
+        if (mask != 0) {
+            // Use __builtin_ctzll to find the lowest set bit (64-bit mask)
+            int offset = __builtin_ctzll(mask);
+            return static_cast<int>(i + offset);
+        }
+    }
+    // Process remaining bytes with scalar fallback
+    for (; i < length; i++) {
+        if (data[i] == target)
+            return static_cast<int>(i);
+    }
+    return -1;
+}
+// AVX2 implementation for x86 (fallback when AVX512 not available)
+#elif defined(__AVX2__)
 int avx_search(const char* data, size_t length, char target) {
     size_t i = 0;
     __m256i target_vec = _mm256_set1_epi8(target);
@@ -224,11 +250,41 @@ int avx_search(const char* data, size_t length, char target) {
 }
 #endif
 
-// AVX2 find_all implementation for x86
-#ifdef __AVX2__
+// AVX512 find_all implementation for x86
+#if defined(__AVX512F__) && defined(__AVX512BW__)
 std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
     std::vector<size_t> results;
-    results.reserve(length / 100);  // Reserve space for ~1% matches as a reasonable estimate
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
+    
+    size_t i = 0;
+    __m512i target_vec = _mm512_set1_epi8(target);
+    
+    for (; i + 64 <= length; i += 64) {
+        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
+        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
+        
+        // Process all matches in this chunk
+        while (mask != 0) {
+            int offset = __builtin_ctzll(mask);
+            results.push_back(i + offset);
+            mask &= (mask - 1);  // Clear the lowest set bit
+        }
+    }
+    
+    // Process remaining bytes.
+    for (; i < length; i++) {
+        if (data[i] == target) {
+            results.push_back(i);
+        }
+    }
+    
+    return results;
+}
+// AVX2 find_all implementation for x86 (fallback)
+#elif defined(__AVX2__)
+std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
+    std::vector<size_t> results;
+    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
     
     size_t i = 0;
     __m256i target_vec = _mm256_set1_epi8(target);
@@ -268,8 +324,32 @@ std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
 }
 #endif
 
-// AVX2 count implementation for x86
-#ifdef __AVX2__
+// AVX512 count implementation for x86
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+size_t avx_count(const char* data, size_t length, char target) {
+    size_t count = 0;
+    size_t i = 0;
+    __m512i target_vec = _mm512_set1_epi8(target);
+    
+    for (; i + 64 <= length; i += 64) {
+        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
+        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
+        
+        // Count the number of set bits in the mask using popcount
+        count += __builtin_popcountll(mask);
+    }
+    
+    // Process remaining bytes.
+    for (; i < length; i++) {
+        if (data[i] == target) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+// AVX2 count implementation for x86 (fallback)
+#elif defined(__AVX2__)
 size_t avx_count(const char* data, size_t length, char target) {
     size_t count = 0;
     size_t i = 0;
@@ -366,9 +446,51 @@ int neon_find_delimiter(const char* data, size_t length) {
 }
 #endif
 
-// AVX2 delimiter search for x86
+// AVX512 delimiter search for x86
 // Delimiters: space (32), comma (44), '}' (125), tab (9)
-#ifdef __AVX2__
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+int avx_find_delimiter(const char* data, size_t length) {
+    size_t i = 0;
+    
+    // Create comparison vectors for all delimiters
+    __m512i space_vec = _mm512_set1_epi8(32);   // ' '
+    __m512i comma_vec = _mm512_set1_epi8(44);   // ','
+    __m512i brace_vec = _mm512_set1_epi8(125);  // '}'
+    __m512i tab_vec = _mm512_set1_epi8(9);      // '\t'
+    
+    for (; i + 64 <= length; i += 64) {
+        // Load 64 bytes
+        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
+        
+        // Compare with all delimiters
+        __mmask64 cmp_space = _mm512_cmpeq_epi8_mask(chunk, space_vec);
+        __mmask64 cmp_comma = _mm512_cmpeq_epi8_mask(chunk, comma_vec);
+        __mmask64 cmp_brace = _mm512_cmpeq_epi8_mask(chunk, brace_vec);
+        __mmask64 cmp_tab = _mm512_cmpeq_epi8_mask(chunk, tab_vec);
+        
+        // OR all comparisons together
+        __mmask64 result = cmp_space | cmp_comma | cmp_brace | cmp_tab;
+        
+        if (result != 0) {
+            // Find the first set bit
+            int offset = __builtin_ctzll(result);
+            return static_cast<int>(i + offset);
+        }
+    }
+    
+    // Process remaining bytes
+    for (; i < length; i++) {
+        char c = data[i];
+        if (c == 32 || c == 44 || c == 125 || c == 9) {
+            return static_cast<int>(i);
+        }
+    }
+    
+    return -1;
+}
+// AVX2 delimiter search for x86 (fallback)
+// Delimiters: space (32), comma (44), '}' (125), tab (9)
+#elif defined(__AVX2__)
 int avx_find_delimiter(const char* data, size_t length) {
     size_t i = 0;
     

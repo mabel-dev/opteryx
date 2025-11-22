@@ -18,7 +18,9 @@ This module provides:
 Used for high-performance analytics and columnar data processing in Draken.
 """
 
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AS_STRING
 from cpython.mem cimport PyMem_Malloc
+from libc.string cimport memset
 
 from libc.stddef cimport size_t
 from libc.stdint cimport int32_t
@@ -525,9 +527,34 @@ cdef Int64Vector from_arrow(object array):
     cdef intptr_t addr = base_ptr + offset * itemsize
     vec.ptr.data = <void*> addr
 
+    # Null bitmap handling with offset support
+    cdef Py_ssize_t nb_size
+    cdef uint8_t* src_bitmap
+    cdef uint8_t* dst_bitmap
+    cdef Py_ssize_t i
+    cdef object new_bitmap_bytes
+
     if bufs[0] is not None:
         nb_addr = bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> nb_addr
+        
+        if offset % 8 == 0:
+            vec.ptr.null_bitmap = (<uint8_t*> nb_addr) + (offset >> 3)
+        else:
+            # Unaligned offset: must copy and shift
+            nb_size = (len(array) + 7) // 8
+            new_bitmap_bytes = PyBytes_FromStringAndSize(NULL, nb_size)
+            dst_bitmap = <uint8_t*> PyBytes_AS_STRING(new_bitmap_bytes)
+            memset(dst_bitmap, 0, nb_size)
+            
+            src_bitmap = <uint8_t*> nb_addr
+            
+            # Copy bits shifting them
+            for i in range(len(array)):
+                if (src_bitmap[(offset + i) >> 3] >> ((offset + i) & 7)) & 1:
+                    dst_bitmap[i >> 3] |= (1 << (i & 7))
+            
+            vec.ptr.null_bitmap = dst_bitmap
+            vec._arrow_null_buf = new_bitmap_bytes
     else:
         vec.ptr.null_bitmap = NULL
 

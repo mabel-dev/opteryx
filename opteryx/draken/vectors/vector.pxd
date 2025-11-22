@@ -19,7 +19,7 @@ cdef extern from "simd_hash.h":
 
 cdef inline uint64_t mix_hash(uint64_t current, uint64_t value) nogil:
     cdef uint64_t mixed = current ^ value
-    mixed *= MIX_HASH_CONSTANT
+    mixed = mixed * MIX_HASH_CONSTANT + 1
     return mixed ^ (mixed >> 32)
 
 cdef class Vector:

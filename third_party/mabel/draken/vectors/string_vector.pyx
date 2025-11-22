@@ -28,10 +28,12 @@ from libc.stdlib cimport malloc, realloc, free
 
 from opteryx.draken.core.buffers cimport DrakenVarBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_STRING
-from opteryx.draken.core.var_vector cimport alloc_var_buffer
-from opteryx.draken.core.var_vector cimport buf_dtype
+from opteryx.draken.core.var_vector cimport alloc_var_buffer, buf_dtype
+
+cdef extern from "xxhash.h":
+    uint64_t XXH3_64bits(const void* input, size_t length) nogil
+
 from opteryx.draken.vectors.vector cimport MIX_HASH_CONSTANT, Vector, NULL_HASH, simd_mix_hash
-from opteryx.third_party.cyan4973.xxhash cimport cy_xxhash3_64
 
 DEF STRING_HASH_CHUNK = 256
 
@@ -275,31 +277,32 @@ cdef class StringVector(Vector):
         cdef Py_ssize_t idx
 
         i = 0
-        while i < n:
-            block = n - i
-            if block > STRING_HASH_CHUNK:
-                block = STRING_HASH_CHUNK
+        with nogil:
+            while i < n:
+                block = n - i
+                if block > STRING_HASH_CHUNK:
+                    block = STRING_HASH_CHUNK
 
-            if nb_ptr != NULL:
-                for j in range(block):
-                    idx = i + j
-                    byte = nb_ptr[idx >> 3]
-                    if ((byte >> (idx & 7)) & 1) == 0:
-                        scratch[j] = NULL_HASH
-                        continue
-                    start = offsets[idx]
-                    end = offsets[idx + 1]
-                    str_len = <size_t>(end - start)
-                    scratch[j] = cy_xxhash3_64(data + start, str_len)
-            else:
-                for j in range(block):
-                    start = offsets[i + j]
-                    end = offsets[i + j + 1]
-                    str_len = <size_t>(end - start)
-                    scratch[j] = cy_xxhash3_64(data + start, str_len)
-
-            simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
-            i += block
+                if nb_ptr != NULL:
+                    for j in range(block):
+                        idx = i + j
+                        byte = nb_ptr[idx >> 3]
+                        if ((byte >> (idx & 7)) & 1) == 0:
+                            scratch[j] = NULL_HASH
+                            continue
+                        start = offsets[idx]
+                        end = offsets[idx + 1]
+                        str_len = <size_t>(end - start)
+                        scratch[j] = XXH3_64bits(data + start, str_len)
+                else:
+                    for j in range(block):
+                        start = offsets[i + j]
+                        end = offsets[i + j + 1]
+                        str_len = <size_t>(end - start)
+                        scratch[j] = XXH3_64bits(data + start, str_len)
+                
+                simd_mix_hash(dst + i, scratch_ptr, <size_t> block)
+                i += block
 
     cpdef StringVector take(self, int32_t[::1] indices):
         cdef DrakenVarBuffer* src_ptr = self.ptr
@@ -809,6 +812,7 @@ cdef StringVector from_arrow(object array):
     vec._arrow_data_buf = bufs[2]
 
     vec.ptr.length = <size_t> len(array)
+    cdef Py_ssize_t offset = array.offset
 
     # Data buffer (bytes)
     cdef intptr_t data_addr = bufs[2].address
@@ -816,18 +820,63 @@ cdef StringVector from_arrow(object array):
 
     # Offsets buffer (int32_t[length+1])
     cdef intptr_t offs_addr = bufs[1].address
-    vec.ptr.offsets = <int32_t*> offs_addr
+    vec.ptr.offsets = (<int32_t*> offs_addr) + offset
 
     # Null bitmap (optional)
     cdef intptr_t nb_addr
+    cdef Py_ssize_t nb_size
+    cdef uint8_t* src_bitmap
+    cdef uint8_t* dst_bitmap
+    cdef Py_ssize_t i
+    cdef object new_bitmap_bytes
+
     if bufs[0] is not None:
         nb_addr = bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> nb_addr
+        
+        if offset % 8 == 0:
+            vec.ptr.null_bitmap = (<uint8_t*> nb_addr) + (offset >> 3)
+        else:
+            # Unaligned offset: must copy and shift
+            nb_size = (len(array) + 7) // 8
+            new_bitmap_bytes = PyBytes_FromStringAndSize(NULL, nb_size)
+            dst_bitmap = <uint8_t*> PyBytes_AS_STRING(new_bitmap_bytes)
+            # memset(dst_bitmap, 0, nb_size) # Not needed as we overwrite
+            
+            src_bitmap = <uint8_t*> nb_addr
+            
+            copy_bitmap_shifted(src_bitmap, dst_bitmap, offset, len(array))
+            
+            vec.ptr.null_bitmap = dst_bitmap
+            vec._arrow_null_buf = new_bitmap_bytes
     else:
         vec.ptr.null_bitmap = NULL
 
     vec.ptr.type = DRAKEN_STRING
     return vec
+
+cdef void copy_bitmap_shifted(uint8_t* src, uint8_t* dst, Py_ssize_t offset, Py_ssize_t length) noexcept nogil:
+    cdef Py_ssize_t i
+    cdef int shift = offset & 7
+    cdef Py_ssize_t byte_offset = offset >> 3
+    cdef Py_ssize_t num_bytes = (length + 7) // 8
+    
+    if shift == 0:
+        memcpy(dst, src + byte_offset, num_bytes)
+        return
+
+    # Process all bytes except the last one
+    for i in range(num_bytes - 1):
+        dst[i] = (src[byte_offset + i] >> shift) | (src[byte_offset + i + 1] << (8 - shift))
+        
+    # Handle the last byte
+    i = num_bytes - 1
+    cdef Py_ssize_t last_bit_index = offset + length - 1
+    cdef Py_ssize_t last_byte_index = last_bit_index >> 3
+    
+    if last_byte_index > (byte_offset + i):
+        dst[i] = (src[byte_offset + i] >> shift) | (src[byte_offset + i + 1] << (8 - shift))
+    else:
+        dst[i] = (src[byte_offset + i] >> shift)
 
 cdef inline bint is_null(uint8_t* bitmap, Py_ssize_t i):
     """Check if row i is null, given Arrow-style bitmap (1=valid, 0=null)."""

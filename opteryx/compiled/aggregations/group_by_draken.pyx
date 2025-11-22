@@ -51,6 +51,8 @@ cpdef Morsel group_by_morsel(
         object iter_indices
         int64_t group_val_int
         double group_val_double
+        uint64_t h
+        set seen_set
 
     if morsel is None or morsel.num_rows == 0:
         # return empty table similar to what pyarrow would return
@@ -85,7 +87,6 @@ cpdef Morsel group_by_morsel(
 
         # Build map of hash -> vector of row indices
         # Store seen keys in seen_keys (Python list) to iterate later
-        cdef uint64_t h
         for i in range(num_rows):
             h = <uint64_t> row_hashes[i]
             fmap.insert(h, i)
@@ -98,7 +99,7 @@ cpdef Morsel group_by_morsel(
 
         # Build unique keys dict by iterating again and filling a Python dict
         seen_keys = []
-        cdef set seen_set = set()
+        seen_set = set()
         for i in range(num_rows):
             h = <uint64_t> row_hashes[i]
             if h not in seen_set:

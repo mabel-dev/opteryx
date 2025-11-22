@@ -26,7 +26,7 @@ cpdef numpy.ndarray[numpy.uint32_t, ndim=1] list_length(object array):
     # PyArrow fast path (uses offsets buffer)
     if isinstance(array, (pyarrow.Array, pyarrow.ChunkedArray, pyarrow.lib.StringArray)):
         if isinstance(array, pyarrow.ChunkedArray):
-            array = array.combine_chunks()
+            return numpy.concatenate([list_length(chunk) for chunk in array.chunks])
 
         n = len(array)
 

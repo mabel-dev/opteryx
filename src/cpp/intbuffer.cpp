@@ -81,7 +81,15 @@ void CIntBuffer::reserve(size_t additional_capacity) {
     buffer.reserve(buffer.size() + additional_capacity);
 }
 
+void CIntBuffer::resize(size_t new_size) {
+    buffer.resize(new_size);
+}
+
 const int64_t* CIntBuffer::data() const noexcept {
+    return buffer.data();
+}
+
+int64_t* CIntBuffer::mutable_data() noexcept {
     return buffer.data();
 }
 
@@ -101,7 +109,58 @@ void CIntBuffer::clear() noexcept {
     buffer.clear();
 }
 
-template<typename InputIt>
-void CIntBuffer::extend(InputIt first, InputIt last) {
-    buffer.insert(buffer.end(), first, last);
+// CInt32Buffer Implementation
+
+CInt32Buffer::CInt32Buffer(size_t size_hint) {
+    buffer.reserve(size_hint > 0 ? size_hint : INITIAL_CAPACITY);
+}
+
+void CInt32Buffer::append(int32_t value) {
+    buffer.push_back(value);
+}
+
+void CInt32Buffer::extend(const std::vector<int32_t>& values) {
+    extend(values.data(), values.size());
+}
+
+void CInt32Buffer::extend(const int32_t* values, size_t count) {
+    if (count > 0) {
+        const size_t new_size = buffer.size() + count;
+        if (new_size > buffer.capacity()) {
+            buffer.reserve(std::max(new_size, buffer.capacity() * GROWTH_FACTOR));
+        }
+        buffer.insert(buffer.end(), values, values + count);
+    }
+}
+
+void CInt32Buffer::reserve(size_t additional_capacity) {
+    buffer.reserve(buffer.size() + additional_capacity);
+}
+
+void CInt32Buffer::resize(size_t new_size) {
+    buffer.resize(new_size);
+}
+
+const int32_t* CInt32Buffer::data() const noexcept {
+    return buffer.data();
+}
+
+int32_t* CInt32Buffer::mutable_data() noexcept {
+    return buffer.data();
+}
+
+size_t CInt32Buffer::size() const noexcept {
+    return buffer.size();
+}
+
+size_t CInt32Buffer::capacity() const noexcept {
+    return buffer.capacity();
+}
+
+void CInt32Buffer::shrink_to_fit() {
+    buffer.shrink_to_fit();
+}
+
+void CInt32Buffer::clear() noexcept {
+    buffer.clear();
 }
