@@ -445,6 +445,8 @@ def evaluate_and_append(expressions, table: Table):
                 raise IncorrectTypeError(
                     f"Unable to cast '{statement.schema_column.name}' to {field.type}"
                 ) from e
+        elif not isinstance(new_column, (pyarrow.Array, pyarrow.ChunkedArray)):
+            new_column = pyarrow.array(new_column)
 
         table = table.append_column(field, new_column)
         existing_cols.add(identity)
@@ -474,7 +476,7 @@ def evaluate_statement(statement, table):
     new_column = evaluate(statement, table)
     if is_mask(new_column, statement, table):
         new_column = create_mask(new_column, table.num_rows)
-    return [new_column]
+    return new_column
 
 
 def is_mask(new_column, statement, table):
