@@ -26,17 +26,17 @@ def and_mask(bytes a, bytes b, Py_ssize_t n):
     - AVX2: 32 bytes per iteration  
     - NEON: 16 bytes per iteration
     """
-    cdef uint8_t* pa = <uint8_t*> a
-    cdef uint8_t* pb = <uint8_t*> b
+    cdef uint8_t* pa = <uint8_t*> (<char*> a)
+    cdef uint8_t* pb = <uint8_t*> (<char*> b)
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
     
     simd_and_mask(out, pa, pb, n)
     
-    py_out = bytes(<char *><void*> out, n)
+    py_out = out[:n]
     free(out)
-    return py_out
+    return bytes(py_out)
 
 
 def or_mask(bytes a, bytes b, Py_ssize_t n):
@@ -47,17 +47,17 @@ def or_mask(bytes a, bytes b, Py_ssize_t n):
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """
-    cdef uint8_t* pa = <uint8_t*> a
-    cdef uint8_t* pb = <uint8_t*> b
+    cdef uint8_t* pa = <uint8_t*> (<char*> a)
+    cdef uint8_t* pb = <uint8_t*> (<char*> b)
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
     
     simd_or_mask(out, pa, pb, n)
     
-    py_out = bytes(<char *><void*> out, n)
+    py_out = out[:n]
     free(out)
-    return py_out
+    return bytes(py_out)
 
 
 def xor_mask(bytes a, bytes b, Py_ssize_t n):
@@ -68,17 +68,17 @@ def xor_mask(bytes a, bytes b, Py_ssize_t n):
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """
-    cdef uint8_t* pa = <uint8_t*> a
-    cdef uint8_t* pb = <uint8_t*> b
+    cdef uint8_t* pa = <uint8_t*> (<char*> a)
+    cdef uint8_t* pb = <uint8_t*> (<char*> b)
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
     
     simd_xor_mask(out, pa, pb, n)
     
-    py_out = bytes(<char *><void*> out, n)
+    py_out = out[:n]
     free(out)
-    return py_out
+    return bytes(py_out)
 
 
 def not_mask(bytes a, Py_ssize_t n):
@@ -89,16 +89,16 @@ def not_mask(bytes a, Py_ssize_t n):
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """
-    cdef uint8_t* pa = <uint8_t*> a
+    cdef uint8_t* pa = <uint8_t*> (<char*> a)
     cdef uint8_t* out = <uint8_t*> malloc(n)
     if out == NULL:
         raise MemoryError()
     
     simd_not_mask(out, pa, n)
     
-    py_out = bytes(<char *><void*> out, n)
+    py_out = out[:n]
     free(out)
-    return py_out
+    return bytes(py_out)
 
 
 def popcount_mask(bytes a, Py_ssize_t n):
@@ -106,5 +106,5 @@ def popcount_mask(bytes a, Py_ssize_t n):
     
     Uses SIMD acceleration with POPCNT instruction when available.
     """
-    cdef uint8_t* pa = <uint8_t*> a
+    cdef uint8_t* pa = <uint8_t*> (<char*> a)
     return simd_popcount(pa, n)
