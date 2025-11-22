@@ -219,3 +219,4 @@ tests/draken/performance/.perf_baseline.json
 opteryx/draken/vectors/_hash_api.c*
 third_party/mabel/draken/vectors/interval_vector.c*
 third_party/mabel/draken/morsels/align.c*
+third_party/mabel/draken/compiled/maskops.cpp

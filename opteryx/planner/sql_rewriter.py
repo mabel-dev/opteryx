@@ -206,7 +206,6 @@ def sql_parts(string):
                 if subpart:
                     parts.append(subpart)
 
-    print(" ".join(parts))
     return parts
 
 

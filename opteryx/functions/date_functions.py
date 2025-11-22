@@ -20,7 +20,7 @@ def convert_int64_array_to_pyarrow_datetime(values: numpy.ndarray) -> pyarrow.Ar
     Convert a NumPy int64 array to PyArrow TimestampArray, inferring time unit.
     """
     if isinstance(values, pyarrow.ChunkedArray):
-        values = values.combine_chunks()
+        values = values.to_numpy(zero_copy_only=False)
 
     if isinstance(values, pyarrow.Array):
         values = values.to_numpy(zero_copy_only=False)
@@ -220,7 +220,11 @@ def unixtime(array):
     NaNs or nulls are converted to numpy.nan.
     """
     if isinstance(array, pyarrow.ChunkedArray):
-        array = array.combine_chunks().to_numpy(zero_copy_only=False)
+        # Handle ChunkedArray by processing chunks individually
+        if array.num_chunks == 0:
+            return numpy.array([], dtype=numpy.int64)
+        chunks = [unixtime(chunk) for chunk in array.chunks]
+        return numpy.concatenate(chunks)
 
     if numpy.issubdtype(array.dtype, numpy.datetime64):
         # Convert datetime64[ns] to seconds since epoch

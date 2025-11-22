@@ -8,7 +8,7 @@
 # cython: boundscheck=False
 
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t, uint64_t
+from libc.stdint cimport int64_t, uint64_t, int32_t
 from libc.stddef cimport size_t
 from libcpp.pair cimport pair
 
@@ -72,6 +72,39 @@ cdef class FlatHashSet:
 
     cdef inline void reserve(self, int64_t capacity) noexcept nogil:
         self._set.reserve(capacity)
+
+    cdef vector[int64_t] find_new_indices(self, uint64_t* hashes, Py_ssize_t length) noexcept nogil:
+        cdef vector[int64_t] indices
+        cdef Py_ssize_t i
+        indices.reserve(length)  # Worst case
+
+        for i in range(length):
+            if self._set.insert(hashes[i]).second:
+                indices.push_back(i)
+
+        return indices
+
+    cdef Py_ssize_t find_new_indices_out(self, uint64_t* hashes, Py_ssize_t length, int64_t* out_indices) noexcept nogil:
+        cdef Py_ssize_t i
+        cdef Py_ssize_t count = 0
+
+        for i in range(length):
+            if self._set.insert(hashes[i]).second:
+                out_indices[count] = i
+                count += 1
+
+        return count
+
+    cdef Py_ssize_t find_new_indices_out_32(self, uint64_t* hashes, Py_ssize_t length, int32_t* out_indices) noexcept nogil:
+        cdef Py_ssize_t i
+        cdef Py_ssize_t count = 0
+
+        for i in range(length):
+            if self._set.insert(hashes[i]).second:
+                out_indices[count] = i
+                count += 1
+
+        return count
 
     cpdef size_t items(self):
         return self._set.size()
