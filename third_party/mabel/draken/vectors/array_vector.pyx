@@ -15,6 +15,7 @@ and a flattened child Vector stores nested values.
 """
 
 from cpython.buffer cimport PyBUF_READ
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AS_STRING
 from cpython.exc cimport PyErr_Occurred
 from cpython.long cimport PyLong_AsSsize_t
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
@@ -398,11 +399,49 @@ cdef ArrayVector from_arrow(object array):
     if bufs[1] is None:
         raise ValueError("List arrays require an offsets buffer")
 
-    offsets_addr = <intptr_t> bufs[1].address
+    # Handle offsets with array.offset
+    # Assuming ListType (int32 offsets). If LargeList, this will be wrong.
+    # TODO: Check for LargeList and handle or error.
+    cdef Py_ssize_t offset = array.offset
+    offsets_addr = <intptr_t> bufs[1].address + offset * 4
     vec.ptr.offsets = <int32_t*> offsets_addr
+
+    # Variables for null bitmap handling
+    cdef Py_ssize_t n_bytes
+    cdef bytes new_bitmap
+    cdef uint8_t* dst_bitmap
+    cdef uint8_t* src_bitmap
+    cdef int bit_offset
+    cdef Py_ssize_t byte_offset
+    cdef int shift_down
+    cdef int shift_up
+    cdef uint8_t val
+    cdef Py_ssize_t i
+
     if bufs[0] is not None:
         null_addr = <intptr_t> bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> null_addr
+        if offset % 8 == 0:
+            vec.ptr.null_bitmap = <uint8_t*> (null_addr + (offset >> 3))
+        else:
+            # Unaligned offset: copy and shift
+            n_bytes = (vec.ptr.length + 7) // 8
+            new_bitmap = PyBytes_FromStringAndSize(NULL, n_bytes)
+            dst_bitmap = <uint8_t*> PyBytes_AS_STRING(new_bitmap)
+            
+            byte_offset = offset >> 3
+            bit_offset = offset & 7
+            src_bitmap = <uint8_t*> null_addr + byte_offset
+            
+            shift_down = bit_offset
+            shift_up = 8 - bit_offset
+            
+            for i in range(n_bytes):
+                val = src_bitmap[i] >> shift_down
+                val |= (src_bitmap[i+1] << shift_up)
+                dst_bitmap[i] = val
+                
+            vec.ptr.null_bitmap = dst_bitmap
+            vec._arrow_null_buf = new_bitmap # Keep alive
     else:
         vec.ptr.null_bitmap = NULL
 

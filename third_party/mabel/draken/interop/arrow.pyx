@@ -97,8 +97,19 @@ cdef void expose_draken_fixed_as_arrow(
 cpdef object vector_from_arrow(object array):
     import pyarrow as pa
     
-    if hasattr(array, "combine_chunks"):
-        array = array.combine_chunks()
+    # Handle chunked arrays: single chunk is OK, multiple chunks not supported
+    if hasattr(array, "num_chunks"):
+        num_chunks = array.num_chunks
+        if num_chunks > 1:
+            raise ValueError(
+                f"vector_from_arrow received ChunkedArray with {num_chunks} chunks. "
+                f"Use Morsel.iter_from_arrow() to process tables with chunked columns, "
+                f"or call table.combine_chunks() before conversion."
+            )
+        elif num_chunks == 1:
+            # Single chunk - extract it
+            array = array.chunk(0)
+        # num_chunks == 0: empty array, proceed with it as-is
 
     pa_type = array.type
     if pa_type.equals(pa.int64()):

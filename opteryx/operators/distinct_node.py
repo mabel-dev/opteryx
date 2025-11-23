@@ -14,6 +14,7 @@ This Node eliminates duplicate records.
 from pyarrow import Table
 
 from opteryx import EOS
+from opteryx.draken import Morsel
 from opteryx.models import QueryProperties
 
 from . import BasePlanNode
@@ -29,6 +30,7 @@ class DistinctNode(BasePlanNode):
                 col.schema_column.identity.encode("utf-8") for col in self._distinct_on
             ]
         self.hash_set = None
+        self.at_least_one_yielded = False
 
     @property
     def config(self):  # pragma: no cover
@@ -39,22 +41,25 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self, morsel: Table, **kwargs) -> Table:
-        morsel = self.ensure_draken_morsel(morsel)
-
         from opteryx.compiled.table_ops.distinct import distinct
 
         if morsel == EOS:
             yield EOS
             return
 
-        # Use Draken-based distinct with column names as bytes
-        unique_indexes, self.hash_set = distinct(
-            morsel, columns=self._distinct_on, seen_hashes=self.hash_set
-        )
+        morsel = [morsel] if isinstance(morsel, Morsel) else Morsel.iter_from_arrow(morsel)
 
-        if len(unique_indexes) > 0:
-            morsel.take(unique_indexes)
-            yield morsel
-        else:
-            morsel.empty()
-            yield morsel
+        for chunk in morsel:
+            # Use Draken-based distinct with column names as bytes
+            unique_indexes, self.hash_set = distinct(
+                chunk, columns=self._distinct_on, seen_hashes=self.hash_set
+            )
+
+            if len(unique_indexes) > 0:
+                chunk.take(unique_indexes)
+                yield chunk
+            elif not self.at_least_one_yielded:
+                chunk.empty()
+                yield chunk
+
+            self.at_least_one_yielded = True

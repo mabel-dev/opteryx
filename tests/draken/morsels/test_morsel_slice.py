@@ -246,13 +246,15 @@ def test_slice_chunked_array():
         pa.array([3, 4, 5])
     ])
     tbl = pa.Table.from_arrays([chunked], names=['x'])
-    morsel = Morsel.from_arrow(tbl)
     
-    sliced = morsel.slice(1, 3)
-    assert sliced.shape == (3, 1)
-    
-    vals = [sliced.column(b'x')[i] for i in range(3)]
-    assert vals == [2, 3, 4]
+    with pytest.raises(ValueError):
+        morsel = Morsel.from_arrow(tbl)
+
+        sliced = morsel.slice(1, 3)
+        assert sliced.shape == (3, 1)
+        
+        vals = [sliced.column(b'x')[i] for i in range(3)]
+        assert vals == [2, 3, 4]
 
 
 def test_slice_with_array_type():
