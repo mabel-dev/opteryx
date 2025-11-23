@@ -103,13 +103,18 @@ class BasePlanNode:
             return morsel.to_arrow()
         return morsel
 
-    def ensure_draken_morsel(self, table: Union[Table, Morsel]) -> Morsel:
-        """Ensure the provided morsel is a Draken morsel when needed."""
+    def ensure_draken_morsel(self, table: Union[Table, Morsel]):
+        """Ensure the provided morsel is a Draken morsel when needed.
+
+        Returns either a single Morsel or a generator of Morsels.
+        """
         if table is EOS:
             return EOS
         if isinstance(table, Table):
             self.statistics.table_to_morsel_conversion += 1
-            return Morsel.from_arrow(table)
+            # Use iter_from_arrow to avoid expensive combine_chunks
+            # Yields morsels aligned with Arrow chunk boundaries
+            return Morsel.iter_from_arrow(table)
         return table
 
     def __call__(self, morsel: pyarrow.Table, join_leg: str) -> Optional[pyarrow.Table]:

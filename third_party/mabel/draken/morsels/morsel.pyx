@@ -24,7 +24,7 @@ from cpython.mem cimport PyMem_Calloc
 from cpython.mem cimport PyMem_Free
 from cpython.mem cimport PyMem_Malloc
 from libc.string cimport strlen
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, int64_t
 from libc.stdint cimport uint64_t
 
 from opteryx.draken.core.buffers cimport (
@@ -147,6 +147,8 @@ cdef class Morsel:
 
         for i in range(n):
             col = table.column(i)
+            # if hasattr(col, "num_chunks") and col.num_chunks > 1:
+            #     col = col.combine_chunks()
             vec = Vector.from_arrow(col)
             self._columns[i] = vec
 
@@ -186,7 +188,8 @@ cdef class Morsel:
                 length = table.num_rows - start
                 if length > batch_size:
                     length = batch_size
-                yield Morsel.from_arrow(table.slice(start, length))
+                slice = table.slice(start, length)
+                yield Morsel.from_arrow(slice)
                 start += length
             return
 
@@ -210,6 +213,7 @@ cdef class Morsel:
         if not breakpoints:
             breakpoints.add(total_rows)
 
+        chunk_count = 0
         for boundary in sorted(breakpoints):
             if boundary <= previous:
                 continue
@@ -394,6 +398,8 @@ cdef class Morsel:
                         import pyarrow as pa
                         arrow_array = vec.to_arrow()
                         sliced_arrow = arrow_array.slice(start, ln)
+                        if isinstance(sliced_arrow, pa.ChunkedArray):
+                            sliced_arrow = sliced_arrow.combine_chunks()
                         new_vec = vector_from_arrow(sliced_arrow)
 
                 result._columns[i] = new_vec
@@ -498,36 +504,79 @@ cdef class Morsel:
         cdef int32_t[::1] indices_view
         cdef int i, n_indices, n_columns = self.ptr.num_columns
         cdef Vector src_vec, dst_vec
+        cdef int32_t* indices_ptr = NULL
+        cdef int64_t[::1] input_view_64
+        cdef int32_t[::1] input_view_32
+        cdef bint free_indices = False
+        cdef bint indices_ready = False
 
-        # Convert indices to array without NumPy
-        if not hasattr(indices, '__len__'):
-            indices = [indices]
+        # Try fast path for int32 memoryview (e.g. Int32Buffer)
+        if not indices_ready:
+            try:
+                input_view_32 = indices
+                n_indices = input_view_32.shape[0]
+                if n_indices == 0:
+                    self._empty_inplace()
+                    return
+                indices_view = input_view_32
+                indices_ready = True
+            except (TypeError, ValueError):
+                pass
 
-        # Handle PyArrow arrays by converting to list
-        if hasattr(indices, 'to_pylist'):
-            indices = indices.to_pylist()
-        elif hasattr(indices, 'tolist'):  # Handle numpy arrays if passed in
-            indices = indices.tolist()
+        # Try fast path for int64 memoryview (e.g. from numpy)
+        if not indices_ready:
+            try:
+                input_view_64 = indices
+                n_indices = input_view_64.shape[0]
+                if n_indices == 0:
+                    self._empty_inplace()
+                    return
+                
+                indices_ptr = <int32_t*>PyMem_Malloc(n_indices * sizeof(int32_t))
+                if indices_ptr == NULL:
+                    raise MemoryError()
+                free_indices = True
+                
+                # Fast copy/cast loop
+                for i in range(n_indices):
+                    indices_ptr[i] = <int32_t>input_view_64[i]
+                    
+                indices_view = <int32_t[:n_indices]>indices_ptr
+                indices_ready = True
+                
+            except (TypeError, ValueError):
+                pass
 
-        # Convert to C array
-        n_indices = len(indices)
-        # Fast-path: empty selection -> replace each column with an empty
-        # vector of the same concrete class and set rowcount to 0.
-        if n_indices == 0:
-            self._empty_inplace()
-            return
+        if not indices_ready:
+            # Fallback to existing logic
+            if not hasattr(indices, '__len__'):
+                indices = [indices]
 
-        cdef int32_t* indices_ptr = <int32_t*>PyMem_Malloc(n_indices * sizeof(int32_t))
-        if indices_ptr == NULL:
-            raise MemoryError()
+            if hasattr(indices, 'to_pylist'):
+                indices = indices.to_pylist()
+            elif hasattr(indices, 'tolist'):  # Handle numpy arrays if passed in
+                indices = indices.tolist()
 
-        try:
+            # Convert to C array
+            n_indices = len(indices)
+            # Fast-path: empty selection -> replace each column with an empty
+            # vector of the same concrete class and set rowcount to 0.
+            if n_indices == 0:
+                self._empty_inplace()
+                return
+
+            indices_ptr = <int32_t*>PyMem_Malloc(n_indices * sizeof(int32_t))
+            if indices_ptr == NULL:
+                raise MemoryError()
+            free_indices = True
+
             for i in range(n_indices):
                 indices_ptr[i] = <int32_t>indices[i]
 
             # Create memoryview from C array
             indices_view = <int32_t[:n_indices]>indices_ptr
 
+        try:
             # Take from each column using vector's native take method
             for i in range(n_columns):
                 src_vec = <Vector>self.ptr.columns[i]
@@ -543,7 +592,8 @@ cdef class Morsel:
             self.ptr.num_rows = n_indices
 
         finally:
-            PyMem_Free(indices_ptr)
+            if free_indices and indices_ptr != NULL:
+                PyMem_Free(indices_ptr)
 
     cdef void _empty_inplace(self):
         """Replace each column with a zero-length vector of the same class.
@@ -793,7 +843,7 @@ cdef class Morsel:
         for i in range(self.ptr.num_columns):
             column_names.append(self.ptr.column_names[i].decode('utf-8'))
 
-        # Get arrow arrays from vectors using their native to_arrow methods
+        # Get arrow columns from vectors using their native to_arrow methods
         arrow_columns = []
         cdef Vector vec
         for i in range(self.ptr.num_columns):
