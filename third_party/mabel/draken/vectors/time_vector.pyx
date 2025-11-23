@@ -18,8 +18,8 @@ This module provides:
 Used for high-performance temporal analytics and columnar data processing in Draken.
 """
 
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AS_STRING
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
-
 from libc.stdint cimport int32_t
 from libc.stdint cimport int64_t
 from libc.stdint cimport int8_t
@@ -27,6 +27,7 @@ from libc.stdint cimport intptr_t
 from libc.stdint cimport uint64_t
 from libc.stdint cimport uint8_t
 from libc.stdlib cimport malloc
+from libc.string cimport memset
 
 from opteryx.draken.core.buffers cimport DrakenFixedBuffer
 from opteryx.draken.core.buffers cimport DRAKEN_TIME32
@@ -335,9 +336,42 @@ cdef TimeVector from_arrow(object array):
     cdef intptr_t addr = base_ptr + offset * itemsize
     vec.ptr.data = <void*> addr
 
+    # Variables for null bitmap handling
+    cdef Py_ssize_t n_bytes
+    cdef bytes new_bitmap
+    cdef uint8_t* dst_bitmap
+    cdef uint8_t* src_bitmap
+    cdef int bit_offset
+    cdef Py_ssize_t byte_offset
+    cdef int shift_down
+    cdef int shift_up
+    cdef uint8_t val
+    cdef Py_ssize_t i
+
     if bufs[0] is not None:
         nb_addr = bufs[0].address
-        vec.ptr.null_bitmap = <uint8_t*> nb_addr
+        if offset % 8 == 0:
+            vec.ptr.null_bitmap = <uint8_t*> (nb_addr + (offset >> 3))
+        else:
+            # Unaligned offset: copy and shift
+            n_bytes = (vec.ptr.length + 7) // 8
+            new_bitmap = PyBytes_FromStringAndSize(NULL, n_bytes)
+            dst_bitmap = <uint8_t*> PyBytes_AS_STRING(new_bitmap)
+            
+            byte_offset = offset >> 3
+            bit_offset = offset & 7
+            src_bitmap = <uint8_t*> nb_addr + byte_offset
+            
+            shift_down = bit_offset
+            shift_up = 8 - bit_offset
+            
+            for i in range(n_bytes):
+                val = src_bitmap[i] >> shift_down
+                val |= (src_bitmap[i+1] << shift_up)
+                dst_bitmap[i] = val
+                
+            vec.ptr.null_bitmap = dst_bitmap
+            vec._arrow_null_buf = new_bitmap # Keep alive
     else:
         vec.ptr.null_bitmap = NULL
 

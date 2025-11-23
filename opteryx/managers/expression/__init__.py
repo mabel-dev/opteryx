@@ -425,9 +425,6 @@ def evaluate_and_append(expressions, table: Table):
             # we make all unknown fields to object type
             new_column = pyarrow.array([], type=statement.schema_column.arrow_field.type)
 
-        if isinstance(new_column, pyarrow.ChunkedArray):
-            new_column = new_column.combine_chunks()
-
         # if we know the intended type of the result column, cast it
         field = statement.schema_column.identity
         if statement.schema_column.type not in (
@@ -440,14 +437,16 @@ def evaluate_and_append(expressions, table: Table):
                 type=statement.schema_column.arrow_field.type,
             )
             try:
-                if isinstance(new_column, pyarrow.Array):
+                if isinstance(new_column, (pyarrow.Array, pyarrow.ChunkedArray)):
                     new_column = new_column.cast(field.type)
                 else:
-                    new_column = pyarrow.array(new_column[0], type=field.type)
+                    new_column = pyarrow.array(new_column, type=field.type)
             except pyarrow.lib.ArrowInvalid as e:
                 raise IncorrectTypeError(
                     f"Unable to cast '{statement.schema_column.name}' to {field.type}"
                 ) from e
+        elif not isinstance(new_column, (pyarrow.Array, pyarrow.ChunkedArray)):
+            new_column = pyarrow.array(new_column)
 
         table = table.append_column(field, new_column)
         existing_cols.add(identity)
@@ -477,7 +476,7 @@ def evaluate_statement(statement, table):
     new_column = evaluate(statement, table)
     if is_mask(new_column, statement, table):
         new_column = create_mask(new_column, table.num_rows)
-    return [new_column]
+    return new_column
 
 
 def is_mask(new_column, statement, table):

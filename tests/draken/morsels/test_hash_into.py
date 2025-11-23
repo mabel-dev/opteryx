@@ -27,7 +27,7 @@ def _hash_view_to_list(buffer):
 
 
 def _mix_hash(current: int, value: int, mix_constant: int) -> int:
-    current = (current ^ value) * mix_constant
+    current = (current ^ value) * mix_constant + 1
     current &= 0xFFFFFFFFFFFFFFFF
     current ^= current >> 32
     return current & 0xFFFFFFFFFFFFFFFF

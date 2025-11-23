@@ -22,8 +22,12 @@ cdef inline numpy.ndarray[object, ndim=1] _ensure_object_array(object data):
             return data
         return data.astype(object)
 
-    if hasattr(data, "combine_chunks"):
-        data = data.combine_chunks()
+    if hasattr(data, "chunks"):
+        # Handle ChunkedArray by processing chunks individually to avoid massive copy
+        return numpy.concatenate([_ensure_object_array(chunk) for chunk in data.chunks])
+
+    # if hasattr(data, "combine_chunks"):
+    #     data = data.combine_chunks()
 
     if hasattr(data, "to_numpy"):
         arr = data.to_numpy(zero_copy_only=False)
