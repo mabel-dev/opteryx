@@ -14,7 +14,21 @@
 
 #if defined(__linux__)
 #include <sys/auxv.h>
-#include <asm/hwcap.h>
+// <asm/hwcap.h> is not available on all distros/headers (CI images may lack it).
+// Use __has_include when available to include it only if present and provide
+// a graceful fallback otherwise.
+#if defined(__has_include)
+#  if __has_include(<asm/hwcap.h>)
+#    include <asm/hwcap.h>
+#  elif __has_include(<linux/hwcap.h>)
+#    include <linux/hwcap.h>
+#  endif
+#else
+// Older compilers without __has_include will attempt to include the header
+// as before; if it's missing the build will fail and we will need to add
+// further fallbacks in CI. Keep existing behavior for now.
+#  include <asm/hwcap.h>
+#endif
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
