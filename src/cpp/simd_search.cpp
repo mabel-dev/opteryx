@@ -588,7 +588,8 @@ static int avx_find_delimiter_avx512(const char* data, size_t length) {
 }
 // AVX2 delimiter search for x86 (fallback)
 // Delimiters: space (32), comma (44), '}' (125), tab (9)
-#elif defined(__AVX2__)
+#endif
+#if defined(__AVX2__)
 static int avx_find_delimiter_avx2(const char* data, size_t length) {
     size_t i = 0;
     

@@ -280,6 +280,13 @@ if SHOULD_BUILD_EXTENSIONS:
             sources = [f"third_party/mabel/draken/{source_file}"]
         else:
             sources = [f"third_party/mabel/draken/{sf}" for sf in source_file]
+
+        # Always compile the CPU feature probes into draken extensions so
+        # symbols like `cpu_supports_avx2` are available to each shared
+        # object. This avoids runtime undefined-symbol errors due to link
+        # ordering differences across platforms and Python versions.
+        if "src/cpp/cpu_features.cpp" not in sources:
+            sources.append("src/cpp/cpu_features.cpp")
         
         ext_kwargs = {
             "name": f"opteryx.draken.{module_path}",
