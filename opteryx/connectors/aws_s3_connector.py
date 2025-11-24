@@ -85,7 +85,12 @@ class AwsS3Connector(
                 "MinIo (S3) adapter requires MINIO_END_POINT, MINIO_ACCESS_KEY and MINIO_SECRET_KEY set in environment variables."
             )
 
-        self.minio = Minio(end_point, access_key, secret_key, secure=secure)
+        # Minio v7 uses keyword-only args for construction (endpoint=...).
+        try:
+            self.minio = Minio(endpoint=end_point, access_key=access_key, secret_key=secret_key, secure=secure)
+        except TypeError:
+            # Fall back to positional args for older Minio versions.
+            self.minio = Minio(end_point, access_key, secret_key, secure=secure)
 
         # Only convert dots to path separators if the dataset doesn't already contain slashes
         # Dataset references like "my.dataset.table" use dots as separators
@@ -190,7 +195,8 @@ class AwsS3Connector(
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             # DEBUG: print("READ   ", name)
-            stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
+            stream = None
+            stream = self.minio.get_object(bucket_name=bucket, object_name=object_path + "/" + name + extension)
             data = stream.read()
 
             ref = await pool.commit(data)
@@ -203,14 +209,17 @@ class AwsS3Connector(
             statistics.bytes_read += len(data)
             return ref
         finally:
-            stream.close()
+            if stream:
+                stream.close()
 
     def read_blob(self, *, blob_name, **kwargs):
+        stream = None
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
-            stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
+            stream = self.minio.get_object(bucket_name=bucket, object_name=object_path + "/" + name + extension)
             content = stream.read()
             self.statistics.bytes_read += len(content)
             return content
         finally:
-            stream.close()
+            if stream:
+                stream.close()
