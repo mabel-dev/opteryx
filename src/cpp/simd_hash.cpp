@@ -2,6 +2,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
+
+#include "simd_dispatch.h"
+#include "cpu_features.h"
 
 #if defined(__AVX512F__) || defined(__AVX2__)
 #include <immintrin.h>
@@ -58,13 +62,20 @@ inline uint64x2_t mullo_u64(uint64x2_t a, uint64x2_t b) {
 
 }  // namespace
 
-void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
+static void simd_mix_hash_scalar(uint64_t* dest, const uint64_t* values, std::size_t count) {
     if (dest == nullptr || values == nullptr || count == 0) {
         return;
     }
 
+    scalar_mix(dest, values, count);
+}
+
 #if defined(__AVX512F__)
-    // AVX512: Process 8x uint64 per iteration (512 bits / 64 bits = 8)
+static void simd_mix_hash_avx512(uint64_t* dest, const uint64_t* values, std::size_t count) {
+    if (dest == nullptr || values == nullptr || count == 0) {
+        return;
+    }
+
     const std::size_t stride = 8;
     const __m512i const_vec = _mm512_set1_epi64(static_cast<long long>(MIX_HASH_CONSTANT));
     std::size_t i = 0;
@@ -81,7 +92,15 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
     if (i < count) {
         scalar_mix(dest + i, values + i, count - i);
     }
-#elif defined(__AVX2__)
+}
+#endif
+
+#if defined(__AVX2__)
+static void simd_mix_hash_avx2(uint64_t* dest, const uint64_t* values, std::size_t count) {
+    if (dest == nullptr || values == nullptr || count == 0) {
+        return;
+    }
+
     const std::size_t stride = 4;
     const __m256i const_vec = _mm256_set1_epi64x(static_cast<long long>(MIX_HASH_CONSTANT));
     std::size_t i = 0;
@@ -98,7 +117,15 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
     if (i < count) {
         scalar_mix(dest + i, values + i, count - i);
     }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+}
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+static void simd_mix_hash_neon(uint64_t* dest, const uint64_t* values, std::size_t count) {
+    if (dest == nullptr || values == nullptr || count == 0) {
+        return;
+    }
+
     const std::size_t stride = 2;
     const uint64x2_t const_vec = vdupq_n_u64(MIX_HASH_CONSTANT);
     std::size_t i = 0;
@@ -115,7 +142,24 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
     if (i < count) {
         scalar_mix(dest + i, values + i, count - i);
     }
-#else
-    scalar_mix(dest, values, count);
+}
 #endif
+
+void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
+    using fn_t = void(*)(uint64_t*, const uint64_t*, std::size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX512F__)
+        { &cpu_supports_avx512, simd_mix_hash_avx512 },
+#endif
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_mix_hash_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_mix_hash_neon },
+#endif
+    }, simd_mix_hash_scalar);
+
+    return fn(dest, values, count);
 }

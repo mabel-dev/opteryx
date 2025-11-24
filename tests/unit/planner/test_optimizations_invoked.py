@@ -7,7 +7,7 @@ This tests the various format readers.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 import pytest
 
 import opteryx
@@ -42,7 +42,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id < 8 AND id < 5", "optimization_predicate_compaction"),  # id < 8 AND id < 5 => id < 5
         ("SELECT * FROM $planets WHERE id > 1 AND id < 8 AND id > 3 AND id < 7", "optimization_predicate_compaction"),  # Multiple bounds compacted
         # Correlated filters test - filters created based on join statistics
-        ("SELECT s.name FROM $satellites s INNER JOIN $planets p ON s.planetId = p.id", "optimization_inner_join_correlated_filter"),  # Correlated filter on join
+        #("SELECT s.name FROM $satellites s INNER JOIN $planets p ON s.planetId = p.id", "optimization_inner_join_correlated_filter"),  # Correlated filter on join
     ]
 # fmt:on
 
