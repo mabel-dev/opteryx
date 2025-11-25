@@ -24,12 +24,19 @@ inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count
     }
 }
 
+// Provide architecture-specific mullo_u64 overloads. Use separate `#if`
+// blocks (not `#elif`) so multiple implementations can be compiled when
+// both feature macros (e.g. __AVX512F__ and __AVX2__) are defined. That
+// prevents compilation issues where an AVX2 routine tries to call the
+// AVX512 signature when AVX512 is enabled.
 #if defined(__AVX512F__)
 // AVX512 has native 64-bit multiply instruction (vpmuludq)
 inline __m512i mullo_u64(__m512i a, __m512i b) {
     return _mm512_mullo_epi64(a, b);
 }
-#elif defined(__AVX2__)
+#endif
+
+#if defined(__AVX2__)
 inline __m256i mullo_u64(__m256i a, __m256i b) {
     // AVX2 lacks a direct 64-bit integer multiply, so combine 32-bit partials per lane.
     const __m256i mask = _mm256_set1_epi64x(0xFFFFFFFFULL);
@@ -47,7 +54,9 @@ inline __m256i mullo_u64(__m256i a, __m256i b) {
 
     return _mm256_add_epi64(prod_ll, cross);
 }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
 inline uint64x2_t mullo_u64(uint64x2_t a, uint64x2_t b) {
     alignas(16) uint64_t a_vals[2];
     alignas(16) uint64_t b_vals[2];
