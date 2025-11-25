@@ -48,7 +48,9 @@ def _s3_client(**_kwargs):
     # Minio v7 introduced keyword-only constructor parameters (endpoint=...).
     # Call using keywords for compatibility with both older and newer SDKs.
     try:
-        return Minio(endpoint=end_point, access_key=access_key, secret_key=secret_key, secure=secure)
+        return Minio(
+            endpoint=end_point, access_key=access_key, secret_key=secret_key, secure=secure
+        )
     except TypeError:
         # Fallback: older Minio versions accept positional args
         return Minio(end_point, access_key, secret_key, secure=secure)

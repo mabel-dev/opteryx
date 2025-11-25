@@ -87,7 +87,9 @@ class AwsS3Connector(
 
         # Minio v7 uses keyword-only args for construction (endpoint=...).
         try:
-            self.minio = Minio(endpoint=end_point, access_key=access_key, secret_key=secret_key, secure=secure)
+            self.minio = Minio(
+                endpoint=end_point, access_key=access_key, secret_key=secret_key, secure=secure
+            )
         except TypeError:
             # Fall back to positional args for older Minio versions.
             self.minio = Minio(end_point, access_key, secret_key, secure=secure)
@@ -196,7 +198,9 @@ class AwsS3Connector(
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             # DEBUG: print("READ   ", name)
             stream = None
-            stream = self.minio.get_object(bucket_name=bucket, object_name=object_path + "/" + name + extension)
+            stream = self.minio.get_object(
+                bucket_name=bucket, object_name=object_path + "/" + name + extension
+            )
             data = stream.read()
 
             ref = await pool.commit(data)
@@ -216,7 +220,9 @@ class AwsS3Connector(
         stream = None
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
-            stream = self.minio.get_object(bucket_name=bucket, object_name=object_path + "/" + name + extension)
+            stream = self.minio.get_object(
+                bucket_name=bucket, object_name=object_path + "/" + name + extension
+            )
             content = stream.read()
             self.statistics.bytes_read += len(content)
             return content
