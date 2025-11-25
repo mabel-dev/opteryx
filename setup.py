@@ -592,7 +592,8 @@ if SHOULD_BUILD_EXTENSIONS:
             ],
             include_dirs=include_dirs + ["src/cpp"],
             language="c++",
-            extra_compile_args=CPP_COMPILE_FLAGS,
+            # Ensure this extension is forcibly compiled as C++17
+            extra_compile_args=CPP_COMPILE_FLAGS + ["-std=c++17"],
             depends=["src/cpp/directories.h"],
         ),
         Extension(
