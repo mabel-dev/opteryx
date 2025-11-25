@@ -248,8 +248,10 @@ static int avx_search_avx512(const char* data, size_t length, char target) {
     }
     return -1;
 }
-// AVX2 implementation for x86 (fallback when AVX512 not available)
-#elif defined(__AVX2__)
+// AVX2 implementation for x86 (fallback)
+#endif
+
+#if defined(__AVX2__)
 static int avx_search_avx2(const char* data, size_t length, char target) {
     size_t i = 0;
     __m256i target_vec = _mm256_set1_epi8(target);
@@ -337,7 +339,9 @@ static std::vector<size_t> avx_find_all_avx512(const char* data, size_t length, 
     return results;
 }
 // AVX2 find_all implementation for x86 (fallback)
-#elif defined(__AVX2__)
+#endif
+
+#if defined(__AVX2__)
 static std::vector<size_t> avx_find_all_avx2(const char* data, size_t length, char target) {
     std::vector<size_t> results;
     results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
@@ -425,7 +429,9 @@ static size_t avx_count_avx512(const char* data, size_t length, char target) {
     return count;
 }
 // AVX2 count implementation for x86 (fallback)
-#elif defined(__AVX2__)
+#endif
+
+#if defined(__AVX2__)
 static size_t avx_count_avx2(const char* data, size_t length, char target) {
     size_t count = 0;
     size_t i = 0;
