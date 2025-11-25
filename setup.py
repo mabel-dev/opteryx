@@ -36,9 +36,12 @@ if "clean" in [arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith
 # Architecture detection for SIMD
 def detect_architecture():
     machine = platform.machine().lower()
-    if "arm" in machine or "aarch64" in machine:
+    # Distinguish between 32-bit ARM (arm/armv7) and 64-bit ARM (aarch64/arm64)
+    if "aarch64" in machine or "arm64" in machine:
+        return "aarch64"
+    if "arm" in machine:
         return "arm"
-    elif "x86" in machine or "amd64" in machine:
+    if "x86" in machine or "amd64" in machine:
         return "x86_64"
     return machine
 
