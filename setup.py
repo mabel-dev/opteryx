@@ -249,7 +249,7 @@ extensions = [
     # Pre-generated C module for morsels.align (Cython-generated C source)
     Extension(
         "opteryx.draken.morsels.align",
-        sources=["third_party/mabel/draken/morsels/align.c"],
+        sources=["third_party/mabel/draken/morsels/align.pyx"],
         include_dirs=include_dirs,
         extra_compile_args=C_FLAGS,
         language="c",
