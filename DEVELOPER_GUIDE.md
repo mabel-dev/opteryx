@@ -161,6 +161,16 @@ make build
 make clean
 ```
 
+
+### macOS support
+
+We no longer build or support Intel (x86_64) macOS binaries. Apple stopped adding support for Intel macs and our CI and releases build ARM64 mac wheels only.
+
+To build mac wheel locally for Apple Silicon (arm64):
+
+```bash
+ARCHFLAGS="-arch arm64" python setup.py bdist_wheel
+```
 ## Development Patterns
 
 ### Adding a New Operator

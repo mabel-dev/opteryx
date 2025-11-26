@@ -36,6 +36,22 @@ if "clean" in [arg.lower() for arg in sys.argv[1:] if arg and not arg.startswith
 # Architecture detection for SIMD
 def detect_architecture():
     machine = platform.machine().lower()
+    # Respect environment ARCHFLAGS when cross-compiling or building universal
+    # wheels (e.g., ``-arch x86_64 -arch arm64``). This makes the build
+    # deterministic wrt which arch-specific sources to include.
+    archflags = os.environ.get("ARCHFLAGS", "").lower()
+    has_x86 = "x86_64" in archflags
+    has_arm = "arm64" in archflags or "aarch64" in archflags
+    if has_x86 and not has_arm:
+        return "x86_64"
+    if has_arm and not has_x86:
+        return "aarch64"
+    if has_x86 and has_arm:
+        # Universal build - don't infer a single architecture. Leave
+        # autodetection using the host platform below, which avoids
+        # including arch-specific assembly for both targets in a single
+        # compile invocation.
+        pass
     # Distinguish between 32-bit ARM (arm/armv7) and 64-bit ARM (aarch64/arm64)
     if "aarch64" in machine or "arm64" in machine:
         return "aarch64"
@@ -170,6 +186,15 @@ def get_parquet_vendor_sources():
     vendor_sources.extend(zstd_sources)
     return vendor_sources
 
+# Link args for parquet extension - ensure libcrypto is linked on Linux so
+# the runtime 'ldd' check in CI can verify its presence. Don't add -lcrypto
+# on macOS where the system library naming differs.
+parquet_link_args = []
+if not is_mac():
+    # Ensure libcrypto is added to the DT_NEEDED entries of the shared
+    # object even if no symbols are referenced (CI asserts its presence).
+    parquet_link_args.extend(["-Wl,--no-as-needed", "-lcrypto", "-Wl,--as-needed"])
+
 # Define all extensions
 extensions = [
     
@@ -238,6 +263,7 @@ extensions = [
     ),
     
     # File format readers
+
     Extension(
         "opteryx.rugo.parquet",
         sources=(
@@ -261,7 +287,7 @@ extensions = [
         define_macros=[("HAVE_SNAPPY", "1"), ("HAVE_ZSTD", "1"), ("ZSTD_STATIC_LINKING_ONLY", "1")],
         language="c++",
         extra_compile_args=CPP_FLAGS,
-        extra_link_args=[],
+        extra_link_args=parquet_link_args,
     ),
     Extension(
         "opteryx.rugo.jsonl", 

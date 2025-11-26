@@ -35,6 +35,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
+      - name: Install system packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          # We only need libssl-dev/pkg-config for libcrypto and build tooling
+          sudo apt-get install -y libssl-dev pkg-config
         
       - name: Install Requirements
         run: |
@@ -42,8 +48,21 @@ jobs:
           python -m uv pip install --upgrade numpy cython
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
-          python setup.py build_ext --inplace 
-          echo -j 4
+          python setup.py build_ext --inplace -j 4
+
+      - name: Print 'parquet' shared object dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          set -eux
+          SO_FILE=$(ls -1 opteryx/rugo/parquet*.so | head -n1)
+          echo "Located: $SO_FILE"
+          echo "File type: $(file $SO_FILE)"
+          echo "ldd output:"
+          ldd $SO_FILE || true
+          if ! ldd $SO_FILE | grep -q libcrypto; then
+            echo "ERROR: libcrypto not linked into $SO_FILE"
+            exit 1
+          fi
 
       - name: "Start Memcached Instance"
         run: |
