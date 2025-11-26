@@ -8,7 +8,6 @@ This module tests the SIMD implementations in src/cpp/simd_search.cpp:
 - avx_find_delimiter() / neon_find_delimiter() - Find JSON delimiters
 
 Tests verify correctness across different input sizes to exercise:
-- AVX512 path (64+ bytes)
 - AVX2 path (32-63 bytes)
 - NEON path (16-31 bytes on ARM)
 - Scalar fallback (<16 bytes)
@@ -67,7 +66,7 @@ class TestSIMDSearch:
         assert result == 10
 
     def test_search_long_string(self, strings_module):
-        """Test search with long string (64+ bytes) to exercise AVX512."""
+        """Test search with long string (64+ bytes) to exercise vectorized path (AVX2/NEON)."""
         try:
             from opteryx.compiled.functions import strings
         except ImportError:
@@ -123,7 +122,7 @@ class TestSIMDSearch:
         assert result == 4
 
     def test_count_long_string(self, strings_module):
-        """Test counting with long string (64+ bytes) to exercise AVX512."""
+        """Test counting with long string (64+ bytes) to exercise vectorized path (AVX2/NEON)."""
         try:
             from opteryx.compiled.functions import strings
         except ImportError:
@@ -168,7 +167,7 @@ class TestSIMDSearch:
         assert result == [0]
 
     def test_find_all_long_string(self, strings_module):
-        """Test find_all with long string (64+ bytes) to exercise AVX512."""
+        """Test find_all with long string (64+ bytes) to exercise vectorized path (AVX2/NEON)."""
         try:
             from opteryx.compiled.functions import strings
         except ImportError:

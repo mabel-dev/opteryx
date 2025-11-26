@@ -6,7 +6,6 @@
 # cython: wraparound=False
 # cython: boundscheck=False
 
-from libc.stddef cimport size_t
 from libc.stdint cimport int64_t, uint64_t, int32_t
 
 from opteryx.compiled.structures.buffers cimport IntBuffer, Int32Buffer
@@ -42,7 +41,7 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         seen_hashes.reserve(2048)
 
     cdef Py_ssize_t num_rows = row_hashes.shape[0]
-    
+
     if num_rows == 0:
         return IntBuffer(0), seen_hashes
 
@@ -58,13 +57,13 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         buffer32 = Int32Buffer(num_rows)
         buffer32.c_buffer.resize(num_rows)
         buffer32_ptr = buffer32.c_buffer.mutable_data()
-        
+
         with nogil:
             count = seen_hashes.find_new_indices_out_32(hashes_ptr, num_rows, buffer32_ptr)
-            
+
         if count == 0:
             return Int32Buffer(0), seen_hashes
-            
+
         buffer32.c_buffer.resize(count)
         return buffer32, seen_hashes
     else:
@@ -72,12 +71,12 @@ cpdef tuple distinct(Morsel morsel, FlatHashSet seen_hashes=None, list columns=N
         buffer64 = IntBuffer(num_rows)
         buffer64.c_buffer.resize(num_rows)
         buffer64_ptr = buffer64.c_buffer.mutable_data()
-        
+
         with nogil:
             count = seen_hashes.find_new_indices_out(hashes_ptr, num_rows, buffer64_ptr)
-            
+
         if count == 0:
             return IntBuffer(0), seen_hashes
-            
+
         buffer64.c_buffer.resize(count)
         return buffer64, seen_hashes

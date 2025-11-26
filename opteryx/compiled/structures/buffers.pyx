@@ -49,7 +49,7 @@ cdef class IntBuffer:
     def __getbuffer__(self, Py_buffer *view, int flags):
         cdef Py_ssize_t itemsize = sizeof(int64_t)
         cdef Py_ssize_t n_items = self.c_buffer.size()
-        
+
         self._shape[0] = n_items
 
         view.obj = self
@@ -151,7 +151,7 @@ cdef class Int32Buffer:
     def __getbuffer__(self, Py_buffer *view, int flags):
         cdef Py_ssize_t itemsize = sizeof(int32_t)
         cdef Py_ssize_t n_items = self.c_buffer.size()
-        
+
         self._shape[0] = n_items
 
         view.obj = self

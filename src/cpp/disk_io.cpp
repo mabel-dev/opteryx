@@ -35,7 +35,7 @@ int read_all_pread(const char* path, uint8_t* dst, size_t* out_len,
     int fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) return -errno;
 
-    struct stat st{};
+    struct stat st;
     if (fstat(fd, &st) != 0) { 
         int e = -errno; 
         close(fd); 
@@ -92,7 +92,7 @@ int read_all_pread(const char* path, uint8_t* dst, size_t* out_len,
     int fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) return -errno;
 
-    struct stat st{};
+    struct stat st;
     if (fstat(fd, &st) != 0) { 
         int e = -errno; 
         close(fd); 
@@ -172,7 +172,7 @@ int read_all_mmap(const char* path, uint8_t** dst, size_t* out_len) {
     int fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd < 0) return -errno;
 
-    struct stat st{};
+    struct stat st;
     if (fstat(fd, &st) != 0) { 
         int e = -errno; 
         close(fd); 

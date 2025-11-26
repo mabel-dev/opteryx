@@ -2,6 +2,9 @@
 set -ex
 
 # Install OpenSSL development headers inside the container
+# Note: zstd/snappy are vendored into the project; we should not install
+# zstd-devel/snappy-devel via yum inside the manylinux container (they may
+# not be available on the base image and we compile vendor sources directly).
 yum install -y openssl-devel
 
 # Install Rust (required for building some Python packages with Rust extensions)

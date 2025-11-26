@@ -1,7 +1,11 @@
 #include "simd_bitops.h"
 #include <cstring>
+#include <atomic>
 
-#if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
+#include "simd_dispatch.h"
+#include "cpu_features.h"
+
+#if defined(__AVX2__)
 #include <immintrin.h>
 #endif
 
@@ -13,23 +17,15 @@
 // Bitwise AND
 // ============================================================================
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    // Process 64 bytes at a time with AVX512
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_and_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    // Scalar tail
-    for (; i < n; i++) {
+// Scalar fallback for and
+static void simd_and_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    for (size_t i = 0; i < n; i++) {
         dest[i] = a[i] & b[i];
     }
 }
-#elif defined(__AVX2__)
-void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+
+#if defined(__AVX2__)
+static void simd_and_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 32 <= n; i += 32) {
         __m256i va = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(a + i));
@@ -37,12 +33,12 @@ void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
         __m256i result = _mm256_and_si256(va, vb);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] & b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] & b[i];
 }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
-void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+static void simd_and_mask_neon(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 16 <= n; i += 16) {
         uint8x16_t va = vld1q_u8(a + i);
@@ -50,37 +46,38 @@ void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
         uint8x16_t result = vandq_u8(va, vb);
         vst1q_u8(dest + i, result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] & b[i];
-    }
-}
-#else
-void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = a[i] & b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] & b[i];
 }
 #endif
+
+void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+    #if defined(__AVX2__)
+        fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_and_mask_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_and_mask_neon },
+#endif
+    }, simd_and_mask_scalar);
+
+    return fn(dest, a, b, n);
+}
 
 // ============================================================================
 // Bitwise OR
 // ============================================================================
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_or_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) {
-        dest[i] = a[i] | b[i];
-    }
+// Scalar fallback for or
+static void simd_or_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    for (size_t i = 0; i < n; i++) dest[i] = a[i] | b[i];
 }
-#elif defined(__AVX2__)
-void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+
+#if defined(__AVX2__)
+static void simd_or_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 32 <= n; i += 32) {
         __m256i va = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(a + i));
@@ -88,12 +85,12 @@ void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
         __m256i result = _mm256_or_si256(va, vb);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] | b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] | b[i];
 }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
-void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+static void simd_or_mask_neon(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 16 <= n; i += 16) {
         uint8x16_t va = vld1q_u8(a + i);
@@ -101,37 +98,38 @@ void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
         uint8x16_t result = vorrq_u8(va, vb);
         vst1q_u8(dest + i, result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] | b[i];
-    }
-}
-#else
-void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = a[i] | b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] | b[i];
 }
 #endif
+
+void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+#if defined(__AVX2__)
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_or_mask_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_or_mask_neon },
+#endif
+    }, simd_or_mask_scalar);
+
+    return fn(dest, a, b, n);
+}
 
 // ============================================================================
 // Bitwise XOR
 // ============================================================================
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_xor_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) {
-        dest[i] = a[i] ^ b[i];
-    }
+// Scalar fallback for xor
+static void simd_xor_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    for (size_t i = 0; i < n; i++) dest[i] = a[i] ^ b[i];
 }
-#elif defined(__AVX2__)
-void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+
+#if defined(__AVX2__)
+static void simd_xor_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 32 <= n; i += 32) {
         __m256i va = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(a + i));
@@ -139,12 +137,12 @@ void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
         __m256i result = _mm256_xor_si256(va, vb);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] ^ b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] ^ b[i];
 }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
-void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+static void simd_xor_mask_neon(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     for (; i + 16 <= n; i += 16) {
         uint8x16_t va = vld1q_u8(a + i);
@@ -152,37 +150,38 @@ void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
         uint8x16_t result = veorq_u8(va, vb);
         vst1q_u8(dest + i, result);
     }
-    for (; i < n; i++) {
-        dest[i] = a[i] ^ b[i];
-    }
-}
-#else
-void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = a[i] ^ b[i];
-    }
+    for (; i < n; i++) dest[i] = a[i] ^ b[i];
 }
 #endif
+
+void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
+    using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+#if defined(__AVX2__)
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_xor_mask_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_xor_mask_neon },
+#endif
+    }, simd_xor_mask_scalar);
+
+    return fn(dest, a, b, n);
+}
 
 // ============================================================================
 // Bitwise NOT
 // ============================================================================
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
-    size_t i = 0;
-    __m512i all_ones = _mm512_set1_epi8(static_cast<char>(0xFF));
-    for (; i + 64 <= n; i += 64) {
-        __m512i v = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(src + i));
-        __m512i result = _mm512_xor_si512(v, all_ones);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) {
-        dest[i] = ~src[i];
-    }
+// Scalar fallback for not
+static void simd_not_mask_scalar(uint8_t* dest, const uint8_t* src, size_t n) {
+    for (size_t i = 0; i < n; i++) dest[i] = ~src[i];
 }
-#elif defined(__AVX2__)
-void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
+
+#if defined(__AVX2__)
+static void simd_not_mask_avx2(uint8_t* dest, const uint8_t* src, size_t n) {
     size_t i = 0;
     __m256i all_ones = _mm256_set1_epi8(static_cast<char>(0xFF));
     for (; i + 32 <= n; i += 32) {
@@ -190,29 +189,38 @@ void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
         __m256i result = _mm256_xor_si256(v, all_ones);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), result);
     }
-    for (; i < n; i++) {
-        dest[i] = ~src[i];
-    }
+    for (; i < n; i++) dest[i] = ~src[i];
 }
-#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
-void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+static void simd_not_mask_neon(uint8_t* dest, const uint8_t* src, size_t n) {
     size_t i = 0;
     for (; i + 16 <= n; i += 16) {
         uint8x16_t v = vld1q_u8(src + i);
         uint8x16_t result = vmvnq_u8(v);
         vst1q_u8(dest + i, result);
     }
-    for (; i < n; i++) {
-        dest[i] = ~src[i];
-    }
-}
-#else
-void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = ~src[i];
-    }
+    for (; i < n; i++) dest[i] = ~src[i];
 }
 #endif
+
+void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
+    using fn_t = void(*)(uint8_t*, const uint8_t*, size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+#if defined(__AVX2__)
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_not_mask_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_not_mask_neon },
+#endif
+    }, simd_not_mask_scalar);
+
+    return fn(dest, src, n);
+}
 
 // ============================================================================
 // Population Count (number of set bits)
@@ -230,33 +238,24 @@ static const uint8_t popcount_table[256] = {
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8
 };
 
+// Keep popcount as-is: its implementations are safe fallbacks and do not execute
+// wide SIMD intrinsics that would cause illegal-instruction faults on older CPUs.
 #if defined(__AVX2__) && defined(__POPCNT__)
-// AVX2 with POPCNT instruction (also works for AVX512)
 size_t simd_popcount(const uint8_t* data, size_t n) {
     size_t count = 0;
     size_t i = 0;
-    
-    // Process 8 bytes at a time using POPCNT
     for (; i + 8 <= n; i += 8) {
         uint64_t val;
         memcpy(&val, data + i, 8);
         count += __builtin_popcountll(val);
     }
-    
-    // Scalar tail
-    for (; i < n; i++) {
-        count += popcount_table[data[i]];
-    }
-    
+    for (; i < n; i++) count += popcount_table[data[i]];
     return count;
 }
 #else
-// Fallback using lookup table
 size_t simd_popcount(const uint8_t* data, size_t n) {
     size_t count = 0;
-    for (size_t i = 0; i < n; i++) {
-        count += popcount_table[data[i]];
-    }
+    for (size_t i = 0; i < n; i++) count += popcount_table[data[i]];
     return count;
 }
 #endif
@@ -265,57 +264,44 @@ size_t simd_popcount(const uint8_t* data, size_t n) {
 // Conditional Selection: dest[i] = mask[i] ? a[i] : b[i]
 // ============================================================================
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-void simd_select_bytes(uint8_t* dest, const uint8_t* mask, 
-                       const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    __m512i zero = _mm512_setzero_si512();
-    
-    for (; i + 64 <= n; i += 64) {
-        __m512i vm = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(mask + i));
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        
-        // Create mask from non-zero bytes
-        __mmask64 m = _mm512_cmpneq_epu8_mask(vm, zero);
-        
-        // Use mask to select between a and b
-        __m512i result = _mm512_mask_blend_epi8(m, vb, va);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    
-    for (; i < n; i++) {
-        dest[i] = mask[i] ? a[i] : b[i];
-    }
+// Scalar fallback for select
+static void simd_select_bytes_scalar(uint8_t* dest, const uint8_t* mask,
+                                     const uint8_t* a, const uint8_t* b, size_t n) {
+    for (size_t i = 0; i < n; i++) dest[i] = mask[i] ? a[i] : b[i];
 }
-#elif defined(__AVX2__)
-void simd_select_bytes(uint8_t* dest, const uint8_t* mask, 
-                       const uint8_t* a, const uint8_t* b, size_t n) {
+
+#if defined(__AVX2__)
+static void simd_select_bytes_avx2(uint8_t* dest, const uint8_t* mask,
+                                   const uint8_t* a, const uint8_t* b, size_t n) {
     size_t i = 0;
     __m256i zero = _mm256_setzero_si256();
-    
+
     for (; i + 32 <= n; i += 32) {
         __m256i vm = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(mask + i));
         __m256i va = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(a + i));
         __m256i vb = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(b + i));
-        
-        // Create mask from non-zero bytes
         __m256i m = _mm256_cmpeq_epi8(vm, zero);
-        
-        // Select: where mask is zero (m is true), use b; otherwise use a
         __m256i result = _mm256_blendv_epi8(va, vb, m);
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + i), result);
     }
-    
-    for (; i < n; i++) {
-        dest[i] = mask[i] ? a[i] : b[i];
-    }
-}
-#else
-void simd_select_bytes(uint8_t* dest, const uint8_t* mask, 
-                       const uint8_t* a, const uint8_t* b, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = mask[i] ? a[i] : b[i];
-    }
+    for (; i < n; i++) dest[i] = mask[i] ? a[i] : b[i];
 }
 #endif
+
+void simd_select_bytes(uint8_t* dest, const uint8_t* mask,
+                       const uint8_t* a, const uint8_t* b, size_t n) {
+    using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*, size_t);
+    static std::atomic<fn_t> cache{nullptr};
+
+#if defined(__AVX2__)
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+        { &cpu_supports_avx2, simd_select_bytes_avx2 },
+#endif
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        { &cpu_supports_neon, simd_select_bytes_scalar },
+#endif
+    }, simd_select_bytes_scalar);
+
+    return fn(dest, mask, a, b, n);
+}

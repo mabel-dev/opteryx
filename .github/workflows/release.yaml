@@ -90,7 +90,7 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Set up Python ${{ matrix.python-version }} x64
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -101,15 +101,19 @@ jobs:
       - name: Install Rust aarch64-apple-darwin target
         run: rustup target add aarch64-apple-darwin
 
-      - name: Install Rust x86_64-apple-darwin
-        run: rustup target add x86_64-apple-darwin
+      # Dropped x86 macOS support: we no longer build x86_64 mac artifacts
+      # as Apple stopped support for Intel macs. We build arm64-only mac wheels.
 
-      - name: Build on macOS universal2
+      - name: Build on macOS (arm64)
         shell: bash
         env:
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
           MACOSX_DEPLOYMENT_TARGET: "10.15"
-          ARCHFLAGS: -arch x86_64 -arch arm64
+          # Build for arm64 only for now. Building universal2 in a single
+          # invocation can cause mac x86_64 assembly / linker errors
+          # (fixup/linker errors in huf_decompress) reported during release
+          # builds. We match the regression mac runner (arm64) for now.
+          ARCHFLAGS: -arch arm64
           PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
         run: python setup.py bdist_wheel
 

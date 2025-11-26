@@ -235,11 +235,6 @@ def __getattr__(name: str):
         return CONCURRENT_WORKERS_DEFAULT
     raise AttributeError(name)
 
-DATA_CATALOG_PROVIDER: str = get("DATA_CATALOG_PROVIDER")
-"""Data Catalog provider."""
-
-DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG_CONFIGURATION")
-"""Data Catalog configuration, different catalogs have different config formats."""
 
 DISABLE_ZERO_COPY_BUFFER_READS = bool(get("DISABLE_ZERO_COPY_BUFFER_READS", False))
 """Disable zero-copy reads from the buffer pool."""

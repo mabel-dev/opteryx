@@ -9,7 +9,6 @@ This module tests the SIMD implementations in src/cpp/simd_bitops.cpp:
 - simd_popcount() - Count set bits
 
 Tests verify correctness across different input sizes to exercise:
-- AVX512 path (64+ bytes)
 - AVX2 path (32-63 bytes)
 - NEON path (16-31 bytes on ARM)
 - Scalar fallback (<16 bytes)
@@ -67,7 +66,7 @@ class TestSIMDBitOps:
         assert result == expected
 
     def test_and_mask_long(self, maskops_module):
-        """Test AND with long input (64+ bytes) to exercise AVX512."""
+        """Test AND with long input (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
         # Create 128 bytes of data
         a = bytes([0xAA] * 128)
         b = bytes([0x55] * 128)
@@ -77,7 +76,7 @@ class TestSIMDBitOps:
         assert result == expected
 
     def test_or_mask_long(self, maskops_module):
-        """Test OR with long input (64+ bytes) to exercise AVX512."""
+        """Test OR with long input (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
         # Create 128 bytes of data
         a = bytes([0xAA] * 128)
         b = bytes([0x55] * 128)
@@ -87,7 +86,7 @@ class TestSIMDBitOps:
         assert result == expected
 
     def test_xor_mask_long(self, maskops_module):
-        """Test XOR with long input (64+ bytes) to exercise AVX512."""
+        """Test XOR with long input (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
         # Create 128 bytes of data
         a = bytes([0xAA] * 128)
         b = bytes([0xAA] * 128)
@@ -97,7 +96,7 @@ class TestSIMDBitOps:
         assert result == expected
 
     def test_not_mask_long(self, maskops_module):
-        """Test NOT with long input (64+ bytes) to exercise AVX512."""
+        """Test NOT with long input (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
         # Create 128 bytes of data
         a = bytes([0x00] * 64 + [0xFF] * 64)
         expected = bytes([0xFF] * 64 + [0x00] * 64)
@@ -128,7 +127,7 @@ class TestSIMDBitOps:
         assert result == expected
 
     def test_popcount_long(self, maskops_module):
-        """Test popcount with long input (64+ bytes) to exercise AVX512."""
+        """Test popcount with long input (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
         # Alternating pattern: 0xAA = 10101010 (4 bits set)
         a = bytes([0xAA] * 128)
         expected = 128 * 4  # 512 bits
