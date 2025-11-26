@@ -126,4 +126,13 @@ impl Dialect for OpteryxDialect {
         true
     }
 
+    /// Returns true if the dialect supports timestamp versioning for time-travel queries.
+    /// This enables syntax like:
+    /// - `SELECT * FROM table AT(TIMESTAMP => '2024-12-15 00:00:00')`
+    /// - `SELECT * FROM table BEFORE(TIMESTAMP => '2024-12-15 00:00:00')`
+    /// - `SELECT * FROM table FOR SYSTEM_TIME AS OF '2024-12-15 00:00:00'`
+    fn supports_timestamp_versioning(&self) -> bool {
+        true
+    }
+
 }
