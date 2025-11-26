@@ -186,6 +186,15 @@ def get_parquet_vendor_sources():
     vendor_sources.extend(zstd_sources)
     return vendor_sources
 
+# Link args for parquet extension - ensure libcrypto is linked on Linux so
+# the runtime 'ldd' check in CI can verify its presence. Don't add -lcrypto
+# on macOS where the system library naming differs.
+parquet_link_args = []
+if not is_mac():
+    # Ensure libcrypto is added to the DT_NEEDED entries of the shared
+    # object even if no symbols are referenced (CI asserts its presence).
+    parquet_link_args.extend(["-Wl,--no-as-needed", "-lcrypto", "-Wl,--as-needed"])
+
 # Define all extensions
 extensions = [
     
@@ -254,6 +263,7 @@ extensions = [
     ),
     
     # File format readers
+
     Extension(
         "opteryx.rugo.parquet",
         sources=(
@@ -277,7 +287,7 @@ extensions = [
         define_macros=[("HAVE_SNAPPY", "1"), ("HAVE_ZSTD", "1"), ("ZSTD_STATIC_LINKING_ONLY", "1")],
         language="c++",
         extra_compile_args=CPP_FLAGS,
-        extra_link_args=[],
+        extra_link_args=parquet_link_args,
     ),
     Extension(
         "opteryx.rugo.jsonl", 
