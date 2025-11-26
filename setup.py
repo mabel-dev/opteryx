@@ -6,6 +6,7 @@ import glob
 import os
 import platform
 import sys
+import subprocess
 
 import numpy
 from Cython.Build import cythonize
@@ -45,6 +46,32 @@ def detect_architecture():
         return "x86_64"
     return machine
 
+
+def build_supports_avx512():
+    """Check at build time whether the local build machine supports AVX512.
+
+    We prefer a lightweight check from /proc/cpuinfo on Linux and use sysctl on
+    macOS if available. This prevents us from adding global AVX512 compile
+    flags when the build machine doesn't support them (which can cause
+    illegal instruction errors if a binary built with those flags runs on a
+    machine without AVX512).
+    """
+    if is_linux():
+        try:
+            with open('/proc/cpuinfo', 'r', encoding='utf8') as cpuinfo_file:
+                contents = cpuinfo_file.read()
+            return 'avx512f' in contents and 'avx512bw' in contents
+        except FileNotFoundError:
+            return False
+    if is_mac():
+        try:
+            # Attempt to use sysctl to query CPU features
+            out = subprocess.check_output(['sysctl', '-n', 'machdep.cpu.leaf7_features'], text=True)
+            return 'AVX512F' in out and 'AVX512BW' in out
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
+    return False
+
 # Compiler flags with SIMD support
 arch = detect_architecture()
 CPP_FLAGS = ["-O3", "-std=c++17"]
@@ -61,8 +88,11 @@ elif is_linux():
 if arch == "x86_64":
     # Add SIMD support
     CPP_FLAGS.extend(["-msse4.2", "-mavx2"])
-    # Add AVX512 support
-    CPP_FLAGS.extend(["-mavx512f", "-mavx512cd", "-mavx512bw", "-mavx512dq", "-mavx512vl"])
+    # Add AVX512 support only if the build host supports it. This keeps
+    # compilation portable and prevents the compiler from embedding AVX512 in
+    # scalar paths when the instruction set isn't available on the test runner.
+    if build_supports_avx512():
+        CPP_FLAGS.extend(["-mavx512f", "-mavx512cd", "-mavx512bw", "-mavx512dq", "-mavx512vl"])
 elif arch == "arm" and not is_mac():
     CPP_FLAGS.append("-mfpu=neon")
 
