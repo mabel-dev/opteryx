@@ -42,7 +42,8 @@ jobs:
           python -m uv pip install --upgrade numpy cython
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
-          python setup.py build_ext --inplace -j 4
+          python setup.py build_ext --inplace 
+          echo -j 4
 
       - name: "Start Memcached Instance"
         run: |
@@ -82,7 +83,6 @@ jobs:
           OPTERYX_DEBUG: 1
           MAX_LOCAL_BUFFER_CAPACITY: 100
           MAX_CACHE_EVICTIONS_PER_QUERY: 4
-          DATA_CATALOG_PROVIDER: 'ICEBERG'
           DATA_CATALOG_CONNECTION: '${{ secrets.DATA_CATALOG_CONNECTION }}'
           DATA_CATALOG_STORAGE: '${{ secrets.DATA_CATALOG_STORAGE }}'
           VALKEY_CONNECTION: '${{ secrets.VALKEY_CONNECTION }}'

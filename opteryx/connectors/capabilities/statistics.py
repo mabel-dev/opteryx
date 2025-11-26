@@ -101,9 +101,11 @@ class Statistics:
         schema.row_count_metric = statistics.record_count
 
         for column in schema.columns:
-            column.highest_value = statistics.upper_bounds.get(column.name, None)
-            column.lowest_value = statistics.lower_bounds.get(column.name, None)
+            # Statistics dictionaries use bytes keys, so we need to encode the column name
+            column_key = column.name.encode() if isinstance(column.name, str) else column.name
+            column.highest_value = statistics.upper_bounds.get(column_key, None)
+            column.lowest_value = statistics.lower_bounds.get(column_key, None)
             if statistics.null_count:
-                column.null_count = statistics.null_count.get(column.name, None)
+                column.null_count = statistics.null_count.get(column_key, None)
 
         return schema

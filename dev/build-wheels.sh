@@ -2,7 +2,7 @@
 set -ex
 
 # Install OpenSSL development headers inside the container
-yum install -y openssl-devel
+yum install -y openssl-devel zstd-devel snappy-devel
 
 # Install Rust (required for building some Python packages with Rust extensions)
 curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y

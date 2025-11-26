@@ -48,7 +48,9 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           ARCHFLAGS: -arch arm64
           PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
-        run: python setup.py build_ext --inplace -j 4
+        run: |
+          python setup.py build_ext --inplace 
+          echo -j 4
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1
@@ -64,7 +66,5 @@ jobs:
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
           MEMCACHED_SERVER: 'localhost:11211'
-          DATA_CATALOG_PROVIDER: 'ICEBERG'
-          DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
           EXPERIMENTAL_EXECUTION_ENGINE: 'true'
           RESOURCES_PATH: 'testdata'

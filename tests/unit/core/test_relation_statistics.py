@@ -165,6 +165,79 @@ def test_serialization_round_trip_repeated():
     assert stats.lower_bounds[b"x"] == -123
     assert stats.upper_bounds[b"x"] == 123
 
+def test_relation_statistics_merge():
+    """Test merging two RelationStatistics objects"""
+    # Create first statistics object
+    stats1 = RelationStatistics()
+    stats1.record_count = 100
+    stats1.record_count_estimate = 110
+    stats1.update_lower("col1", 10)
+    stats1.update_upper("col1", 100)
+    stats1.add_null("col1", 5)
+    stats1.set_cardinality_estimate("col1", 50)
+    stats1.update_lower("col2", 20)
+    stats1.update_upper("col2", 200)
+
+    # Create second statistics object
+    stats2 = RelationStatistics()
+    stats2.record_count = 200
+    stats2.record_count_estimate = 220
+    stats2.update_lower("col1", 5)  # Lower than stats1
+    stats2.update_upper("col1", 150)  # Higher than stats1
+    stats2.add_null("col1", 3)
+    stats2.set_cardinality_estimate("col1", 60)
+    stats2.update_lower("col3", 30)  # New column
+    stats2.update_upper("col3", 300)
+
+    # Merge stats2 into stats1
+    stats1.merge(stats2)
+
+    # Verify record counts are summed
+    assert stats1.record_count == 300
+    assert stats1.record_count_estimate == 330
+
+    # Verify col1 bounds are correct (min of mins, max of maxs)
+    assert stats1.lower_bounds[b"col1"] == to_int(5)
+    assert stats1.upper_bounds[b"col1"] == to_int(150)
+
+    # Verify null counts are summed
+    assert stats1.null_count[b"col1"] == 8
+
+    # Verify cardinality estimates take the max
+    assert stats1.cardinality_estimate[b"col1"] == 60
+
+    # Verify col2 is still there (from stats1 only)
+    assert stats1.lower_bounds[b"col2"] == to_int(20)
+    assert stats1.upper_bounds[b"col2"] == to_int(200)
+
+    # Verify col3 is added (from stats2 only)
+    assert stats1.lower_bounds[b"col3"] == to_int(30)
+    assert stats1.upper_bounds[b"col3"] == to_int(300)
+
+def test_relation_statistics_merge_multiple():
+    """Test merging multiple statistics objects sequentially"""
+    stats = RelationStatistics()
+    stats.record_count = 50
+    stats.update_lower("value", 10)
+    stats.update_upper("value", 20)
+
+    # Merge 3 more statistics
+    for i in range(3):
+        other = RelationStatistics()
+        other.record_count = 50
+        other.update_lower("value", 5 + i)
+        other.update_upper("value", 25 + i)
+        stats.merge(other)
+
+    # Total records should be 200
+    assert stats.record_count == 200
+
+    # Min should be 5 (from first merge)
+    assert stats.lower_bounds[b"value"] == to_int(5)
+
+    # Max should be 27 (from last merge: 25 + 2)
+    assert stats.upper_bounds[b"value"] == to_int(27)
+
 if __name__ == "__main__":  # pragma: no cover
     from tests import run_tests
 

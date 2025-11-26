@@ -25,6 +25,7 @@ from orso.types import OrsoTypes
 
 from opteryx import config
 from opteryx.__version__ import __version__
+from opteryx.compiled.simd_probe import cpu_architecture
 from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
 from opteryx.exceptions import PermissionsError
@@ -92,6 +93,7 @@ SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     "concurrent_reads": (OrsoTypes.INTEGER, config.CONCURRENT_READS, VariableOwner.SERVER, Visibility.RESTRICTED),
     "user_memberships": (OrsoTypes.ARRAY, [[]], VariableOwner.INTERNAL, Visibility.UNRESTRICTED),
     "morsel_size": (OrsoTypes.INTEGER, config.MORSEL_SIZE, VariableOwner.SERVER, Visibility.RESTRICTED),
+    "architecture": (OrsoTypes.ARRAY, cpu_architecture(), VariableOwner.SERVER, Visibility.RESTRICTED),
 }
 # fmt: on
 
