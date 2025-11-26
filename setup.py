@@ -478,6 +478,7 @@ extensions.extend([
         include_dirs=include_dirs,
         language="c++",
         extra_compile_args=CPP_FLAGS,
+        libraries=([] if is_mac() else ["crypto"]),
     ),
     Extension(
         "opteryx.compiled.joins.join_definitions", 
