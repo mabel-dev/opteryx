@@ -5,7 +5,7 @@
 #include "simd_dispatch.h"
 #include "cpu_features.h"
 
-#if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
+#if defined(__AVX2__)
 #include <immintrin.h>
 #endif
 
@@ -23,19 +23,6 @@ static void simd_and_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t*
         dest[i] = a[i] & b[i];
     }
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static void simd_and_mask_avx512(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_and_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) dest[i] = a[i] & b[i];
-}
-#endif
 
 #if defined(__AVX2__)
 static void simd_and_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
@@ -67,10 +54,8 @@ void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
     using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
     static std::atomic<fn_t> cache{nullptr};
 
-    fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-        { &cpu_supports_avx512, simd_and_mask_avx512 },
-#endif
+    #if defined(__AVX2__)
+        fn_t fn = simd::select_dispatch<fn_t>(cache, {
 #if defined(__AVX2__)
         { &cpu_supports_avx2, simd_and_mask_avx2 },
 #endif
@@ -90,19 +75,6 @@ void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
 static void simd_or_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     for (size_t i = 0; i < n; i++) dest[i] = a[i] | b[i];
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static void simd_or_mask_avx512(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_or_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) dest[i] = a[i] | b[i];
-}
-#endif
 
 #if defined(__AVX2__)
 static void simd_or_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
@@ -134,10 +106,8 @@ void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
     static std::atomic<fn_t> cache{nullptr};
 
+#if defined(__AVX2__)
     fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-        { &cpu_supports_avx512, simd_or_mask_avx512 },
-#endif
 #if defined(__AVX2__)
         { &cpu_supports_avx2, simd_or_mask_avx2 },
 #endif
@@ -157,19 +127,6 @@ void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
 static void simd_xor_mask_scalar(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
     for (size_t i = 0; i < n; i++) dest[i] = a[i] ^ b[i];
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static void simd_xor_mask_avx512(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    for (; i + 64 <= n; i += 64) {
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __m512i result = _mm512_xor_si512(va, vb);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) dest[i] = a[i] ^ b[i];
-}
-#endif
 
 #if defined(__AVX2__)
 static void simd_xor_mask_avx2(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) {
@@ -201,10 +158,8 @@ void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
     using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, size_t);
     static std::atomic<fn_t> cache{nullptr};
 
+#if defined(__AVX2__)
     fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-        { &cpu_supports_avx512, simd_xor_mask_avx512 },
-#endif
 #if defined(__AVX2__)
         { &cpu_supports_avx2, simd_xor_mask_avx2 },
 #endif
@@ -224,19 +179,6 @@ void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n) 
 static void simd_not_mask_scalar(uint8_t* dest, const uint8_t* src, size_t n) {
     for (size_t i = 0; i < n; i++) dest[i] = ~src[i];
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static void simd_not_mask_avx512(uint8_t* dest, const uint8_t* src, size_t n) {
-    size_t i = 0;
-    __m512i all_ones = _mm512_set1_epi8(static_cast<char>(0xFF));
-    for (; i + 64 <= n; i += 64) {
-        __m512i v = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(src + i));
-        __m512i result = _mm512_xor_si512(v, all_ones);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) dest[i] = ~src[i];
-}
-#endif
 
 #if defined(__AVX2__)
 static void simd_not_mask_avx2(uint8_t* dest, const uint8_t* src, size_t n) {
@@ -267,10 +209,8 @@ void simd_not_mask(uint8_t* dest, const uint8_t* src, size_t n) {
     using fn_t = void(*)(uint8_t*, const uint8_t*, size_t);
     static std::atomic<fn_t> cache{nullptr};
 
+#if defined(__AVX2__)
     fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-        { &cpu_supports_avx512, simd_not_mask_avx512 },
-#endif
 #if defined(__AVX2__)
         { &cpu_supports_avx2, simd_not_mask_avx2 },
 #endif
@@ -330,24 +270,6 @@ static void simd_select_bytes_scalar(uint8_t* dest, const uint8_t* mask,
     for (size_t i = 0; i < n; i++) dest[i] = mask[i] ? a[i] : b[i];
 }
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static void simd_select_bytes_avx512(uint8_t* dest, const uint8_t* mask,
-                                     const uint8_t* a, const uint8_t* b, size_t n) {
-    size_t i = 0;
-    __m512i zero = _mm512_setzero_si512();
-
-    for (; i + 64 <= n; i += 64) {
-        __m512i vm = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(mask + i));
-        __m512i va = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(a + i));
-        __m512i vb = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(b + i));
-        __mmask64 m = _mm512_cmpneq_epu8_mask(vm, zero);
-        __m512i result = _mm512_mask_blend_epi8(m, vb, va);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), result);
-    }
-    for (; i < n; i++) dest[i] = mask[i] ? a[i] : b[i];
-}
-#endif
-
 #if defined(__AVX2__)
 static void simd_select_bytes_avx2(uint8_t* dest, const uint8_t* mask,
                                    const uint8_t* a, const uint8_t* b, size_t n) {
@@ -371,10 +293,8 @@ void simd_select_bytes(uint8_t* dest, const uint8_t* mask,
     using fn_t = void(*)(uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*, size_t);
     static std::atomic<fn_t> cache{nullptr};
 
+#if defined(__AVX2__)
     fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-        { &cpu_supports_avx512, simd_select_bytes_avx512 },
-#endif
 #if defined(__AVX2__)
         { &cpu_supports_avx2, simd_select_bytes_avx2 },
 #endif

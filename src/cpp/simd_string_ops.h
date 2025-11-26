@@ -11,7 +11,6 @@ extern "C++" {
  * Convert ASCII characters to uppercase in-place using SIMD.
  * Non-ASCII bytes (>127) are left unchanged.
  * 
- * On AVX512: processes 64 bytes per iteration
  * On AVX2: processes 32 bytes per iteration
  * Fallback: scalar byte-by-byte conversion
  * 
@@ -24,7 +23,6 @@ void simd_to_upper(char* data, size_t length);
  * Convert ASCII characters to lowercase in-place using SIMD.
  * Non-ASCII bytes (>127) are left unchanged.
  * 
- * On AVX512: processes 64 bytes per iteration
  * On AVX2: processes 32 bytes per iteration
  * Fallback: scalar byte-by-byte conversion
  * 

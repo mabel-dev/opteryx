@@ -24,7 +24,6 @@ def and_mask(bytes a, bytes b, Py_ssize_t n):
     """Return the byte-wise AND of `a` and `b` for `n` bytes as bytes.
     
     Uses SIMD acceleration:
-    - AVX512: 64 bytes per iteration
     - AVX2: 32 bytes per iteration  
     - NEON: 16 bytes per iteration
     """
@@ -45,7 +44,6 @@ def or_mask(bytes a, bytes b, Py_ssize_t n):
     """Return the byte-wise OR of `a` and `b` for `n` bytes as bytes.
     
     Uses SIMD acceleration:
-    - AVX512: 64 bytes per iteration
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """
@@ -66,7 +64,6 @@ def xor_mask(bytes a, bytes b, Py_ssize_t n):
     """Return the byte-wise XOR of `a` and `b` for `n` bytes as bytes.
     
     Uses SIMD acceleration:
-    - AVX512: 64 bytes per iteration
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """
@@ -87,7 +84,6 @@ def not_mask(bytes a, Py_ssize_t n):
     """Return the byte-wise NOT of `a` for `n` bytes as bytes.
     
     Uses SIMD acceleration:
-    - AVX512: 64 bytes per iteration
     - AVX2: 32 bytes per iteration
     - NEON: 16 bytes per iteration
     """

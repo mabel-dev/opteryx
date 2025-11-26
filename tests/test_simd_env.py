@@ -14,7 +14,6 @@ def test_cpu_probe_basic():
     if simd_probe is None:
         pytest.skip("compiled simd_probe extension not available")
     assert isinstance(simd_probe.cpu_supports_avx2(), bool)
-    assert isinstance(simd_probe.cpu_supports_avx512(), bool)
     assert isinstance(simd_probe.cpu_supports_neon(), bool)
 
 
@@ -36,16 +35,4 @@ def test_fail_if_not_avx2_behavior():
         assert "ok" in p.stdout
     else:
         # should abort / non-zero exit
-        assert p.returncode != 0
-
-
-def test_fail_if_not_avx512_behavior():
-    if simd_probe is None:
-        pytest.skip("compiled simd_probe extension not available")
-    supports = simd_probe.cpu_supports_avx512()
-    p = _run_check_with_env({"OPTERYX_FAIL_IF_NOT_AVX512": "1"})
-    if supports:
-        assert p.returncode == 0
-        assert "ok" in p.stdout
-    else:
         assert p.returncode != 0
