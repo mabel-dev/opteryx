@@ -26,6 +26,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - name: Install system packages (Ubuntu ARM)
+        if: matrix.os == 'ubuntu-24.04-arm'
+        run: |
+          sudo apt-get update
+          # Only needed for libcrypto & build tools on ARM; zstd/snappy are vendored.
+          sudo apt-get install -y libssl-dev pkg-config
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -39,8 +45,24 @@ jobs:
           python -m uv pip install --upgrade numpy cython
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
-          python setup.py build_ext --inplace 
-          echo -j 4
+          python setup.py build_ext --inplace -j 4
+
+      - name: Print 'parquet' shared object dependencies
+        run: |
+          set -eux
+          # Attempt to locate the built parquet shared object and print its dynamic
+          # dependencies so we can verify that it was linked against libcrypto on Linux.
+          SO_FILE=$(ls -1 opteryx/rugo/parquet*.so | head -n1)
+          echo "Located: $SO_FILE"
+          echo "File type: $(file $SO_FILE)"
+          echo "ldd output:"
+          ldd $SO_FILE || true
+          if ! ldd $SO_FILE | grep -q libcrypto; then
+            echo "ERROR: libcrypto not linked into $SO_FILE"
+            exit 1
+          fi
+          # We vendor zstd & snappy into the parquet extension; they may not show
+          # up in ldd output as dynamic dependencies. Only assert libcrypto presence.
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1

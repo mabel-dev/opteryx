@@ -74,8 +74,7 @@ jobs:
           python3.13 -m uv pip install --upgrade numpy cython
           python3.13 -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python3.13 -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
-          python3.13 setup.py build_ext --inplace 
-          echo -j 4
+          python3.13 setup.py build_ext --inplace -j 4
 
       - name: "Start Memcached Instance"
         run: |

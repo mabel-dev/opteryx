@@ -41,7 +41,7 @@ jobs:
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python -m uv pip install --upgrade -r $GITHUB_WORKSPACE/pyproject.toml
 
-      - name: Build on macOS universal2
+      - name: Build on macOS (arm64)
         shell: bash
         env:
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
@@ -49,8 +49,7 @@ jobs:
           ARCHFLAGS: -arch arm64
           PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          python setup.py build_ext --inplace 
-          echo -j 4
+          python setup.py build_ext --inplace -j 4
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1

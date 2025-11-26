@@ -16,6 +16,8 @@ This directory contains scripts and tools used for Opteryx development, building
 ./build-wheels.sh
 ```
 
+Note: macOS releases are arm64-only; Intel/x86_64 macOS wheels are not built by CI or released.
+
 ### Updating Build Counter
 ```bash
 python build_counter.py
