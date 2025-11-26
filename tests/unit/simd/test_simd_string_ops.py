@@ -6,7 +6,6 @@ This module tests the SIMD implementations in src/cpp/simd_string_ops.cpp:
 - simd_to_lower() - ASCII lowercase conversion
 
 Tests verify correctness across different input sizes to exercise:
-- AVX512 path (64+ bytes)
 - AVX2 path (32-63 bytes)
 - Scalar fallback (<32 bytes)
 """
@@ -52,15 +51,15 @@ class TestSIMDStringOps:
         assert result == b"hello world 123!@#"
 
     def test_to_upper_long_string(self, strings_module):
-        """Test with long string (64+ bytes) to exercise AVX512 path."""
-        # 80 characters - exercises AVX512 path
+        """Test with long string (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
+        # 80 characters - exercises the vectorized path (AVX2/NEON)
         test_str = b"this is a very long string designed to test the avx512 simd implementation path"
         result = strings_module.to_upper(test_str)
         assert result == b"THIS IS A VERY LONG STRING DESIGNED TO TEST THE AVX512 SIMD IMPLEMENTATION PATH"
 
     def test_to_lower_long_string(self, strings_module):
-        """Test with long string (64+ bytes) to exercise AVX512 path."""
-        # 80 characters - exercises AVX512 path
+        """Test with long string (64+ bytes) to exercise the vectorized path (AVX2/NEON)."""
+        # 80 characters - exercises the vectorized path (AVX2/NEON)
         test_str = b"THIS IS A VERY LONG STRING DESIGNED TO TEST THE AVX512 SIMD IMPLEMENTATION PATH"
         result = strings_module.to_lower(test_str)
         assert result == b"this is a very long string designed to test the avx512 simd implementation path"

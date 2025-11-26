@@ -71,29 +71,6 @@ bool cpu_supports_avx2() {
 #endif
 }
 
-bool cpu_supports_avx512() {
-#if defined(__x86_64__) || defined(__i386__)
-#if (defined(__GNUC__) || defined(__clang__))
-    #ifdef __builtin_cpu_supports
-    if (__builtin_cpu_supports("avx512f") && __builtin_cpu_supports("avx512bw"))
-        return true;
-    #endif
-
-    #if defined(__linux__)
-    std::ifstream f("/proc/cpuinfo");
-    if (f) {
-        std::string contents((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-        if (contents.find("avx512f") != std::string::npos && contents.find("avx512bw") != std::string::npos)
-            return true;
-    }
-    #endif
-#endif
-    return false;
-#else
-    return false;
-#endif
-}
-
 bool cpu_supports_neon() {
 #if defined(__arm__) || defined(__aarch64__)
     // On Linux, check HWCAP

@@ -7,7 +7,7 @@
 #include "simd_dispatch.h"
 #include "cpu_features.h"
 
-#if defined(__AVX512F__) || defined(__AVX2__)
+#if defined(__AVX2__)
 #include <immintrin.h>
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
@@ -24,17 +24,7 @@ inline void scalar_mix(uint64_t* dest, const uint64_t* values, std::size_t count
     }
 }
 
-// Provide architecture-specific mullo_u64 overloads. Use separate `#if`
-// blocks (not `#elif`) so multiple implementations can be compiled when
-// both feature macros (e.g. __AVX512F__ and __AVX2__) are defined. That
-// prevents compilation issues where an AVX2 routine tries to call the
-// AVX512 signature when AVX512 is enabled.
-#if defined(__AVX512F__)
-// AVX512 has native 64-bit multiply instruction (vpmuludq)
-inline __m512i mullo_u64(__m512i a, __m512i b) {
-    return _mm512_mullo_epi64(a, b);
-}
-#endif
+// Provide architecture-specific mullo_u64 overloads.
 
 #if defined(__AVX2__)
 inline __m256i mullo_u64(__m256i a, __m256i b) {
@@ -78,31 +68,6 @@ static void simd_mix_hash_scalar(uint64_t* dest, const uint64_t* values, std::si
 
     scalar_mix(dest, values, count);
 }
-
-#if defined(__AVX512F__)
-static void simd_mix_hash_avx512(uint64_t* dest, const uint64_t* values, std::size_t count) {
-    if (dest == nullptr || values == nullptr || count == 0) {
-        return;
-    }
-
-    const std::size_t stride = 8;
-    const __m512i const_vec = _mm512_set1_epi64(static_cast<long long>(MIX_HASH_CONSTANT));
-    std::size_t i = 0;
-    for (; i + stride <= count; i += stride) {
-        __m512i dst_vec = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(dest + i));
-        __m512i val_vec = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(values + i));
-        __m512i mixed = _mm512_xor_si512(dst_vec, val_vec);
-        __m512i product = mullo_u64(mixed, const_vec);
-        product = _mm512_add_epi64(product, _mm512_set1_epi64(1));
-        __m512i shifted = _mm512_srli_epi64(product, 32);
-        __m512i combined = _mm512_xor_si512(product, shifted);
-        _mm512_storeu_si512(reinterpret_cast<__m512i*>(dest + i), combined);
-    }
-    if (i < count) {
-        scalar_mix(dest + i, values + i, count - i);
-    }
-}
-#endif
 
 #if defined(__AVX2__)
 static void simd_mix_hash_avx2(uint64_t* dest, const uint64_t* values, std::size_t count) {
@@ -158,12 +123,12 @@ void simd_mix_hash(uint64_t* dest, const uint64_t* values, std::size_t count) {
     using fn_t = void(*)(uint64_t*, const uint64_t*, std::size_t);
     static std::atomic<fn_t> cache{nullptr};
 
-    fn_t fn = simd::select_dispatch<fn_t>(cache, {
-#if defined(__AVX512F__)
-        { &cpu_supports_avx512, simd_mix_hash_avx512 },
-#endif
 #if defined(__AVX2__)
-        { &cpu_supports_avx2, simd_mix_hash_avx2 },
+    // noop - AVX2 candidate included below
+#endif
+    fn_t fn = simd::select_dispatch<fn_t>(cache, {
+#if defined(__AVX2__)
+    { &cpu_supports_avx2, simd_mix_hash_avx2 },
 #endif
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
         { &cpu_supports_neon, simd_mix_hash_neon },

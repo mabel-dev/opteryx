@@ -37,18 +37,8 @@ inline bool simd_disabled_by_env() {
     return disabled;
 }
 
-// If the environment variable OPTERYX_FORCE_AVX2 is set, try to prefer the
-// AVX2 implementation even on CPUs that also support AVX512. This allows CI
-// regression tests to exercise the AVX2 path on newer hardware.
-inline bool simd_force_avx2_by_env() {
-    static std::once_flag once;
-    static bool force = false;
-    std::call_once(once, [](){
-        const char* val = std::getenv("OPTERYX_FORCE_AVX2");
-        force = (val != nullptr && val[0] != '\0');
-    });
-    return force;
-}
+// NOTE: OPTERYX_FORCE_AVX2 environment flagging removed. We no longer prefer
+// AVX2 over other supported SIMD implementations via an env var.
 
 template <typename Fn>
 Fn select_dispatch(std::atomic<Fn>& cache, std::initializer_list<std::pair<bool (*)(), Fn>> candidates, Fn fallback) {
@@ -62,26 +52,8 @@ Fn select_dispatch(std::atomic<Fn>& cache, std::initializer_list<std::pair<bool 
         return fallback;
     }
 
-    // If the user requested forcing AVX2, try to locate the AVX2 candidate
-    // specifically and select it if available and supported. This lets CI
-    // tests exercise AVX2 even when AVX512 is present.
-    if (simd_force_avx2_by_env()) {
-        for (auto &c : candidates) {
-            auto check = c.first;
-            Fn fn = c.second;
-            // Compare the check function pointer against the known
-            // cpu_supports_avx2 probe. If they match and report available,
-            // select this implementation.
-            if (check == &cpu_supports_avx2) {
-                if (check && check()) {
-                    cache.store(fn, std::memory_order_release);
-                    return fn;
-                }
-            }
-        }
-        // If forcing AVX2 but no AVX2 candidate is present or supported,
-        // continue to normal selection below.
-    }
+    // No explicit AVX2 forcing available; continue to normal selection
+    // below which prefers the first supported candidate.
 
     for (auto &c : candidates) {
         auto check = c.first;

@@ -10,7 +10,7 @@ extern "C" {
 
 /**
  * SIMD-accelerated bitwise AND operation on byte arrays.
- * Processes 64 bytes at once on AVX512, 32 on AVX2, 16 on NEON.
+ * Processes 32 bytes at a time on AVX2, 16 on NEON.
  * 
  * @param dest Destination buffer (can be same as a or b for in-place)
  * @param a First input buffer
@@ -21,7 +21,7 @@ void simd_and_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n);
 
 /**
  * SIMD-accelerated bitwise OR operation on byte arrays.
- * Processes 64 bytes at once on AVX512, 32 on AVX2, 16 on NEON.
+ * Processes 32 bytes at a time on AVX2, 16 on NEON.
  * 
  * @param dest Destination buffer (can be same as a or b for in-place)
  * @param a First input buffer
@@ -32,7 +32,7 @@ void simd_or_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n);
 
 /**
  * SIMD-accelerated bitwise XOR operation on byte arrays.
- * Processes 64 bytes at once on AVX512, 32 on AVX2, 16 on NEON.
+ * Processes 32 bytes at a time on AVX2, 16 on NEON.
  * 
  * @param dest Destination buffer (can be same as a or b for in-place)
  * @param a First input buffer
@@ -43,7 +43,7 @@ void simd_xor_mask(uint8_t* dest, const uint8_t* a, const uint8_t* b, size_t n);
 
 /**
  * SIMD-accelerated bitwise NOT operation on byte array.
- * Processes 64 bytes at once on AVX512, 32 on AVX2, 16 on NEON.
+ * Processes 32 bytes at a time on AVX2, 16 on NEON.
  * 
  * @param dest Destination buffer (can be same as src for in-place)
  * @param src Source buffer

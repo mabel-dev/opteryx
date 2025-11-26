@@ -11,7 +11,7 @@ static const size_t EXPECTED_MATCH_RATIO = 100;
 #include <arm_neon.h>
 #endif
 
-#if (defined(__AVX512F__) && defined(__AVX512BW__)) || defined(__AVX2__)
+#if defined(__AVX2__)
 #include <immintrin.h>
 #endif
 
@@ -217,7 +217,7 @@ size_t neon_count(const char* data, size_t length, char target) {
 }
 #endif
 
-// AVX512/AVX2 implementation for x86 (if available)
+// AVX2 implementation for x86 (if available)
 // Always provide a scalar fallback implementation for avx_search so we can
 // dispatch to it at runtime even when compiling with AVX flags.
 static int avx_search_scalar(const char* data, size_t length, char target) {
@@ -227,29 +227,6 @@ static int avx_search_scalar(const char* data, size_t length, char target) {
     }
     return -1;
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static int avx_search_avx512(const char* data, size_t length, char target) {
-    size_t i = 0;
-    __m512i target_vec = _mm512_set1_epi8(target);
-    for (; i + 64 <= length; i += 64) {
-        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
-        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
-        if (mask != 0) {
-            // Use __builtin_ctzll to find the lowest set bit (64-bit mask)
-            int offset = __builtin_ctzll(mask);
-            return static_cast<int>(i + offset);
-        }
-    }
-    // Process remaining bytes with scalar fallback
-    for (; i < length; i++) {
-        if (data[i] == target)
-            return static_cast<int>(i);
-    }
-    return -1;
-}
-// AVX2 implementation for x86 (fallback)
-#endif
 
 #if defined(__AVX2__)
 static int avx_search_avx2(const char* data, size_t length, char target) {
@@ -273,9 +250,9 @@ static int avx_search_avx2(const char* data, size_t length, char target) {
     return -1;
 }
 #else
-// If neither AVX512 nor AVX2 support is compiled in, keep the scalar impl as
+// If AVX2 support is compiled in, keep the scalar impl as
 // the only available code.
-// avx_search_avx2/avx_search_avx512 won't be defined; use scalar only.
+// avx_search_avx2 won't be defined; use scalar only.
 #endif
 
 // Wrapper for avx_search that dispatches to available implementation
@@ -285,9 +262,6 @@ int avx_search(const char* data, size_t length, char target) {
     fn_t fn = simd::select_dispatch<fn_t>(
         cache,
         {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-            { &cpu_supports_avx512, avx_search_avx512 },
-#endif
 #if defined(__AVX2__)
             { &cpu_supports_avx2, avx_search_avx2 },
 #endif
@@ -297,7 +271,6 @@ int avx_search(const char* data, size_t length, char target) {
     return fn(data, length, target);
 }
 
-// AVX512 find_all implementation for x86
 // Scalar fallback for find_all (always compiled)
 static std::vector<size_t> avx_find_all_scalar(const char* data, size_t length, char target) {
     std::vector<size_t> results;
@@ -308,38 +281,6 @@ static std::vector<size_t> avx_find_all_scalar(const char* data, size_t length, 
     }
     return results;
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static std::vector<size_t> avx_find_all_avx512(const char* data, size_t length, char target) {
-    std::vector<size_t> results;
-    results.reserve(length / EXPECTED_MATCH_RATIO);  // Reserve space for ~1% matches as a reasonable estimate
-    
-    size_t i = 0;
-    __m512i target_vec = _mm512_set1_epi8(target);
-    
-    for (; i + 64 <= length; i += 64) {
-        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
-        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
-        
-        // Process all matches in this chunk
-        while (mask != 0) {
-            int offset = __builtin_ctzll(mask);
-            results.push_back(i + offset);
-            mask &= (mask - 1);  // Clear the lowest set bit
-        }
-    }
-    
-    // Process remaining bytes.
-    for (; i < length; i++) {
-        if (data[i] == target) {
-            results.push_back(i);
-        }
-    }
-    
-    return results;
-}
-// AVX2 find_all implementation for x86 (fallback)
-#endif
 
 #if defined(__AVX2__)
 static std::vector<size_t> avx_find_all_avx2(const char* data, size_t length, char target) {
@@ -372,7 +313,7 @@ static std::vector<size_t> avx_find_all_avx2(const char* data, size_t length, ch
     return results;
 }
 #else
-// If compiled without AVX2/AVX512, avx_find_all_avx2/avx_find_all_avx512 won't exist.
+// If compiled without AVX2, avx_find_all_avx2 won't exist.
 #endif
 
 // Wrapper that dispatches to the best available implementation at runtime.
@@ -382,9 +323,6 @@ std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
     fn_t fn = simd::select_dispatch<fn_t>(
         cache,
         {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-            { &cpu_supports_avx512, avx_find_all_avx512 },
-#endif
 #if defined(__AVX2__)
             { &cpu_supports_avx2, avx_find_all_avx2 },
 #endif
@@ -394,8 +332,6 @@ std::vector<size_t> avx_find_all(const char* data, size_t length, char target) {
     return fn(data, length, target);
 }
 
-
-// AVX512 count implementation for x86
 // Scalar fallback for avx_count
 static size_t avx_count_scalar(const char* data, size_t length, char target) {
     size_t count = 0;
@@ -404,32 +340,6 @@ static size_t avx_count_scalar(const char* data, size_t length, char target) {
     }
     return count;
 }
-
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static size_t avx_count_avx512(const char* data, size_t length, char target) {
-    size_t count = 0;
-    size_t i = 0;
-    __m512i target_vec = _mm512_set1_epi8(target);
-    
-    for (; i + 64 <= length; i += 64) {
-        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
-        __mmask64 mask = _mm512_cmpeq_epi8_mask(chunk, target_vec);
-        
-        // Count the number of set bits in the mask using popcount
-        count += __builtin_popcountll(mask);
-    }
-    
-    // Process remaining bytes.
-    for (; i < length; i++) {
-        if (data[i] == target) {
-            count++;
-        }
-    }
-    
-    return count;
-}
-// AVX2 count implementation for x86 (fallback)
-#endif
 
 #if defined(__AVX2__)
 static size_t avx_count_avx2(const char* data, size_t length, char target) {
@@ -456,7 +366,7 @@ static size_t avx_count_avx2(const char* data, size_t length, char target) {
     return count;
 }
 #else
-// If neither AVX512 nor AVX2 compiled in, avx_count_avx2/avx_count_avx512 won't exist.
+// If not AVX2 compiled in, avx_count_avx2 won't exist.
 #endif
 
 // Wrapper that dispatches for avx_count
@@ -466,9 +376,6 @@ size_t avx_count(const char* data, size_t length, char target) {
     fn_t fn = simd::select_dispatch<fn_t>(
         cache,
         {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-            { &cpu_supports_avx512, avx_count_avx512 },
-#endif
 #if defined(__AVX2__)
             { &cpu_supports_avx2, avx_count_avx2 },
 #endif
@@ -539,7 +446,6 @@ int neon_find_delimiter(const char* data, size_t length) {
 }
 #endif
 
-// AVX512 delimiter search for x86
 // Delimiters: space (32), comma (44), '}' (125), tab (9)
 // Scalar fallback for avx_find_delimiter
 static int avx_find_delimiter_scalar(const char* data, size_t length) {
@@ -552,50 +458,9 @@ static int avx_find_delimiter_scalar(const char* data, size_t length) {
     return -1;
 }
 
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-static int avx_find_delimiter_avx512(const char* data, size_t length) {
-    size_t i = 0;
-    
-    // Create comparison vectors for all delimiters
-    __m512i space_vec = _mm512_set1_epi8(32);   // ' '
-    __m512i comma_vec = _mm512_set1_epi8(44);   // ','
-    __m512i brace_vec = _mm512_set1_epi8(125);  // '}'
-    __m512i tab_vec = _mm512_set1_epi8(9);      // '\t'
-    
-    for (; i + 64 <= length; i += 64) {
-        // Load 64 bytes
-        __m512i chunk = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(data + i));
-        
-        // Compare with all delimiters
-        __mmask64 cmp_space = _mm512_cmpeq_epi8_mask(chunk, space_vec);
-        __mmask64 cmp_comma = _mm512_cmpeq_epi8_mask(chunk, comma_vec);
-        __mmask64 cmp_brace = _mm512_cmpeq_epi8_mask(chunk, brace_vec);
-        __mmask64 cmp_tab = _mm512_cmpeq_epi8_mask(chunk, tab_vec);
-        
-        // OR all comparisons together
-        __mmask64 result = cmp_space | cmp_comma | cmp_brace | cmp_tab;
-        
-        if (result != 0) {
-            // Find the first set bit
-            int offset = __builtin_ctzll(result);
-            return static_cast<int>(i + offset);
-        }
-    }
-    
-    // Process remaining bytes
-    for (; i < length; i++) {
-        char c = data[i];
-        if (c == 32 || c == 44 || c == 125 || c == 9) {
-            return static_cast<int>(i);
-        }
-    }
-    
-    return -1;
-}
+#if defined(__AVX2__)
 // AVX2 delimiter search for x86 (fallback)
 // Delimiters: space (32), comma (44), '}' (125), tab (9)
-#endif
-#if defined(__AVX2__)
 static int avx_find_delimiter_avx2(const char* data, size_t length) {
     size_t i = 0;
     
@@ -639,8 +504,6 @@ static int avx_find_delimiter_avx2(const char* data, size_t length) {
     
     return -1;
 }
-#else
-// If neither AVX512 nor AVX2 compiled in the specialized paths won't exist.
 #endif
 
 // Wrapper that dispatches to the best delimiter finder
@@ -650,9 +513,6 @@ int avx_find_delimiter(const char* data, size_t length) {
     fn_t fn = simd::select_dispatch<fn_t>(
         cache,
         {
-#if defined(__AVX512F__) && defined(__AVX512BW__)
-            { &cpu_supports_avx512, avx_find_delimiter_avx512 },
-#endif
 #if defined(__AVX2__)
             { &cpu_supports_avx2, avx_find_delimiter_avx2 },
 #endif
