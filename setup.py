@@ -161,6 +161,47 @@ def make_draken_extension(module_path, source_file, language="c++", depends=None
         depends=depends,
     )
 
+
+def get_parquet_vendor_sources():
+    """Return vendored zstd/snappy source files to build into parquet extension.
+
+    We only compile the decompression bits (zstd) and minimal snappy sources we
+    need for decompression. The vendor code is included inside the project, so
+    building them into the extension avoids linking to system libraries and
+    avoids runtime missing symbol errors.
+    """
+    vendor_sources = []
+    RUGO_PARQUET = "third_party/mabel/rugo/parquet"
+
+    # Snappy sources (minimal subset for decompress)
+    snappy_sources = [
+        f"{RUGO_PARQUET}/vendor/snappy/snappy.cc",
+        f"{RUGO_PARQUET}/vendor/snappy/snappy-sinksource.cc",
+        f"{RUGO_PARQUET}/vendor/snappy/snappy-stubs-internal.cc",
+    ]
+    vendor_sources.extend(snappy_sources)
+
+    # Zstd decompression sources
+    zstd_sources = [
+        f"{RUGO_PARQUET}/vendor/zstd/common/entropy_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/fse_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/zstd_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/xxhash.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/error_private.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress_block.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_ddict.cpp",
+    ]
+
+    # Optionally include the x86 optimized huf path when building for x86_64
+    machine = detect_architecture()
+    if machine in ("x86_64", "amd64"):
+        zstd_sources.append(f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress_amd64.S")
+
+    vendor_sources.extend(zstd_sources)
+    return vendor_sources
+
 # Define all extensions
 extensions = [
     
@@ -231,17 +272,28 @@ extensions = [
     # File format readers
     Extension(
         "opteryx.rugo.parquet",
-        sources=[
-            "third_party/mabel/rugo/parquet/parquet_reader.pyx",
-            "third_party/mabel/rugo/parquet/metadata.cpp",
-            "third_party/mabel/rugo/parquet/decode.cpp",
-            "third_party/mabel/rugo/parquet/compression.cpp",
-            "third_party/mabel/rugo/parquet/bloom_filter.cpp",
-        ],
-        include_dirs=include_dirs,
+        sources=(
+            [
+                "third_party/mabel/rugo/parquet/parquet_reader.pyx",
+                "third_party/mabel/rugo/parquet/metadata.cpp",
+                "third_party/mabel/rugo/parquet/decode.cpp",
+                "third_party/mabel/rugo/parquet/compression.cpp",
+                "third_party/mabel/rugo/parquet/bloom_filter.cpp",
+            ] + get_parquet_vendor_sources()
+        ),
+        include_dirs=(
+            include_dirs
+            + [
+                "third_party/mabel/rugo/parquet/vendor/snappy",
+                "third_party/mabel/rugo/parquet/vendor/zstd",
+                "third_party/mabel/rugo/parquet/vendor/zstd/common",
+                "third_party/mabel/rugo/parquet/vendor/zstd/decompress",
+            ]
+        ),
+        define_macros=[("HAVE_SNAPPY", "1"), ("HAVE_ZSTD", "1"), ("ZSTD_STATIC_LINKING_ONLY", "1")],
         language="c++",
         extra_compile_args=CPP_FLAGS,
-        libraries=([] if is_mac() else ["zstd", "snappy"]),
+        extra_link_args=[],
     ),
     Extension(
         "opteryx.rugo.jsonl", 
@@ -463,6 +515,13 @@ generate_consolidated_module("opteryx/compiled/list_ops", "opteryx/compiled/list
 generate_consolidated_module("opteryx/compiled/joins", "opteryx/compiled/joins/joins.pyx")
 
 # Add consolidated modules with their dependencies
+# Link args for list_ops (use -lcrypto on non-macOS and -pthread where appropriate)
+list_ops_link_args = []
+if not is_mac():
+    list_ops_link_args.append("-lcrypto")
+if not is_win():
+    list_ops_link_args.append("-pthread")
+
 extensions.extend([
     Extension(
         "opteryx.compiled.list_ops.function_definitions",
@@ -479,7 +538,7 @@ extensions.extend([
         include_dirs=include_dirs,
         language="c++",
         extra_compile_args=CPP_FLAGS,
-        libraries=([] if is_mac() else ["crypto"]),
+        extra_link_args=list_ops_link_args,
     ),
     Extension(
         "opteryx.compiled.joins.join_definitions", 
