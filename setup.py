@@ -5,8 +5,8 @@ Simplified setup script for Opteryx - builds all Cython extensions and Rust modu
 import glob
 import os
 import platform
-import sys
 import subprocess
+import sys
 
 import numpy
 from Cython.Build import cythonize
@@ -241,6 +241,7 @@ extensions = [
         include_dirs=include_dirs,
         language="c++",
         extra_compile_args=CPP_FLAGS,
+        libraries=([] if is_mac() else ["zstd", "snappy"]),
     ),
     Extension(
         "opteryx.rugo.jsonl", 
