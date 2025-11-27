@@ -249,7 +249,7 @@ cdef class ArrayVector(Vector):
             if total == 0:
                 # avoid creating a zero-length memoryview
                 import array as pyarray
-                child_result = (<Vector>self.child).take(pyarray.array('i'))
+                child_result = (<Vector>self._child).take(pyarray.array('i'))
             else:
                 idx_view = <int32_t[:total]> child_idx
                 child_vec = <Vector> self._child
