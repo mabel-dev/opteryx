@@ -247,12 +247,13 @@ cdef class ArrayVector(Vector):
                     start += 1
 
             if total == 0:
-                idx_view = <int32_t[:0]> child_idx
+                # avoid creating a zero-length memoryview
+                import array as pyarray
+                child_result = (<Vector>self.child).take(pyarray.array('i'))
             else:
                 idx_view = <int32_t[:total]> child_idx
-
-            child_vec = <Vector> self._child
-            child_result = child_vec.take(idx_view)
+                child_vec = <Vector> self._child
+                child_result = child_vec.take(idx_view)
 
             result = ArrayVector()
             result.ptr = _alloc_array_buffer()
