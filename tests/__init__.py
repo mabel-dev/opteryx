@@ -794,6 +794,15 @@ def set_up_iceberg():
     with contextlib.suppress(NamespaceAlreadyExistsError):
         catalog.create_namespace("opteryx")
 
+    _epoch_schema = pyarrow.schema([
+        pyarrow.field("epoch", pyarrow.timestamp("ms", tz="UTC"))
+    ])
+    _epoch_table = pyarrow.Table.from_arrays(
+        [pyarrow.array([datetime.datetime.now(datetime.timezone.utc)], type=_epoch_schema.field("epoch").type)],
+        schema=_epoch_schema
+    )
+    catalog.create_table("opteryx.epoch", schema=_epoch_schema).append(_epoch_table)
+
     data = opteryx.query_to_arrow("SELECT tweet_id, text, timestamp, user_id, user_verified, user_name, hash_tags, followers, following, tweets_by_user, is_quoting, is_reply_to, is_retweeting FROM testdata.flat.formats.parquet")
     table = catalog.create_table("opteryx.tweets", schema=data.schema)
     table.append(data.slice(0, 50000))

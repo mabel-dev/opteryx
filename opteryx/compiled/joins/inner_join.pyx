@@ -15,6 +15,7 @@ from libc.stddef cimport size_t
 from libcpp.vector cimport vector
 
 from time import perf_counter_ns
+cimport cython
 
 from opteryx.third_party.abseil.containers cimport (
     FlatHashMap,
@@ -75,15 +76,16 @@ cpdef tuple inner_join(object right_relation, list join_columns, FlatHashMap lef
     last_hash_time_ns = t_after_hash - t_start
 
     with nogil:
-        inner_join_probe(
-            &left_hash_table._map,
-            &non_null_indices[0],
-            <size_t>candidate_count,
-            &row_hashes[0],
-            <size_t>num_rows,
-            left_indexes.c_buffer,
-            right_indexes.c_buffer,
-        )
+        with cython.boundscheck(False):
+            inner_join_probe(
+                &left_hash_table._map,
+                &non_null_indices[0],
+                <size_t>candidate_count,
+                &row_hashes[0],
+                <size_t>num_rows,
+                left_indexes.c_buffer,
+                right_indexes.c_buffer,
+            )
     cdef long long t_after_probe = perf_counter_ns()
     last_probe_time_ns = t_after_probe - t_after_hash
     last_rows_hashed = num_rows

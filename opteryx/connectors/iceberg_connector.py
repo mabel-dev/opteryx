@@ -276,6 +276,14 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             )
         )
 
+        # Short-cut COUNT(*) handling
+        if selected_columns == []:
+            table = pyarrow.Table.from_arrays(
+                [[self.relation_statistics.record_count]], names=["$COUNT(*)"]
+            )
+            yield table
+            return
+
         reader = self.table.scan(
             row_filter=pushed_filters,
             selected_fields=selected_columns,
@@ -356,7 +364,7 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
         elif data_type_class == pyiceberg.types.DoubleType:
             # IEEE 754 encoded floats are typically decoded directly
             return struct.unpack("<d", value)[0]  # 8-byte IEEE 754 double
-        elif data_type_class == pyiceberg.types.TimestampType:
+        elif data_type_class in (pyiceberg.types.TimestampType, pyiceberg.types.TimestamptzType):
             # Iceberg stores timestamps as microseconds since epoch
             interval = int.from_bytes(value, "little", signed=True)
             if interval < 0:
@@ -378,5 +386,5 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             return Decimal(int_value) / (10**data_type.scale)
         elif data_type_class == pyiceberg.types.BooleanType:
             return bool(value)
-        else:
-            raise ValueError(f"Unsupported data type: {data_type}, {str(data_type)}")
+
+        ValueError(f"Unsupported data type: {data_type}, {str(data_type)}")
