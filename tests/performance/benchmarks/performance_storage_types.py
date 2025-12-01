@@ -20,21 +20,21 @@ Best of three runs, lower is better
 500 cycles  jsonl took      18.6 seconds    ██▍
 500 cycles  jsonl_zstd      23.5 seconds    ████
 
-(results on M2 Mac)
-500 cycles  parquet_zstd    1.23 seconds
-500 cycles  parquet_snappy  1.09 seconds
-500 cycles  parquet_lz4     1.14 seconds
-500 cycles  ipc             1.58 seconds
-500 cycles  arrow_lz4       11.1 seconds
-500 cycles  ipc_zstd        10.2 seconds
+(results on M2 Mac - last updated 20251201)
+500 cycles  parquet_zstd    1.07 seconds
+500 cycles  parquet_snappy  0.92 seconds
+500 cycles  parquet_lz4     0.91 seconds
+500 cycles  ipc             2.40 seconds
+500 cycles  arrow_lz4       10.2 seconds
+500 cycles  ipc_zstd        10.3 seconds
 500 cycles  orc_snappy      13.8 seconds
-500 cycles  arrow           15.4 seconds
-500 cycles  orc_zstd        15.4 seconds
-500 cycles  ipc_lz4         10.2 seconds
-500 cycles  jsonl           35.2 seconds
-500 cycles  jsonl_zstd      43.8 seconds
+500 cycles  arrow           15.8 seconds
+500 cycles  orc_zstd        16.1 seconds
+500 cycles  ipc_lz4         9.14 seconds
+500 cycles  jsonl           34.8 seconds
+500 cycles  jsonl_zstd      59.3 seconds
 500 cycles  avro            171 seconds
-500 cycles  vortex          17.5 seconds 
+500 cycles  vortex          5.93 seconds 
 
 
 """
@@ -42,7 +42,7 @@ Best of three runs, lower is better
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import time
 
@@ -62,19 +62,19 @@ class Timer(object):
 
 
 FORMATS = (
-#    "arrow",
-#    "arrow_lz4",
-#    "jsonl",
-#    "orc",
-#    "orc_snappy",
+    "arrow",
+    "arrow_lz4",
+    "jsonl",
+    "orc",
+    "orc_snappy",
     "parquet",
     "parquet_snappy",
     "parquet_lz4",
-#    "zstd",
+    "zstd",
     "ipc",  # no compression
     "ipc_lz4",
     "ipc_zstd",
-#    "avro",
+    "avro",
     "vortex"
 )
 

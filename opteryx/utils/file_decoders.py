@@ -172,21 +172,14 @@ def zstd_decoder(
     if just_statistics:
         return None
 
-    import zstandard
+    from opteryx.third_party.facebook import zstd
 
-    # zstandard.open expects a file-like
-    if not isinstance(buffer, memoryview):
-        buffer = memoryview(buffer)
-    buffer = MemoryViewStream(buffer)
-
-    with zstandard.open(buffer, "rb") as file:
-        decompressed = file.read()
-        return jsonl_decoder(
-            memoryview(decompressed),
-            projection=projection,
-            selection=selection,
-            just_schema=just_schema,
-        )
+    return jsonl_decoder(
+        zstd.decompress(buffer),
+        projection=projection,
+        selection=selection,
+        just_schema=just_schema,
+    )
 
 
 def lzma_decoder(

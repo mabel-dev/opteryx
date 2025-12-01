@@ -50,7 +50,9 @@ def load_virtual_dataset(name: str):
     import io
 
     import pyarrow.parquet as pq
-    import zstandard as zstd
+
+    from opteryx.compiled.io import disk_reader
+    from opteryx.third_party.facebook import zstd
 
     def _load_fallback_file(fname):
         from pathlib import Path
@@ -60,11 +62,16 @@ def load_virtual_dataset(name: str):
         return (here / fname).read_bytes()
 
     fname = _DATASETS[name]
+    decompressed = None
+    mmap_obj = None
     try:
-        with importlib.resources.files("opteryx.virtual_datasets").joinpath(fname).open("rb") as f:
-            compressed = f.read()
+        with importlib.resources.path("opteryx.virtual_datasets", fname) as dataset_path:
+            mmap_obj = disk_reader.read_file_mmap(str(dataset_path))
+        decompressed = zstd.decompress(memoryview(mmap_obj))
     except (FileNotFoundError, AttributeError):
         compressed = _load_fallback_file(fname)
-
-    decompressed = zstd.ZstdDecompressor().decompress(compressed)
+        decompressed = zstd.decompress(compressed)
+    finally:
+        if mmap_obj is not None:
+            disk_reader.unmap_memory(mmap_obj)
     return pq.read_table(io.BytesIO(decompressed))
