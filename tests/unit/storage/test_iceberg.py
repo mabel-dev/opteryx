@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.connectors import IcebergConnector
@@ -327,6 +327,41 @@ STATEMENTS = [
     ("SELECT * FROM iceberg.opteryx.planets WHERE gravity BETWEEN 4.0 AND 8.0;", 0, 20, None),
     ("SELECT * FROM iceberg.opteryx.planets WHERE gravity NOT BETWEEN 4.0 AND 8.0;", 9, 20, None),
     ("SELECT * FROM iceberg.opteryx.planets WHERE gravity BETWEEN 3.0 AND 9.0;", 5, 20, None),
+
+    ("SELECT epoch FROM iceberg.opteryx.epoch", 1, 1, None),
+    ("SELECT epoch FROM iceberg.opteryx.epoch LIMIT 1", 1, 1, None),
+    ("SELECT epoch FROM iceberg.opteryx.epoch LIMIT 10", 1, 1, None),
+    ("SELECT epoch FROM iceberg.opteryx.epoch ORDER BY epoch", 1, 1, None),
+    ("SELECT epoch FROM iceberg.opteryx.epoch ORDER BY epoch DESC LIMIT 1", 1, 1, None),
+    ("SELECT p.name, e.epoch FROM iceberg.opteryx.planets p CROSS JOIN iceberg.opteryx.epoch e", 9, 2, None),
+    ("SELECT p.name, e.epoch FROM iceberg.opteryx.planets p, iceberg.opteryx.epoch e WHERE p.id = 1", 1, 2, None),
+    ("SELECT * FROM iceberg.opteryx.planets p CROSS JOIN iceberg.opteryx.epoch e", 9, 21, None),
+    ("SELECT COUNT(*) FROM iceberg.opteryx.planets p CROSS JOIN iceberg.opteryx.epoch e", 1, 1, None),
+    ("SELECT s.planetId, e.epoch FROM (SELECT planetId FROM iceberg.opteryx.satellites LIMIT 5) AS s CROSS JOIN iceberg.opteryx.epoch e", 5, 2, None),
+    ("SELECT e.epoch, COUNT(s.planetId) AS cnt FROM iceberg.opteryx.epoch e, iceberg.opteryx.satellites s GROUP BY e.epoch", 1, 2, None),
+    ("SELECT DISTINCT e.epoch FROM iceberg.opteryx.epoch e CROSS JOIN iceberg.opteryx.planets p", 1, 1, None),
+    ("SELECT * FROM (SELECT epoch FROM iceberg.opteryx.epoch ORDER BY epoch LIMIT 1) AS sub", 1, 1, None),
+    ("SELECT e.epoch FROM iceberg.opteryx.epoch e WHERE e.epoch IS NOT NULL", 1, 1, None),
+    ("SELECT e.epoch FROM iceberg.opteryx.epoch e WHERE e.epoch IS NULL", 0, 1, None),
+    ("SELECT e.epoch, p.id FROM iceberg.opteryx.epoch e CROSS JOIN iceberg.opteryx.planets p WHERE p.id > 4", 5, 2, None),
+    ("SELECT DISTINCT e.epoch, p.id FROM iceberg.opteryx.planets p CROSS JOIN iceberg.opteryx.epoch e ORDER BY p.id DESC LIMIT 3", 3, 2, None),
+    ("SELECT e.epoch FROM iceberg.opteryx.epoch e JOIN (SELECT MIN(epoch) AS min_epoch FROM iceberg.opteryx.epoch) AS sub ON e.epoch > sub.min_epoch", 0, 1, None),
+    ("SELECT e.epoch FROM iceberg.opteryx.epoch e JOIN (SELECT MIN(epoch) AS min_epoch FROM iceberg.opteryx.epoch) AS sub ON e.epoch >= sub.min_epoch", 1, 1, None),
+    ("SELECT DISTINCT p.name, e.epoch FROM iceberg.opteryx.planets p CROSS JOIN iceberg.opteryx.epoch e ORDER BY p.name LIMIT 2", 2, 2, None),
+    ("SELECT e.epoch, p.name FROM iceberg.opteryx.epoch e, iceberg.opteryx.planets p WHERE p.id > 3 ORDER BY p.id LIMIT 2", 2, 2, None),
+
+    # Additional planets / satellites join coverage
+    ("SELECT * FROM iceberg.opteryx.planets CROSS JOIN iceberg.opteryx.satellites;", 1593, 28, None),
+    ("SELECT COUNT(*) FROM iceberg.opteryx.planets CROSS JOIN iceberg.opteryx.satellites;", 1, 1, None),
+    ("SELECT p.id, s.planetId FROM (SELECT id FROM iceberg.opteryx.planets LIMIT 2) AS p CROSS JOIN (SELECT planetId FROM iceberg.opteryx.satellites LIMIT 5) AS s", 10, 2, None),
+    ("SELECT p.id, COUNT(s.planetId) FROM iceberg.opteryx.planets p LEFT JOIN iceberg.opteryx.satellites s ON p.id = s.planetId GROUP BY p.id", 9, 2, None),
+    ("SELECT p.id, COUNT(s.planetId) FROM iceberg.opteryx.planets p LEFT JOIN iceberg.opteryx.satellites s ON p.id = s.planetId GROUP BY p.id HAVING COUNT(s.planetId) > 1", 6, 2, None),
+    ("SELECT DISTINCT p.id FROM iceberg.opteryx.planets p JOIN iceberg.opteryx.satellites s ON p.id = s.planetId", 7, 1, None),
+    ("SELECT p.id, s.id FROM iceberg.opteryx.planets p JOIN iceberg.opteryx.satellites s ON p.id = s.planetId ORDER BY p.id, s.planetId LIMIT 5", 5, 2, None),
+    ("SELECT p.id FROM iceberg.opteryx.planets p LEFT JOIN iceberg.opteryx.satellites s ON p.id = s.planetId WHERE s.planetId IS NULL", 2, 1, None),
+    ("SELECT p.id, s.planetId FROM iceberg.opteryx.planets p JOIN (SELECT planetId FROM iceberg.opteryx.satellites WHERE planetId >= 5) AS s ON p.id = s.planetId", 174, 2, None),
+    ("SELECT p.id FROM iceberg.opteryx.planets p JOIN (SELECT planetId FROM (SELECT planetId, COUNT(*) AS cnt FROM iceberg.opteryx.satellites GROUP BY planetId) AS s WHERE cnt > 10) AS big ON p.id = big.planetId", 4, 1, None),
+    ("SELECT p.id, COUNT(s.planetId) AS cnt FROM iceberg.opteryx.planets p JOIN iceberg.opteryx.satellites s ON p.id = s.planetId GROUP BY p.id ORDER BY cnt DESC LIMIT 2", 2, 2, None),
 
     ("SELECT user_name, name FROM iceberg.opteryx.tweets JOIN iceberg.opteryx.planets ON iceberg.opteryx.tweets.followers = iceberg.opteryx.planets.id;", 3962, 2, None),
     ("SELECT * FROM iceberg.opteryx.invalid_table;", 0, 0, DatasetNotFoundError),
