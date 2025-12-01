@@ -9,6 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import opteryx
 from opteryx.exceptions import InvalidCursorStateError, MissingSqlStatement, UnsupportedSyntaxError
+from opteryx.constants import ResultType
 
 
 def setup_function():
@@ -147,6 +148,57 @@ def test_query_to_arrow():
     results = opteryx.query_to_arrow("SELECT * FROM $planets")
     assert results.shape == (9, 20)
     assert isinstance(results, pyarrow.Table)
+
+
+def test_execute_to_arrow_batches():
+    cursor = setup_function()
+    batches = list(cursor.execute_to_arrow_batches("SELECT * FROM $planets", batch_size=3))
+    # Ensure we received record batches
+    assert all(isinstance(b, pyarrow.RecordBatch) for b in batches)
+    # Verify total rows match
+    assert sum(b.num_rows for b in batches) == 9
+
+
+def test_execute_to_arrow_batches_limit():
+    cursor = setup_function()
+    batches = list(cursor.execute_to_arrow_batches("SELECT * FROM $planets", batch_size=2, limit=3))
+    assert sum(b.num_rows for b in batches) == 3
+
+
+def test_query_to_arrow_batches():
+    batches = list(opteryx.query_to_arrow_batches("SELECT * FROM $planets", batch_size=4))
+    assert all(isinstance(b, pyarrow.RecordBatch) for b in batches)
+
+
+def test_execute_to_arrow_batches_consolidate():
+    cursor = setup_function()
+    # create two morsels 50 and 100 rows
+    t1 = pyarrow.Table.from_pydict({"a": [1] * 50})
+    t2 = pyarrow.Table.from_pydict({"a": [2] * 100})
+
+    def fake_execute_statements(operation, params, visibility_filters):
+        return (iter([t1, t2]), ResultType.TABULAR)
+
+    # patch the cursor's execute statements to return our fake morsels
+    cursor._execute_statements = fake_execute_statements
+
+    # target batch 150: should emit a single batch of 150
+    batches = list(cursor.execute_to_arrow_batches("SELECT fakes", batch_size=150))
+    assert len(batches) == 1
+    assert batches[0].num_rows == 150
+
+    # target batch 100: should emit one batch of 100 and a second of 50
+    cursor = setup_function()
+    cursor._execute_statements = fake_execute_statements
+    batches = list(cursor.execute_to_arrow_batches("SELECT fakes", batch_size=100))
+    assert [b.num_rows for b in batches] == [100, 50]
+
+
+def test_execute_to_arrow_batches_sets_description():
+    cursor = setup_function()
+    batches = cursor.execute_to_arrow_batches("SELECT * FROM $planets", batch_size=3)
+    next(batches)
+    assert cursor.description is not None
 
 
 def test_execute_missing_sql_statement():

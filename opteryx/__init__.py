@@ -26,7 +26,7 @@ import warnings
 from pathlib import Path
 
 from decimal import getcontext
-from typing import Optional, Union, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Union, Dict, Any, List, TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:  # pragma: no cover - only for type checkers
     import pyarrow
@@ -221,6 +221,46 @@ def query_to_arrow(
     # Execute the SQL query using the cursor
     return curr.execute_to_arrow(
         operation=operation, params=params, visibility_filters=visibility_filters, limit=limit
+    )
+
+
+def query_to_arrow_batches(
+    operation: str,
+    params: Union[List, Dict, None] = None,
+    batch_size: int = 1024,
+    limit: int = None,
+    visibility_filters: Optional[Dict[str, Any]] = None,
+    **kwargs,
+) -> "Iterable[pyarrow.RecordBatch]":
+    """
+    Helper function to execute a query and stream pyarrow RecordBatch objects.
+
+    Parameters:
+        operation: SQL query string
+        params: list of parameters to bind into the SQL query
+        batch_size: Number of rows per arrow record batch
+        limit: stop after this many rows (optional)
+        kwargs: additional arguments for creating the Connection
+    Returns:
+        Iterable over pyarrow.RecordBatch
+    """
+    # Lazy import Connection
+    from opteryx.connection import Connection
+
+    # Create a new database connection
+    conn = Connection(**kwargs)
+
+    # Create a new cursor object using the connection
+    curr = conn.cursor()
+    curr._owns_connection = True
+
+    # Execute the SQL query using the cursor
+    return curr.execute_to_arrow_batches(
+        operation=operation,
+        params=params,
+        batch_size=batch_size,
+        limit=limit,
+        visibility_filters=visibility_filters,
     )
 
 
