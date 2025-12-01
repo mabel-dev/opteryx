@@ -146,6 +146,25 @@ def make_draken_extension(module_path, source_file, language="c++", depends=None
     )
 
 
+def get_zstd_vendor_sources():
+    """Return the vendored zstd sources so other extensions can link to the same files."""
+    RUGO_PARQUET = "third_party/mabel/rugo/parquet"
+    sources = [
+        f"{RUGO_PARQUET}/vendor/zstd/common/entropy_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/fse_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/zstd_common.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/xxhash.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/common/error_private.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress_block.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress.cpp",
+        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_ddict.cpp",
+    ]
+    machine = detect_architecture()
+    if machine in ("x86_64", "amd64"):
+        sources.append(f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress_amd64.S")
+    return sources
+
 def get_parquet_vendor_sources():
     """Return vendored zstd/snappy source files to build into parquet extension.
 
@@ -166,24 +185,7 @@ def get_parquet_vendor_sources():
     vendor_sources.extend(snappy_sources)
 
     # Zstd decompression sources
-    zstd_sources = [
-        f"{RUGO_PARQUET}/vendor/zstd/common/entropy_common.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/common/fse_decompress.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/common/zstd_common.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/common/xxhash.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/common/error_private.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_decompress_block.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress.cpp",
-        f"{RUGO_PARQUET}/vendor/zstd/decompress/zstd_ddict.cpp",
-    ]
-
-    # Optionally include the x86 optimized huf path when building for x86_64
-    machine = detect_architecture()
-    if machine in ("x86_64", "amd64"):
-        zstd_sources.append(f"{RUGO_PARQUET}/vendor/zstd/decompress/huf_decompress_amd64.S")
-
-    vendor_sources.extend(zstd_sources)
+    vendor_sources.extend(get_zstd_vendor_sources())
     return vendor_sources
 
 # Link args for parquet extension - ensure libcrypto is linked on Linux so
@@ -247,6 +249,20 @@ extensions = [
             "src/cpp/simdjson_error_shim.cpp",
         ],
         include_dirs=include_dirs,
+        language="c++",
+        extra_compile_args=CPP_FLAGS,
+    ),
+    Extension(
+        "opteryx.third_party.facebook.zstd",
+        sources=["opteryx/third_party/facebook/zstd.pyx"] + get_zstd_vendor_sources(),
+        include_dirs=
+            include_dirs
+            + [
+                "third_party/mabel/rugo/parquet/vendor/zstd",
+                "third_party/mabel/rugo/parquet/vendor/zstd/common",
+                "third_party/mabel/rugo/parquet/vendor/zstd/decompress",
+            ],
+        define_macros=[("ZSTD_STATIC_LINKING_ONLY", "1")],
         language="c++",
         extra_compile_args=CPP_FLAGS,
     ),

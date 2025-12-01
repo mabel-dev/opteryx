@@ -221,3 +221,4 @@ third_party/mabel/draken/vectors/interval_vector.c*
 third_party/mabel/draken/morsels/align.c*
 third_party/mabel/draken/compiled/maskops.c*
 **.html
+opteryx/third_party/facebook/zstd.c*
