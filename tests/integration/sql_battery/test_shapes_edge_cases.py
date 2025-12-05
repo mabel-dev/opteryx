@@ -519,6 +519,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), 'constant' FROM $planets", 1, 2, None),
         ("SELECT MAX(id), MIN(id), AVG(id) FROM $planets", 1, 3, None),
 
+        ("SELECT name FROM $planets WHERE name IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name IN (b'Earth', b'Mars', b'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
 ]
 # fmt:on
 
