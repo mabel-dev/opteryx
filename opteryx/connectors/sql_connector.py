@@ -361,9 +361,9 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                                 if (
                                     isinstance(value, str)
                                     and value.strip().upper() in null_like_strings
+                                    and getattr(column, "type", None) in null_cleanup_types
                                 ):
-                                    if getattr(column, "type", None) in null_cleanup_types:
-                                        fields[idx] = None
+                                    fields[idx] = None
                         if needs_struct_conversion:
                             for index in struct_column_indices:
                                 value = fields[index]
