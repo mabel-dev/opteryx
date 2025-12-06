@@ -21,7 +21,9 @@ import opteryx
 from opteryx.utils.formatter import format_sql
 
 from opteryx.connectors import FileConnector, IcebergConnector
+from opteryx.models import QueryStatistics
 from tests import set_up_iceberg
+
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -136,19 +138,19 @@ def get_iceberg_tables():
     _tables_cache = [
         {
             "name": "iceberg.opteryx.planets",
-            "fields": IcebergConnector(dataset="opteryx.planets", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "fields": IcebergConnector(dataset="opteryx.planets", statistics=QueryStatistics(), catalog=_catalog).get_dataset_schema().columns,
         },
         {
             "name": "iceberg.opteryx.satellites",
-            "fields": IcebergConnector(dataset="opteryx.satellites", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "fields": IcebergConnector(dataset="opteryx.satellites", statistics=QueryStatistics(), catalog=_catalog).get_dataset_schema().columns,
         },
         {
             "name": "iceberg.opteryx.astronauts",
-            "fields": IcebergConnector(dataset="opteryx.astronauts", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "fields": IcebergConnector(dataset="opteryx.astronauts", statistics=QueryStatistics(), catalog=_catalog).get_dataset_schema().columns,
         },
         {
             "name": "iceberg.opteryx.missions",
-            "fields": IcebergConnector(dataset="opteryx.missions", statistics=None, catalog=_catalog).get_dataset_schema().columns,
+            "fields": IcebergConnector(dataset="opteryx.missions", statistics=QueryStatistics(), catalog=_catalog).get_dataset_schema().columns,
         },
         {
             "name": virtual_datasets.planets.schema().name,
@@ -168,15 +170,15 @@ def get_iceberg_tables():
         },
         {
             "name": "testdata.planets",
-            "fields": FileConnector(dataset="testdata/planets/planets.parquet", statistics=None).get_dataset_schema().columns,
+            "fields": FileConnector(dataset="testdata/planets/planets.parquet", statistics=QueryStatistics()).get_dataset_schema().columns,
         },
         {
             "name": "testdata.satellites",
-            "fields": FileConnector(dataset="testdata/satellites/satellites.parquet", statistics=None).get_dataset_schema().columns,
+            "fields": FileConnector(dataset="testdata/satellites/satellites.parquet", statistics=QueryStatistics()).get_dataset_schema().columns,
         },
         {
             "name": "testdata.missions",
-            "fields": FileConnector(dataset="testdata/missions/space_missions.parquet", statistics=None).get_dataset_schema().columns,
+            "fields": FileConnector(dataset="testdata/missions/space_missions.parquet", statistics=QueryStatistics()).get_dataset_schema().columns,
         },
     ]
     return _tables_cache

@@ -8,6 +8,8 @@ The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
 
+# ensure json import present
+import json
 import time
 from decimal import Decimal
 from decimal import InvalidOperation
@@ -93,6 +95,66 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
         "NotInStr": "NOT LIKE",
     }
 
+    def _quote_identifier(self, identifier: str) -> str:
+        preparer = self._engine.dialect.identifier_preparer
+        return preparer.quote(identifier)
+
+    def _quote_dataset_name(self, dataset: str) -> str:
+        parts = [part for part in dataset.split(".") if part]
+        if parts:
+            return ".".join(self._quote_identifier(part) for part in parts)
+        return self._quote_identifier(dataset)
+
+    def _get_declared_column_types(self, table_name: str) -> dict[str, str]:
+        dialect = self._engine.dialect.name.lower()
+        if dialect != "sqlite":
+            return {}
+
+        from sqlalchemy.sql import text
+
+        try:
+            pragma = text(f"PRAGMA main.table_info({self._quote_identifier(table_name)})")
+            with self._engine.connect() as conn:
+                rows = conn.execute(pragma).mappings().all()
+            return {row["name"]: (row.get("type") or "").upper() for row in rows if row.get("name")}
+        except Exception:
+            return {}
+
+    def _map_column_type(self, column, declared_type: str | None) -> Any:
+        if declared_type and "ARRAY" in declared_type:
+            return OrsoTypes.ARRAY
+        return PYTHON_TO_ORSO_MAP.get(getattr(column.type, "python_type", None), OrsoTypes.VARCHAR)
+
+    def _deserialize_array_value(self, value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, (list, tuple)):
+            return list(value)
+        if hasattr(value, "tolist") and not isinstance(value, (str, bytes)):
+            try:
+                arr = value.tolist()
+            except (AttributeError, TypeError, ValueError):
+                arr = None
+            if isinstance(arr, (list, tuple)):
+                return list(arr)
+        if isinstance(value, bytes):
+            try:
+                text = value.decode("utf-8")
+            except UnicodeDecodeError:
+                return list(value)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                return list(value)
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+            except json.JSONDecodeError:
+                return value
+            if isinstance(parsed, (list, tuple)):
+                return list(parsed)
+        return value
+
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
         BaseConnector.__init__(self, **kwargs)
         LimitPushable.__init__(self, **kwargs)
@@ -153,17 +215,20 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
             query_builder = None
             sql_text = pushed_sql
         else:
-            query_builder = Query().FROM(self.dataset)
+            query_builder = Query().FROM(self._quote_dataset_name(self.dataset))
 
         # Update the SQL and the target morsel schema if we've pushed a projection
         if pushed_sql is None:
             if columns:
-                column_names = [col.schema_column.name for col in columns]
-                query_builder.add("SELECT", *column_names)
+                quoted_column_names = [
+                    self._quote_identifier(col.schema_column.name) for col in columns
+                ]
+                actual_column_names = [col.schema_column.name for col in columns]
+                query_builder.add("SELECT", *quoted_column_names)
                 result_schema.columns = [  # type:ignore
                     col
                     for col in self.schema.columns  # type:ignore
-                    if col.name in column_names  # type:ignore
+                    if col.name in actual_column_names  # type:ignore
                 ]
             else:
                 query_builder.add("SELECT", "1")
@@ -207,6 +272,11 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
             for idx, column in enumerate(result_schema.columns)
             if getattr(column, "type", None) == OrsoTypes.BOOLEAN
         ]
+        array_column_indices = [
+            idx
+            for idx, column in enumerate(result_schema.columns)
+            if getattr(column, "type", None) == OrsoTypes.ARRAY
+        ]
 
         needs_struct_conversion = bool(struct_column_indices)
         decimal_adjustments = []
@@ -231,6 +301,19 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
         needs_decimal_conversion = bool(decimal_adjustments)
         needs_boolean_conversion = bool(boolean_column_indices)
+        needs_array_conversion = bool(array_column_indices)
+        null_cleanup_types = {
+            OrsoTypes.INTEGER,
+            OrsoTypes.DOUBLE,
+            OrsoTypes.DECIMAL,
+            OrsoTypes.TIMESTAMP,
+            OrsoTypes.DATE,
+            OrsoTypes.TIME,
+        }
+        null_like_strings = {"NULL", "NONE"}
+        needs_null_string_cleanup = any(
+            getattr(column, "type", None) in null_cleanup_types for column in result_schema.columns
+        )
 
         at_least_once = False
 
@@ -259,10 +342,28 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 if not batch_rows:
                     break
 
-                if needs_struct_conversion or needs_decimal_conversion or needs_boolean_conversion:
+                if (
+                    needs_struct_conversion
+                    or needs_decimal_conversion
+                    or needs_boolean_conversion
+                    or needs_array_conversion
+                    or needs_null_string_cleanup
+                ):
                     processed_rows = []
                     for row in batch_rows:
                         fields = list(row)
+                        if needs_array_conversion:
+                            for index in array_column_indices:
+                                fields[index] = self._deserialize_array_value(fields[index])
+                        if needs_null_string_cleanup:
+                            for idx, column in enumerate(result_schema.columns):
+                                value = fields[idx]
+                                if (
+                                    isinstance(value, str)
+                                    and value.strip().upper() in null_like_strings
+                                    and getattr(column, "type", None) in null_cleanup_types
+                                ):
+                                    fields[idx] = None
                         if needs_struct_conversion:
                             for index in struct_column_indices:
                                 value = fields[index]
@@ -392,18 +493,27 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 # Fall back to table name only
                 columns = inspect(self._engine).get_columns(table_name_only)
 
+            declared_types = self._get_declared_column_types(table_name_only)
+
             numeric_cols = [
                 col["name"]
                 for col in columns
                 if str(col["type"]).lower()
                 in {"integer", "bigint", "float", "real", "numeric", "double"}
+                and "ARRAY" not in declared_types.get(col["name"], "")
             ]
 
-            # Build dynamic query
+            # Build dynamic query with quoted identifiers
             parts = ["COUNT(*) AS count"]
             for col in numeric_cols:
-                parts.extend([f"MIN({col}) AS min_{col}", f"MAX({col}) AS max_{col}"])
-            q = f"SELECT {', '.join(parts)} FROM {self.dataset}"
+                quoted_col = self._quote_identifier(col)
+                alias_min = f"min_{col}"
+                alias_max = f"max_{col}"
+                parts.extend(
+                    [f"MIN({quoted_col}) AS {alias_min}", f"MAX({quoted_col}) AS {alias_max}"]
+                )
+            quoted_dataset = self._quote_dataset_name(self.dataset)
+            q = f"SELECT {', '.join(parts)} FROM {quoted_dataset}"
             with self._engine.connect() as conn:
                 # DEBUG: print("READ STATS\n", str(q))
                 result = conn.execute(text(q)).fetchone()._asdict()
@@ -424,26 +534,29 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
 
         # get the schema from the dataset
         # DEBUG: print("GET SQL SCHEMA:", self.dataset)
-        try:
-            # Handle schema.table format
-            schema_name = None
-            table_name = self.dataset
-            if "." in self.dataset:
-                parts = self.dataset.split(".")
-                if len(parts) == 2:
-                    schema_name, table_name = parts
-                elif len(parts) > 2:
-                    # Handle database.schema.table format (take last two parts)
-                    schema_name, table_name = parts[-2], parts[-1]
+        schema_name = None
+        table_name = self.dataset
+        if "." in self.dataset:
+            parts = self.dataset.split(".")
+            if len(parts) == 2:
+                schema_name, table_name = parts
+            elif len(parts) > 2:
+                # Handle database.schema.table format (take last two parts)
+                schema_name, table_name = parts[-2], parts[-1]
 
+        declared_column_types = self._get_declared_column_types(table_name)
+
+        try:
             table = Table(table_name, self.metadata, schema=schema_name, autoload_with=self._engine)
 
-            self.schema = RelationSchema(
-                name=table.name,
-                columns=[
+            column_defs = []
+            for column in table.columns:
+                column_type = self._map_column_type(column, declared_column_types.get(column.name))
+                column_defs.append(
                     FlatColumn(
                         name=column.name,
-                        type=PYTHON_TO_ORSO_MAP.get(column.type.python_type, OrsoTypes.VARCHAR),
+                        type=column_type,
+                        element_type=OrsoTypes.VARCHAR if column_type == OrsoTypes.ARRAY else None,
                         precision=(
                             column.type.precision
                             if hasattr(column.type, "precision")
@@ -457,9 +570,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                         ),
                         nullable=column.nullable,
                     )
-                    for column in table.columns
-                ],
-            )
+                )
+            self.schema = RelationSchema(name=table.name, columns=column_defs)
             # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns")
         except Exception as err:
             # Try again with quoted identifiers if the first attempt fails
@@ -477,12 +589,18 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                     autoload_with=self._engine,
                 )
 
-                self.schema = RelationSchema(
-                    name=table.name,
-                    columns=[
+                column_defs = []
+                for column in table.columns:
+                    column_type = self._map_column_type(
+                        column, declared_column_types.get(column.name)
+                    )
+                    column_defs.append(
                         FlatColumn(
                             name=column.name,
-                            type=PYTHON_TO_ORSO_MAP.get(column.type.python_type, OrsoTypes.VARCHAR),
+                            type=column_type,
+                            element_type=OrsoTypes.VARCHAR
+                            if column_type == OrsoTypes.ARRAY
+                            else None,
                             precision=(
                                 column.type.precision
                                 if hasattr(column.type, "precision")
@@ -496,9 +614,8 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                             ),
                             nullable=column.nullable,
                         )
-                        for column in table.columns
-                    ],
-                )
+                    )
+                self.schema = RelationSchema(name=table.name, columns=column_defs)
                 # DEBUG: print(f"Successfully loaded schema for {self.dataset} with {len(table.columns)} columns using quoted identifiers")
             except Exception as inner_err:
                 # DEBUG: print(f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err}) AND {type(inner_err).__name__}({inner_err})")
@@ -509,7 +626,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 try:
                     with self._engine.connect() as conn:
                         query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                        rows = conn.execute(text(str(query))).fetchmany(25)
+                        rows = conn.execute(text(str(query))).mappings().fetchmany(25)
 
                         if not rows:
                             raise DatasetReadError(f"No rows found in dataset '{self.dataset}'.")
@@ -517,8 +634,17 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                         column_types = {}
 
                         # Walk rows until we find a non-null for each column
-                        for row in rows:
-                            row_dict = row._asdict()
+                        for row_dict in rows:
+                            schema_name = None
+                            table_name = self.dataset
+                            if "." in self.dataset:
+                                parts = self.dataset.split(".")
+                                if len(parts) == 2:
+                                    schema_name, table_name = parts
+                                elif len(parts) > 2:
+                                    # Handle database.schema.table format (take last two parts)
+                                    schema_name, table_name = parts[-2], parts[-1]
+                            declared_column_types = self._get_declared_column_types(table_name)
                             for column, value in row_dict.items():
                                 if column not in column_types:
                                     column_types[column] = None
@@ -527,19 +653,23 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                                         type(value), OrsoTypes.NULL
                                     )
 
-                        self.schema = RelationSchema(
-                            name=self.dataset,
-                            columns=[
+                        column_defs = []
+                        for col in column_types:
+                            column_type = column_types[col] or OrsoTypes.NULL
+                            if "ARRAY" in declared_column_types.get(col, ""):
+                                column_type = OrsoTypes.ARRAY
+                            column_defs.append(
                                 FlatColumn(
                                     name=col,
-                                    type=column_types[col]
-                                    or OrsoTypes.NULL,  # all nulls stays as NULL
+                                    type=column_type,
+                                    element_type=OrsoTypes.VARCHAR
+                                    if column_type == OrsoTypes.ARRAY
+                                    else None,
                                     precision=38,
                                     scale=14,
                                 )
-                                for col in column_types
-                            ],
-                        )
+                            )
+                        self.schema = RelationSchema(name=self.dataset, columns=column_defs)
 
                         # DEBUG: print("SCHEMA:", self.schema)
                 except Exception as final_err:

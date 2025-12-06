@@ -160,6 +160,8 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "GtEq":
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=numpy.bool_)
     if operator == "InList":
+        from opteryx.draken.interop.arrow import vector_from_arrow
+
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
             value = to_pylist()
@@ -169,14 +171,20 @@ def _inner_filter_operations(arr, operator, value):
             value = to_numpy(zero_copy_only=False)
 
         values = set(value)
-        to_numpy = getattr(arr, "to_numpy", None)
-        if to_numpy is not None:
-            arr = to_numpy(zero_copy_only=False)
-        if arr.dtype == numpy.int64:
-            return list_ops.list_in_list_int64(memoryview(arr), values, len(arr))
-        else:
-            return list_ops.list_in_list(arr.astype(object), values)
+
+        if isinstance(arr, numpy.ndarray):
+            arr = pyarrow.array(arr)
+
+        if isinstance(arr, pyarrow.ChunkedArray):
+            arr = arr.combine_chunks()
+
+        if isinstance(arr, pyarrow.Array):
+            arr = vector_from_arrow(arr)
+
+        return list_ops.list_in_list(arr, values)
     if operator == "NotInList":
+        from opteryx.draken.interop.arrow import vector_from_arrow
+
         to_pylist = getattr(value, "to_pylist", None)
         if to_pylist is not None:
             value = to_pylist()
@@ -187,14 +195,16 @@ def _inner_filter_operations(arr, operator, value):
 
         values = set(value)
 
-        to_numpy = getattr(arr, "to_numpy", None)
-        if to_numpy is not None:
-            arr = to_numpy(zero_copy_only=False)
+        if isinstance(arr, numpy.ndarray):
+            arr = pyarrow.array(arr)
 
-        if arr.dtype == numpy.int64:
-            matches = list_ops.list_in_list_int64(memoryview(arr), values, len(arr))
-        else:
-            matches = list_ops.list_in_list(arr.astype(object), values)
+        if isinstance(arr, pyarrow.ChunkedArray):
+            arr = arr.combine_chunks()
+
+        if isinstance(arr, pyarrow.Array):
+            arr = vector_from_arrow(arr)
+
+        matches = list_ops.list_in_list(arr, values)
         return numpy.invert(matches.astype(dtype=numpy.bool_))
     if operator == "InStr":
         needle = str(value)

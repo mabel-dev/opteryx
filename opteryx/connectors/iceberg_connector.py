@@ -208,6 +208,9 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
             iceberg_schema = self.table.schema()
         else:
             iceberg_schema = self.table.schemas()[self.snapshot.schema_id]
+            self.statistics.dataset_committed_at = datetime.datetime.fromtimestamp(
+                self.snapshot.timestamp_ms / 1000.0
+            ).isoformat()
         arrow_schema = iceberg_schema.as_arrow()
 
         self.schema = RelationSchema(

@@ -181,15 +181,45 @@ def case_when(value, alias: Optional[List[str]] = None, key=None):
 
 
 def cast(branch, alias: Optional[List[str]] = None, key=None):
-    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-
+    """
+    Convert CAST(<expr> AS <type>) to a typed function call <type>(<expr>).
+    Handles literal value casting at compile time when possible.
+    """
     from opteryx.planner import build_literal_node
 
     args = [build(branch["expr"])]
     kind = branch["kind"]
-    data_type = branch["data_type"]
+    raw_data_type = branch["data_type"]
+
+    # Extract the base data type from the AST structure
+    data_type = _extract_data_type(raw_data_type, branch, args, build_literal_node)
+
+    # Validate and normalize the data type
+    normalized_type = _normalize_cast_type(data_type)
+
+    # Apply TRY_CAST or SAFE_CAST prefix if needed
+    if kind in {"TryCast", "SafeCast"}:
+        normalized_type = "TRY_" + normalized_type
+
+    # Handle literal value casting at compile time
+    if args[0].node_type == NodeType.LITERAL:
+        return _cast_literal_value(args[0], normalized_type, kind, alias)
+
+    # For non-literals, return a function node that will be evaluated at runtime
+    return Node(
+        NodeType.FUNCTION,
+        value=normalized_type.upper(),
+        parameters=args,
+        alias=alias,
+    )
+
+
+def _extract_data_type(raw_data_type, branch, args, build_literal_node):
+    """Extract and process the data type from the AST structure."""
+    data_type = raw_data_type
+
+    # Handle dictionary-wrapped types (e.g., Timestamp with timezone info)
     if isinstance(data_type, dict):
-        # timestamps have the timezone as a value
         type_key = next(iter(data_type))
         if type_key == "Timestamp" and data_type[type_key] not in (
             (None, "None"),
@@ -197,71 +227,109 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
+
+    # Handle custom types
     if "Custom" in data_type:
         data_type = branch["data_type"]["Custom"][0][0]["Identifier"]["value"].upper()
-    lower_data_type = data_type.lower()
-    upper_data_type = data_type.upper()
-    if lower_data_type == "timestamp":
-        data_type = "TIMESTAMP"
-    elif lower_data_type == "date":
-        data_type = "DATE"
-    elif "varchar" in lower_data_type:
-        data_type = "VARCHAR"
-    elif "decimal" in lower_data_type:
-        data_type = "DECIMAL"
-        if "PrecisionAndScale" in branch["data_type"]["Decimal"]:
-            precision = branch["data_type"]["Decimal"]["PrecisionAndScale"][0]
-            scale = branch["data_type"]["Decimal"]["PrecisionAndScale"][1]
-            args.append(build_literal_node(precision))
-            args.append(build_literal_node(scale))
-    elif "integer" in lower_data_type:
-        data_type = "INTEGER"
-    elif "double" in lower_data_type:
-        data_type = "DOUBLE"
-    elif "boolean" in lower_data_type:
-        data_type = "BOOLEAN"
-    elif "struct" in lower_data_type:
-        data_type = "STRUCT"
-    elif "blob" in lower_data_type:
-        data_type = "BLOB"
-    elif any(token in lower_data_type for token in ("varbinary", "binary", "raw")):
-        data_type = "VARBINARY"
-    elif "array" in lower_data_type:
+
+    # Handle DECIMAL precision and scale
+    if "decimal" in data_type.lower() and "PrecisionAndScale" in branch["data_type"].get(
+        "Decimal", {}
+    ):
+        precision = branch["data_type"]["Decimal"]["PrecisionAndScale"][0]
+        scale = branch["data_type"]["Decimal"]["PrecisionAndScale"][1]
+        args.append(build_literal_node(precision))
+        args.append(build_literal_node(scale))
+
+    # Handle ARRAY element types
+    if "array" in data_type.lower():
         element_key = branch["data_type"]["Array"].get("AngleBracket", {"Varchar": None})
         if isinstance(element_key, dict):
             element_key = next(iter(element_key))
         if isinstance(element_key, str):
             element_key = build_literal_node(element_key.upper())
             args.append(element_key)
-        data_type = "ARRAY"
+
+    return data_type
+
+
+def _normalize_cast_type(data_type: str) -> str:
+    """Normalize and validate the cast target type."""
+    lower_type = data_type.lower()
+    upper_type = data_type.upper()
+
+    # Map of substring patterns to normalized types
+    type_mappings = {
+        "timestamp": "TIMESTAMP",
+        "date": "DATE",
+        "varchar": "VARCHAR",
+        "decimal": "DECIMAL",
+        "integer": "INTEGER",
+        "double": "DOUBLE",
+        "boolean": "BOOLEAN",
+        "struct": "STRUCT",
+        "blob": "BLOB",
+        "array": "ARRAY",
+    }
+
+    # Check type mappings
+    for pattern, normalized in type_mappings.items():
+        if pattern in lower_type:
+            return normalized
+
+    # Check binary types separately
+    if any(token in lower_type for token in ("varbinary", "binary", "raw")):
+        return "VARBINARY"
+
+    # Handle unsupported type aliases with helpful error messages
+    type_suggestions = {
+        ("STRING", "CHAR", "TEXT", "NVARCHAR"): "VARCHAR",
+        ("FLOAT", "NUMERIC", "REAL"): "DOUBLE",
+        ("INT", "SMALLINT", "TINYINT", "BIGINT", "BYTE"): "INTEGER",
+        ("BOOL", "BIT"): "BOOLEAN",
+    }
+
+    for aliases, suggestion in type_suggestions.items():
+        if upper_type in aliases:
+            raise SqlError(
+                f"Unsupported type for CAST - '{upper_type}'. Did you mean '{suggestion}'?"
+            )
+
+    raise SqlError(f"Unsupported type for CAST - '{data_type}'.")
+
+
+def _cast_literal_value(literal_node, target_type: str, kind: str, alias):
+    """Cast a literal value at compile time."""
+    # NULL values remain NULL regardless of target type
+    if literal_node.type == OrsoTypes.NULL:
+        return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
+
+    # Strip TRY_ prefix for type lookup
+    base_type = target_type.replace("TRY_", "")
+
+    # Special case: VARBINARY maps to BLOB in Orso types
+    if base_type == "VARBINARY":
+        orso_type = OrsoTypes.BLOB
+    # Special case: INTEGER to TIMESTAMP conversion using PyArrow
+    elif base_type == "TIMESTAMP" and literal_node.type == OrsoTypes.INTEGER:
+        import pyarrow
+        import pyarrow.compute as compute
+
+        value = compute.cast([literal_node.value], pyarrow.timestamp("us"))[0].as_py()
+        return Node(NodeType.LITERAL, type=OrsoTypes.TIMESTAMP, value=value, alias=alias)
     else:
-        if upper_data_type in ("STRING", "CHAR", "TEXT", "NVARCHAR"):
-            raise SqlError(
-                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'VARCHAR'?"
-            )
-        if upper_data_type in ("FLOAT", "NUMERIC", "REAL"):
-            raise SqlError(
-                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'DOUBLE'?"
-            )
-        if upper_data_type in ("INT", "SMALLINT", "TINYINT", "BIGINT", "BYTE"):
-            raise SqlError(
-                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'INTEGER'?"
-            )
-        if upper_data_type in ("BOOL", "BIT"):
-            raise SqlError(
-                f"Unsupported type for CAST - '{data_type.upper()}'. Did you mean 'BOOLEAN'?"
-            )
-        raise SqlError(f"Unsupported type for CAST - '{data_type}'.")
+        orso_type = OrsoTypes.from_name(base_type)[0]
 
-    if kind in {"TryCast", "SafeCast"}:
-        data_type = "TRY_" + data_type
-
-    return Node(
-        NodeType.FUNCTION,
-        value=data_type.upper(),
-        parameters=args,
-        alias=alias,
-    )
+    # Attempt to parse and cast the literal value
+    try:
+        parsed_value = orso_type.parse(literal_node.value)
+        return Node(NodeType.LITERAL, type=orso_type, value=parsed_value, alias=alias)
+    except Exception as e:
+        # For TRY_CAST/SAFE_CAST, return NULL on failure
+        if kind in {"TryCast", "SafeCast"}:
+            return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
+        # For regular CAST, raise an error
+        raise SqlError(f"Error casting value '{literal_node.value}' to type '{base_type}': {e}")
 
 
 def ceiling(value, alias: Optional[List[str]] = None, key=None):

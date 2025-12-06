@@ -54,6 +54,8 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.BLOB, OrsoTypes.BLOB, "RLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.BLOB, "NotRLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.BLOB, "StringConcat"): OperatorMapType(OrsoTypes.BLOB, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.BOOLEAN, "Or"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),

@@ -519,6 +519,21 @@ STATEMENTS = [
         ("SELECT COUNT(*), 'constant' FROM $planets", 1, 2, None),
         ("SELECT MAX(id), MIN(id), AVG(id) FROM $planets", 1, 3, None),
 
+        # 2971
+        ("SELECT name FROM $planets WHERE name IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name IN (b'Earth', b'Mars', b'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY IN ('Earth', 'Mars', 'Venus')", 3, 1, None),
+        ("SELECT name FROM $planets WHERE name NOT IN ('Earth', 'Mars', 'Venus')", 6, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY NOT IN ('Earth', 'Mars', 'Venus')", 6, 1, None),
+        ("SELECT name FROM $planets WHERE name NOT IN (b'Earth', b'Mars', b'Venus')", 6, 1, None),
+        ("SELECT name FROM $planets WHERE name::VARBINARY NOT IN ('Earth', 'Mars', 'Venus')", 6, 1, None),
+        ("SELECT id FROM $planets WHERE id IN (1, 3, 5, 7)", 4, 1, None),
+        ("SELECT id FROM $planets WHERE id NOT IN (1, 3, 5, 7)", 5, 1, None),
+        ("SELECT id FROM $planets WHERE id::VARBINARY IN (b'1', b'3', b'5', b'7')", 4, 1, None),
+        ("SELECT id FROM $planets WHERE id::VARBINARY NOT IN (b'1', b'3', b'5', b'7')", 5, 1, None),
+        ("SELECT mass FROM $planets WHERE mass IN (0.330, 4.87, 5.97)", 3, 1, None),
+        ("SELECT mass FROM $planets WHERE mass NOT IN (0.330, 4.87, 5.97)", 6, 1, None),
 ]
 # fmt:on
 
