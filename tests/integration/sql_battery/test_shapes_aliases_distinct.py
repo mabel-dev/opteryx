@@ -229,6 +229,7 @@ STATEMENTS = [
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE ARRAY_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE missions @> ('Apollo 8', 'Apollo 13')", 5, 1, None),
+        ("SELECT * FROM (SELECT name, IFNULL(missions, []) AS missions FROM $astronauts) WHERE NOT missions @> ['Apollo 11']", 354, 2, None),
         ("SELECT * FROM $astronauts WHERE missions @>> ('Apollo 11', 'Gemini 12')", 1, 19, None),
         ("SELECT * FROM $astronauts WHERE missions @>> ('Gemini 7', 'Apollo 8')", 2, 19, None),
 
