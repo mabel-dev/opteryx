@@ -267,6 +267,13 @@ def _inner_evaluate(root: Node, table: Table):
                 if root.centre
                 else pyarrow.nulls(1, type=pyarrow.bool_())
             )
+            # Convert to numpy array if it's not already a PyArrow array
+            # This handles memoryviews, Cython memoryviewslices, and other array-like objects
+            if not isinstance(centre, pyarrow.Array):
+                centre = numpy.asarray(centre)
+                # Convert numeric types (e.g., uint8 from list_contains_any) to boolean
+                if numpy.issubdtype(centre.dtype, numpy.integer):
+                    centre = centre.astype(numpy.bool_)
             centre = pyarrow.array(centre, type=pyarrow.bool_())
             return pyarrow.compute.invert(centre)
 
