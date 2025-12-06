@@ -626,7 +626,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 try:
                     with self._engine.connect() as conn:
                         query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
-                        rows = conn.execute(text(str(query))).fetchmany(25)
+                        rows = conn.execute(text(str(query))).mappings().fetchmany(25)
 
                         if not rows:
                             raise DatasetReadError(f"No rows found in dataset '{self.dataset}'.")
@@ -634,7 +634,7 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                         column_types = {}
 
                         # Walk rows until we find a non-null for each column
-                        for row in rows:
+                        for row_dict in rows:
                             schema_name = None
                             table_name = self.dataset
                             if "." in self.dataset:

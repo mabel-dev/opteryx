@@ -12,6 +12,7 @@ import opteryx
 from opteryx.connectors import IcebergConnector
 from opteryx.compiled.structures.relation_statistics import to_int
 from opteryx.exceptions import DatasetReadError, UnsupportedSyntaxError
+from opteryx.models import QueryStatistics
 import datetime
 from freezegun import freeze_time
 
@@ -126,7 +127,8 @@ def test_iceberg_get_stats_tweets():
         catalog=catalog,
         remove_prefix=True,
     )
-    connector = connector_factory("iceberg.opteryx.tweets", None)
+
+    connector = connector_factory("iceberg.opteryx.tweets", QueryStatistics())
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 
@@ -155,7 +157,7 @@ def test_iceberg_get_stats_missions():
         catalog=catalog,
         remove_prefix=True,
     )
-    connector = connector_factory("iceberg.opteryx.tweets", None)
+    connector = connector_factory("iceberg.opteryx.tweets", QueryStatistics())
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 
@@ -195,7 +197,7 @@ def test_iceberg_get_stats_remote():
         catalog=catalog,
         remove_prefix=True,
     )
-    connector = connector_factory("iceberg.iceberg.planets", None)
+    connector = connector_factory("iceberg.iceberg.planets", QueryStatistics())
     connector.get_dataset_schema()
     stats = connector.relation_statistics
 

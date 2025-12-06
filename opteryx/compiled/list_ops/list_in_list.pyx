@@ -16,7 +16,7 @@ numpy.import_array()
 from opteryx.draken.vectors.vector cimport Vector
 from opteryx.draken.vectors.int64_vector cimport Int64Vector
 from opteryx.draken.vectors.string_vector cimport StringVector
-from opteryx.draken.core.buffers cimport DrakenFixedBuffer, DrakenVarBuffer
+from opteryx.draken.core.buffers cimport DrakenVarBuffer
 
 cdef numpy.ndarray[numpy.uint8_t, ndim=1] list_in_list_int64_vector(Int64Vector vec, set values):
     cdef Py_ssize_t i, size = vec.ptr.length

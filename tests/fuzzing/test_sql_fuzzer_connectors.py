@@ -24,6 +24,7 @@ from opteryx.connectors import SqlConnector
 from opteryx.connectors import CqlConnector
 from opteryx.connectors import IcebergConnector
 from opteryx.connectors import MongoDbConnector
+from opteryx.models import QueryStatistics
 from opteryx import virtual_datasets
 from orso.tools import lru_cache_with_expiry
 
