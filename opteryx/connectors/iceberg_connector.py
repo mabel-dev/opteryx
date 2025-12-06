@@ -206,6 +206,7 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
         # the table's declared schema (from metadata) and return an empty result set.
         if self.snapshot is None:
             iceberg_schema = self.table.schema()
+            self.statistics.dataset_committed_at = self.table["committed_at"].isoformat()
         else:
             iceberg_schema = self.table.schemas()[self.snapshot.schema_id]
         arrow_schema = iceberg_schema.as_arrow()

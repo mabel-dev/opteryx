@@ -256,6 +256,22 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
     if kind in {"TryCast", "SafeCast"}:
         data_type = "TRY_" + data_type
 
+    if args[0].node_type == NodeType.LITERAL:
+        if upper_data_type == "VARBINARY":
+            orso_type = OrsoTypes.BLOB
+        elif upper_data_type == "TIMESTAMP" and args[0].type == OrsoTypes.INTEGER:
+            import pyarrow
+            import pyarrow.compute as compute
+
+            value = compute.cast([args[0].value], pyarrow.timestamp("us"))[0].as_py()
+
+            return Node(NodeType.LITERAL, type=OrsoTypes.TIMESTAMP, value=value, alias=alias)
+        else:
+            orso_type = OrsoTypes.from_name(upper_data_type)[0]
+        return Node(
+            NodeType.LITERAL, type=orso_type, value=orso_type.parse(args[0].value), alias=alias
+        )
+
     return Node(
         NodeType.FUNCTION,
         value=data_type.upper(),

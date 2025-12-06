@@ -277,7 +277,7 @@ def cast(_type):
             elif len(args) == 1:
                 kwargs["precision"] = args[0]
                 kwargs["scale"] = 0
-        elif _type in ("VARCHAR", "BLOB") and len(args) == 1:
+        elif _type in ("VARCHAR", "BLOB", "VARBINARY") and len(args) == 1:
             # VARCHAR and BLOB can take a single argument for length
             kwargs["length"] = args[0]
         elif _type == "ARRAY" and len(args) == 1:
