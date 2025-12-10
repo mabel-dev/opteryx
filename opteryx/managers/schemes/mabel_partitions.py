@@ -122,12 +122,19 @@ class MabelPartitionScheme(BasePartitionScheme):
                             raise UnsupportedSegementationError(dataset=prefix, segment=segment)
 
             if any(f"{OS_SEP}by_hour{OS_SEP}" in blob_name for blob_name in data_blobs):
-                start = min(start, date)
-                end = max(end, date)
+                # Calculate the time range for this specific day
+                day_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
+                day_end = (
+                    day_start + datetime.timedelta(days=1) - datetime.timedelta(microseconds=1)
+                )
+
+                # Intersect with the global query range
+                loop_start = max(start, day_start)
+                loop_end = min(end, day_end)
 
                 selected_blobs = []
 
-                for hour in date_range(start, end, "1h"):
+                for hour in date_range(loop_start, loop_end, "1h"):
                     hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={hour.hour:02d}/"
                     # Filter for the specific hour, if hour folders exist
                     if any(hour_label in blob_name for blob_name in data_blobs):
@@ -152,7 +159,11 @@ class MabelPartitionScheme(BasePartitionScheme):
             # Prepare a list of future tasks
             futures = [
                 executor.submit(_inner, **{"date": date, "start": start_date, "end": end_date})
-                for date in date_range(start_date, end_date, "1d")
+                for date in date_range(
+                    start_date.replace(hour=0, minute=0, second=0, microsecond=0),
+                    end_date,
+                    "1d",
+                )
             ]
             # Wait for all futures to complete and collect results
             for future in concurrent.futures.as_completed(futures):

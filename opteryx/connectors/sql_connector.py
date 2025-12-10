@@ -490,8 +490,32 @@ class SqlConnector(BaseConnector, LimitPushable, PredicatePushable, Statistics):
                 # Try with full dataset name first
                 columns = inspect(self._engine).get_columns(self.dataset)
             except Exception:
-                # Fall back to table name only
-                columns = inspect(self._engine).get_columns(table_name_only)
+                try:
+                    # Fall back to table name only
+                    columns = inspect(self._engine).get_columns(table_name_only)
+                except Exception:
+                    # Some SQLAlchemy/DBAPI combinations (notably certain
+                    # versions of the duckdb engine) attempt to run
+                    # Postgres-specific catalog queries during reflection
+                    # which may not be present in the underlying engine and
+                    # will raise. In that case, gracefully fall back to a
+                    # lightweight stats query (COUNT) so we can still
+                    # provide basic relation statistics instead of failing
+                    # the whole schema discovery.
+                    try:
+                        quoted_dataset = self._quote_dataset_name(self.dataset)
+                        with self._engine.connect() as conn:
+                            result = conn.execute(
+                                text(f"SELECT COUNT(*) AS count FROM {quoted_dataset}")
+                            ).fetchone()
+                        count = result[0] if result is not None else None
+                        if count is not None:
+                            stats.record_count = int(count)
+                            stats.record_count_estimate = int(count)
+                        return stats
+                    except Exception:
+                        # Give up and return empty stats rather than raising
+                        return stats
 
             declared_types = self._get_declared_column_types(table_name_only)
 
