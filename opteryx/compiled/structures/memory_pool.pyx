@@ -167,7 +167,7 @@ cdef class MemoryPool:
 
         return best_index
 
-    cdef void _merge_adjacent_free_segments(self):
+    cdef inline void _merge_adjacent_free_segments(self):
         """Merge adjacent free segments (Level 1 compaction)."""
         if self.segments.size() <= 1:
             return
@@ -609,9 +609,6 @@ cdef class MemoryPool:
             segment.latches = 0
             self.segments[segment_index] = segment
             self.used_size -= segment.length
-
-            # Try to merge adjacent free segments
-            self._merge_adjacent_free_segments()
 
     def available_space(self) -> int64_t:
         cdef int64_t total_free = 0

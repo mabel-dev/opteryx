@@ -334,18 +334,31 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AtArrow":
         from opteryx.compiled.list_ops import list_contains_any
 
-        to_pylist = getattr(value, "to_pylist", None)
-        if to_pylist is not None:
-            value = to_pylist()
+        if len(arr) == 0:
+            return numpy.array([], dtype=numpy.bool_)
+
+        if len(arr) == 1:
+            # Fixed: Handle None element
+            elem = arr[0]
+            if elem is None:
+                return numpy.array([False], dtype=numpy.bool_)
+
+            value_set = set(value) if value is not None else set()
+            try:
+                elem_set = set(elem)
+            except TypeError:
+                elem_set = {elem}
+
+            result = bool(elem_set.intersection(value_set))
+            return numpy.array([result], dtype=numpy.bool_)
 
         to_numpy = getattr(arr, "to_numpy", None)
         if to_numpy is not None:
             arr = to_numpy(zero_copy_only=False)
 
-        if len(arr) == 0:
-            return numpy.array([], dtype=numpy.bool_)
-        if len(arr) == 1:
-            return numpy.array([set(arr[0]).intersection(value)], dtype=numpy.bool_)
+        to_pylist = getattr(value, "to_pylist", None)
+        if to_pylist is not None:
+            value = to_pylist()
 
         return list_contains_any(arr, set(value))
 

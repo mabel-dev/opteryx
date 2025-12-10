@@ -168,3 +168,7 @@ distclean: clean ## Deep clean including compiled extensions
 all: clean dev-install lint mypy test compile ## Run complete development workflow
 
 check-all: lint mypy test coverage ## Run all checks without compilation
+
+loc: ## Count LOC for production code only (excludes tests)
+	$(call print_blue,'Counting LOC for production files (excluding tests)')
+	@$(PYTHON) dev/count_loc_basic.py --exclude build,temp,third_party,dev,scratch,tests --ext py,pyx,c,cpp,cc,cxx,h,hpp --per-file
