@@ -165,7 +165,17 @@ def rugo_to_orso_schema(
         nullable = bool(entry.get("nullable", True))
 
         orso_type = _map_parquet_type_to_orso(physical_type, logical_type)
-        columns.append(FlatColumn(name=name, type=orso_type, nullable=nullable))
+        columns.append(
+            FlatColumn(
+                name=name,
+                type=orso_type,
+                nullable=nullable,
+                precision=orso_type._precision,
+                scale=orso_type._scale,
+                length=orso_type._length,
+                element_type=orso_type._element_type,
+            )
+        )
 
     if not columns:
         raise ValueError("No columns could be derived from rugo metadata")
