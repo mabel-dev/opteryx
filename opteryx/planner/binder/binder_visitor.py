@@ -1150,7 +1150,7 @@ class BinderVisitor:
 
             # this is the column that is being created
             element_type = OrsoTypes.VARCHAR
-            if node.unnest_column.schema_column:
+            if node.unnest_column.schema_column and node.unnest_column.schema_column.element_type:
                 element_type = node.unnest_column.schema_column.element_type
 
             schema_column = FlatColumn(name=node.unnest_alias, type=element_type)

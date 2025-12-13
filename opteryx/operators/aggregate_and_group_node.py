@@ -84,7 +84,8 @@ class AggregateAndGroupNode(BasePlanNode):
             250  # Buffer size before partial aggregation (kept for future parallelization)
         )
         self._partial_aggregated = False  # Track if we've done a partial aggregation
-        self._disable_partial_agg = False  # Can disable if partial agg isn't helping
+        # Disable if partial agg isn't helping
+        self._disable_partial_agg = not self._partial_merge_aggs
 
     def _build_partial_merge_plan(self):
         merge_aggs = []
@@ -108,11 +109,9 @@ class AggregateAndGroupNode(BasePlanNode):
                 renamed = f"{source_column}_one"
                 final_column_map[alias] = renamed
                 buffer_column_map[source_column] = renamed
-            elif function == "hash_list":
-                merge_aggs.append((source_column, "hash_list", None))
-                renamed = f"{source_column}_list"
-                final_column_map[alias] = renamed
-                buffer_column_map[source_column] = renamed
+            elif function in ("hash_list", "distinct"):
+                # ARRAY_AGG and DISTINCT need special handling
+                return [], {}, {}
             else:
                 merge_aggs.append((source_column, "hash_one", None))
                 renamed = f"{source_column}_one"
