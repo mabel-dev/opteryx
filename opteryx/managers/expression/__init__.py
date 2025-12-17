@@ -447,7 +447,22 @@ def evaluate_and_append(expressions, table: Table):
                 if isinstance(new_column, (pyarrow.Array, pyarrow.ChunkedArray)):
                     new_column = new_column.cast(field.type)
                 else:
-                    new_column = pyarrow.array(new_column, type=field.type)
+                    # Use Draken's vector_from_sequence for efficient array construction
+                    from opteryx.draken.interop.arrow import vector_from_sequence
+                    
+                    # Convert numpy arrays to lists to avoid dimension issues
+                    if hasattr(new_column, 'tolist'):
+                        new_column = new_column.tolist()
+                    
+                    vec = vector_from_sequence(new_column)
+                    new_column = vec.to_arrow()
+                    # Cast to the expected type if needed
+                    if new_column.type != field.type:
+                        try:
+                            new_column = new_column.cast(field.type)
+                        except pyarrow.lib.ArrowInvalid:
+                            # If safe casting fails, try unsafe cast
+                            new_column = new_column.cast(field.type, safe=False)
             except pyarrow.lib.ArrowInvalid as e:
                 raise IncorrectTypeError(
                     f"Unable to cast '{statement.schema_column.name}' to {field.type}"

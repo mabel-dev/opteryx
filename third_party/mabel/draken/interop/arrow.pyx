@@ -41,6 +41,7 @@ from opteryx.draken.vectors.interval_vector cimport (
     from_arrow_binary as interval_from_arrow_binary,
 )
 from opteryx.draken.vectors.array_vector cimport from_arrow as array_from_arrow
+from opteryx.draken.vectors.array_vector cimport from_sequence as array_from_sequence
 
 from opteryx.draken.vectors.arrow_vector import from_arrow as arrow_from_arrow
 from opteryx.draken.vectors.int64_vector cimport Int64Vector
@@ -144,10 +145,11 @@ cpdef object vector_from_sequence(object data, object dtype=None):
     Create a Draken Vector from a typed memoryview or Python sequence.
     
     For fixed-width numeric/boolean types, accepts typed memoryviews for zero-copy wrapping.
+    For nested lists (list of lists), uses ArrayVector.from_sequence for efficient construction.
     Falls back to Arrow conversion for other types (including varchar/varbinary).
     
     Args:
-        data: int64[::1], double[::1], uint8[::1] (bool), or Python sequence
+        data: int64[::1], double[::1], uint8[::1] (bool), nested lists, or Python sequence
         dtype: Optional type hint (for future use)
     
     Returns:
@@ -155,7 +157,7 @@ cpdef object vector_from_sequence(object data, object dtype=None):
     
     Note:
         For varchar/varbinary types, use pa.array() + vector_from_arrow() instead.
-        This function is optimized for fixed-width numeric types only.
+        This function is optimized for fixed-width numeric types and nested lists.
     """
     cdef int64_t[::1] int64_view
     cdef double[::1] float64_view
@@ -183,6 +185,16 @@ cpdef object vector_from_sequence(object data, object dtype=None):
         return bool_from_sequence(bool_view)
     except (TypeError, ValueError):
         pass
+    
+    # Check if it's a nested list (list of lists)
+    # We check the first non-None element to see if it's a list
+    if isinstance(data, (list, tuple)) and len(data) > 0:
+        for item in data:
+            if item is not None:
+                if isinstance(item, (list, tuple)):
+                    # Found a nested list, use array_from_sequence
+                    return array_from_sequence(data)
+                break
     
     # Fallback: convert to Arrow then to Vector
     # This handles varchar, varbinary, and other complex types

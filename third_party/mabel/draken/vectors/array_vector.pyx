@@ -453,3 +453,25 @@ cdef ArrayVector from_arrow(object array):
     vec.ptr.value_type = arrow_type_to_draken(array.type.value_type)
 
     return vec
+
+
+cdef ArrayVector from_sequence(object data):
+    """
+    Create ArrayVector from a Python sequence of lists.
+    
+    Args:
+        data: Python sequence where each element is a list (or None for null arrays)
+    
+    Returns:
+        ArrayVector with nested list structure
+    
+    Example:
+        >>> vec = from_sequence([[1, 2, 3], [4, 5], None, [6]])
+        >>> vec.to_arrow()  # Converts to PyArrow ListArray
+    """
+    # Simple approach: Convert to PyArrow first, then use from_arrow
+    # This avoids complex memory management while still providing the convenience method
+    import pyarrow as pa
+    
+    arrow_array = pa.array(data)
+    return from_arrow(arrow_array)

@@ -280,7 +280,7 @@ class IcebergConnector(BaseConnector, Diachronic, LimitPushable, Statistics, Pre
         )
 
         # Short-cut COUNT(*) handling
-        if selected_columns == []:
+        if selected_columns == [] and not predicates:
             table = pyarrow.Table.from_arrays(
                 [[self.relation_statistics.record_count]], names=["$COUNT(*)"]
             )
