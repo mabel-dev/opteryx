@@ -70,12 +70,15 @@ if is_win():
     CPP_FLAGS = ["/O2", "/std:c++17"]
     C_FLAGS = ["/O2"]
 elif is_linux():
-    CPP_FLAGS.extend(["-march=native", "-fvisibility=default"])
-    C_FLAGS.extend(["-march=native", "-fvisibility=default"])
+    # Don't use -march=native as it can cause "Illegal Instruction" errors
+    # when the binary is run on a different CPU than it was built on.
+    # The SIMD code has runtime dispatch guards, so we don't need -march=native.
+    CPP_FLAGS.extend(["-fvisibility=default"])
+    C_FLAGS.extend(["-fvisibility=default"])
 
-# SIMD-specific flags
+# SIMD-specific flags for conditional compilation (guarded by runtime checks)
 if arch == "x86_64":
-    # Add SIMD support
+    # Enable AVX2 codegen for SIMD sections (runtime dispatch will select appropriate impl)
     CPP_FLAGS.extend(["-msse4.2", "-mavx2"])
 elif arch == "arm" and not is_mac():
     CPP_FLAGS.append("-mfpu=neon")
