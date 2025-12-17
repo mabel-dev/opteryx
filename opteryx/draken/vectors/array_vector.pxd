@@ -25,3 +25,4 @@ cdef class ArrayVector(Vector):
 
 
 cdef ArrayVector from_arrow(object array)
+cdef ArrayVector from_sequence(object data)
