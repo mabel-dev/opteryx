@@ -227,7 +227,7 @@ def rewrite_ored_any_eq_to_contains(predicate, statistics):
             # Build new comparison node: ('a', 'b', 'c') @> z
             new_node = data["nodes"][0]
 
-            new_node.left.value = set(data["values"])
+            new_node.left.value = list(set(data["values"]))
             new_node.left.element_type = new_node.left.type
             new_node.left.type = OrsoTypes.ARRAY
             new_node.left.schema_column = ConstantColumn(
@@ -298,7 +298,7 @@ def rewrite_ored_eq_to_inlist(predicate, statistics):
             # Create a new regex pattern
             new_node = eq_data["nodes"][0]
             new_node.value = "InList"
-            new_node.right.value = set(eq_data["values"])
+            new_node.right.value = list(set(eq_data["values"]))
             new_node.right.element_type = new_node.right.type
             new_node.right.type = OrsoTypes.ARRAY
             new_node.right.schema_column = ConstantColumn(
