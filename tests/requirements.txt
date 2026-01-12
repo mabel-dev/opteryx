@@ -42,7 +42,7 @@ cassandra-driver
 pyiceberg[sql-sqlite]
 psycopg2-binary
 openpyxl
-vortex-data==0.56.0
+vortex-data==0.58.0
 
 setuptools_rust
 
