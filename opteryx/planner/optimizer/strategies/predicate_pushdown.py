@@ -96,6 +96,10 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             # if we're a CROSS JOIN UNNEST, we can push some filters into the UNNEST
             remaining_predicates = []
             for predicate in context.collected_predicates:
+                # NOT conditions don't have left/right so need special handling
+                if predicate.condition.centre is not None:
+                    remaining_predicates.append(predicate)
+                    continue
                 known_columns = set(col.schema_column.identity for col in predicate.columns)
                 query_columns = {
                     predicate.condition.left.schema_column.identity,

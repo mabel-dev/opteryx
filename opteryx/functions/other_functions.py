@@ -120,7 +120,10 @@ def if_null(values, replacements):
             # For list/array types, use object dtype to avoid flattening
             if isinstance(replacement, (list, tuple)) or values.dtype == object:
                 return numpy.array(
-                    [replacement if is_null else values[i] for i, is_null in enumerate(is_null_mask)],
+                    [
+                        replacement if is_null else values[i]
+                        for i, is_null in enumerate(is_null_mask)
+                    ],
                     dtype=object,
                 )
             return numpy.array(
@@ -131,10 +134,15 @@ def if_null(values, replacements):
         # For object dtype (like lists), create result differently
         if values.dtype == object or isinstance(replacements[0], (list, tuple)):
             return numpy.array(
-                [replacements[0] if is_null else values[i] for i, is_null in enumerate(is_null_mask.tolist() if hasattr(is_null_mask, 'tolist') else is_null_mask)],
-                dtype=object
+                [
+                    replacements[0] if is_null else values[i]
+                    for i, is_null in enumerate(
+                        is_null_mask.tolist() if hasattr(is_null_mask, "tolist") else is_null_mask
+                    )
+                ],
+                dtype=object,
             )
-        
+
         replacements = numpy.full(values.shape, replacements[0], dtype=values.dtype)
 
     target_type = numpy.promote_types(values.dtype, replacements.dtype)
