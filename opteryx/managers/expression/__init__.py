@@ -449,11 +449,11 @@ def evaluate_and_append(expressions, table: Table):
                 else:
                     # Use Draken's vector_from_sequence for efficient array construction
                     from opteryx.draken.interop.arrow import vector_from_sequence
-                    
+
                     # Convert numpy arrays to lists to avoid dimension issues
-                    if hasattr(new_column, 'tolist'):
+                    if hasattr(new_column, "tolist"):
                         new_column = new_column.tolist()
-                    
+
                     vec = vector_from_sequence(new_column)
                     new_column = vec.to_arrow()
                     # Cast to the expected type if needed

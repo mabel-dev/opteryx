@@ -1,6 +1,9 @@
 # Opteryx
 ### Query your data, where it lives.
 
+> ⚠️ **Repository status:** This repository is currently in a **bug‑fix only** state while the internals of the engine undergo a major rewrite in the separate [`opteryx-core`](https://github.com/mabel-dev/opteryx-core) repository. New features and breaking changes live there; this repo will remain stable to avoid surprises.
+
+
 _A unified SQL interface to unlock insights across your diverse data sources, from blobs stores to databases - **effortless cross-platform data analytics**._
 
 ![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/terminal.gif) We're excited to have you join our journey. Let us know how we can help!
